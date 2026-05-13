@@ -36,6 +36,13 @@ export function EmployerLoginPage() {
 
     try {
       const payload = await api.employerLogin(form)
+      if (normalizeRole(payload.data.role) !== 'Employer') {
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('authUser')
+        setMessage('Only recruiter accounts can login from this page.')
+        return
+      }
+
       saveSession(payload)
       setMessage('Recruiter login successful. Redirecting...')
       navigate(getDashboardPath(payload.data.role))
