@@ -1,0 +1,25 @@
+const express = require('express')
+const controllers = require('../controllers/resourceControllers')
+const authRoutes = require('./authRoutes')
+const crudRoutes = require('./crudRoutes')
+const dashboardRoutes = require('./dashboardRoutes')
+const userRoutes = require('./userRoutes')
+
+const router = express.Router()
+
+router.get('/health', (req, res) => res.json({ success: true, message: 'Cromgen Rozgar API is running' }))
+router.use('/auth', authRoutes)
+router.use('/dashboard', dashboardRoutes)
+router.use('/users', userRoutes)
+router.use('/jobs', crudRoutes(controllers.jobs))
+router.use('/companies', crudRoutes(controllers.companies))
+router.use('/employers', crudRoutes(controllers.employers))
+router.use('/candidates', crudRoutes(controllers.candidates))
+router.use('/applications', crudRoutes(controllers.applications))
+router.use('/categories', crudRoutes(controllers.categories))
+router.use('/locations', crudRoutes(controllers.locations))
+router.use('/payments', crudRoutes(controllers.payments))
+router.use('/resumes', crudRoutes(controllers.resumes))
+router.use('/settings', crudRoutes(controllers.settings))
+
+module.exports = router

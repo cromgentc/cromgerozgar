@@ -1,0 +1,46 @@
+const jwt = require('jsonwebtoken')
+const asyncHandler = require('./asyncHandler')
+const User = require('../models/User')
+
+function normalizeRole(role) {
+  const roleMap = {
+    'Super Admin': 'Admin',
+    'HR Manager': 'staff',
+    Support: 'users',
+  }
+
+  return roleMap[role] || role
+}
+
+const protect = asyncHandler(async (req, res, next) => {
+  const header = req.headers.authorization
+
+  if (!header?.startsWith('Bearer ')) {
+    res.status(401)
+    throw new Error('Not authorized, token missing')
+  }
+
+  const token = header.split(' ')[1]
+  const decoded = jwt.verify(token, process.env.JWT_SECRET)
+  req.user = await User.findById(decoded.id).select('-password')
+
+  if (!req.user) {
+    res.status(401)
+    throw new Error('Not authorized, user not found')
+  }
+
+  req.user.role = normalizeRole(req.user.role)
+  next()
+})
+
+function authorize(...roles) {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      res.status(403)
+      throw new Error('Forbidden: insufficient role')
+    }
+    next()
+  }
+}
+
+module.exports = { authorize, protect }
