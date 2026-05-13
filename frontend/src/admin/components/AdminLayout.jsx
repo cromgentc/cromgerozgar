@@ -250,6 +250,11 @@ function SidebarContent({ isEmployer, role }) {
           <div className="mt-3 flex flex-wrap gap-2">
             {(isEmployer ? ['Recruiter'] : adminRoles).map((role) => <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 shadow-sm" key={role}>{role}</span>)}
           </div>
+          {isEmployer && (
+            <Link className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-full bg-blue-600 px-4 text-sm font-bold text-white shadow-lg shadow-blue-100 hover:bg-blue-700" to="/recruiter">
+              Website
+            </Link>
+          )}
         </div>
       </div>
       <nav className="mt-4 flex-1 space-y-1 overflow-y-auto px-4 pb-4">
