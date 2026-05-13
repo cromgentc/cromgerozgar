@@ -63,7 +63,12 @@ const createUser = asyncHandler(async (req, res) => {
     throw new Error('User already exists')
   }
 
-  const user = await User.create({ name, email, password: password || 'password123', role: normalizeRole(role), status })
+  if (!password) {
+    res.status(400)
+    throw new Error('Password is required')
+  }
+
+  const user = await User.create({ name, email, password, role: normalizeRole(role), status })
   const safeUser = await User.findById(user._id).select('-password')
   res.status(201).json({ success: true, data: normalizeUser(safeUser) })
 })

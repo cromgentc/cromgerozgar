@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { City, Country, State } from 'country-state-city'
 import { Navigate, useSearchParams } from 'react-router-dom'
-import { Download, Eye, FileText, ShieldCheck } from 'lucide-react'
+import { Download, Eye, EyeOff, FileText, ShieldCheck } from 'lucide-react'
 import {
   ActionButtons,
   AdminCard,
@@ -39,6 +39,12 @@ const configs = {
       ['role', 'Role: Admin, staff, company, users'],
       ['status', 'Status'],
     ],
+    required: ['name', 'email', 'role', 'status'],
+    transform: (form) => {
+      const payload = { ...form }
+      if (!payload.password) delete payload.password
+      return payload
+    },
   },
   jobs: {
     resource: 'jobs',
@@ -383,7 +389,8 @@ export function AdminManagementPage({ type }) {
     }
 
     const payload = config.transform ? config.transform(form) : form
-    const missingField = config.required?.find((key) => !String(form[key] || '').trim())
+    const requiredFields = type === 'users' && !selectedRow ? [...(config.required || []), 'password'] : config.required
+    const missingField = requiredFields?.find((key) => !String(form[key] || '').trim())
 
     if (missingField) {
       setMessage(`${getFieldLabel(config.fields, missingField)} is required.`)
@@ -464,7 +471,7 @@ export function AdminManagementPage({ type }) {
       {type === 'payments' && <RevenueSummary />}
       <DataTable actions={actions} columns={config.columns} rows={formatRows(rows)} />
       {!rows.length && <EmptyAdminState title={`${config.title} empty state`} />}
-      <CrudModal companyOptions={companyOptions} companyRows={companyRows} config={config} form={form} onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))} onClose={() => setModalOpen(false)} onSave={save} open={modalOpen} type={type} />
+      <CrudModal companyOptions={companyOptions} companyRows={companyRows} config={config} form={form} isCreate={!selectedRow} onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))} onClose={() => setModalOpen(false)} onSave={save} open={modalOpen} type={type} />
       <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={remove} />
     </div>
   )
@@ -511,7 +518,11 @@ function getSelectOptions(key, companyOptions) {
   return key === 'company' ? companyOptions : fieldOptions[key]
 }
 
-function CrudModal({ companyOptions, companyRows, config, form, onChange, onClose, onSave, open, type }) {
+function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChange, onClose, onSave, open, type }) {
+  const [showPassword, setShowPassword] = useState(false)
+  const fields = type === 'users' && isCreate
+    ? [['name', 'Full name'], ['email', 'Email address'], ['role', 'Role: Admin, staff, company, users'], ['password', 'Password'], ['status', 'Status']]
+    : config.fields
   const updateMany = (updates) => {
     Object.entries(updates).forEach(([key, value]) => onChange(key, value))
   }
@@ -519,7 +530,7 @@ function CrudModal({ companyOptions, companyRows, config, form, onChange, onClos
   return (
     <AdminModal open={open} title={config.modalTitle} onClose={onClose}>
       <div className="grid gap-3 sm:grid-cols-2">
-        {config.fields.map(([key, label, fieldType]) =>
+        {fields.map(([key, label, fieldType]) =>
           fieldType === 'textarea' ? (
             <textarea className="input min-h-28 sm:col-span-2" key={key} onChange={(event) => onChange(key, event.target.value)} placeholder={label} value={form[key] || ''} />
           ) : fieldType === 'jobLocation' ? (
@@ -562,6 +573,24 @@ function CrudModal({ companyOptions, companyRows, config, form, onChange, onClos
             <select className="input" key={key} onChange={(event) => onChange(key, event.target.value)} value={form[key] || 'Active'}>
               {fieldOptions.userStatus.map((option) => <option key={option}>{option}</option>)}
             </select>
+          ) : type === 'users' && key === 'password' ? (
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3" key={key}>
+              <input
+                className="w-full bg-transparent text-sm font-semibold outline-none"
+                onChange={(event) => onChange(key, event.target.value)}
+                placeholder={label}
+                type={showPassword ? 'text' : 'password'}
+                value={form[key] || ''}
+              />
+              <button
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-blue-600"
+                onClick={() => setShowPassword((value) => !value)}
+                type="button"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           ) : fieldOptions[key] ? (
             <select
               className="input"
