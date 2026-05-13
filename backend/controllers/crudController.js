@@ -25,12 +25,17 @@ function crudController(Model, options = {}) {
         filter.$or = searchFields.map((field) => ({ [field]: { $regex: req.query.search, $options: 'i' } }))
       }
 
-      const [items, total] = await Promise.all([
-        Model.find(filter).sort(req.query.sort || '-createdAt').skip(skip).limit(limit),
-        Model.countDocuments(filter),
-      ])
+      try {
+        const [items, total] = await Promise.all([
+          Model.find(filter).sort(req.query.sort || '-createdAt').skip(skip).limit(limit),
+          Model.countDocuments(filter),
+        ])
 
-      res.json({ success: true, data: items, pagination: { page, limit, total, pages: Math.ceil(total / limit) } })
+        res.json({ success: true, data: items, pagination: { page, limit, total, pages: Math.ceil(total / limit) } })
+      } catch (error) {
+        if (!options.safeGet) throw error
+        res.json({ success: true, data: [], pagination: { page, limit, total: 0, pages: 0 }, warning: error.message })
+      }
     }),
 
     getById: asyncHandler(async (req, res) => {

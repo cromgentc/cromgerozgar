@@ -23,8 +23,16 @@ export function ChartCard({ title, children }) {
   return (
     <AdminCard>
       <h3 className="mb-5 text-lg font-black text-slate-950">{title}</h3>
-      <div className="h-72">{children}</div>
+      <div className="h-72 min-h-72 min-w-0 overflow-hidden">{children}</div>
     </AdminCard>
+  )
+}
+
+function ChartContainer({ children }) {
+  return (
+    <ResponsiveContainer debounce={50} height="100%" minHeight={260} minWidth={0} width="100%">
+      {children}
+    </ResponsiveContainer>
   )
 }
 
@@ -32,7 +40,7 @@ export function AnalyticsGrid() {
   return (
     <div className="grid gap-5 xl:grid-cols-2">
       <ChartCard title="Monthly Job Posting Chart">
-        <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer>
           <AreaChart data={monthlyJobsData}>
             <defs><linearGradient id="jobs" x1="0" x2="0" y1="0" y2="1"><stop offset="5%" stopColor="#2563EB" stopOpacity={0.28} /><stop offset="95%" stopColor="#2563EB" stopOpacity={0} /></linearGradient></defs>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
@@ -41,10 +49,10 @@ export function AnalyticsGrid() {
             <Tooltip />
             <Area dataKey="jobs" fill="url(#jobs)" stroke="#2563EB" strokeWidth={3} />
           </AreaChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </ChartCard>
       <ChartCard title="Application Trend Chart">
-        <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer>
           <LineChart data={monthlyJobsData}>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
             <XAxis dataKey="month" stroke="#64748B" />
@@ -52,20 +60,20 @@ export function AnalyticsGrid() {
             <Tooltip />
             <Line dataKey="applications" stroke="#14B8A6" strokeWidth={3} dot={{ r: 4 }} />
           </LineChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </ChartCard>
       <ChartCard title="Category-wise Jobs Chart">
-        <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer>
           <PieChart>
             <Pie data={categoryChartData} dataKey="value" nameKey="name" outerRadius={92} innerRadius={54} paddingAngle={4}>
               {categoryChartData.map((entry, index) => <Cell fill={colors[index % colors.length]} key={entry.name} />)}
             </Pie>
             <Tooltip />
           </PieChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </ChartCard>
       <ChartCard title="Employer Performance Chart">
-        <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer>
           <BarChart data={employerPerformance}>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
             <XAxis dataKey="company" stroke="#64748B" />
@@ -74,10 +82,10 @@ export function AnalyticsGrid() {
             <Bar dataKey="hires" fill="#8B5CF6" radius={[10, 10, 0, 0]} />
             <Bar dataKey="views" fill="#38BDF8" radius={[10, 10, 0, 0]} />
           </BarChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </ChartCard>
       <ChartCard title="Revenue Chart">
-        <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer>
           <AreaChart data={monthlyJobsData}>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
             <XAxis dataKey="month" stroke="#64748B" />
@@ -85,10 +93,10 @@ export function AnalyticsGrid() {
             <Tooltip />
             <Area dataKey="revenue" fill="#CCFBF1" stroke="#14B8A6" strokeWidth={3} />
           </AreaChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </ChartCard>
       <ChartCard title="Candidate Registration Graph">
-        <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer>
           <BarChart data={monthlyJobsData}>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
             <XAxis dataKey="month" stroke="#64748B" />
@@ -96,7 +104,7 @@ export function AnalyticsGrid() {
             <Tooltip />
             <Bar dataKey="candidates" fill="#2563EB" radius={[10, 10, 0, 0]} />
           </BarChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </ChartCard>
     </div>
   )

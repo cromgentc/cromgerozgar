@@ -16,7 +16,7 @@ module.exports = {
   categories: crudController(Category, { searchFields: ['name', 'status'] }),
   companies: crudController(Company, { searchFields: ['name', 'industry', 'location', 'status'] }),
   employers: crudController(Employer, { searchFields: ['companyName', 'businessEmail', 'industry', 'location'] }),
-  jobs: crudController(Job, { searchFields: ['title', 'company', 'department', 'location', 'skills'] }),
+  jobs: crudController(Job, { searchFields: ['title', 'company', 'department', 'location', 'skills'], safeGet: true }),
   locations: crudController(Location, { searchFields: ['city', 'state', 'country'] }),
   payments: crudController(Payment, { searchFields: ['employer', 'plan', 'invoiceNo', 'status'] }),
   resumes: crudController(Resume, { searchFields: ['name', 'email', 'role', 'skills', 'experience', 'source'] }),
