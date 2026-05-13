@@ -8,7 +8,7 @@ import { EmployerFooter } from './EmployerFooter'
 const employerNav = [
   ['Home', '/recruiter'],
   ['Solutions', '/recruiter#solutions'],
-  ['Pricing', '/recruiter#pricing'],
+  ['Pricing', '/recruiter-pricing'],
   ['Talent Pool', '/recruiter#talent'],
   ['Dashboard', '/recruiter-dashboard'],
   ['Resources', '/recruiter#resources'],
