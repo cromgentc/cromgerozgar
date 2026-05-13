@@ -15,6 +15,7 @@ const employerNav = [
 ]
 
 const recruiterDashboardPath = '/recruiter-dashboard'
+const recruiterProfilePath = '/recruiter-profile'
 
 export function EmployerLayout() {
   const [open, setOpen] = useState(false)
@@ -79,7 +80,7 @@ export function EmployerLayout() {
                     <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-600 text-white"><Building2 size={17} /></span>
                     {user.name || 'Company'}
                   </div>
-                  <Button to={recruiterDashboardPath} variant="secondary">Profile</Button>
+                  <Button to={recruiterProfilePath} variant="secondary">Profile</Button>
                   <Button to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
                   <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100" onClick={logout} type="button">
                     Logout
@@ -123,7 +124,7 @@ function CompanyMenu({ logout, open, setOpen, user }) {
 
       {open && (
         <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
-          <CompanyMenuLink icon={UserRound} label="Profile" setOpen={setOpen} to={recruiterDashboardPath} />
+          <CompanyMenuLink icon={UserRound} label="Profile" setOpen={setOpen} to={recruiterProfilePath} />
           <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" setOpen={setOpen} to={recruiterDashboardPath} />
           <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold text-rose-600 hover:bg-rose-50" onClick={logout} type="button">
             <LogOut size={17} />

@@ -13,6 +13,7 @@ const navItems = [
 ]
 
 const recruiterDashboardPath = '/recruiter-dashboard'
+const recruiterProfilePath = '/recruiter-profile'
 
 export function Layout() {
   const [open, setOpen] = useState(false)
@@ -128,7 +129,7 @@ export function Layout() {
                     </span>
                     {user.name || 'Company'}
                   </div>
-                  <Button to={recruiterDashboardPath} variant="secondary">Profile</Button>
+                  <Button to={recruiterProfilePath} variant="secondary">Profile</Button>
                   <Button to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
                   <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100" onClick={logout} type="button">
                     Logout
@@ -275,7 +276,7 @@ function CompanyProfileMenu({ logout, open, setOpen, user }) {
       {open && (
         <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
           {[
-            ['Profile', recruiterDashboardPath],
+            ['Profile', recruiterProfilePath],
             ['Dashboard', recruiterDashboardPath],
           ].map(([label, to]) => (
             <Link className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50" key={label} onClick={() => setOpen(false)} to={to}>

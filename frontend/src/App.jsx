@@ -18,6 +18,7 @@ import { HomePage } from './pages/HomePage'
 import { JobDetailsPage } from './pages/JobDetailsPage'
 import { JobsPage } from './pages/JobsPage'
 import { PostJobPage } from './pages/PostJobPage'
+import { RecruiterProfilePage } from './pages/RecruiterProfilePage'
 import { ProtectedRoute, RoleRedirect } from './routes/ProtectedRoute'
 
 function App() {
@@ -93,6 +94,14 @@ function App() {
           element: (
             <ProtectedRoute allowedRoles={['recruiter']}>
               <EmployerDashboard />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/recruiter-profile',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterProfilePage />
             </ProtectedRoute>
           ),
         },
