@@ -83,7 +83,7 @@ function App() {
         {
           path: '/recruiter/recruiter-dashboard',
           element: (
-            <ProtectedRoute allowedRoles={['Employer']}>
+            <ProtectedRoute allowedRoles={['Employer', 'company']}>
               <EmployerDashboard />
             </ProtectedRoute>
           ),
@@ -91,7 +91,7 @@ function App() {
         {
           path: '/recruiter-dashboard',
           element: (
-            <ProtectedRoute allowedRoles={['Employer']}>
+            <ProtectedRoute allowedRoles={['Employer', 'company']}>
               <EmployerDashboard />
             </ProtectedRoute>
           ),
@@ -99,7 +99,7 @@ function App() {
         {
           path: '/employers-dashboard',
           element: (
-            <ProtectedRoute allowedRoles={['Employer']}>
+            <ProtectedRoute allowedRoles={['Employer', 'company']}>
               <EmployerDashboard />
             </ProtectedRoute>
           ),
@@ -107,7 +107,7 @@ function App() {
         {
           path: '/employer-dashboard',
           element: (
-            <ProtectedRoute allowedRoles={['Employer']}>
+            <ProtectedRoute allowedRoles={['Employer', 'company']}>
               <EmployerDashboard />
             </ProtectedRoute>
           ),
