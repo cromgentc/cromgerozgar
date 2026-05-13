@@ -4,28 +4,34 @@ const API_BASE_URL =
 
 export async function apiRequest(path, options = {}) {
   const token = localStorage.getItem('authToken')
+  const { authRequired = false, ...fetchOptions } = options
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(authRequired && token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(fetchOptions.headers || {}),
+  }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {}),
-    },
-    ...options,
+    ...fetchOptions,
+    headers,
   })
 
   const payload = await response.json().catch(() => ({}))
 
   if (!response.ok) {
     if (response.status === 401) {
-      localStorage.removeItem('authToken')
-      localStorage.removeItem('authUser')
+      if (authRequired) {
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('authUser')
 
-      if (typeof window !== 'undefined' && window.location.pathname !== '/auth') {
-        window.location.assign('/auth')
+        if (typeof window !== 'undefined' && window.location.pathname !== '/auth') {
+          window.location.assign('/auth')
+        }
+
+        throw new Error('Session expired. Please login again.')
       }
 
-      throw new Error('Session expired. Please login again.')
+      throw new Error(payload.message || 'Unauthorized request')
     }
 
     throw new Error(payload.message || 'API request failed')
@@ -45,8 +51,8 @@ export const api = {
   register: (data) => apiRequest('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   employerLogin: (data) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   employerRegister: (data) => apiRequest('/employers', { method: 'POST', body: JSON.stringify(data) }),
-  list: (resource, params = '') => apiRequest(`/${resource}${params}`),
-  create: (resource, data) => apiRequest(`/${resource}`, { method: 'POST', body: JSON.stringify(data) }),
-  update: (resource, id, data) => apiRequest(`/${resource}/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  remove: (resource, id) => apiRequest(`/${resource}/${id}`, { method: 'DELETE' }),
+  list: (resource, params = '') => apiRequest(`/${resource}${params}`, { authRequired: resource === 'users' }),
+  create: (resource, data) => apiRequest(`/${resource}`, { method: 'POST', body: JSON.stringify(data), authRequired: resource === 'users' }),
+  update: (resource, id, data) => apiRequest(`/${resource}/${id}`, { method: 'PUT', body: JSON.stringify(data), authRequired: resource === 'users' }),
+  remove: (resource, id) => apiRequest(`/${resource}/${id}`, { method: 'DELETE', authRequired: resource === 'users' }),
 }

@@ -22,7 +22,7 @@ export function getDashboardPath(role) {
   const paths = {
     Admin: '/admin-dashboard',
     staff: '/staff-dashboard',
-    company: '/company-dashboard',
+    company: '/employers',
     users: '/users-dashboard',
     Employer: '/employer-dashboard',
     Candidate: '/candidate-dashboard',
