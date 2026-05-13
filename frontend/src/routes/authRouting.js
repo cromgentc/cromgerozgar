@@ -24,7 +24,7 @@ export function getDashboardPath(role) {
     staff: '/staff-dashboard',
     company: '/employers',
     users: '/users-dashboard',
-    Employer: '/employer-dashboard',
+    Employer: '/employers-dashboard',
     Candidate: '/candidate-dashboard',
   }
 

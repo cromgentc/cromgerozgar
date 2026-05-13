@@ -19,9 +19,14 @@ export function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const isCandidate = user?.role === 'Candidate'
+  const isCompany = user?.role === 'company'
   const visibleNavItems = navItems
     .filter((item) => !isCandidate || item.label !== 'Employers')
-    .map((item) => (isCandidate && item.label === 'Candidates' ? { ...item, label: 'Accounts' } : item))
+    .map((item) => {
+      if (isCandidate && item.label === 'Candidates') return { ...item, label: 'Accounts' }
+      if (isCompany && item.label === 'Employers') return { ...item, label: 'Company', to: '/employers' }
+      return item
+    })
 
   useEffect(() => {
     setUser(getStoredUser())
@@ -67,6 +72,8 @@ export function Layout() {
           <div className="hidden items-center gap-2 lg:flex">
             {isCandidate ? (
               <CandidateProfileMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
+            ) : isCompany ? (
+              <CompanyProfileMenu open={profileOpen} setOpen={setProfileOpen} user={user} />
             ) : (
               <>
                 <Button to="/auth" variant="ghost">
@@ -110,6 +117,19 @@ export function Layout() {
                   <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100" onClick={logout} type="button">
                     Logout
                   </button>
+                </div>
+              ) : isCompany ? (
+                <div className="grid gap-2 pt-2">
+                  <div className="flex items-center gap-3 rounded-2xl bg-blue-50 px-4 py-3 text-sm font-black text-slate-950">
+                    <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-600 text-white">
+                      <UserRound size={17} />
+                    </span>
+                    {user.name || 'Company'}
+                  </div>
+                  <Button to="/companies" variant="secondary">Profile</Button>
+                  <Button to="/companies" variant="secondary">Account</Button>
+                  <Button to="/employers" variant="secondary">Dashboard</Button>
+                  <Button to="/employers#pricing">Pricing</Button>
                 </div>
               ) : (
                 <>
@@ -230,6 +250,40 @@ export function Layout() {
           </div>
         </div>
       </footer>}
+    </div>
+  )
+}
+
+function CompanyProfileMenu({ open, setOpen, user }) {
+  return (
+    <div className="relative">
+      <button
+        className="inline-flex min-h-11 items-center gap-3 rounded-full border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-black text-slate-950 transition hover:bg-blue-100"
+        onClick={() => setOpen((value) => !value)}
+        type="button"
+      >
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-blue-600 text-white">
+          <UserRound size={16} />
+        </span>
+        {user.name || 'Company'}
+        <ChevronDown size={16} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
+          {[
+            ['Profile', '/companies'],
+            ['Account', '/companies'],
+            ['Dashboard', '/employers'],
+            ['Pricing', '/employers#pricing'],
+          ].map(([label, to]) => (
+            <Link className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50" key={label} onClick={() => setOpen(false)} to={to}>
+              <UserRound size={17} />
+              {label}
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

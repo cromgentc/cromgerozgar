@@ -81,6 +81,14 @@ function App() {
       element: <AdminLayout />,
       children: [
         {
+          path: '/employers-dashboard',
+          element: (
+            <ProtectedRoute allowedRoles={['Employer']}>
+              <EmployerDashboard />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: '/employer-dashboard',
           element: (
             <ProtectedRoute allowedRoles={['Employer']}>
@@ -121,6 +129,7 @@ function App() {
           ),
         },
         { path: '/admin-dashoard', element: <RoleRedirect /> },
+        { path: '/employers-dashoard', element: <RoleRedirect /> },
         { path: '/staff-dashoard', element: <RoleRedirect /> },
         { path: '/company-dashoard', element: <RoleRedirect /> },
         { path: '/users-dashoard', element: <RoleRedirect /> },

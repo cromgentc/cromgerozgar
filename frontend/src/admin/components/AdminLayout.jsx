@@ -39,10 +39,10 @@ const sidebarItems = [
 ]
 
 const employerSidebarItems = [
-  { label: 'Dashboard', to: '/employer-dashboard', icon: LayoutDashboard },
+  { label: 'Dashboard', to: '/employers-dashboard', icon: LayoutDashboard },
   { label: 'Post a Job', to: '/post-job', icon: BriefcaseBusiness },
   { label: 'Company Profile', to: '/companies', icon: Building2 },
-  { label: 'Applications', to: '/employer-dashboard', icon: FileCheck2 },
+  { label: 'Applications', to: '/employers-dashboard', icon: FileCheck2 },
 ]
 
 export function AdminLayout() {
@@ -233,7 +233,7 @@ function SidebarContent({ isEmployer, role }) {
 
   return (
     <div className="flex h-full flex-col">
-      <Link className="flex items-center gap-3 px-6 py-5" to={isEmployer ? '/employer-dashboard' : '/admin'}>
+      <Link className="flex items-center gap-3 px-6 py-5" to={isEmployer ? '/employers-dashboard' : '/admin'}>
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-teal-400 text-white shadow-lg shadow-blue-100">
           <BriefcaseBusiness size={23} />
         </span>
