@@ -42,7 +42,7 @@ const showcases = [
     title: 'Recruiter Hiring Suite',
     subtitle: 'Manage hiring workflows, post jobs, review applications, and recruit top talent efficiently.',
     cta: 'Start Hiring',
-    to: '/recruiter-dashboard',
+    to: '/recruiter/recruiter-dashboard',
     image: employerImage,
     imageAlt: 'Recruiter hiring dashboard illustration',
     accent: 'from-teal-500 via-blue-500 to-violet-500',

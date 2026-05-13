@@ -12,6 +12,8 @@ const navItems = [
   { label: 'Candidates', to: '/candidate-dashboard' },
 ]
 
+const recruiterDashboardPath = '/recruiter/recruiter-dashboard'
+
 export function Layout() {
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -24,7 +26,7 @@ export function Layout() {
     .filter((item) => !isCandidate || item.label !== 'Recruiter')
     .map((item) => {
       if (isCandidate && item.label === 'Candidates') return { ...item, label: 'Accounts' }
-      if (isRecruiterAccount && item.label === 'Recruiter') return { ...item, to: '/recruiter-dashboard' }
+      if (isRecruiterAccount && item.label === 'Recruiter') return { ...item, to: recruiterDashboardPath }
       return item
     })
 
@@ -126,8 +128,10 @@ export function Layout() {
                     </span>
                     {user.name || 'Company'}
                   </div>
-                  <Button to="/companies" variant="secondary">Profile</Button>
-                  <Button to="/recruiter-dashboard" variant="secondary">Dashboard</Button>
+                  <Button to={recruiterDashboardPath} variant="secondary">Profile</Button>
+                  <Button to={recruiterDashboardPath} variant="secondary">Account</Button>
+                  <Button to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
+                  <Button to={recruiterDashboardPath} variant="secondary">Pricing</Button>
                 </div>
               ) : (
                 <>
@@ -207,9 +211,9 @@ export function Layout() {
             <FooterColumn
               title="Recruiter"
               links={[
-                ['Recruiter Dashboard', '/recruiter-dashboard'],
+                ['Recruiter Dashboard', recruiterDashboardPath],
                 ['Post a Job', '/post-job'],
-                ['Applications', '/recruiter-dashboard'],
+                ['Applications', recruiterDashboardPath],
                 ['Company Profile', '/companies'],
               ]}
             />
@@ -270,8 +274,10 @@ function CompanyProfileMenu({ open, setOpen, user }) {
       {open && (
         <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
           {[
-            ['Profile', '/companies'],
-            ['Dashboard', '/recruiter-dashboard'],
+            ['Profile', recruiterDashboardPath],
+            ['Account', recruiterDashboardPath],
+            ['Dashboard', recruiterDashboardPath],
+            ['Pricing', recruiterDashboardPath],
           ].map(([label, to]) => (
             <Link className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50" key={label} onClick={() => setOpen(false)} to={to}>
               <UserRound size={17} />

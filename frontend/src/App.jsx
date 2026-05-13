@@ -81,6 +81,14 @@ function App() {
       element: <AdminLayout />,
       children: [
         {
+          path: '/recruiter/recruiter-dashboard',
+          element: (
+            <ProtectedRoute allowedRoles={['Employer']}>
+              <EmployerDashboard />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: '/recruiter-dashboard',
           element: (
             <ProtectedRoute allowedRoles={['Employer']}>

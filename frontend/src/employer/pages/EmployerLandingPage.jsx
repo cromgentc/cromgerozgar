@@ -33,7 +33,7 @@ const slides = [
     subtitle: 'Track recruiter hiring activity, shortlist candidates, and collaborate with your hiring team effortlessly.',
     primary: 'Start Hiring',
     secondary: 'View Dashboard',
-    to: '/recruiter-dashboard',
+    to: '/recruiter/recruiter-dashboard',
   },
   {
     title: 'Build Your Dream Team',

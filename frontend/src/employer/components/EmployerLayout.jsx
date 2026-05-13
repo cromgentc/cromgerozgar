@@ -10,9 +10,11 @@ const employerNav = [
   ['Solutions', '/recruiter#solutions'],
   ['Pricing', '/recruiter#pricing'],
   ['Talent Pool', '/recruiter#talent'],
-  ['Dashboard', '/recruiter-dashboard'],
+  ['Dashboard', '/recruiter/recruiter-dashboard'],
   ['Resources', '/recruiter#resources'],
 ]
+
+const recruiterDashboardPath = '/recruiter/recruiter-dashboard'
 
 export function EmployerLayout() {
   const [open, setOpen] = useState(false)
@@ -20,7 +22,7 @@ export function EmployerLayout() {
   const user = getStoredUser()
   const isRecruiterAccount = user?.role === 'company' || user?.role === 'Employer'
   const brandLabel = 'Rozgar Recruiter'
-  const navItems = employerNav.map(([label, to]) => (isRecruiterAccount ? [label, '/recruiter-dashboard'] : [label, to]))
+  const navItems = employerNav.map(([label, to]) => (isRecruiterAccount ? [label, recruiterDashboardPath] : [label, to]))
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -69,8 +71,10 @@ export function EmployerLayout() {
                     <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-600 text-white"><Building2 size={17} /></span>
                     {user.name || 'Company'}
                   </div>
-                  <Button to="/companies" variant="secondary">Profile</Button>
-                  <Button to="/recruiter-dashboard" variant="secondary">Dashboard</Button>
+                  <Button to={recruiterDashboardPath} variant="secondary">Profile</Button>
+                  <Button to={recruiterDashboardPath} variant="secondary">Account</Button>
+                  <Button to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
+                  <Button to={recruiterDashboardPath} variant="secondary">Pricing</Button>
                 </div>
               ) : (
                 <div className="grid gap-2 pt-2 sm:grid-cols-3">
@@ -110,8 +114,10 @@ function CompanyMenu({ open, setOpen, user }) {
 
       {open && (
         <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
-          <CompanyMenuLink icon={UserRound} label="Profile" setOpen={setOpen} to="/companies" />
-          <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" setOpen={setOpen} to="/recruiter-dashboard" />
+          <CompanyMenuLink icon={UserRound} label="Profile" setOpen={setOpen} to={recruiterDashboardPath} />
+          <CompanyMenuLink icon={Building2} label="Account" setOpen={setOpen} to={recruiterDashboardPath} />
+          <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" setOpen={setOpen} to={recruiterDashboardPath} />
+          <CompanyMenuLink icon={UserRound} label="Pricing" setOpen={setOpen} to={recruiterDashboardPath} />
         </div>
       )}
     </div>
