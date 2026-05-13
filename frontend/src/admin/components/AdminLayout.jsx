@@ -41,7 +41,7 @@ const sidebarItems = [
 const employerSidebarItems = [
   { label: 'Dashboard', to: '/recruiter-dashboard', icon: LayoutDashboard },
   { label: 'Post a Job', to: '/post-job', icon: BriefcaseBusiness },
-  { label: 'Pricing', to: '/recruiter#pricing', icon: CreditCard },
+  { label: 'Pricing', to: '/recruiter-pricing', icon: CreditCard },
 ]
 
 export function AdminLayout() {

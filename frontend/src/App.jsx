@@ -19,6 +19,7 @@ import { JobDetailsPage } from './pages/JobDetailsPage'
 import { JobsPage } from './pages/JobsPage'
 import { PostJobPage } from './pages/PostJobPage'
 import { RecruiterProfilePage } from './pages/RecruiterProfilePage'
+import { RecruiterPricingPage } from './pages/RecruiterPricingPage'
 import { ProtectedRoute, RoleRedirect } from './routes/ProtectedRoute'
 
 function App() {
@@ -102,6 +103,14 @@ function App() {
           element: (
             <ProtectedRoute allowedRoles={['recruiter']}>
               <RecruiterProfilePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/recruiter-pricing',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterPricingPage />
             </ProtectedRoute>
           ),
         },
