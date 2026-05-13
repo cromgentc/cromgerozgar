@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { BriefcaseBusiness, Building2, ChevronDown, LayoutDashboard, Menu, UserRound, WalletCards, X } from 'lucide-react'
+import { BriefcaseBusiness, Building2, ChevronDown, LayoutDashboard, Menu, UserRound, X } from 'lucide-react'
 import { Button } from '../../components/Button'
 import { getStoredUser } from '../../routes/authRouting'
 import { EmployerFooter } from './EmployerFooter'
@@ -18,9 +18,9 @@ export function EmployerLayout() {
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const user = getStoredUser()
-  const isCompany = user?.role === 'company'
+  const isRecruiterAccount = user?.role === 'company' || user?.role === 'Employer'
   const brandLabel = 'Rozgar Recruiter'
-  const navItems = employerNav.map(([label, to]) => (isCompany && label === 'Dashboard' ? ['Dashboard', '/recruiter'] : [label, to]))
+  const navItems = employerNav.map(([label, to]) => (isRecruiterAccount ? [label, '/recruiter-dashboard'] : [label, to]))
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -43,7 +43,7 @@ export function EmployerLayout() {
           </div>
 
           <div className="hidden items-center gap-2 lg:flex">
-            {isCompany ? (
+            {isRecruiterAccount ? (
               <CompanyMenu open={profileOpen} setOpen={setProfileOpen} user={user} />
             ) : (
               <>
@@ -63,16 +63,14 @@ export function EmployerLayout() {
           <div className="border-t border-slate-200 bg-white px-4 py-4 lg:hidden">
             <div className="grid gap-2">
               {navItems.map(([label, to]) => <Link className="rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50" key={label} to={to}>{label}</Link>)}
-              {isCompany ? (
+              {isRecruiterAccount ? (
                 <div className="grid gap-2 pt-2">
                   <div className="flex items-center gap-3 rounded-2xl bg-blue-50 px-4 py-3 text-sm font-black text-slate-950">
                     <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-600 text-white"><Building2 size={17} /></span>
                     {user.name || 'Company'}
                   </div>
                   <Button to="/companies" variant="secondary">Profile</Button>
-                  <Button to="/companies" variant="secondary">Account</Button>
-                  <Button to="/recruiter" variant="secondary">Dashboard</Button>
-                  <Button to="/recruiter#pricing">Pricing</Button>
+                  <Button to="/recruiter-dashboard" variant="secondary">Dashboard</Button>
                 </div>
               ) : (
                 <div className="grid gap-2 pt-2 sm:grid-cols-3">
@@ -113,9 +111,7 @@ function CompanyMenu({ open, setOpen, user }) {
       {open && (
         <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
           <CompanyMenuLink icon={UserRound} label="Profile" setOpen={setOpen} to="/companies" />
-          <CompanyMenuLink icon={Building2} label="Account" setOpen={setOpen} to="/companies" />
-          <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" setOpen={setOpen} to="/recruiter" />
-          <CompanyMenuLink icon={WalletCards} label="Pricing" setOpen={setOpen} to="/recruiter#pricing" />
+          <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" setOpen={setOpen} to="/recruiter-dashboard" />
         </div>
       )}
     </div>
