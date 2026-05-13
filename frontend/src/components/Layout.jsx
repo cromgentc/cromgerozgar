@@ -21,7 +21,7 @@ export function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const isCandidate = user?.role === 'Candidate'
-  const isRecruiterAccount = user?.role === 'company' || user?.role === 'Employer'
+  const isRecruiterAccount = user?.role === 'recruiter'
   const visibleNavItems = navItems
     .filter((item) => !isCandidate || item.label !== 'Recruiter')
     .map((item) => {

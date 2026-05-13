@@ -54,7 +54,7 @@ export function AdminLayout() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const user = getStoredAdminUser()
-  const isEmployer = user?.role === 'Employer' || user?.role === 'company'
+  const isEmployer = user?.role === 'recruiter'
   const searchValue = searchParams.get('search') || ''
   const crumbs = location.pathname
     .split('/')

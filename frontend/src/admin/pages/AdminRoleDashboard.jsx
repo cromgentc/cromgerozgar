@@ -10,9 +10,9 @@ const roleCopy = {
     title: 'staff Dashboard',
     text: 'Staff workspace for operational follow-up, candidate help, recruiter coordination, and internal tasks.',
   },
-  company: {
-    title: 'company Dashboard',
-    text: 'Company workspace for recruiter accounts, company details, hiring visibility, and recruitment coordination.',
+  recruiter: {
+    title: 'recruiter Dashboard',
+    text: 'Recruiter workspace for recruiter accounts, company details, hiring visibility, and recruitment coordination.',
   },
   users: {
     title: 'users Dashboard',

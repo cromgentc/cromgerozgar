@@ -21,7 +21,7 @@ export function EmployerLayout() {
   const [profileOpen, setProfileOpen] = useState(false)
   const navigate = useNavigate()
   const user = getStoredUser()
-  const isRecruiterAccount = user?.role === 'company' || user?.role === 'Employer'
+  const isRecruiterAccount = user?.role === 'recruiter'
   const brandLabel = 'Rozgar Recruiter'
   const navItems = employerNav.map(([label, to]) => (isRecruiterAccount ? [label, recruiterDashboardPath] : [label, to]))
   const logout = () => {

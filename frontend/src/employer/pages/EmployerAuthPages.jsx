@@ -36,7 +36,7 @@ export function EmployerLoginPage() {
 
     try {
       const payload = await api.employerLogin(form)
-      if (normalizeRole(payload.data.role) !== 'Employer') {
+      if (normalizeRole(payload.data.role) !== 'recruiter') {
         localStorage.removeItem('authToken')
         localStorage.removeItem('authUser')
         setMessage('Only recruiter accounts can login from this page.')
@@ -96,7 +96,7 @@ export function EmployerRegisterPage() {
         name: form.companyName,
         email: form.businessEmail,
         password: form.password,
-        role: 'Employer',
+        role: 'recruiter',
       })
 
       await api.employerRegister({

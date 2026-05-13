@@ -36,7 +36,7 @@ const configs = {
     fields: [
       ['name', 'Full name'],
       ['email', 'Email address'],
-      ['role', 'Role: Admin, staff, company, users'],
+      ['role', 'Role: Admin, staff, recruiter, users'],
       ['status', 'Status'],
     ],
     required: ['name', 'email', 'role', 'status'],
@@ -228,12 +228,12 @@ const configs = {
 const accessByRole = {
   Admin: ['users', 'jobs', 'companies', 'employers', 'candidates', 'applications', 'resumes', 'categories', 'locations', 'payments', 'reports', 'settings'],
   staff: [],
-  company: [],
+  recruiter: [],
   users: [],
 }
 
 const fieldOptions = {
-  role: ['Admin', 'staff', 'company', 'users'],
+  role: ['Admin', 'staff', 'recruiter', 'users'],
   status: ['Active', 'Inactive', 'Pending', 'Approved', 'Blocked', 'Open', 'Closed', 'New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected', 'Rejected'],
   userStatus: ['Active', 'Inactive', 'Suspend'],
   company: ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'Cromgen Solutions'],
@@ -456,7 +456,7 @@ export function AdminManagementPage({ type }) {
       />
       <div className="flex flex-col justify-between gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
         <div className="flex flex-wrap gap-2">
-          {['Admin', 'staff', 'company', 'users'].map((role) => <StatusBadge key={role} status={role} />)}
+          {['Admin', 'staff', 'recruiter', 'users'].map((role) => <StatusBadge key={role} status={role} />)}
         </div>
         {type === 'resumes' && (
           <select className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 outline-none" onChange={(event) => updateQuery('resumeMode', event.target.value)} value={resumeMode}>
@@ -531,7 +531,7 @@ function getSelectOptions(key, companyOptions) {
 function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChange, onClose, onSave, open, type }) {
   const [showPassword, setShowPassword] = useState(false)
   const fields = type === 'users' && isCreate
-    ? [['name', 'Full name'], ['email', 'Email address'], ['role', 'Role: Admin, staff, company, users'], ['password', 'Password'], ['status', 'Status']]
+    ? [['name', 'Full name'], ['email', 'Email address'], ['role', 'Role: Admin, staff, recruiter, users'], ['password', 'Password'], ['status', 'Status']]
     : config.fields
   const updateMany = (updates) => {
     Object.entries(updates).forEach(([key, value]) => onChange(key, value))

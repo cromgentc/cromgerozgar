@@ -7,6 +7,8 @@ function normalizeRole(role) {
     'Super Admin': 'Admin',
     'HR Manager': 'staff',
     Support: 'users',
+    company: 'recruiter',
+    Employer: 'recruiter',
   }
 
   return roleMap[role] || role

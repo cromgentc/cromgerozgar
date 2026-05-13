@@ -57,7 +57,7 @@ function App() {
     {
       path: '/admin',
       element: (
-        <ProtectedRoute allowedRoles={['Admin', 'staff', 'company', 'users']}>
+        <ProtectedRoute allowedRoles={['Admin', 'staff', 'recruiter', 'users']}>
           <AdminLayout />
         </ProtectedRoute>
       ),
@@ -83,7 +83,7 @@ function App() {
         {
           path: '/recruiter/recruiter-dashboard',
           element: (
-            <ProtectedRoute allowedRoles={['Employer', 'company']}>
+            <ProtectedRoute allowedRoles={['recruiter']}>
               <EmployerDashboard />
             </ProtectedRoute>
           ),
@@ -91,7 +91,7 @@ function App() {
         {
           path: '/recruiter-dashboard',
           element: (
-            <ProtectedRoute allowedRoles={['Employer', 'company']}>
+            <ProtectedRoute allowedRoles={['recruiter']}>
               <EmployerDashboard />
             </ProtectedRoute>
           ),
@@ -99,7 +99,7 @@ function App() {
         {
           path: '/employers-dashboard',
           element: (
-            <ProtectedRoute allowedRoles={['Employer', 'company']}>
+            <ProtectedRoute allowedRoles={['recruiter']}>
               <EmployerDashboard />
             </ProtectedRoute>
           ),
@@ -107,7 +107,7 @@ function App() {
         {
           path: '/employer-dashboard',
           element: (
-            <ProtectedRoute allowedRoles={['Employer', 'company']}>
+            <ProtectedRoute allowedRoles={['recruiter']}>
               <EmployerDashboard />
             </ProtectedRoute>
           ),
@@ -129,10 +129,10 @@ function App() {
           ),
         },
         {
-          path: '/company-dashboard',
+          path: '/recruiter-role-dashboard',
           element: (
-            <ProtectedRoute allowedRoles={['company']}>
-              <AdminRoleDashboard role="company" />
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <AdminRoleDashboard role="recruiter" />
             </ProtectedRoute>
           ),
         },
@@ -149,6 +149,7 @@ function App() {
         { path: '/recruiter-dashoard', element: <RoleRedirect /> },
         { path: '/staff-dashoard', element: <RoleRedirect /> },
         { path: '/company-dashoard', element: <RoleRedirect /> },
+        { path: '/recruiter-role-dashoard', element: <RoleRedirect /> },
         { path: '/users-dashoard', element: <RoleRedirect /> },
       ],
     },

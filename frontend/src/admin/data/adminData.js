@@ -11,7 +11,7 @@ import {
   UsersRound,
 } from 'lucide-react'
 
-export const adminRoles = ['Admin', 'staff', 'company', 'users']
+export const adminRoles = ['Admin', 'staff', 'recruiter', 'users']
 
 export const dashboardMetrics = [
   { label: 'Total Jobs', value: '12,840', change: '+12.4%', icon: BriefcaseBusiness, color: 'blue' },

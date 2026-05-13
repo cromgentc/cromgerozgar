@@ -127,9 +127,9 @@ const settings = [
 const users = [
   { name: 'Admin Demo', email: 'admin@cromgen.test', password: 'password123', role: 'Admin', status: 'Active' },
   { name: 'Staff Demo', email: 'staff@cromgen.test', password: 'password123', role: 'staff', status: 'Active' },
-  { name: 'Company Demo', email: 'company@cromgen.test', password: 'password123', role: 'company', status: 'Active' },
+  { name: 'Recruiter Demo', email: 'recruiter@cromgen.test', password: 'password123', role: 'recruiter', status: 'Active' },
   { name: 'Users Demo', email: 'users@cromgen.test', password: 'password123', role: 'users', status: 'Active' },
-  { name: 'Employer Demo', email: 'employer@cromgen.test', password: 'password123', role: 'Employer', status: 'Active' },
+  { name: 'Recruiter Admin Demo', email: 'employer@cromgen.test', password: 'password123', role: 'recruiter', status: 'Active' },
   { name: 'Candidate Demo', email: 'candidate@cromgen.test', password: 'password123', role: 'Candidate', status: 'Active' },
 ]
 

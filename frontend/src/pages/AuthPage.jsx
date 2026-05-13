@@ -15,7 +15,7 @@ const initialForm = {
 
 const registerRoles = [
   { label: 'Candidate', value: 'Candidate' },
-  { label: 'Recruiter', value: 'Employer' },
+  { label: 'Recruiter', value: 'recruiter' },
 ]
 
 function saveSession(payload) {
@@ -130,7 +130,7 @@ export function AuthPage() {
 }
 
 function getRoleLabel(role) {
-  return normalizeRole(role) === 'Employer' ? 'Recruiter' : normalizeRole(role)
+  return normalizeRole(role) === 'recruiter' ? 'Recruiter' : normalizeRole(role)
 }
 
 function Field({ icon: Icon, label, ...props }) {

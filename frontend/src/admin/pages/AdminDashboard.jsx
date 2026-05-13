@@ -65,7 +65,7 @@ export function AdminDashboard() {
 
 function AdminControlCenter() {
   const actions = [
-    ['User roles', '/admin/users', UsersRound, 'Create admins, reset access, and assign Admin/staff/company/users roles.'],
+    ['User roles', '/admin/users', UsersRound, 'Create admins, reset access, and assign Admin/staff/recruiter/users roles.'],
     ['Payments', '/admin/payments', CreditCard, 'Review invoices, failed payments, subscription plans, and revenue records.'],
     ['Settings', '/admin/settings', Settings, 'Control website, SEO, email, notifications, and role permission settings.'],
     ['Reports', '/admin/reports', FileCheck2, 'Generate platform, recruiter, job, candidate, and revenue reports.'],

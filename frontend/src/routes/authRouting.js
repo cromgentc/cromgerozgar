@@ -12,6 +12,8 @@ export function normalizeRole(role) {
     'Super Admin': 'Admin',
     'HR Manager': 'staff',
     Support: 'users',
+    company: 'recruiter',
+    Employer: 'recruiter',
   }
 
   return roleMap[role] || role
@@ -22,9 +24,8 @@ export function getDashboardPath(role) {
   const paths = {
     Admin: '/admin-dashboard',
     staff: '/staff-dashboard',
-    company: '/recruiter',
+    recruiter: '/recruiter-dashboard',
     users: '/users-dashboard',
-    Employer: '/recruiter-dashboard',
     Candidate: '/candidate-dashboard',
   }
 
