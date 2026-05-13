@@ -12,7 +12,7 @@ const navItems = [
   { label: 'Candidates', to: '/candidate-dashboard' },
 ]
 
-const recruiterDashboardPath = '/recruiter/recruiter-dashboard'
+const recruiterDashboardPath = '/recruiter-dashboard'
 
 export function Layout() {
   const [open, setOpen] = useState(false)
@@ -129,9 +129,7 @@ export function Layout() {
                     {user.name || 'Company'}
                   </div>
                   <Button to={recruiterDashboardPath} variant="secondary">Profile</Button>
-                  <Button to={recruiterDashboardPath} variant="secondary">Account</Button>
                   <Button to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
-                  <Button to={recruiterDashboardPath} variant="secondary">Pricing</Button>
                 </div>
               ) : (
                 <>
@@ -275,9 +273,7 @@ function CompanyProfileMenu({ open, setOpen, user }) {
         <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
           {[
             ['Profile', recruiterDashboardPath],
-            ['Account', recruiterDashboardPath],
             ['Dashboard', recruiterDashboardPath],
-            ['Pricing', recruiterDashboardPath],
           ].map(([label, to]) => (
             <Link className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50" key={label} onClick={() => setOpen(false)} to={to}>
               <UserRound size={17} />

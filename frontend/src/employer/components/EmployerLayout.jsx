@@ -10,11 +10,11 @@ const employerNav = [
   ['Solutions', '/recruiter#solutions'],
   ['Pricing', '/recruiter#pricing'],
   ['Talent Pool', '/recruiter#talent'],
-  ['Dashboard', '/recruiter/recruiter-dashboard'],
+  ['Dashboard', '/recruiter-dashboard'],
   ['Resources', '/recruiter#resources'],
 ]
 
-const recruiterDashboardPath = '/recruiter/recruiter-dashboard'
+const recruiterDashboardPath = '/recruiter-dashboard'
 
 export function EmployerLayout() {
   const [open, setOpen] = useState(false)
@@ -72,9 +72,7 @@ export function EmployerLayout() {
                     {user.name || 'Company'}
                   </div>
                   <Button to={recruiterDashboardPath} variant="secondary">Profile</Button>
-                  <Button to={recruiterDashboardPath} variant="secondary">Account</Button>
                   <Button to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
-                  <Button to={recruiterDashboardPath} variant="secondary">Pricing</Button>
                 </div>
               ) : (
                 <div className="grid gap-2 pt-2 sm:grid-cols-3">
@@ -115,9 +113,7 @@ function CompanyMenu({ open, setOpen, user }) {
       {open && (
         <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
           <CompanyMenuLink icon={UserRound} label="Profile" setOpen={setOpen} to={recruiterDashboardPath} />
-          <CompanyMenuLink icon={Building2} label="Account" setOpen={setOpen} to={recruiterDashboardPath} />
           <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" setOpen={setOpen} to={recruiterDashboardPath} />
-          <CompanyMenuLink icon={UserRound} label="Pricing" setOpen={setOpen} to={recruiterDashboardPath} />
         </div>
       )}
     </div>
