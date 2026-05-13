@@ -4,15 +4,15 @@ import { AdminDashboard } from './AdminDashboard'
 const roleCopy = {
   Admin: {
     title: 'Admin Dashboard',
-    text: 'Full platform control for jobs, employers, candidates, applications, resume database, reports, settings, and role permissions.',
+    text: 'Full platform control for jobs, recruiters, candidates, applications, resume database, reports, settings, and role permissions.',
   },
   staff: {
     title: 'staff Dashboard',
-    text: 'Staff workspace for operational follow-up, candidate help, employer coordination, and internal tasks.',
+    text: 'Staff workspace for operational follow-up, candidate help, recruiter coordination, and internal tasks.',
   },
   company: {
     title: 'company Dashboard',
-    text: 'Company workspace for employer accounts, company details, hiring visibility, and recruitment coordination.',
+    text: 'Company workspace for recruiter accounts, company details, hiring visibility, and recruitment coordination.',
   },
   users: {
     title: 'users Dashboard',

@@ -33,11 +33,11 @@ export function HomePage({ onApply }) {
         </div>
       </Section>
 
-      <Section className="bg-white" eyebrow="Companies" title="Top Hiring Companies" subtitle="Verified employer profiles with active openings and transparent role information.">
+      <Section className="bg-white" eyebrow="Companies" title="Top Hiring Companies" subtitle="Verified recruiter profiles with active openings and transparent role information.">
         <CompanyGrid />
       </Section>
 
-      <Section eyebrow="Latest" title="Latest Premium Job Openings" subtitle="Curated roles with salary, deadline, work mode, skills, and employer context.">
+      <Section eyebrow="Latest" title="Latest Premium Job Openings" subtitle="Curated roles with salary, deadline, work mode, skills, and recruiter context.">
         <div className="grid gap-5 lg:grid-cols-2">
           {jobs.map((job) => <JobCard featured job={job} key={job.id} onApply={onApply} />)}
         </div>

@@ -13,6 +13,11 @@ const initialForm = {
   password: '',
 }
 
+const registerRoles = [
+  { label: 'Candidate', value: 'Candidate' },
+  { label: 'Recruiter', value: 'Employer' },
+]
+
 function saveSession(payload) {
   localStorage.setItem('authToken', payload.token)
   localStorage.setItem('authUser', JSON.stringify({ ...payload.data, role: normalizeRole(payload.data.role) }))
@@ -40,7 +45,7 @@ export function AuthPage() {
         : await api.register({ name: form.name, email: form.email, password: form.password, role })
 
       saveSession(payload)
-      setMessage(`${normalizeRole(payload.data.role)} login successful. Redirecting...`)
+      setMessage(`${getRoleLabel(payload.data.role)} login successful. Redirecting...`)
       navigate(getDashboardPath(payload.data.role))
     } catch (error) {
       setMessage(error.message)
@@ -61,7 +66,7 @@ export function AuthPage() {
               : 'Register a dynamic account and start using the portal.'}
           </p>
           <div className="mt-10 grid gap-4">
-            {['Candidate dashboard', 'Employer hiring suite', 'Admin control center'].map((item) => (
+            {['Candidate dashboard', 'Recruiter hiring suite', 'Admin control center'].map((item) => (
               <div className="rounded-2xl bg-white/15 p-4 font-semibold" key={item}>{item}</div>
             ))}
           </div>
@@ -71,7 +76,7 @@ export function AuthPage() {
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-2xl font-black text-slate-950">{isLogin ? 'Login' : 'Register'}</h2>
-              <p className="mt-1 text-sm text-slate-500">{isLogin ? 'Use email and password' : `${role} access portal`}</p>
+              <p className="mt-1 text-sm text-slate-500">{isLogin ? 'Use email and password' : `${getRoleLabel(role)} access portal`}</p>
             </div>
             <p className="text-sm text-slate-500">
               {isLogin ? 'New here?' : 'Already have an account?'}{' '}
@@ -90,8 +95,8 @@ export function AuthPage() {
 
           {!isLogin && (
             <div className="mb-6 grid grid-cols-2 rounded-full bg-slate-100 p-1">
-              {['Candidate', 'Employer'].map((item) => (
-                <button className={`rounded-full px-4 py-2 text-sm font-black transition ${role === item ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500'}`} key={item} onClick={() => setRole(item)} type="button">{item}</button>
+              {registerRoles.map((item) => (
+                <button className={`rounded-full px-4 py-2 text-sm font-black transition ${role === item.value ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500'}`} key={item.value} onClick={() => setRole(item.value)} type="button">{item.label}</button>
               ))}
             </div>
           )}
@@ -114,7 +119,7 @@ export function AuthPage() {
             )}
             {message && <p className="rounded-2xl bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
             <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700" disabled={loading} type="submit">
-              {loading ? 'Please wait...' : isLogin ? 'Login' : `Create ${role} Account`}
+              {loading ? 'Please wait...' : isLogin ? 'Login' : `Create ${getRoleLabel(role)} Account`}
             </button>
             <Button className="w-full" variant="secondary"><Globe2 size={18} /> Continue with Google</Button>
           </form>
@@ -122,6 +127,10 @@ export function AuthPage() {
       </div>
     </section>
   )
+}
+
+function getRoleLabel(role) {
+  return normalizeRole(role) === 'Employer' ? 'Recruiter' : normalizeRole(role)
 }
 
 function Field({ icon: Icon, label, ...props }) {

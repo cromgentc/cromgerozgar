@@ -39,12 +39,12 @@ const showcases = [
     ],
   },
   {
-    title: 'Employer Hiring Suite',
+    title: 'Recruiter Hiring Suite',
     subtitle: 'Manage hiring workflows, post jobs, review applications, and recruit top talent efficiently.',
     cta: 'Start Hiring',
-    to: '/employer-dashboard',
+    to: '/recruiter-dashboard',
     image: employerImage,
-    imageAlt: 'Employer hiring dashboard illustration',
+    imageAlt: 'Recruiter hiring dashboard illustration',
     accent: 'from-teal-500 via-blue-500 to-violet-500',
     glow: 'bg-teal-300/30',
     stat: '42',
@@ -78,7 +78,7 @@ export function FeatureShowcase() {
             Premium career and hiring workspaces
           </h2>
           <p className="mt-4 text-base leading-7 text-slate-500">
-            Two focused product experiences designed for candidates and employers with clean workflows, modern dashboards, and trusted enterprise UI.
+            Two focused product experiences designed for candidates and recruiters with clean workflows, modern dashboards, and trusted enterprise UI.
           </p>
         </motion.div>
 

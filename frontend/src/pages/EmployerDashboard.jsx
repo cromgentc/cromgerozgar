@@ -11,7 +11,7 @@ export function EmployerDashboard() {
   const dashboardJobs = Array.isArray(data.jobs) && data.jobs.length ? data.jobs : jobs
 
   return (
-    <DashboardShell title="Employer Dashboard" subtitle="A premium hiring command center for jobs, applications, shortlists, interviews, analytics, and team collaboration.">
+    <DashboardShell title="Recruiter Dashboard" subtitle="A premium hiring command center for jobs, applications, shortlists, interviews, analytics, and team collaboration.">
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard icon={FilePlus2} label="Total Jobs" value={String(metrics.totalJobs ?? 42)} />
         <MetricCard icon={UsersRound} label="Active Applications" value={String(metrics.activeApplications ?? 318)} />
@@ -54,7 +54,7 @@ export function EmployerDashboard() {
           </Panel>
           <Panel title="Company Profile">
             <Building2 className="text-blue-600" />
-            <p className="mt-3 text-sm leading-6 text-slate-500">Nimbus Tech · Cloud software · Verified employer · 42 active openings</p>
+            <p className="mt-3 text-sm leading-6 text-slate-500">Nimbus Tech · Cloud software · Verified recruiter · 42 active openings</p>
           </Panel>
           <Panel title="Performance">
             <BarChart3 className="text-blue-600" size={28} />

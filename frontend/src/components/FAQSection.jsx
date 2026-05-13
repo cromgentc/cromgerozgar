@@ -9,9 +9,9 @@ const faqItems = [
     answer: 'Open a job details page, review the role information, click Apply Now, and submit your profile or resume through the application modal.',
   },
   {
-    category: 'Employer',
-    question: 'How do employers post jobs?',
-    answer: 'Employers can use the Post Job page or employer dashboard to add job details, skills, salary, work mode, requirements, and application deadline.',
+    category: 'Recruiter',
+    question: 'How do recruiters post jobs?',
+    answer: 'Recruiters can use the Post Job page or recruiter dashboard to add job details, skills, salary, work mode, requirements, and application deadline.',
   },
   {
     category: 'Candidate',
@@ -29,9 +29,9 @@ const faqItems = [
     answer: 'Your candidate dashboard shows applied jobs, saved jobs, profile progress, and a timeline for reviewed, shortlisted, and interview stages.',
   },
   {
-    category: 'Employer',
-    question: 'Can employers shortlist candidates?',
-    answer: 'Yes. Employers can review applications, manage candidate lists, shortlist profiles, and monitor hiring workflow performance.',
+    category: 'Recruiter',
+    question: 'Can recruiters shortlist candidates?',
+    answer: 'Yes. Recruiters can review applications, manage candidate lists, shortlist profiles, and monitor hiring workflow performance.',
   },
   {
     category: 'Applications',
@@ -41,11 +41,11 @@ const faqItems = [
   {
     category: 'Payments',
     question: 'How do I contact support?',
-    answer: 'Use the Contact page or the footer support option to chat with the support team for candidate, employer, listing, or billing help.',
+    answer: 'Use the Contact page or the footer support option to chat with the support team for candidate, recruiter, listing, or billing help.',
   },
 ]
 
-const categories = ['All', 'Candidate', 'Employer', 'Applications', 'Payments']
+const categories = ['All', 'Candidate', 'Recruiter', 'Applications', 'Payments']
 
 export function FAQSection() {
   const [activeCategory, setActiveCategory] = useState('All')
@@ -81,7 +81,7 @@ export function FAQSection() {
           <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">FAQ</p>
           <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Common Questions</h2>
           <p className="mt-4 text-base leading-7 text-slate-500">
-            Quick answers for candidates, employers, applications, remote jobs, and platform support.
+            Quick answers for candidates, recruiters, applications, remote jobs, and platform support.
           </p>
         </motion.div>
 
@@ -153,7 +153,7 @@ export function FAQSection() {
           transition={{ duration: 0.45 }}
         >
           <p className="text-lg font-black text-slate-950">Still have questions?</p>
-          <p className="mt-2 text-sm text-slate-500">Our support team can help with jobs, applications, employers, and account setup.</p>
+          <p className="mt-2 text-sm text-slate-500">Our support team can help with jobs, applications, recruiters, and account setup.</p>
           <button
             className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
             onClick={() => setChatOpen(true)}

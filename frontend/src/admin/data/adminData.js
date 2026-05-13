@@ -17,7 +17,7 @@ export const dashboardMetrics = [
   { label: 'Total Jobs', value: '12,840', change: '+12.4%', icon: BriefcaseBusiness, color: 'blue' },
   { label: 'Active Jobs', value: '8,216', change: '+8.1%', icon: ShieldCheck, color: 'teal' },
   { label: 'Pending Jobs', value: '486', change: '-2.3%', icon: Clock3, color: 'purple' },
-  { label: 'Total Employers', value: '1,284', change: '+6.8%', icon: Building2, color: 'blue' },
+  { label: 'Total Recruiters', value: '1,284', change: '+6.8%', icon: Building2, color: 'blue' },
   { label: 'Total Candidates', value: '48,920', change: '+18.2%', icon: UsersRound, color: 'teal' },
   { label: 'Total Applications', value: '96,430', change: '+14.9%', icon: FileCheck2, color: 'purple' },
   { label: 'Shortlisted Candidates', value: '7,418', change: '+9.5%', icon: UserCheck, color: 'blue' },
@@ -77,7 +77,7 @@ export const paymentRows = [
 
 export const reportRows = [
   { id: 'REP-01', name: 'Daily Report', scope: 'Platform activity', updated: 'Today', records: '4,820' },
-  { id: 'REP-02', name: 'Weekly Report', scope: 'Jobs and employers', updated: 'This week', records: '18,240' },
+  { id: 'REP-02', name: 'Weekly Report', scope: 'Jobs and recruiters', updated: 'This week', records: '18,240' },
   { id: 'REP-03', name: 'Monthly Report', scope: 'Revenue and growth', updated: 'May 2026', records: '74,118' },
   { id: 'REP-04', name: 'Candidate-wise Report', scope: 'Applications', updated: 'May 2026', records: '96,430' },
 ]
@@ -108,7 +108,7 @@ export const employerPerformance = [
 
 export const auditItems = [
   '42 jobs approved by Admin team',
-  '8 employer accounts awaiting verification',
+  '8 recruiter accounts awaiting verification',
   '16 payment retries scheduled',
   '124 resumes added to database',
 ]

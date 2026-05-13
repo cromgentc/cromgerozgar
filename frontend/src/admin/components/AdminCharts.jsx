@@ -72,7 +72,7 @@ export function AnalyticsGrid() {
           </PieChart>
         </ChartContainer>
       </ChartCard>
-      <ChartCard title="Employer Performance Chart">
+      <ChartCard title="Recruiter Performance Chart">
         <ChartContainer>
           <BarChart data={employerPerformance}>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />

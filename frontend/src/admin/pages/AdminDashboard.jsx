@@ -20,7 +20,7 @@ export function AdminDashboard() {
       <section className="rounded-[2rem] bg-gradient-to-br from-blue-600 via-sky-500 to-teal-400 p-6 text-white shadow-xl shadow-blue-100 sm:p-8">
         <p className="text-sm font-bold uppercase tracking-wide text-blue-50">Admin overview</p>
         <h2 className="mt-3 text-3xl font-black sm:text-5xl">Premium Job Portal Admin Panel</h2>
-        <p className="mt-4 max-w-3xl text-blue-50">Monitor listings, employers, candidates, applications, reports, revenue, and access roles from one clean enterprise dashboard.</p>
+        <p className="mt-4 max-w-3xl text-blue-50">Monitor listings, recruiters, candidates, applications, reports, revenue, and access roles from one clean enterprise dashboard.</p>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -68,8 +68,8 @@ function AdminControlCenter() {
     ['User roles', '/admin/users', UsersRound, 'Create admins, reset access, and assign Admin/staff/company/users roles.'],
     ['Payments', '/admin/payments', CreditCard, 'Review invoices, failed payments, subscription plans, and revenue records.'],
     ['Settings', '/admin/settings', Settings, 'Control website, SEO, email, notifications, and role permission settings.'],
-    ['Reports', '/admin/reports', FileCheck2, 'Generate platform, employer, job, candidate, and revenue reports.'],
-    ['Approvals', '/admin/employers', ShieldCheck, 'Approve employers, verify companies, and manage account access.'],
+    ['Reports', '/admin/reports', FileCheck2, 'Generate platform, recruiter, job, candidate, and revenue reports.'],
+    ['Approvals', '/admin/employers', ShieldCheck, 'Approve recruiters, verify companies, and manage account access.'],
   ]
 
   return (

@@ -27,7 +27,7 @@ const sidebarItems = [
   { label: 'User Management', to: '/admin/users', icon: UsersRound, roles: ['Admin'] },
   { label: 'Jobs Management', to: '/admin/jobs', icon: BriefcaseBusiness, roles: ['Admin'] },
   { label: 'Companies', to: '/admin/companies', icon: Building2, roles: ['Admin'] },
-  { label: 'Employers', to: '/admin/employers', icon: Building2, roles: ['Admin'] },
+  { label: 'Recruiters', to: '/admin/employers', icon: Building2, roles: ['Admin'] },
   { label: 'Candidates', to: '/admin/candidates', icon: UsersRound, roles: ['Admin'] },
   { label: 'Applications', to: '/admin/applications', icon: FileCheck2, roles: ['Admin'] },
   { label: 'Resume Database', to: '/admin/resumes', icon: Database, roles: ['Admin'] },
@@ -39,10 +39,10 @@ const sidebarItems = [
 ]
 
 const employerSidebarItems = [
-  { label: 'Dashboard', to: '/employers-dashboard', icon: LayoutDashboard },
+  { label: 'Dashboard', to: '/recruiter-dashboard', icon: LayoutDashboard },
   { label: 'Post a Job', to: '/post-job', icon: BriefcaseBusiness },
   { label: 'Company Profile', to: '/companies', icon: Building2 },
-  { label: 'Applications', to: '/employers-dashboard', icon: FileCheck2 },
+  { label: 'Applications', to: '/recruiter-dashboard', icon: FileCheck2 },
 ]
 
 export function AdminLayout() {
@@ -91,14 +91,14 @@ export function AdminLayout() {
                     <span className="capitalize" key={crumb}>{index > 0 ? `/ ${crumb}` : crumb}</span>
                   ))}
                 </div>
-                <h1 className="mt-1 text-xl font-black text-slate-950">{isEmployer ? 'Employer Control Center' : 'Admin Control Center'}</h1>
+                <h1 className="mt-1 text-xl font-black text-slate-950">{isEmployer ? 'Recruiter Control Center' : 'Admin Control Center'}</h1>
               </div>
             </div>
 
             <div className="hidden flex-1 justify-center px-8 md:flex">
               <label className="flex w-full max-w-xl items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
                 <Search size={18} className="text-blue-600" />
-                <input className="w-full bg-transparent outline-none" onChange={(event) => updateSearch(event.target.value)} placeholder="Search jobs, employers, candidates..." value={searchValue} />
+                <input className="w-full bg-transparent outline-none" onChange={(event) => updateSearch(event.target.value)} placeholder="Search jobs, recruiters, candidates..." value={searchValue} />
               </label>
             </div>
 
@@ -157,7 +157,7 @@ export function AdminLayout() {
 function NotificationMenu() {
   const items = [
     '12 new applications received',
-    '4 employer accounts need review',
+    '4 recruiter accounts need review',
     '2 payments marked as failed',
     'Candidate shortlist updated',
   ]
@@ -233,12 +233,12 @@ function SidebarContent({ isEmployer, role }) {
 
   return (
     <div className="flex h-full flex-col">
-      <Link className="flex items-center gap-3 px-6 py-5" to={isEmployer ? '/employers-dashboard' : '/admin'}>
+      <Link className="flex items-center gap-3 px-6 py-5" to={isEmployer ? '/recruiter-dashboard' : '/admin'}>
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-teal-400 text-white shadow-lg shadow-blue-100">
           <BriefcaseBusiness size={23} />
         </span>
         <span>
-          <span className="block text-lg font-black text-slate-950">{isEmployer ? 'Rozgar Employer' : 'Rozgar Admin'}</span>
+          <span className="block text-lg font-black text-slate-950">{isEmployer ? 'Rozgar Recruiter' : 'Rozgar Admin'}</span>
           <span className="block text-xs font-semibold text-slate-500">{isEmployer ? 'Hiring panel' : 'Enterprise panel'}</span>
         </span>
       </Link>
@@ -246,7 +246,7 @@ function SidebarContent({ isEmployer, role }) {
         <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-teal-50 p-4">
           <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Role access</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {(isEmployer ? ['Employer'] : adminRoles).map((role) => <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 shadow-sm" key={role}>{role}</span>)}
+            {(isEmployer ? ['Recruiter'] : adminRoles).map((role) => <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 shadow-sm" key={role}>{role}</span>)}
           </div>
         </div>
       </div>
@@ -271,7 +271,7 @@ function SidebarContent({ isEmployer, role }) {
           })
         ) : (
           <div className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold leading-6 text-slate-500">
-            {isEmployer ? 'Employer workspace' : `${role || 'User'} dashboard access only`}
+            {isEmployer ? 'Recruiter workspace' : `${role || 'User'} dashboard access only`}
           </div>
         )}
       </nav>

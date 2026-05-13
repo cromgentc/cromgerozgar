@@ -91,11 +91,11 @@ export const jobs = [
     urgent: false,
     skills: ['Google Ads', 'Meta Ads', 'Analytics', 'SEO'],
     description:
-      'Own acquisition campaigns for a fast-growing talent platform and convert insight into measurable employer and candidate growth.',
+      'Own acquisition campaigns for a fast-growing talent platform and convert insight into measurable recruiter and candidate growth.',
     responsibilities: ['Plan paid campaigns', 'Optimize conversion funnels', 'Report weekly channel performance'],
     requirements: ['Hands-on campaign management', 'Strong analytics mindset', 'Clear communication'],
     benefits: ['Quarterly bonus', 'Team offsites', 'Wellness allowance'],
-    aboutCompany: 'Talentora partners with recruiters and founders to run high-quality sourcing and employer branding programs.',
+    aboutCompany: 'Talentora partners with recruiters and founders to run high-quality sourcing and hiring brand programs.',
   },
   {
     id: 'customer-success-specialist',
@@ -182,7 +182,7 @@ export const testimonials = [
 
 export const faqs = [
   ['How do candidates apply?', 'Candidates can search jobs, open details, upload a resume, and submit through the apply modal.'],
-  ['Can employers post jobs?', 'Yes, employers can use the post job page and employer dashboard to publish and manage openings.'],
+  ['Can recruiters post jobs?', 'Yes, recruiters can use the post job page and recruiter dashboard to publish and manage openings.'],
   ['Is the UI mobile responsive?', 'The portal is built with responsive layouts for mobile, tablet, and desktop screens.'],
   ['Can this connect to a backend?', 'The current frontend uses demo data and is structured so API integration can be added cleanly.'],
 ]

@@ -3,7 +3,7 @@ import { BriefcaseBusiness, Mail, MapPin, MessageCircle, Send, Share2 } from 'lu
 
 const footerGroups = {
   Solutions: ['AI Matching', 'Applicant Tracking', 'Resume Database', 'Hiring Analytics'],
-  Employers: ['Post Jobs', 'Company Profile', 'Team Members', 'Pricing'],
+  Recruiter: ['Post Jobs', 'Recruiter Profile', 'Team Members', 'Pricing'],
   Candidates: ['Talent Pool', 'Saved Profiles', 'Shortlists', 'Interviews'],
   Resources: ['Hiring Guide', 'Blog', 'Help Center', 'Case Studies'],
   Support: ['Contact', 'Live Chat', 'Documentation', 'System Status'],
@@ -17,13 +17,13 @@ export function EmployerFooter() {
         <div className="h-px bg-gradient-to-r from-blue-600 via-teal-400 to-violet-500" />
         <div className="grid gap-10 py-10 lg:grid-cols-[1.25fr_2fr]">
           <div>
-            <Link className="flex items-center gap-3 font-black text-slate-950" to="/employers">
+            <Link className="flex items-center gap-3 font-black text-slate-950" to="/recruiter">
               <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-teal-400 text-white"><BriefcaseBusiness size={23} /></span>
-              <span className="text-xl">Rozgar Employers</span>
+              <span className="text-xl">Rozgar Recruiter</span>
             </Link>
-            <p className="mt-4 max-w-sm text-sm leading-7 text-slate-500">Premium hiring tools for companies that want faster sourcing, cleaner workflows, and better talent decisions.</p>
+            <p className="mt-4 max-w-sm text-sm leading-7 text-slate-500">Premium hiring tools for recruiters that want faster sourcing, cleaner workflows, and better talent decisions.</p>
             <div className="mt-5 grid gap-3 text-sm text-slate-500">
-              <p className="flex items-center gap-3"><Mail className="text-blue-600" size={18} /> employers@cromgenrozgar.com</p>
+              <p className="flex items-center gap-3"><Mail className="text-blue-600" size={18} /> recruiter@cromgenrozgar.com</p>
               <p className="flex items-center gap-3"><MessageCircle className="text-blue-600" size={18} /> Chat with hiring support</p>
               <p className="flex items-center gap-3"><MapPin className="text-blue-600" size={18} /> New Delhi, India</p>
             </div>
@@ -37,7 +37,7 @@ export function EmployerFooter() {
               <div key={title}>
                 <h3 className="text-sm font-black uppercase tracking-wide text-slate-950">{title}</h3>
                 <div className="mt-4 grid gap-2 text-sm font-semibold text-slate-500">
-                  {links.map((link) => <Link className="hover:text-blue-600" key={link} to="/employers">{link}</Link>)}
+                  {links.map((link) => <Link className="hover:text-blue-600" key={link} to="/recruiter">{link}</Link>)}
                 </div>
               </div>
             ))}
@@ -45,7 +45,7 @@ export function EmployerFooter() {
         </div>
         <div className="rounded-[2rem] bg-gradient-to-br from-blue-50 via-white to-teal-50 p-4 sm:flex sm:items-center sm:justify-between">
           <div>
-            <p className="font-black text-slate-950">Get employer hiring insights</p>
+            <p className="font-black text-slate-950">Get recruiter hiring insights</p>
             <p className="text-sm text-slate-500">Monthly trends, sourcing ideas, and recruiter productivity tips.</p>
           </div>
           <div className="mt-4 flex gap-2 sm:mt-0">
@@ -53,7 +53,7 @@ export function EmployerFooter() {
             <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-600 text-white" type="button"><Send size={17} /></button>
           </div>
         </div>
-        <p className="mt-6 text-sm text-slate-500">© 2026 Cromgen Rozgar Employer Portal. All rights reserved.</p>
+        <p className="mt-6 text-sm text-slate-500">© 2026 Cromgen Rozgar Recruiter Portal. All rights reserved.</p>
       </div>
     </footer>
   )

@@ -8,7 +8,7 @@ const navItems = [
   { label: 'Home', to: '/' },
   { label: 'Jobs', to: '/jobs' },
   { label: 'Companies', to: '/companies' },
-  { label: 'Employers', to: '/employer-dashboard' },
+  { label: 'Recruiter', to: '/recruiter' },
   { label: 'Candidates', to: '/candidate-dashboard' },
 ]
 
@@ -21,10 +21,9 @@ export function Layout() {
   const isCandidate = user?.role === 'Candidate'
   const isCompany = user?.role === 'company'
   const visibleNavItems = navItems
-    .filter((item) => !isCandidate || item.label !== 'Employers')
+    .filter((item) => !isCandidate || item.label !== 'Recruiter')
     .map((item) => {
       if (isCandidate && item.label === 'Candidates') return { ...item, label: 'Accounts' }
-      if (isCompany && item.label === 'Employers') return { ...item, label: 'Company', to: '/employers' }
       return item
     })
 
@@ -128,8 +127,8 @@ export function Layout() {
                   </div>
                   <Button to="/companies" variant="secondary">Profile</Button>
                   <Button to="/companies" variant="secondary">Account</Button>
-                  <Button to="/employers" variant="secondary">Dashboard</Button>
-                  <Button to="/employers#pricing">Pricing</Button>
+                  <Button to="/recruiter" variant="secondary">Dashboard</Button>
+                  <Button to="/recruiter#pricing">Pricing</Button>
                 </div>
               ) : (
                 <>
@@ -160,7 +159,7 @@ export function Layout() {
                     Hire faster or find your next role with trusted companies.
                   </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-                    Premium job discovery, employer dashboards, candidate profiles, and scalable recruitment workflows in one clean platform.
+                    Premium job discovery, company dashboards, candidate profiles, and scalable recruitment workflows in one clean platform.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
@@ -183,7 +182,7 @@ export function Layout() {
                 A modern enterprise job portal for candidates, recruiters, HR teams, and growing companies.
               </p>
               <div className="mt-5 grid gap-3 text-sm font-semibold text-slate-600">
-                <p className="flex items-center gap-3"><ShieldCheck className="text-teal-500" size={18} /> Verified employer ecosystem</p>
+                <p className="flex items-center gap-3"><ShieldCheck className="text-teal-500" size={18} /> Verified company ecosystem</p>
                 <p className="flex items-center gap-3"><Sparkles className="text-blue-600" size={18} /> Premium candidate experience</p>
                 <p className="flex items-center gap-3"><Users className="text-violet-500" size={18} /> Recruiter-ready dashboards</p>
               </div>
@@ -207,11 +206,11 @@ export function Layout() {
               ]}
             />
             <FooterColumn
-              title="Employers"
+              title="Recruiter"
               links={[
-                ['Employer Dashboard', '/employer-dashboard'],
+                ['Recruiter Dashboard', '/recruiter-dashboard'],
                 ['Post a Job', '/post-job'],
-                ['Applications', '/employer-dashboard'],
+                ['Applications', '/recruiter-dashboard'],
                 ['Company Profile', '/companies'],
               ]}
             />
@@ -274,8 +273,8 @@ function CompanyProfileMenu({ open, setOpen, user }) {
           {[
             ['Profile', '/companies'],
             ['Account', '/companies'],
-            ['Dashboard', '/employers'],
-            ['Pricing', '/employers#pricing'],
+            ['Dashboard', '/recruiter'],
+            ['Pricing', '/recruiter#pricing'],
           ].map(([label, to]) => (
             <Link className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50" key={label} onClick={() => setOpen(false)} to={to}>
               <UserRound size={17} />

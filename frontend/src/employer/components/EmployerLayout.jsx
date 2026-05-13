@@ -6,12 +6,12 @@ import { getStoredUser } from '../../routes/authRouting'
 import { EmployerFooter } from './EmployerFooter'
 
 const employerNav = [
-  ['Home', '/employers'],
-  ['Solutions', '/employers#solutions'],
-  ['Pricing', '/employers#pricing'],
-  ['Talent Pool', '/employers#talent'],
-  ['Dashboard', '/employer-dashboard'],
-  ['Resources', '/employers#resources'],
+  ['Home', '/recruiter'],
+  ['Solutions', '/recruiter#solutions'],
+  ['Pricing', '/recruiter#pricing'],
+  ['Talent Pool', '/recruiter#talent'],
+  ['Dashboard', '/recruiter-dashboard'],
+  ['Resources', '/recruiter#resources'],
 ]
 
 export function EmployerLayout() {
@@ -19,14 +19,14 @@ export function EmployerLayout() {
   const [profileOpen, setProfileOpen] = useState(false)
   const user = getStoredUser()
   const isCompany = user?.role === 'company'
-  const brandLabel = isCompany ? 'Rozgar Company' : 'Rozgar Employers'
-  const navItems = employerNav.map(([label, to]) => (isCompany && label === 'Dashboard' ? ['Dashboard', '/employers'] : [label, to]))
+  const brandLabel = 'Rozgar Recruiter'
+  const navItems = employerNav.map(([label, to]) => (isCompany && label === 'Dashboard' ? ['Dashboard', '/recruiter'] : [label, to]))
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/88 shadow-sm shadow-blue-100/40 backdrop-blur-xl">
         <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <Link className="flex items-center gap-3 font-black text-slate-950" to="/employers">
+          <Link className="flex items-center gap-3 font-black text-slate-950" to="/recruiter">
             <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-teal-400 text-white shadow-lg shadow-blue-100">
               <BriefcaseBusiness size={22} />
             </span>
@@ -47,8 +47,8 @@ export function EmployerLayout() {
               <CompanyMenu open={profileOpen} setOpen={setProfileOpen} user={user} />
             ) : (
               <>
-                <Button to="/employer-login" variant="ghost">Employer Login</Button>
-                <Button to="/employer-register" variant="secondary">Register Company</Button>
+                <Button to="/recruiter-login" variant="ghost">Recruiter Login</Button>
+                <Button to="/recruiter-register" variant="secondary">Register Recruiter</Button>
                 <Button to="/post-job">Post a Job</Button>
               </>
             )}
@@ -71,13 +71,13 @@ export function EmployerLayout() {
                   </div>
                   <Button to="/companies" variant="secondary">Profile</Button>
                   <Button to="/companies" variant="secondary">Account</Button>
-                  <Button to="/employers" variant="secondary">Dashboard</Button>
-                  <Button to="/employers#pricing">Pricing</Button>
+                  <Button to="/recruiter" variant="secondary">Dashboard</Button>
+                  <Button to="/recruiter#pricing">Pricing</Button>
                 </div>
               ) : (
                 <div className="grid gap-2 pt-2 sm:grid-cols-3">
-                  <Button to="/employer-login" variant="secondary">Login</Button>
-                  <Button to="/employer-register" variant="secondary">Register</Button>
+                  <Button to="/recruiter-login" variant="secondary">Login</Button>
+                  <Button to="/recruiter-register" variant="secondary">Register</Button>
                   <Button to="/post-job">Post Job</Button>
                 </div>
               )}
@@ -114,8 +114,8 @@ function CompanyMenu({ open, setOpen, user }) {
         <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
           <CompanyMenuLink icon={UserRound} label="Profile" setOpen={setOpen} to="/companies" />
           <CompanyMenuLink icon={Building2} label="Account" setOpen={setOpen} to="/companies" />
-          <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" setOpen={setOpen} to="/employers" />
-          <CompanyMenuLink icon={WalletCards} label="Pricing" setOpen={setOpen} to="/employers#pricing" />
+          <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" setOpen={setOpen} to="/recruiter" />
+          <CompanyMenuLink icon={WalletCards} label="Pricing" setOpen={setOpen} to="/recruiter#pricing" />
         </div>
       )}
     </div>

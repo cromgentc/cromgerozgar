@@ -81,6 +81,14 @@ function App() {
       element: <AdminLayout />,
       children: [
         {
+          path: '/recruiter-dashboard',
+          element: (
+            <ProtectedRoute allowedRoles={['Employer']}>
+              <EmployerDashboard />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: '/employers-dashboard',
           element: (
             <ProtectedRoute allowedRoles={['Employer']}>
@@ -130,6 +138,7 @@ function App() {
         },
         { path: '/admin-dashoard', element: <RoleRedirect /> },
         { path: '/employers-dashoard', element: <RoleRedirect /> },
+        { path: '/recruiter-dashoard', element: <RoleRedirect /> },
         { path: '/staff-dashoard', element: <RoleRedirect /> },
         { path: '/company-dashoard', element: <RoleRedirect /> },
         { path: '/users-dashoard', element: <RoleRedirect /> },
@@ -138,8 +147,11 @@ function App() {
     {
       element: <EmployerLayout />,
       children: [
+        { path: '/recruiter', element: <EmployerLandingPage /> },
         { path: '/employers', element: <EmployerLandingPage /> },
+        { path: '/recruiter-login', element: <EmployerLoginPage /> },
         { path: '/employer-login', element: <EmployerLoginPage /> },
+        { path: '/recruiter-register', element: <EmployerRegisterPage /> },
         { path: '/employer-register', element: <EmployerRegisterPage /> },
       ],
     },

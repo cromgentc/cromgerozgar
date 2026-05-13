@@ -26,7 +26,7 @@ export function HeroBanner() {
             Find Your Dream Job With Trusted Companies
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg lg:mx-0">
-            Search thousands of jobs, connect with top employers, and grow your career faster with a premium hiring platform built for modern teams.
+            Search thousands of jobs, connect with top recruiters, and grow your career faster with a premium hiring platform built for modern teams.
           </p>
 
           <div className="mt-7">

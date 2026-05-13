@@ -37,7 +37,7 @@ export function EmployerLoginPage() {
     try {
       const payload = await api.employerLogin(form)
       saveSession(payload)
-      setMessage('Employer login successful. Redirecting...')
+      setMessage('Recruiter login successful. Redirecting...')
       navigate(getDashboardPath(payload.data.role))
     } catch (error) {
       setMessage(error.message)
@@ -47,21 +47,21 @@ export function EmployerLoginPage() {
   }
 
   return (
-    <EmployerAuthShell title="Employer Login" subtitle="Access your company hiring workspace, review applications, and manage recruiter workflows.">
+    <EmployerAuthShell title="Recruiter Login" subtitle="Access your recruiter hiring workspace, review applications, and manage hiring workflows.">
       <form className="grid gap-4" onSubmit={submit}>
-        <Field icon={Mail} label="Business Email" onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} placeholder="employer@cromgen.test" required type="email" value={form.email} />
+        <Field icon={Mail} label="Business Email" onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} placeholder="recruiter@cromgen.test" required type="email" value={form.email} />
         <Field icon={Lock} label="Password" onChange={(e) => setForm((current) => ({ ...current, password: e.target.value }))} placeholder="password123" required type="password" value={form.password} />
-        <select className="input"><option>Company login</option><option>Recruiter login</option><option>Hiring manager login</option></select>
+        <select className="input"><option>Recruiter login</option><option>Company login</option><option>Hiring manager login</option></select>
         <div className="flex items-center justify-between text-sm">
           <label className="flex items-center gap-2 text-slate-500"><input type="checkbox" /> Remember me</label>
           <a className="font-bold text-blue-600" href="#forgot">Forgot password?</a>
         </div>
         {message && <p className="rounded-2xl bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
         <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700" disabled={loading} type="submit">
-          {loading ? 'Logging in...' : 'Login to Employer Portal'}
+          {loading ? 'Logging in...' : 'Login to Recruiter Portal'}
         </button>
         <Button className="w-full" variant="secondary"><Globe2 size={18} /> Continue with Google</Button>
-        <p className="text-center text-sm text-slate-500">New employer? <Link className="font-black text-blue-600" to="/employer-register">Register Company</Link></p>
+        <p className="text-center text-sm text-slate-500">New recruiter? <Link className="font-black text-blue-600" to="/recruiter-register">Register Recruiter</Link></p>
       </form>
     </EmployerAuthShell>
   )
@@ -104,7 +104,7 @@ export function EmployerRegisterPage() {
       }).catch(() => null)
 
       saveSession(payload)
-      setMessage('Company registered successfully. Redirecting...')
+      setMessage('Recruiter registered successfully. Redirecting...')
       navigate(getDashboardPath(payload.data.role))
     } catch (error) {
       setMessage(error.message)
@@ -114,9 +114,9 @@ export function EmployerRegisterPage() {
   }
 
   return (
-    <EmployerAuthShell title="Register Company" subtitle="Create your employer account and start building a premium hiring pipeline.">
+    <EmployerAuthShell title="Register Recruiter" subtitle="Create your recruiter account and start building a premium hiring pipeline.">
       <div className="mb-6">
-        <div className="flex justify-between text-sm font-black text-slate-600"><span>Step {step} of 2</span><span>{step === 1 ? 'Company info' : 'Hiring setup'}</span></div>
+        <div className="flex justify-between text-sm font-black text-slate-600"><span>Step {step} of 2</span><span>{step === 1 ? 'Recruiter info' : 'Hiring setup'}</span></div>
         <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full bg-gradient-to-r from-blue-600 to-teal-400 ${step === 1 ? 'w-1/2' : 'w-full'}`} /></div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -137,7 +137,7 @@ export function EmployerRegisterPage() {
           </>
         )}
       </div>
-      <label className="mt-4 flex items-center gap-2 text-sm text-slate-500"><input type="checkbox" /> I agree to employer terms and hiring policies.</label>
+      <label className="mt-4 flex items-center gap-2 text-sm text-slate-500"><input type="checkbox" /> I agree to recruiter terms and hiring policies.</label>
       {message && <p className="mt-4 rounded-2xl bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         {step > 1 && <Button className="flex-1" onClick={() => setStep(1)} variant="secondary">Back</Button>}
@@ -147,10 +147,10 @@ export function EmployerRegisterPage() {
           onClick={() => (step === 1 ? setStep(2) : submit())}
           type="button"
         >
-          {loading ? 'Please wait...' : step === 1 ? 'Continue' : 'Register Company'}
+          {loading ? 'Please wait...' : step === 1 ? 'Continue' : 'Register Recruiter'}
         </button>
       </div>
-      <p className="mt-5 text-center text-sm text-slate-500">Already registered? <Link className="font-black text-blue-600" to="/employer-login">Login</Link></p>
+      <p className="mt-5 text-center text-sm text-slate-500">Already registered? <Link className="font-black text-blue-600" to="/recruiter-login">Login</Link></p>
     </EmployerAuthShell>
   )
 }
@@ -165,10 +165,10 @@ function EmployerAuthShell({ title, subtitle, children }) {
             <h1 className="mt-5 text-4xl font-black">{title}</h1>
             <p className="mt-4 leading-7 text-blue-50">{subtitle}</p>
             <div className="mt-8 grid gap-3">
-              {['Verified company profile', 'Collaborative recruiter workspace', 'Application and shortlist management'].map((item) => <p className="flex items-center gap-3 rounded-2xl bg-white/15 p-4 font-semibold" key={item}><CheckCircle2 size={18} />{item}</p>)}
+              {['Verified recruiter profile', 'Collaborative recruiter workspace', 'Application and shortlist management'].map((item) => <p className="flex items-center gap-3 rounded-2xl bg-white/15 p-4 font-semibold" key={item}><CheckCircle2 size={18} />{item}</p>)}
             </div>
           </div>
-          <img className="relative z-10 mt-8 w-full rounded-[1.75rem] bg-white/10 object-contain p-2" src={employerImage} alt="Employer portal illustration" />
+          <img className="relative z-10 mt-8 w-full rounded-[1.75rem] bg-white/10 object-contain p-2" src={employerImage} alt="Recruiter portal illustration" />
         </div>
         <div className="p-6 sm:p-10">{children}</div>
       </div>

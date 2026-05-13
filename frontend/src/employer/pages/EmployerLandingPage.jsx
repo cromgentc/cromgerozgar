@@ -23,24 +23,24 @@ import heroImage from '../../assets/enterprise-hiring-banner.png'
 const slides = [
   {
     title: 'Hire Top Talent Faster',
-    subtitle: 'Streamline recruitment, manage applications, and hire smarter with our enterprise hiring platform.',
+    subtitle: 'Explore recruiter workflows, applications, and hiring tools in one workspace.',
     primary: 'Post a Job',
     secondary: 'Explore Solutions',
     to: '/post-job',
   },
   {
     title: 'Manage Recruitment In One Place',
-    subtitle: 'Track applicants, shortlist candidates, and collaborate with your hiring team effortlessly.',
+    subtitle: 'Track recruiter hiring activity, shortlist candidates, and collaborate with your hiring team effortlessly.',
     primary: 'Start Hiring',
     secondary: 'View Dashboard',
-    to: '/employer-dashboard',
+    to: '/recruiter-dashboard',
   },
   {
     title: 'Build Your Dream Team',
-    subtitle: 'Access skilled professionals, freelancers, and remote talent from across industries.',
-    primary: 'Register Company',
+    subtitle: 'Showcase your hiring brand, access skilled professionals, and manage talent from across industries.',
+    primary: 'Register Recruiter',
     secondary: 'Explore Candidates',
-    to: '/employer-register',
+    to: '/recruiter-register',
   },
 ]
 
@@ -54,7 +54,7 @@ const features = [
 ]
 
 const processSteps = [
-  [LayoutDashboard, 'Create Company Profile'],
+  [LayoutDashboard, 'Create Recruiter Profile'],
   [BriefcaseBusiness, 'Post Job'],
   [FileSearch, 'Review Applications'],
   [Handshake, 'Hire Candidate'],
@@ -76,13 +76,13 @@ export function EmployerLandingPage() {
             <AnimatePresence mode="wait">
               <motion.div key={active} initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -28 }} transition={{ duration: 0.45 }}>
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-black text-blue-700 shadow-sm ring-1 ring-blue-100 backdrop-blur">
-                  <Rocket size={17} /> Enterprise employer platform
+                  <Rocket size={17} /> Enterprise recruiter platform
                 </span>
                 <h1 className="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">{slides[active].title}</h1>
                 <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">{slides[active].subtitle}</p>
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                   <Button to={slides[active].to}>{slides[active].primary}</Button>
-                  <Button to="/employers#solutions" variant="secondary">{slides[active].secondary}</Button>
+                  <Button to="/recruiter#solutions" variant="secondary">{slides[active].secondary}</Button>
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -108,7 +108,7 @@ export function EmployerLandingPage() {
 
       <section className="overflow-hidden bg-white py-12">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">Trusted by recruiters</p>
+          <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">Trusted recruiter network</p>
           <div className="mt-6 flex animate-[marquee_18s_linear_infinite] gap-4 whitespace-nowrap">
             {[...companies, ...companies].map((company, index) => <span className="rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-black text-slate-600" key={`${company.name}-${index}`}>{company.badge} · {company.name}</span>)}
           </div>
@@ -126,7 +126,7 @@ export function EmployerLandingPage() {
 
       <section className="bg-white py-16">
         <div className="mx-auto grid max-w-7xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-          {['10,000+ Employers', '1M+ Applications', '50K+ Hires', '95% Hiring Success'].map((stat) => (
+          {['10,000+ Recruiters', '1M+ Applications', '50K+ Hires', '95% Hiring Success'].map((stat) => (
             <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-100" key={stat}>
               <p className="text-3xl font-black text-slate-950">{stat.split(' ')[0]}</p>
               <p className="mt-2 text-sm font-bold text-slate-500">{stat.replace(stat.split(' ')[0], '')}</p>
@@ -137,7 +137,7 @@ export function EmployerLandingPage() {
 
       <section className="bg-slate-50 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionHeading eyebrow="Recruitment process" title="From company profile to successful hire" />
+          <SectionHeading eyebrow="Recruitment process" title="From recruiter profile to successful hire" />
           <div className="grid gap-5 lg:grid-cols-4">
             {processSteps.map(([Icon, title], index) => (
               <div className="relative rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm" key={title}>
@@ -215,7 +215,7 @@ function EmployerTestimonials() {
   return (
     <section className="bg-slate-50 py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <SectionHeading eyebrow="Employer testimonials" title="Recruiter reviews and success stories" />
+        <SectionHeading eyebrow="Recruiter testimonials" title="Recruiter reviews and success stories" />
         <div className="grid gap-5 md:grid-cols-3">
           {testimonials.map((item) => <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm" key={item.name}><CheckCircle2 className="text-teal-500" /><p className="mt-4 text-slate-600">{item.text}</p><p className="mt-5 font-black text-slate-950">{item.name}</p><p className="text-sm text-slate-500">{item.role}</p></div>)}
         </div>
@@ -232,7 +232,7 @@ function EmployerCTA() {
           <h2 className="text-3xl font-black sm:text-4xl">Start Hiring Smarter Today</h2>
           <p className="mt-3 max-w-2xl text-blue-50">Post jobs, connect with skilled professionals, and grow your team faster.</p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Button to="/employer-register" variant="secondary">Register Company</Button>
+            <Button to="/recruiter-register" variant="secondary">Register Recruiter</Button>
             <Button to="/post-job" variant="secondary">Post Your First Job</Button>
           </div>
         </div>
