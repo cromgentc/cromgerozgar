@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
-import { BriefcaseBusiness, Building2, ChevronDown, LayoutDashboard, Menu, UserRound, X } from 'lucide-react'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { BriefcaseBusiness, Building2, ChevronDown, LayoutDashboard, LogOut, Menu, UserRound, X } from 'lucide-react'
 import { Button } from '../../components/Button'
 import { getStoredUser } from '../../routes/authRouting'
 import { EmployerFooter } from './EmployerFooter'
@@ -19,10 +19,18 @@ const recruiterDashboardPath = '/recruiter-dashboard'
 export function EmployerLayout() {
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const navigate = useNavigate()
   const user = getStoredUser()
   const isRecruiterAccount = user?.role === 'company' || user?.role === 'Employer'
   const brandLabel = 'Rozgar Recruiter'
   const navItems = employerNav.map(([label, to]) => (isRecruiterAccount ? [label, recruiterDashboardPath] : [label, to]))
+  const logout = () => {
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('authUser')
+    setOpen(false)
+    setProfileOpen(false)
+    navigate('/recruiter-login')
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -46,7 +54,7 @@ export function EmployerLayout() {
 
           <div className="hidden items-center gap-2 lg:flex">
             {isRecruiterAccount ? (
-              <CompanyMenu open={profileOpen} setOpen={setProfileOpen} user={user} />
+              <CompanyMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
             ) : (
               <>
                 <Button to="/recruiter-login" variant="ghost">Recruiter Login</Button>
@@ -73,6 +81,9 @@ export function EmployerLayout() {
                   </div>
                   <Button to={recruiterDashboardPath} variant="secondary">Profile</Button>
                   <Button to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
+                  <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100" onClick={logout} type="button">
+                    Logout
+                  </button>
                 </div>
               ) : (
                 <div className="grid gap-2 pt-2 sm:grid-cols-3">
@@ -95,7 +106,7 @@ export function EmployerLayout() {
   )
 }
 
-function CompanyMenu({ open, setOpen, user }) {
+function CompanyMenu({ logout, open, setOpen, user }) {
   return (
     <div className="relative">
       <button
@@ -114,6 +125,10 @@ function CompanyMenu({ open, setOpen, user }) {
         <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
           <CompanyMenuLink icon={UserRound} label="Profile" setOpen={setOpen} to={recruiterDashboardPath} />
           <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" setOpen={setOpen} to={recruiterDashboardPath} />
+          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold text-rose-600 hover:bg-rose-50" onClick={logout} type="button">
+            <LogOut size={17} />
+            Logout
+          </button>
         </div>
       )}
     </div>

@@ -75,7 +75,7 @@ export function Layout() {
             {isCandidate ? (
               <CandidateProfileMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
             ) : isRecruiterAccount ? (
-              <CompanyProfileMenu open={profileOpen} setOpen={setProfileOpen} user={user} />
+              <CompanyProfileMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
             ) : (
               <>
                 <Button to="/auth" variant="ghost">
@@ -130,6 +130,9 @@ export function Layout() {
                   </div>
                   <Button to={recruiterDashboardPath} variant="secondary">Profile</Button>
                   <Button to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
+                  <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100" onClick={logout} type="button">
+                    Logout
+                  </button>
                 </div>
               ) : (
                 <>
@@ -254,7 +257,7 @@ export function Layout() {
   )
 }
 
-function CompanyProfileMenu({ open, setOpen, user }) {
+function CompanyProfileMenu({ logout, open, setOpen, user }) {
   return (
     <div className="relative">
       <button
@@ -280,6 +283,10 @@ function CompanyProfileMenu({ open, setOpen, user }) {
               {label}
             </Link>
           ))}
+          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold text-rose-600 hover:bg-rose-50" onClick={logout} type="button">
+            <LogOut size={17} />
+            Logout
+          </button>
         </div>
       )}
     </div>
