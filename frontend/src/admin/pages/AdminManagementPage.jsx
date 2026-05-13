@@ -478,6 +478,16 @@ export function AdminManagementPage({ type }) {
 }
 
 function getInitialForm(type, companyOptions = fieldOptions.company) {
+  if (type === 'users') {
+    return {
+      name: '',
+      email: '',
+      role: fieldOptions.role[0],
+      password: '',
+      status: fieldOptions.userStatus[0],
+    }
+  }
+
   if (type === 'companies') {
     return {
       ...getDefaultJobLocation(),
