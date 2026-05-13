@@ -41,7 +41,7 @@ const sidebarItems = [
 const employerSidebarItems = [
   { label: 'Dashboard', to: '/recruiter-dashboard', icon: LayoutDashboard },
   { label: 'Post a Job', to: '/post-job', icon: BriefcaseBusiness },
-  { label: 'Company Profile', to: '/companies', icon: Building2 },
+  { label: 'Recruiter Profile', to: '/recruiter-profile', icon: Building2 },
   { label: 'Applications', to: '/recruiter-dashboard', icon: FileCheck2 },
 ]
 
@@ -140,7 +140,7 @@ export function AdminLayout() {
                   </span>
                   <ChevronDown className={`hidden text-slate-400 transition sm:block ${profileOpen ? 'rotate-180' : ''}`} size={16} />
                 </button>
-                {profileOpen && <ProfileMenu logout={logout} user={user} />}
+                {profileOpen && <ProfileMenu isEmployer={isEmployer} logout={logout} user={user} />}
               </div>
             </div>
           </div>
@@ -179,7 +179,9 @@ function NotificationMenu() {
   )
 }
 
-function ProfileMenu({ logout, user }) {
+function ProfileMenu({ isEmployer, logout, user }) {
+  const profilePath = isEmployer ? '/recruiter-profile' : '/admin'
+
   return (
     <div className="absolute right-0 top-14 z-50 w-72 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-2xl shadow-blue-100">
       <div className="flex items-center gap-3 rounded-2xl bg-blue-50 p-3">
@@ -190,8 +192,8 @@ function ProfileMenu({ logout, user }) {
         </div>
       </div>
       <div className="mt-3 grid gap-2">
-        <button className="rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-50" type="button">Profile</button>
-        <button className="rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-50" type="button">Account Settings</button>
+        <Link className="rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-50" to={profilePath}>Profile</Link>
+        <Link className="rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-50" to={profilePath}>Account Settings</Link>
         <button className="rounded-2xl px-4 py-3 text-left text-sm font-bold text-rose-600 hover:bg-rose-50" onClick={logout} type="button">
           Logout
         </button>
