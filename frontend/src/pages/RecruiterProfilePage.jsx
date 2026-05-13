@@ -1,13 +1,6 @@
-import { Building2, BriefcaseBusiness, CheckCircle2, Mail, MapPin, Phone, ShieldCheck, UserRound } from 'lucide-react'
+import { Building2, Mail, MapPin, Phone } from 'lucide-react'
 import { getStoredUser } from '../routes/authRouting'
-import { DashboardShell, MetricCard, Panel } from './CandidateDashboard'
-
-const profileStats = [
-  [BriefcaseBusiness, 'Open jobs', '0'],
-  [UserRound, 'Candidates reviewed', '0'],
-  [CheckCircle2, 'Shortlisted', '0'],
-  [ShieldCheck, 'Profile status', 'Active'],
-]
+import { DashboardShell, Panel } from './CandidateDashboard'
 
 export function RecruiterProfilePage() {
   const user = getStoredUser()
@@ -22,13 +15,7 @@ export function RecruiterProfilePage() {
 
   return (
     <DashboardShell title="Recruiter Profile" subtitle="Manage your recruiter identity, company details, contact information, and hiring workspace profile.">
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {profileStats.map(([Icon, label, value]) => (
-          <MetricCard icon={Icon} key={label} label={label} value={value} />
-        ))}
-      </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <Panel title="Profile Summary">
           <div className="flex items-center gap-4">
             <span className="grid h-20 w-20 place-items-center rounded-3xl bg-blue-600 text-2xl font-black text-white shadow-lg shadow-blue-100">

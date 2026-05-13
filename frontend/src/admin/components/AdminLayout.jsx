@@ -42,7 +42,6 @@ const employerSidebarItems = [
   { label: 'Dashboard', to: '/recruiter-dashboard', icon: LayoutDashboard },
   { label: 'Post a Job', to: '/post-job', icon: BriefcaseBusiness },
   { label: 'Recruiter Profile', to: '/recruiter-profile', icon: Building2 },
-  { label: 'Applications', to: '/recruiter-dashboard', icon: FileCheck2 },
 ]
 
 export function AdminLayout() {
@@ -244,19 +243,16 @@ function SidebarContent({ isEmployer, role }) {
           <span className="block text-xs font-semibold text-slate-500">{isEmployer ? 'Hiring panel' : 'Enterprise panel'}</span>
         </span>
       </Link>
-      <div className="px-4">
-        <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-teal-50 p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Role access</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {(isEmployer ? ['Recruiter'] : adminRoles).map((role) => <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 shadow-sm" key={role}>{role}</span>)}
+      {!isEmployer && (
+        <div className="px-4">
+          <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-teal-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Role access</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {adminRoles.map((role) => <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 shadow-sm" key={role}>{role}</span>)}
+            </div>
           </div>
-          {isEmployer && (
-            <Link className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-full bg-blue-600 px-4 text-sm font-bold text-white shadow-lg shadow-blue-100 hover:bg-blue-700" to="/recruiter">
-              Website
-            </Link>
-          )}
         </div>
-      </div>
+      )}
       <nav className="mt-4 flex-1 space-y-1 overflow-y-auto px-4 pb-4">
         {items.length ? (
           items.map((item) => {
