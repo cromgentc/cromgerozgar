@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { getDashboardPath, getStoredUser } from './authRouting'
+import { getDashboardPath, getRecruiterVerificationPath, getRecruiterVerificationStatus, getStoredUser } from './authRouting'
 
 export function RoleRedirect() {
   const user = getStoredUser()
@@ -19,6 +19,13 @@ export function ProtectedRoute({ allowedRoles, children }) {
 
   if (allowedRoles?.length && !allowedRoles.includes(user.role)) {
     return <Navigate replace to={getDashboardPath(user.role)} />
+  }
+
+  if (allowedRoles?.includes('recruiter') && user.role === 'recruiter') {
+    const status = getRecruiterVerificationStatus(user)
+    if (status !== 'approved') {
+      return <Navigate replace to={getRecruiterVerificationPath(status)} />
+    }
   }
 
   return children

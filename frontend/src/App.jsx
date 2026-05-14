@@ -8,6 +8,7 @@ import { Layout } from './components/Layout'
 import { EmployerLayout } from './employer/components/EmployerLayout'
 import { EmployerLoginPage, EmployerRegisterPage } from './employer/pages/EmployerAuthPages'
 import { EmployerLandingPage } from './employer/pages/EmployerLandingPage'
+import { RecruiterDocumentReviewPage, RecruiterDocumentsPage, RecruiterVerificationPage } from './employer/pages/RecruiterVerificationPages'
 import { AuthPage } from './pages/AuthPage'
 import { CandidateDashboard } from './pages/CandidateDashboard'
 import { CandidateProfilePage } from './pages/CandidateProfilePage'
@@ -19,7 +20,11 @@ import { JobDetailsPage } from './pages/JobDetailsPage'
 import { JobsPage } from './pages/JobsPage'
 import { PostJobPage } from './pages/PostJobPage'
 import { RecruiterProfilePage } from './pages/RecruiterProfilePage'
+import { RecruiterFindResumePage } from './pages/RecruiterFindResumePage'
 import { RecruiterPricingPage } from './pages/RecruiterPricingPage'
+import { RecruiterResourcesPage } from './pages/RecruiterResourcesPage'
+import { RecruiterTalentPoolPage } from './pages/RecruiterTalentPoolPage'
+import { RecruiterAnalyticsPage, RecruiterApplicationsPage, RecruiterInterviewsPage, RecruiterTeamPage } from './pages/RecruiterWorkspacePages'
 import { ProtectedRoute, RoleRedirect } from './routes/ProtectedRoute'
 
 function App() {
@@ -107,10 +112,66 @@ function App() {
           ),
         },
         {
+          path: '/recruiter-applications',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterApplicationsPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: '/recruiter-pricing',
           element: (
             <ProtectedRoute allowedRoles={['recruiter']}>
               <RecruiterPricingPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/recruiter-interviews',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterInterviewsPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/recruiter-analytics',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterAnalyticsPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/recruiter-team',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterTeamPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/recruiter-talent',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterTalentPoolPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/recruiter-find-resume',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterFindResumePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/recruiter-resources',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterResourcesPage />
             </ProtectedRoute>
           ),
         },
@@ -180,6 +241,9 @@ function App() {
         { path: '/employer-login', element: <EmployerLoginPage /> },
         { path: '/recruiter-register', element: <EmployerRegisterPage /> },
         { path: '/employer-register', element: <EmployerRegisterPage /> },
+        { path: '/recruiter-verification', element: <RecruiterVerificationPage /> },
+        { path: '/recruiter-documents', element: <RecruiterDocumentsPage /> },
+        { path: '/recruiter-document-review', element: <RecruiterDocumentReviewPage /> },
       ],
     },
   ])

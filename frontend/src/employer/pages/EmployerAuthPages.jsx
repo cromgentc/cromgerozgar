@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Building2, CheckCircle2, Eye, EyeOff, Globe2, Lock, Mail } from 'lucide-react'
 import { Button } from '../../components/Button'
-import { getDashboardPath, normalizeRole } from '../../routes/authRouting'
+import { getDashboardPath, getRecruiterVerificationPath, getRecruiterVerificationStatus, normalizeRole } from '../../routes/authRouting'
 import { api } from '../../services/api'
 import employerImage from '../../assets/employer-hiring-suite.png'
 
@@ -13,14 +13,102 @@ const initialRegister = {
   industry: '',
   companySize: '',
   website: '',
-  location: '',
+  locationType: 'India',
+  country: 'India',
+  state: '',
+  city: '',
+  fullAddress: '',
   password: '',
   confirmPassword: '',
 }
 
-function saveSession(payload) {
+const companySuggestions = ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'Cromgen Rozgar']
+
+const industrySuggestions = [
+  'IT & Software', 'Recruitment', 'HR Technology', 'Cloud Software', 'Fintech', 'Digital Marketing', 'Customer Support',
+  'Healthcare', 'Education', 'Manufacturing', 'Retail', 'Logistics', 'Consulting', 'AI Operations',
+]
+
+const companySizeSuggestions = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5000+']
+
+const freeEmailDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'live.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com', 'rediffmail.com']
+
+const indiaLocations = {
+  'Andaman and Nicobar Islands': ['Port Blair'],
+  'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Nellore', 'Kurnool', 'Kakinada', 'Rajahmundry', 'Anantapur', 'Kadapa'],
+  'Arunachal Pradesh': ['Itanagar', 'Naharlagun', 'Tawang', 'Pasighat', 'Ziro'],
+  Assam: ['Guwahati', 'Silchar', 'Dibrugarh', 'Jorhat', 'Tezpur', 'Nagaon'],
+  Bihar: ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Darbhanga', 'Purnia'],
+  Chandigarh: ['Chandigarh'],
+  Chhattisgarh: ['Raipur', 'Bhilai', 'Bilaspur', 'Korba', 'Durg'],
+  Delhi: ['New Delhi', 'Delhi NCR', 'Dwarka', 'Rohini', 'Saket'],
+  Goa: ['Panaji', 'Margao', 'Vasco da Gama', 'Mapusa'],
+  Gujarat: ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar', 'Bhavnagar', 'Jamnagar', 'Vapi'],
+  Haryana: ['Gurugram', 'Faridabad', 'Panipat', 'Ambala', 'Hisar', 'Karnal', 'Sonipat'],
+  'Himachal Pradesh': ['Shimla', 'Dharamshala', 'Mandi', 'Solan'],
+  'Jammu and Kashmir': ['Srinagar', 'Jammu', 'Anantnag', 'Baramulla'],
+  Jharkhand: ['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Deoghar'],
+  Karnataka: ['Bengaluru', 'Mysuru', 'Mangaluru', 'Hubballi', 'Belagavi', 'Udupi', 'Manipal'],
+  Kerala: ['Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Thrissur', 'Kollam'],
+  Ladakh: ['Leh', 'Kargil'],
+  'Madhya Pradesh': ['Indore', 'Bhopal', 'Gwalior', 'Jabalpur', 'Ujjain'],
+  Maharashtra: ['Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Thane', 'Navi Mumbai', 'Aurangabad', 'Kolhapur'],
+  Manipur: ['Imphal', 'Thoubal'],
+  Meghalaya: ['Shillong', 'Tura'],
+  Mizoram: ['Aizawl', 'Lunglei'],
+  Nagaland: ['Kohima', 'Dimapur'],
+  Odisha: ['Bhubaneswar', 'Cuttack', 'Rourkela', 'Puri', 'Sambalpur'],
+  Puducherry: ['Puducherry', 'Karaikal'],
+  Punjab: ['Ludhiana', 'Amritsar', 'Jalandhar', 'Mohali', 'Patiala'],
+  Rajasthan: ['Jaipur', 'Udaipur', 'Jodhpur', 'Kota', 'Ajmer'],
+  Sikkim: ['Gangtok', 'Namchi'],
+  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem', 'Tiruppur', 'Hosur'],
+  Telangana: ['Hyderabad', 'Warangal', 'Karimnagar', 'Nizamabad', 'Khammam'],
+  Tripura: ['Agartala', 'Udaipur'],
+  'Uttar Pradesh': ['Noida', 'Greater Noida', 'Lucknow', 'Kanpur', 'Ghaziabad', 'Varanasi', 'Agra', 'Prayagraj', 'Meerut'],
+  Uttarakhand: ['Dehradun', 'Haridwar', 'Haldwani', 'Roorkee'],
+  'West Bengal': ['Kolkata', 'Siliguri', 'Durgapur', 'Asansol', 'Howrah'],
+}
+
+const internationalLocations = {
+  'United States': {
+    California: ['San Francisco', 'Los Angeles', 'San Diego', 'San Jose'],
+    'New York': ['New York City', 'Buffalo', 'Rochester'],
+    Texas: ['Austin', 'Dallas', 'Houston'],
+  },
+  'United Kingdom': {
+    England: ['London', 'Manchester', 'Birmingham', 'Leeds'],
+    Scotland: ['Edinburgh', 'Glasgow'],
+  },
+  Canada: {
+    Ontario: ['Toronto', 'Ottawa', 'Mississauga'],
+    'British Columbia': ['Vancouver', 'Victoria'],
+  },
+  UAE: {
+    Dubai: ['Dubai'],
+    'Abu Dhabi': ['Abu Dhabi'],
+    Sharjah: ['Sharjah'],
+  },
+  Singapore: {
+    Central: ['Singapore'],
+  },
+  Australia: {
+    'New South Wales': ['Sydney', 'Newcastle'],
+    Victoria: ['Melbourne', 'Geelong'],
+  },
+}
+
+function getSavedRecruiterVerificationStatus(email) {
+  return localStorage.getItem(`recruiterVerification:${email?.toLowerCase()}`) || ''
+}
+
+function saveSession(payload, overrides = {}) {
+  const email = payload.data.email || overrides.email
+  const savedStatus = normalizeRole(payload.data.role) === 'recruiter' ? getSavedRecruiterVerificationStatus(email) : ''
+  const recruiterVerificationStatus = overrides.recruiterVerificationStatus || savedStatus || payload.data.recruiterVerificationStatus
+
   localStorage.setItem('authToken', payload.token)
-  localStorage.setItem('authUser', JSON.stringify({ ...payload.data, role: normalizeRole(payload.data.role) }))
+  localStorage.setItem('authUser', JSON.stringify({ ...payload.data, ...overrides, role: normalizeRole(payload.data.role), ...(recruiterVerificationStatus ? { recruiterVerificationStatus } : {}) }))
 }
 
 export function EmployerLoginPage() {
@@ -44,8 +132,9 @@ export function EmployerLoginPage() {
       }
 
       saveSession(payload)
+      const status = getRecruiterVerificationStatus()
       setMessage('Recruiter login successful. Redirecting...')
-      navigate(getDashboardPath(payload.data.role))
+      navigate(status === 'approved' ? getDashboardPath(payload.data.role) : getRecruiterVerificationPath(status))
     } catch (error) {
       setMessage(error.message)
     } finally {
@@ -79,14 +168,62 @@ export function EmployerRegisterPage() {
   const [form, setForm] = useState(initialRegister)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const stateOptions = useMemo(() => {
+    if (form.locationType === 'India') return Object.keys(indiaLocations)
+    return form.country ? Object.keys(internationalLocations[form.country] || {}) : []
+  }, [form.country, form.locationType])
+  const cityOptions = useMemo(() => {
+    if (!form.state) return []
+    if (form.locationType === 'India') return indiaLocations[form.state] || []
+    return internationalLocations[form.country]?.[form.state] || []
+  }, [form.country, form.locationType, form.state])
+  const fullAddressOpen = Boolean(form.city)
 
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
 
+  const isBusinessEmail = (email) => {
+    const domain = email.split('@')[1]?.toLowerCase()
+    return Boolean(domain && !freeEmailDomains.includes(domain))
+  }
+
+  const continueToSetup = () => {
+    if (!form.companyName || !form.businessEmail) {
+      setMessage('Company name and business email are required.')
+      return
+    }
+
+    if (!isBusinessEmail(form.businessEmail)) {
+      setMessage('Please use a business email address. Personal email domains are not accepted.')
+      return
+    }
+
+    setMessage('')
+    setStep(2)
+  }
+
+  const changeLocationType = (value) => {
+    setForm((current) => ({
+      ...current,
+      locationType: value,
+      country: value === 'India' ? 'India' : '',
+      state: '',
+      city: '',
+      fullAddress: '',
+    }))
+  }
+
   const submit = async () => {
+    if (!isBusinessEmail(form.businessEmail)) {
+      setMessage('Please use a business email address. Personal email domains are not accepted.')
+      return
+    }
+
     if (form.password !== form.confirmPassword) {
       setMessage('Password and confirm password do not match.')
       return
     }
+
+    const location = [form.city, form.state, form.country].filter(Boolean).join(', ')
 
     setLoading(true)
     setMessage('')
@@ -106,12 +243,14 @@ export function EmployerRegisterPage() {
         industry: form.industry,
         companySize: form.companySize,
         website: form.website,
-        location: form.location,
+        location,
+        fullAddress: form.fullAddress,
       }).catch(() => null)
 
-      saveSession(payload)
+      localStorage.setItem(`recruiterVerification:${form.businessEmail.toLowerCase()}`, 'account_review')
+      saveSession(payload, { recruiterVerificationStatus: 'account_review' })
       setMessage('Recruiter registered successfully. Redirecting...')
-      navigate(getDashboardPath(payload.data.role))
+      navigate('/recruiter-verification')
     } catch (error) {
       setMessage(error.message)
     } finally {
@@ -128,18 +267,41 @@ export function EmployerRegisterPage() {
       <div className="grid gap-4 sm:grid-cols-2">
         {step === 1 ? (
           <>
-            <input className="input" onChange={(e) => update('companyName', e.target.value)} placeholder="Company Name" required value={form.companyName} />
+            <input className="input" list="register-company-suggestions" onChange={(e) => update('companyName', e.target.value)} placeholder="Company Name" required value={form.companyName} />
             <input className="input" onChange={(e) => update('businessEmail', e.target.value)} placeholder="Business Email" required type="email" value={form.businessEmail} />
             <input className="input" onChange={(e) => update('phone', e.target.value)} placeholder="Phone Number" value={form.phone} />
-            <input className="input" onChange={(e) => update('industry', e.target.value)} placeholder="Industry" value={form.industry} />
+            <input className="input" list="register-industry-suggestions" onChange={(e) => update('industry', e.target.value)} placeholder="Industry" value={form.industry} />
+            <datalist id="register-company-suggestions">{companySuggestions.map((item) => <option key={item} value={item} />)}</datalist>
+            <datalist id="register-industry-suggestions">{industrySuggestions.map((item) => <option key={item} value={item} />)}</datalist>
           </>
         ) : (
           <>
-            <input className="input" onChange={(e) => update('companySize', e.target.value)} placeholder="Company Size" value={form.companySize} />
+            <input className="input" list="register-company-size-suggestions" onChange={(e) => update('companySize', e.target.value)} placeholder="Company Size" value={form.companySize} />
             <input className="input" onChange={(e) => update('website', e.target.value)} placeholder="Website URL" value={form.website} />
-            <input className="input" onChange={(e) => update('location', e.target.value)} placeholder="Location" value={form.location} />
+            <select className="input" onChange={(e) => changeLocationType(e.target.value)} value={form.locationType}>
+              <option>India</option>
+              <option>International</option>
+            </select>
+            {form.locationType === 'International' ? (
+              <select className="input" onChange={(e) => setForm((current) => ({ ...current, country: e.target.value, state: '', city: '', fullAddress: '' }))} required value={form.country}>
+                <option value="">Select country</option>
+                {Object.keys(internationalLocations).map((country) => <option key={country}>{country}</option>)}
+              </select>
+            ) : (
+              <input className="input" readOnly value="India" />
+            )}
+            <select className="input" onChange={(e) => setForm((current) => ({ ...current, state: e.target.value, city: '', fullAddress: '' }))} required value={form.state}>
+              <option value="">Select state / region</option>
+              {stateOptions.map((state) => <option key={state}>{state}</option>)}
+            </select>
+            <input className="input" disabled={!form.state} list="register-city-suggestions" onChange={(e) => update('city', e.target.value)} placeholder="Select or type city" required value={form.city} />
+            {fullAddressOpen && (
+              <textarea className="input min-h-24 sm:col-span-2" onChange={(e) => update('fullAddress', e.target.value)} placeholder="Full company address" required value={form.fullAddress} />
+            )}
             <PasswordInput onChange={(e) => update('password', e.target.value)} placeholder="Password" required value={form.password} />
             <PasswordInput className="sm:col-span-2" onChange={(e) => update('confirmPassword', e.target.value)} placeholder="Confirm Password" required value={form.confirmPassword} />
+            <datalist id="register-company-size-suggestions">{companySizeSuggestions.map((item) => <option key={item} value={item} />)}</datalist>
+            <datalist id="register-city-suggestions">{cityOptions.map((city) => <option key={city} value={city} />)}</datalist>
           </>
         )}
       </div>
@@ -150,7 +312,7 @@ export function EmployerRegisterPage() {
         <button
           className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700"
           disabled={loading}
-          onClick={() => (step === 1 ? setStep(2) : submit())}
+          onClick={() => (step === 1 ? continueToSetup() : submit())}
           type="button"
         >
           {loading ? 'Please wait...' : step === 1 ? 'Continue' : 'Register Recruiter'}

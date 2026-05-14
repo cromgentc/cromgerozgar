@@ -16,6 +16,7 @@ import {
 } from '../components/AdminPrimitives'
 import { reportRows } from '../data/adminData'
 import { api } from '../../services/api'
+import { updateRecruiterVerificationRemark } from '../../routes/authRouting'
 
 const configs = {
   users: {
@@ -251,6 +252,14 @@ const companyNameOptions = ['Nimbus Tech', 'Talentora', 'Auralis Support', 'Blue
 
 const industryOptions = ['IT & Software', 'SaaS', 'Fintech', 'Recruitment', 'HR Technology', 'Digital Marketing', 'Customer Support', 'E-commerce', 'Finance', 'Healthcare', 'Education', 'Manufacturing', 'Logistics', 'AI & Data', 'BPO', 'Consulting']
 
+const recruiterReviewActions = [
+  { label: 'Account Reviews', value: 'account_review', status: 'account_review' },
+  { label: 'Account Verify', value: 'account_verify', status: 'documents_required' },
+  { label: 'Rejected', value: 'rejected', status: 'rejected' },
+  { label: 'Hold', value: 'hold', status: 'hold' },
+  { label: 'Suspended', value: 'suspended', status: 'suspended' },
+]
+
 function normalizeName(value) {
   return String(value || '').trim().toLowerCase()
 }
@@ -292,6 +301,8 @@ export function AdminManagementPage({ type }) {
   const [rows, setRows] = useState(config.staticRows || [])
   const [modalOpen, setModalOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [reviewAction, setReviewAction] = useState(null)
+  const [reviewRemark, setReviewRemark] = useState('')
   const [selectedRow, setSelectedRow] = useState(null)
   const [form, setForm] = useState({})
   const [message, setMessage] = useState('')
@@ -431,14 +442,72 @@ export function AdminManagementPage({ type }) {
     }
   }
 
+  const applyRecruiterReviewAction = async (row, action, remark = '') => {
+    const normalizedAction = recruiterReviewActions.find((item) => item.value === action)
+    if (!normalizedAction) return
+
+    const email = row.email || row.businessEmail
+    const status = normalizedAction.status
+    const backendStatus = action === 'suspended' ? 'Suspend' : action === 'account_verify' ? 'Active' : 'Inactive'
+    const localPayload = { status: normalizedAction.label, recruiterVerificationStatus: status, recruiterVerificationRemark: remark }
+    const apiPayload = { status: backendStatus, recruiterVerificationStatus: status, recruiterVerificationRemark: remark }
+
+    if (email) {
+      localStorage.setItem(`recruiterVerification:${email.toLowerCase()}`, status)
+      updateRecruiterVerificationRemark(email, remark)
+    }
+
+    try {
+      if (row._id && config.resource) {
+        await api.update(config.resource, row._id, apiPayload)
+      }
+      setRows((current) => current.map((item) => (item._id === row._id ? { ...item, ...localPayload } : item)))
+      setMessage(`Recruiter account marked as ${normalizedAction.label}.`)
+    } catch (error) {
+      setRows((current) => current.map((item) => (item._id === row._id ? { ...item, ...localPayload } : item)))
+      setMessage(`Saved locally. Backend unavailable: ${error.message}`)
+    }
+  }
+
+  const selectRecruiterReviewAction = (row, action) => {
+    const needsRemark = ['rejected', 'hold', 'suspended'].includes(action)
+
+    if (needsRemark) {
+      setReviewAction({ row, action })
+      setReviewRemark('')
+      return
+    }
+
+    applyRecruiterReviewAction(row, action)
+  }
+
+  const submitReviewRemark = () => {
+    if (!reviewAction) return
+
+    if (!reviewRemark.trim()) {
+      setMessage('Remark is required for rejected, hold, and suspended accounts.')
+      return
+    }
+
+    applyRecruiterReviewAction(reviewAction.row, reviewAction.action, reviewRemark.trim())
+    setReviewAction(null)
+    setReviewRemark('')
+  }
+
   const actions = useMemo(
-    () => (row) => (
-      <ActionButtons
-        extra={type === 'resumes' ? 'Preview' : config.extra}
-        onDelete={type === 'resumes' && resumeMode === 'lead' ? undefined : () => requestDelete(row)}
-        onEdit={type === 'resumes' && resumeMode === 'lead' ? () => openEdit(row) : () => openEdit(row)}
-      />
-    ),
+    () => (row) => {
+      if (type === 'users' && row.role === 'recruiter') {
+        return <RecruiterReviewActions onAction={(action) => selectRecruiterReviewAction(row, action)} onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} />
+      }
+
+      return (
+        <ActionButtons
+          extra={type === 'resumes' ? 'Preview' : config.extra}
+          onDelete={type === 'resumes' && resumeMode === 'lead' ? undefined : () => requestDelete(row)}
+          onEdit={type === 'resumes' && resumeMode === 'lead' ? () => openEdit(row) : () => openEdit(row)}
+        />
+      )
+    },
     [config.extra, resumeMode, type],
   )
 
@@ -472,6 +541,14 @@ export function AdminManagementPage({ type }) {
       <DataTable actions={actions} columns={config.columns} rows={formatRows(rows)} />
       {!rows.length && <EmptyAdminState title={`${config.title} empty state`} />}
       <CrudModal companyOptions={companyOptions} companyRows={companyRows} config={config} form={form} isCreate={!selectedRow} onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))} onClose={() => setModalOpen(false)} onSave={save} open={modalOpen} type={type} />
+      <AdminModal open={Boolean(reviewAction)} title="Add recruiter account remark" onClose={() => setReviewAction(null)}>
+        <p className="text-sm leading-6 text-slate-500">This remark will be shown to the recruiter on their verification screen.</p>
+        <textarea className="input mt-4 min-h-32" onChange={(event) => setReviewRemark(event.target.value)} placeholder="Write reason or next steps for recruiter" value={reviewRemark} />
+        <div className="mt-5 flex justify-end gap-2">
+          <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setReviewAction(null)} type="button">Cancel</button>
+          <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={submitReviewRemark} type="button">Save Remark</button>
+        </div>
+      </AdminModal>
       <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={remove} />
     </div>
   )
@@ -522,6 +599,22 @@ function getInitialForm(type, companyOptions = fieldOptions.company) {
 
 function getFieldLabel(fields, key) {
   return fields.find(([fieldKey]) => fieldKey === key)?.[1] || key
+}
+
+function RecruiterReviewActions({ onAction, onDelete, onEdit }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700" onClick={onEdit} type="button">Edit</button>
+      <select className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 outline-none" onChange={(event) => {
+        if (event.target.value) onAction(event.target.value)
+        event.target.value = ''
+      }} defaultValue="">
+        <option value="">Actions</option>
+        {recruiterReviewActions.map((action) => <option key={action.value} value={action.value}>{action.label}</option>)}
+      </select>
+      {onDelete && <button className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700" onClick={onDelete} type="button">Delete</button>}
+    </div>
+  )
 }
 
 function getSelectOptions(key, companyOptions) {

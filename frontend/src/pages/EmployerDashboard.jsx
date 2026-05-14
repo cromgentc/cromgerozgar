@@ -1,4 +1,4 @@
-import { BarChart3, BriefcaseBusiness, Building2, CalendarDays, FilePlus2, UsersRound } from 'lucide-react'
+import { BarChart3, BriefcaseBusiness, Building2, CalendarDays, FilePlus2, SearchCheck, UserPlus, UsersRound } from 'lucide-react'
 import { Button } from '../components/Button'
 import { jobs } from '../data/portalData'
 import { useApiResource } from '../hooks/useApiResource'
@@ -24,13 +24,14 @@ export function EmployerDashboard() {
             <div className="grid gap-4 md:grid-cols-3">
               {['18.4k Job Views', '12.6% Apply Rate', '8.2 Days Avg Shortlist'].map((item) => <div className="rounded-2xl bg-blue-50 p-4 font-black text-blue-700" key={item}>{item}</div>)}
             </div>
+            <Button className="mt-4" to="/recruiter-analytics" variant="secondary">Open Analytics</Button>
           </Panel>
           <Panel title="Manage Active Jobs">
             <div className="grid gap-3">
               {dashboardJobs.map((job) => (
                 <div className="flex flex-col justify-between gap-3 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center" key={job._id || job.id}>
                   <div><p className="font-bold text-slate-950">{job.title}</p><p className="text-sm text-slate-500">{job.location} · {job.type} · {job.workMode}</p></div>
-                  <Button variant="secondary">View Applications</Button>
+                  <Button to="/recruiter-applications" variant="secondary">View Applications</Button>
                 </div>
               ))}
             </div>
@@ -42,7 +43,14 @@ export function EmployerDashboard() {
           </Panel>
         </div>
         <div className="grid h-max gap-6">
-          <Panel title="Post a Job"><Button className="w-full" to="/post-job">Create New Job</Button></Panel>
+          <Panel title="Quick Actions">
+            <div className="grid gap-3">
+              <Button className="w-full" to="/post-job"><FilePlus2 size={18} /> Create New Job</Button>
+              <Button className="w-full" to="/recruiter-find-resume" variant="secondary"><SearchCheck size={18} /> Find Resume</Button>
+              <Button className="w-full" to="/recruiter-interviews" variant="secondary"><CalendarDays size={18} /> Interviews</Button>
+              <Button className="w-full" to="/recruiter-team" variant="secondary"><UserPlus size={18} /> Team Access</Button>
+            </div>
+          </Panel>
           <Panel title="Candidate List">
             <div className="grid gap-3">{['Neha Sharma', 'Rohan Mehta', 'Simran Kaur', 'Aditya Rao'].map((name) => <p className="rounded-2xl bg-slate-50 p-4 font-semibold text-slate-700" key={name}>{name}</p>)}</div>
           </Panel>

@@ -51,6 +51,7 @@ export const api = {
   register: (data) => apiRequest('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   employerLogin: (data) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   employerRegister: (data) => apiRequest('/employers', { method: 'POST', body: JSON.stringify(data) }),
+  gstDetails: (gstNumber) => apiRequest(`/gst/${encodeURIComponent(gstNumber)}`),
   list: (resource, params = '') => apiRequest(`/${resource}${params}`, { authRequired: resource === 'users' }),
   create: (resource, data) => apiRequest(`/${resource}`, { method: 'POST', body: JSON.stringify(data), authRequired: resource === 'users' }),
   update: (resource, id, data) => apiRequest(`/${resource}/${id}`, { method: 'PUT', body: JSON.stringify(data), authRequired: resource === 'users' }),

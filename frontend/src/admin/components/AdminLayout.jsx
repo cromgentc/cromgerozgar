@@ -4,11 +4,15 @@ import {
   Bell,
   BriefcaseBusiness,
   Building2,
+  CalendarDays,
   ChevronDown,
+  ClipboardList,
   CreditCard,
   Database,
+  ExternalLink,
   FileCheck2,
   FolderTree,
+  LineChart,
   LayoutDashboard,
   LogOut,
   MapPin,
@@ -17,6 +21,7 @@ import {
   Sun,
   Search,
   Settings,
+  UserPlus,
   UsersRound,
   X,
 } from 'lucide-react'
@@ -41,7 +46,21 @@ const sidebarItems = [
 const employerSidebarItems = [
   { label: 'Dashboard', to: '/recruiter-dashboard', icon: LayoutDashboard },
   { label: 'Post a Job', to: '/post-job', icon: BriefcaseBusiness },
+  { label: 'Applications', to: '/recruiter-applications', icon: ClipboardList },
+  {
+    label: 'Talent Pool',
+    to: '/recruiter-talent',
+    icon: UsersRound,
+    children: [
+      { label: 'Talent Overview', to: '/recruiter-talent', icon: UsersRound },
+      { label: 'Find Resume', to: '/recruiter-find-resume', icon: Database },
+    ],
+  },
+  { label: 'Interviews', to: '/recruiter-interviews', icon: CalendarDays },
+  { label: 'Analytics', to: '/recruiter-analytics', icon: LineChart },
+  { label: 'Team', to: '/recruiter-team', icon: UserPlus },
   { label: 'Pricing', to: '/recruiter-pricing', icon: CreditCard },
+  { label: 'Resources', to: '/recruiter-resources', icon: FileCheck2 },
 ]
 
 export function AdminLayout() {
@@ -102,6 +121,15 @@ export function AdminLayout() {
             </div>
 
             <div className="flex items-center gap-2">
+              {isEmployer && (
+                <Link
+                  className="hidden h-11 items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 text-sm font-bold text-blue-700 transition hover:bg-blue-100 sm:inline-flex"
+                  to="/recruiter"
+                >
+                  <ExternalLink size={17} />
+                  Visit Recruiter Website
+                </Link>
+              )}
               <button
                 className={`hidden h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold sm:inline-flex ${lightActive ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600'}`}
                 onClick={() => setLightActive((value) => !value)}
@@ -223,7 +251,9 @@ function AdminSidebar({ isEmployer, mobileOpen, onClose, role }) {
 }
 
 function SidebarContent({ isEmployer, role }) {
+  const [openGroups, setOpenGroups] = useState({ 'Talent Pool': true })
   const navigate = useNavigate()
+  const location = useLocation()
   const items = isEmployer ? employerSidebarItems : role === 'Admin' ? sidebarItems : []
 
   const logout = () => {
@@ -257,6 +287,49 @@ function SidebarContent({ isEmployer, role }) {
         {items.length ? (
           items.map((item) => {
             const Icon = item.icon
+
+            if (item.children?.length) {
+              const isExpanded = openGroups[item.label]
+              const isGroupActive = item.children.some((child) => location.pathname === child.to)
+
+              return (
+                <div key={item.label}>
+                  <button
+                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                      isGroupActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                    }`}
+                    onClick={() => setOpenGroups((current) => ({ ...current, [item.label]: !isExpanded }))}
+                    type="button"
+                  >
+                    <Icon size={19} />
+                    <span className="flex-1 text-left">{item.label}</span>
+                    <ChevronDown className={`transition ${isExpanded ? 'rotate-180' : ''}`} size={16} />
+                  </button>
+                  {isExpanded && (
+                    <div className="mt-1 grid gap-1 pl-5">
+                      {item.children.map((child) => {
+                        const ChildIcon = child.icon
+
+                        return (
+                          <NavLink
+                            className={({ isActive }) =>
+                              `flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-bold transition ${
+                                isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-950'
+                              }`
+                            }
+                            key={child.label}
+                            to={child.to}
+                          >
+                            <ChildIcon size={17} /> {child.label}
+                          </NavLink>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
             return (
               <NavLink
                 className={({ isActive }) =>

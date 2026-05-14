@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { BriefcaseBusiness, ChevronDown, LogOut, Mail, MapPin, Menu, MessageCircle, Send, ShieldCheck, Sparkles, UserRound, Users, X } from 'lucide-react'
 import { Button } from './Button'
 import { getStoredUser } from '../routes/authRouting'
+import { EmployerFooter } from '../employer/components/EmployerFooter'
 
 const navItems = [
   { label: 'Home', to: '/' },
@@ -153,7 +154,7 @@ export function Layout() {
         <Outlet />
       </main>
 
-      {!isCandidate && <footer className="border-t border-slate-200 bg-white">
+      {isRecruiterAccount ? <EmployerFooter /> : !isCandidate && <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           {!isCandidate && (
             <div className="overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-teal-50 shadow-xl shadow-blue-100/50">
