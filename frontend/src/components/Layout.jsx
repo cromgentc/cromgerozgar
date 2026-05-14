@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { BriefcaseBusiness, ChevronDown, LogOut, Mail, MapPin, Menu, MessageCircle, Send, ShieldCheck, Sparkles, UserRound, Users, X } from 'lucide-react'
+import { Bell, BriefcaseBusiness, CalendarDays, ChevronDown, ClipboardList, CreditCard, LogOut, Mail, MapPin, Menu, MessageCircle, Send, ShieldCheck, Sparkles, UserRound, Users, Wallet, X } from 'lucide-react'
 import { Button } from './Button'
 import { getStoredUser } from '../routes/authRouting'
 import { EmployerFooter } from '../employer/components/EmployerFooter'
 import { api } from '../services/api'
+import { getCandidateProfileCompletion, getJobAlerts } from '../utils/candidateActivity'
+import { getSavedJobs } from '../utils/savedJobs'
 
 const navItems = [
   { label: 'Home', to: '/' },
@@ -20,6 +22,10 @@ const recruiterProfilePath = '/recruiter-profile'
 export function Layout() {
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [notificationsLoading, setNotificationsLoading] = useState(false)
+  const [clearedNotificationIds, setClearedNotificationIds] = useState([])
   const [user, setUser] = useState(() => getStoredUser())
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [newsletterStatus, setNewsletterStatus] = useState({ type: '', message: '' })
@@ -41,7 +47,55 @@ export function Layout() {
     setUser(getStoredUser())
     setOpen(false)
     setProfileOpen(false)
+    setNotificationsOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!user?.email || !user?.role) {
+      setNotifications([])
+      setClearedNotificationIds([])
+      return
+    }
+
+    let mounted = true
+    const key = getRoleNotificationClearKey(user)
+    const loadNotifications = async () => {
+      setNotificationsLoading(true)
+      try {
+        const roleNotifications = await buildRoleNotifications(user)
+        const clearedIds = JSON.parse(localStorage.getItem(key) || '[]')
+        if (!mounted) return
+        setClearedNotificationIds(clearedIds)
+        setNotifications(roleNotifications.filter((item) => !clearedIds.includes(item.id)))
+      } catch {
+        if (mounted) setNotifications([])
+      } finally {
+        if (mounted) setNotificationsLoading(false)
+      }
+    }
+
+    loadNotifications()
+    window.addEventListener('focus', loadNotifications)
+    window.addEventListener('candidateActivityChanged', loadNotifications)
+    window.addEventListener('savedJobsChanged', loadNotifications)
+    window.addEventListener('recruiter-wallet-updated', loadNotifications)
+
+    return () => {
+      mounted = false
+      window.removeEventListener('focus', loadNotifications)
+      window.removeEventListener('candidateActivityChanged', loadNotifications)
+      window.removeEventListener('savedJobsChanged', loadNotifications)
+      window.removeEventListener('recruiter-wallet-updated', loadNotifications)
+    }
+  }, [user?.email, user?.role])
+
+  const clearNotifications = () => {
+    if (!user?.email) return
+    const nextIds = [...new Set([...clearedNotificationIds, ...notifications.map((item) => item.id)])]
+    localStorage.setItem(getRoleNotificationClearKey(user), JSON.stringify(nextIds))
+    setClearedNotificationIds(nextIds)
+    setNotifications([])
+  }
 
   const logout = () => {
     localStorage.removeItem('authToken')
@@ -106,9 +160,15 @@ export function Layout() {
 
           <div className="hidden items-center gap-2 lg:flex">
             {isUserAccount ? (
-              <CandidateProfileMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
+              <>
+                <RoleNotificationBell loading={notificationsLoading} notifications={notifications} onClear={clearNotifications} open={notificationsOpen} setOpen={setNotificationsOpen} setProfileOpen={setProfileOpen} user={user} />
+                <CandidateProfileMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
+              </>
             ) : isRecruiterAccount ? (
-              <CompanyProfileMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
+              <>
+                <RoleNotificationBell loading={notificationsLoading} notifications={notifications} onClear={clearNotifications} open={notificationsOpen} setOpen={setNotificationsOpen} setProfileOpen={setProfileOpen} user={user} />
+                <CompanyProfileMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
+              </>
             ) : (
               <>
                 <Button to="/auth" variant="ghost">
@@ -148,6 +208,7 @@ export function Layout() {
                     </span>
                     {user.name || 'Candidate'}
                   </div>
+                  <MobileNotifications loading={notificationsLoading} notifications={notifications} onClear={clearNotifications} user={user} />
                   {isCandidate && <Button to="/candidate-profile" variant="secondary">Profile</Button>}
                   <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100" onClick={logout} type="button">
                     Logout
@@ -161,6 +222,7 @@ export function Layout() {
                     </span>
                     {user.name || 'Company'}
                   </div>
+                  <MobileNotifications loading={notificationsLoading} notifications={notifications} onClear={clearNotifications} user={user} />
                   <Button to={recruiterProfilePath} variant="secondary">Profile</Button>
                   <Button to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
                   <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100" onClick={logout} type="button">
