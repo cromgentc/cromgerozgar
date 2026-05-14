@@ -369,6 +369,283 @@ export function Layout() {
   )
 }
 
+function getRoleNotificationClearKey(user = {}) {
+  return `roleNotificationsCleared:${user.role || 'guest'}:${String(user.email || '').toLowerCase()}`
+}
+
+async function buildRoleNotifications(user) {
+  if (user.role === 'Candidate') return buildCandidateNotifications(user)
+  if (user.role === 'users') return buildUserNotifications(user)
+  if (user.role === 'recruiter') return buildRecruiterHeaderNotifications(user)
+  return []
+}
+
+async function buildCandidateNotifications(user) {
+  const [applicationsPayload] = await Promise.all([
+    api.list('applications', `?candidateEmail=${encodeURIComponent(user.email)}&sort=-createdAt&limit=100`).catch(() => ({ data: [] })),
+  ])
+  const applications = Array.isArray(applicationsPayload.data) ? applicationsPayload.data : []
+  const savedJobs = getSavedJobs(user)
+  const jobAlerts = getJobAlerts(user)
+  const profileCompletion = getCandidateProfileCompletion(user)
+  const interviewCount = applications.filter((item) => ['Interview', 'Selected'].includes(item.status)).length
+  const items = []
+
+  if (!profileCompletion.complete) {
+    items.push({
+      id: 'candidate-profile-incomplete',
+      title: `${profileCompletion.missing.length} profile details pending`,
+      description: 'Job apply karne ke liye profile aur resume complete karein.',
+      to: '/candidate-profile',
+      icon: ShieldCheck,
+      tone: 'rose',
+      meta: 'Profile',
+    })
+  }
+
+  if (applications.length) {
+    items.push({
+      id: 'candidate-applications',
+      title: `${applications.length} applied jobs`,
+      description: 'Aapke application status aur recruiter updates track karein.',
+      to: '/candidate-applied-jobs',
+      icon: ClipboardList,
+      tone: 'blue',
+      meta: 'Applications',
+    })
+  }
+
+  if (interviewCount) {
+    items.push({
+      id: 'candidate-interviews',
+      title: `${interviewCount} interview invites`,
+      description: 'Interview/selected stage applications review karein.',
+      to: '/candidate-interview-invites',
+      icon: CalendarDays,
+      tone: 'violet',
+      meta: 'Interview',
+    })
+  }
+
+  if (savedJobs.length) {
+    items.push({
+      id: 'candidate-saved-jobs',
+      title: `${savedJobs.length} saved jobs`,
+      description: 'Saved jobs ko review karke apply karein.',
+      to: '/candidate-saved-jobs',
+      icon: Sparkles,
+      tone: 'teal',
+      meta: 'Saved',
+    })
+  }
+
+  if (jobAlerts.length) {
+    items.push({
+      id: 'candidate-job-alerts',
+      title: `${jobAlerts.length} job alerts active`,
+      description: 'Matching jobs ke liye alert preferences active hain.',
+      to: '/candidate-job-alerts',
+      icon: Bell,
+      tone: 'emerald',
+      meta: 'Alerts',
+    })
+  }
+
+  applications.slice(0, 3).forEach((application) => {
+    items.push({
+      id: `candidate-application-${application._id}`,
+      title: `${application.jobTitle || 'Job'} status: ${application.status || 'New'}`,
+      description: `${application.company || 'Company'} / applied ${application.createdAt ? new Date(application.createdAt).toLocaleDateString() : 'recently'}`,
+      to: '/candidate-applied-jobs',
+      icon: BriefcaseBusiness,
+      tone: application.status === 'Rejected' ? 'rose' : application.status === 'Selected' ? 'emerald' : 'slate',
+      meta: application.status || 'New',
+    })
+  })
+
+  return items
+}
+
+async function buildUserNotifications(user) {
+  const supportPayload = await api.list('support-messages', `?email=${encodeURIComponent(user.email)}&sort=-createdAt&limit=20`).catch(() => ({ data: [] }))
+  const supportMessages = Array.isArray(supportPayload.data) ? supportPayload.data : []
+  const items = [
+    {
+      id: 'user-account-ready',
+      title: 'Account workspace ready',
+      description: 'Aapka account support, jobs, aur profile access ke liye ready hai.',
+      to: '/candidate-dashboard',
+      icon: UserRound,
+      tone: 'blue',
+      meta: 'Account',
+    },
+  ]
+
+  supportMessages.slice(0, 4).forEach((message) => {
+    items.push({
+      id: `user-support-${message._id}`,
+      title: `${message.subject || 'Support chat'}: ${message.status || 'Open'}`,
+      description: message.message || 'Support team conversation update.',
+      to: '/support',
+      icon: MessageCircle,
+      tone: ['Open', 'In Progress'].includes(message.status) ? 'teal' : 'slate',
+      meta: 'Support',
+    })
+  })
+
+  return items
+}
+
+async function buildRecruiterHeaderNotifications(user) {
+  const [dashboardPayload, walletPayload] = await Promise.all([
+    api.employerDashboard(user.email).catch(() => ({ data: {} })),
+    api.currentRecruiterPackage(user.email).catch(() => ({ data: null })),
+  ])
+  const dashboard = dashboardPayload.data || {}
+  const metrics = dashboard.metrics || {}
+  const applications = Array.isArray(dashboard.applications) ? dashboard.applications : []
+  const wallet = walletPayload.data
+  const items = []
+
+  if (Number(metrics.activeApplications || 0)) {
+    items.push({
+      id: 'recruiter-header-active-applications',
+      title: `${metrics.activeApplications} active applications`,
+      description: 'Candidates ko review, shortlist, interview stage mein move karein.',
+      to: '/recruiter-applications?status=active',
+      icon: ClipboardList,
+      tone: 'blue',
+      meta: 'Hiring',
+    })
+  }
+
+  if (wallet) {
+    items.push({
+      id: 'recruiter-header-wallet',
+      title: `${wallet.coinBalance || 0} wallet coins`,
+      description: 'Job posting wallet aur package details dekhein.',
+      to: '/recruiter-pricing',
+      icon: Wallet,
+      tone: Number(wallet.coinBalance || 0) > 0 ? 'emerald' : 'rose',
+      meta: wallet.packageSnapshot?.name || 'Wallet',
+    })
+  } else {
+    items.push({
+      id: 'recruiter-header-package',
+      title: 'Package activation required',
+      description: 'Job post karne ke liye recruiter package activate karein.',
+      to: '/recruiter-pricing',
+      icon: CreditCard,
+      tone: 'rose',
+      meta: 'Package',
+    })
+  }
+
+  applications.slice(0, 3).forEach((application) => {
+    items.push({
+      id: `recruiter-header-application-${application._id}`,
+      title: `${application.candidateName || 'Candidate'} applied`,
+      description: `${application.jobTitle || 'Job'} / ${application.status || 'New'}`,
+      to: application.candidateEmail ? `/recruiter-applications/candidate/${encodeURIComponent(application.candidateEmail)}` : '/recruiter-applications',
+      icon: Users,
+      tone: 'teal',
+      meta: application.createdAt ? new Date(application.createdAt).toLocaleDateString() : 'Recent',
+    })
+  })
+
+  return items
+}
+
+function getRoleNotificationTone(tone) {
+  const tones = {
+    blue: 'bg-blue-50 text-blue-700 ring-blue-100',
+    teal: 'bg-teal-50 text-teal-700 ring-teal-100',
+    violet: 'bg-violet-50 text-violet-700 ring-violet-100',
+    emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+    rose: 'bg-rose-50 text-rose-700 ring-rose-100',
+    slate: 'bg-slate-50 text-slate-700 ring-slate-200',
+  }
+
+  return tones[tone] || tones.blue
+}
+
+function RoleNotificationBell({ loading, notifications, onClear, open, setOpen, setProfileOpen, user }) {
+  return (
+    <div className="relative">
+      <button
+        className="relative grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+        onClick={() => {
+          setOpen((value) => !value)
+          setProfileOpen(false)
+        }}
+        type="button"
+      >
+        <Bell size={19} />
+        {notifications.length > 0 && (
+          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-teal-500 px-1 text-[10px] font-black text-white ring-2 ring-white">
+            {notifications.length}
+          </span>
+        )}
+      </button>
+      {open && <RoleNotificationMenu floating loading={loading} notifications={notifications} onClear={onClear} role={user?.role} />}
+    </div>
+  )
+}
+
+function RoleNotificationMenu({ floating = false, loading, notifications, onClear, role }) {
+  return (
+    <div className={`${floating ? 'absolute right-0 top-14 z-50 w-[24rem] max-w-[calc(100vw-2rem)] shadow-2xl shadow-blue-100' : 'w-full'} rounded-[1.5rem] border border-slate-200 bg-white p-4`}>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-black text-slate-950">Notifications</h3>
+        <div className="flex items-center gap-2">
+          {notifications.length > 0 && (
+            <button className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 transition hover:bg-rose-50 hover:text-rose-700" onClick={onClear} type="button">Clear</button>
+          )}
+          <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-700">{role || 'User'} live</span>
+        </div>
+      </div>
+      {loading ? (
+        <div className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-500">Loading notifications...</div>
+      ) : notifications.length ? (
+        <div className="grid max-h-[26rem] gap-2 overflow-y-auto pr-1">
+          {notifications.map((item) => {
+            const Icon = item.icon
+            return (
+              <Link className="group rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-blue-100 hover:bg-blue-50/50" key={item.id} to={item.to}>
+                <div className="flex gap-3">
+                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ring-1 ${getRoleNotificationTone(item.tone)}`}>
+                    <Icon size={18} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-start justify-between gap-3">
+                      <span className="font-black text-slate-950">{item.title}</span>
+                      <span className="shrink-0 rounded-full bg-slate-50 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-400 group-hover:bg-white">{item.meta}</span>
+                    </span>
+                    <span className="mt-1 block text-sm font-semibold leading-5 text-slate-500">{item.description}</span>
+                  </span>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="rounded-2xl bg-slate-50 p-4">
+          <p className="font-black text-slate-950">All clear</p>
+          <p className="mt-1 text-sm font-semibold text-slate-500">Aapke role ke liye abhi koi new notification nahi hai.</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MobileNotifications({ loading, notifications, onClear, user }) {
+  return (
+    <div className="pt-2">
+      <RoleNotificationMenu loading={loading} notifications={notifications} onClear={onClear} role={user?.role} />
+    </div>
+  )
+}
+
 function CompanyProfileMenu({ logout, open, setOpen, user }) {
   return (
     <div className="relative">
