@@ -98,14 +98,8 @@ const internationalLocations = {
   },
 }
 
-function getSavedRecruiterVerificationStatus(email) {
-  return localStorage.getItem(`recruiterVerification:${email?.toLowerCase()}`) || ''
-}
-
 function saveSession(payload, overrides = {}) {
-  const email = payload.data.email || overrides.email
-  const savedStatus = normalizeRole(payload.data.role) === 'recruiter' ? getSavedRecruiterVerificationStatus(email) : ''
-  const recruiterVerificationStatus = overrides.recruiterVerificationStatus || savedStatus || payload.data.recruiterVerificationStatus
+  const recruiterVerificationStatus = overrides.recruiterVerificationStatus || payload.data.recruiterVerificationStatus
 
   localStorage.setItem('authToken', payload.token)
   localStorage.setItem('authUser', JSON.stringify({ ...payload.data, ...overrides, role: normalizeRole(payload.data.role), ...(recruiterVerificationStatus ? { recruiterVerificationStatus } : {}) }))
@@ -247,10 +241,9 @@ export function EmployerRegisterPage() {
         fullAddress: form.fullAddress,
       }).catch(() => null)
 
-      localStorage.setItem(`recruiterVerification:${form.businessEmail.toLowerCase()}`, 'account_review')
-      saveSession(payload, { recruiterVerificationStatus: 'account_review' })
+      saveSession(payload)
       setMessage('Recruiter registered successfully. Redirecting...')
-      navigate('/recruiter-verification')
+      navigate('/recruiter-documents')
     } catch (error) {
       setMessage(error.message)
     } finally {

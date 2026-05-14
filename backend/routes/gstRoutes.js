@@ -12,7 +12,8 @@ router.get('/:gstNumber', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please enter a valid 15 character GST number.' })
     }
 
-    const lookupUrl = process.env.GST_LOOKUP_URL
+    const apiKey = process.env.GST_LOOKUP_API_KEY || process.env.GSTVERIFY_API_KEY
+    const lookupUrl = process.env.GST_LOOKUP_URL || (apiKey ? 'https://gstverify.co.in/api/v1/verify/{gstin}' : '')
 
     if (!lookupUrl) {
       return res.json({
@@ -22,7 +23,6 @@ router.get('/:gstNumber', async (req, res, next) => {
           lookupConfigured: false,
           legalName: '',
           tradeName: '',
-          status: 'Live GST API not connected',
           message: 'GSTIN format verified. Connect GST_LOOKUP_URL and GST_LOOKUP_API_KEY to fetch legal name, trade name, and active/inactive status.',
         },
       })
@@ -32,10 +32,10 @@ router.get('/:gstNumber', async (req, res, next) => {
       ? lookupUrl.replace('{gstin}', encodeURIComponent(gstNumber))
       : `${lookupUrl.replace(/\/$/, '')}/${encodeURIComponent(gstNumber)}`
     const headers = {}
-    const apiKey = process.env.GST_LOOKUP_API_KEY
+    const apiKeyHeader = process.env.GST_LOOKUP_API_KEY_HEADER || 'X-API-Key'
 
     if (apiKey) {
-      headers[process.env.GST_LOOKUP_API_KEY_HEADER || 'x-api-key'] = apiKey
+      headers[apiKeyHeader] = apiKey
     }
 
     const response = await fetch(url, { headers })
@@ -44,7 +44,7 @@ router.get('/:gstNumber', async (req, res, next) => {
     if (!response.ok) {
       return res.status(response.status).json({
         success: false,
-        message: payload.message || payload.error || 'GST lookup failed. Please check GST API configuration.',
+        message: payload.message || payload.error || (response.status === 401 ? 'GST API key missing or invalid. Add GST_LOOKUP_API_KEY in backend .env.' : 'GST lookup failed. Please check GST API configuration.'),
       })
     }
 

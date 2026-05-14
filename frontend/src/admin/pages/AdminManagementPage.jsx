@@ -22,7 +22,7 @@ const configs = {
   users: {
     resource: 'users',
     title: 'User Management',
-    subtitle: 'Get all portal users from MongoDB, add new users, and manage role access.',
+    subtitle: 'Account Management dashboard for user, admin, staff, and recruiter accounts.',
     actionLabel: 'Add User',
     modalTitle: 'Add / Edit User',
     extra: 'Profile',
@@ -37,7 +37,7 @@ const configs = {
     fields: [
       ['name', 'Full name'],
       ['email', 'Email address'],
-      ['role', 'Role: Admin, staff, recruiter, users'],
+      ['role', 'Role'],
       ['status', 'Status'],
     ],
     required: ['name', 'email', 'role', 'status'],
@@ -212,6 +212,41 @@ const configs = {
     columns: [{ key: 'invoiceNo', label: 'Invoice' }, { key: 'employer', label: 'Recruiter' }, { key: 'plan', label: 'Plan' }, { key: 'amount', label: 'Amount' }, { key: 'status', label: 'Status', badge: true }],
     fields: [['invoiceNo', 'Invoice number'], ['employer', 'Recruiter'], ['plan', 'Plan'], ['amount', 'Amount'], ['status', 'Payment status']],
   },
+  recruiterDocuments: {
+    resource: 'recruiter-documents',
+    title: 'Recruiter Documents',
+    subtitle: 'View recruiter document submissions saved in backend.',
+    actionLabel: 'Add Document',
+    modalTitle: 'Recruiter Document Details',
+    extra: 'View',
+    columns: [
+      { key: '_id', label: 'Document ID' },
+      { key: 'recruiterName', label: 'Recruiter' },
+      { key: 'recruiterEmail', label: 'Email' },
+      { key: 'documentType', label: 'Document Type', badge: true },
+      { key: 'panNumber', label: 'PAN' },
+      { key: 'gstNumber', label: 'GSTIN' },
+      { key: 'status', label: 'Status', badge: true },
+      { key: 'createdAt', label: 'Created' },
+    ],
+    fields: [
+      ['recruiterName', 'Recruiter name'],
+      ['recruiterEmail', 'Recruiter email'],
+      ['documentType', 'Document type'],
+      ['panNumber', 'PAN number'],
+      ['gstNumber', 'GST number'],
+      ['aadhaarNumber', 'Aadhar number'],
+      ['panDocument', 'PAN document'],
+      ['gstDocument', 'GST certificate'],
+      ['offerLetter', 'Offer letter'],
+      ['aadhaarDocument', 'Aadhar card'],
+      ['gstLegalName', 'GST legal name'],
+      ['gstTradeName', 'GST trade name'],
+      ['gstStatus', 'GST status'],
+      ['status', 'Review status'],
+    ],
+    required: ['recruiterEmail', 'documentType'],
+  },
   reports: {
     resource: null,
     title: 'Reports',
@@ -227,16 +262,17 @@ const configs = {
 }
 
 const accessByRole = {
-  Admin: ['users', 'jobs', 'companies', 'employers', 'candidates', 'applications', 'resumes', 'categories', 'locations', 'payments', 'reports', 'settings'],
+  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'categories', 'locations', 'payments', 'reports', 'settings'],
   staff: [],
   recruiter: [],
   users: [],
 }
 
 const fieldOptions = {
-  role: ['Admin', 'staff', 'recruiter', 'users'],
+  role: ['users', 'Admin', 'staff', 'recruiter'],
   status: ['Active', 'Inactive', 'Pending', 'Approved', 'Blocked', 'Open', 'Closed', 'New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected', 'Rejected'],
   userStatus: ['Active', 'Inactive', 'Suspend'],
+  documentType: ['GST', 'Offer Letter', 'Aadhar Card'],
   company: ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'Cromgen Solutions'],
   department: ['Engineering', 'Product', 'Design', 'Growth', 'Marketing', 'Sales', 'Customer Success', 'Support', 'HR & Recruitment', 'Finance', 'Operations', 'Research Operations', 'AI Operations'],
   experience: ['Fresher', '0-1 years', '1-3 years', '3-6 years', '6-10 years', '10+ years'],
@@ -255,6 +291,7 @@ const industryOptions = ['IT & Software', 'SaaS', 'Fintech', 'Recruitment', 'HR 
 const recruiterReviewActions = [
   { label: 'Account Reviews', value: 'account_review', status: 'account_review' },
   { label: 'Account Verify', value: 'account_verify', status: 'documents_required' },
+  { label: 'Approve Login', value: 'approved', status: 'approved' },
   { label: 'Rejected', value: 'rejected', status: 'rejected' },
   { label: 'Hold', value: 'hold', status: 'hold' },
   { label: 'Suspended', value: 'suspended', status: 'suspended' },
@@ -297,6 +334,7 @@ export function AdminManagementPage({ type }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const search = searchParams.get('search') || ''
   const status = searchParams.get('status') || ''
+  const role = searchParams.get('role') || ''
   const resumeMode = searchParams.get('resumeMode') || 'lead'
   const [rows, setRows] = useState(config.staticRows || [])
   const [modalOpen, setModalOpen] = useState(false)
@@ -324,6 +362,7 @@ export function AdminManagementPage({ type }) {
 
     const resource = type === 'resumes' && resumeMode === 'lead' ? 'candidates' : config.resource
     const params = new URLSearchParams()
+    if (type === 'users' && role) params.set('role', role)
     if (search) params.set('search', search)
     if (status) params.set('status', status)
 
@@ -344,7 +383,7 @@ export function AdminManagementPage({ type }) {
     setSelectedRow(null)
     setForm({})
     loadRows()
-  }, [type, search, status, resumeMode])
+  }, [type, search, status, role, resumeMode])
 
   useEffect(() => {
     api
@@ -434,7 +473,7 @@ export function AdminManagementPage({ type }) {
 
     try {
       await api.remove(config.resource, selectedRow._id)
-      setMessage('Record deleted successfully.')
+      setMessage(type === 'users' && selectedRow.role === 'recruiter' ? 'Recruiter account, profile, and documents deleted. New registration can use this email now.' : 'Record deleted successfully.')
       setConfirmOpen(false)
       loadRows()
     } catch (error) {
@@ -448,14 +487,11 @@ export function AdminManagementPage({ type }) {
 
     const email = row.email || row.businessEmail
     const status = normalizedAction.status
-    const backendStatus = action === 'suspended' ? 'Suspend' : action === 'account_verify' ? 'Active' : 'Inactive'
+    const backendStatus = ['account_verify', 'approved'].includes(action) ? 'Active' : action === 'suspended' ? 'Suspend' : 'Inactive'
     const localPayload = { status: normalizedAction.label, recruiterVerificationStatus: status, recruiterVerificationRemark: remark }
     const apiPayload = { status: backendStatus, recruiterVerificationStatus: status, recruiterVerificationRemark: remark }
 
-    if (email) {
-      localStorage.setItem(`recruiterVerification:${email.toLowerCase()}`, status)
-      updateRecruiterVerificationRemark(email, remark)
-    }
+    if (email) updateRecruiterVerificationRemark(email, remark)
 
     try {
       if (row._id && config.resource) {
@@ -481,6 +517,30 @@ export function AdminManagementPage({ type }) {
     applyRecruiterReviewAction(row, action)
   }
 
+  const approveRecruiterDocument = async (row) => {
+    const email = row.recruiterEmail
+
+    if (!email) {
+      setMessage('Recruiter email is missing on this document.')
+      return
+    }
+
+    try {
+      await api.update('recruiter-documents', row._id, { status: 'Approved' })
+      const usersPayload = await api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`)
+      const recruiter = (usersPayload.data || []).find((item) => item.email?.toLowerCase() === email.toLowerCase())
+
+      if (recruiter?._id) {
+        await api.update('users', recruiter._id, { status: 'Active', recruiterVerificationStatus: 'approved', recruiterVerificationRemark: '' })
+      }
+
+      setMessage('Recruiter documents approved. Recruiter can login to dashboard now.')
+      loadRows()
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
   const submitReviewRemark = () => {
     if (!reviewAction) return
 
@@ -498,6 +558,10 @@ export function AdminManagementPage({ type }) {
     () => (row) => {
       if (type === 'users' && row.role === 'recruiter') {
         return <RecruiterReviewActions onAction={(action) => selectRecruiterReviewAction(row, action)} onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} />
+      }
+
+      if (type === 'recruiterDocuments') {
+        return <RecruiterDocumentActions onApprove={() => approveRecruiterDocument(row)} onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} />
       }
 
       return (
@@ -525,7 +589,7 @@ export function AdminManagementPage({ type }) {
       />
       <div className="flex flex-col justify-between gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
         <div className="flex flex-wrap gap-2">
-          {['Admin', 'staff', 'recruiter', 'users'].map((role) => <StatusBadge key={role} status={role} />)}
+          {(type === 'users' ? fieldOptions.role : ['Admin', 'staff', 'recruiter', 'users']).map((item) => <StatusBadge key={item} status={item} />)}
         </div>
         {type === 'resumes' && (
           <select className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 outline-none" onChange={(event) => updateQuery('resumeMode', event.target.value)} value={resumeMode}>
@@ -617,6 +681,16 @@ function RecruiterReviewActions({ onAction, onDelete, onEdit }) {
   )
 }
 
+function RecruiterDocumentActions({ onApprove, onDelete, onEdit }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700" onClick={onEdit} type="button">View</button>
+      <button className="rounded-full bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700" onClick={onApprove} type="button">Approve</button>
+      {onDelete && <button className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700" onClick={onDelete} type="button">Delete</button>}
+    </div>
+  )
+}
+
 function getSelectOptions(key, companyOptions) {
   return key === 'company' ? companyOptions : fieldOptions[key]
 }
@@ -624,7 +698,7 @@ function getSelectOptions(key, companyOptions) {
 function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChange, onClose, onSave, open, type }) {
   const [showPassword, setShowPassword] = useState(false)
   const fields = type === 'users' && isCreate
-    ? [['name', 'Full name'], ['email', 'Email address'], ['role', 'Role: Admin, staff, recruiter, users'], ['password', 'Password'], ['status', 'Status']]
+    ? [['name', 'Full name'], ['email', 'Email address'], ['role', 'Role'], ['password', 'Password'], ['status', 'Status']]
     : config.fields
   const updateMany = (updates) => {
     Object.entries(updates).forEach(([key, value]) => onChange(key, value))

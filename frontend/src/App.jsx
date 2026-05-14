@@ -74,6 +74,7 @@ function App() {
         { path: 'jobs', element: <AdminManagementPage type="jobs" /> },
         { path: 'companies', element: <AdminManagementPage type="companies" /> },
         { path: 'employers', element: <AdminManagementPage type="employers" /> },
+        { path: 'recruiter-documents', element: <AdminManagementPage type="recruiterDocuments" /> },
         { path: 'candidates', element: <AdminManagementPage type="candidates" /> },
         { path: 'applications', element: <AdminManagementPage type="applications" /> },
         { path: 'resumes', element: <AdminManagementPage type="resumes" /> },

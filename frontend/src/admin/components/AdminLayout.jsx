@@ -29,10 +29,23 @@ import { adminRoles } from '../data/adminData'
 
 const sidebarItems = [
   { label: 'Dashboard', to: '/admin', icon: LayoutDashboard, roles: ['Admin'] },
-  { label: 'User Management', to: '/admin/users', icon: UsersRound, roles: ['Admin'] },
+  {
+    label: 'User Management',
+    to: '/admin/users',
+    icon: UsersRound,
+    roles: ['Admin'],
+    children: [
+      { label: 'All Users', to: '/admin/users', icon: UsersRound },
+      { label: 'User', to: '/admin/users?role=users', icon: UsersRound },
+      { label: 'Admin', to: '/admin/users?role=Admin', icon: UsersRound },
+      { label: 'Staff', to: '/admin/users?role=staff', icon: UsersRound },
+      { label: 'Recruiter', to: '/admin/users?role=recruiter', icon: UsersRound },
+    ],
+  },
   { label: 'Jobs Management', to: '/admin/jobs', icon: BriefcaseBusiness, roles: ['Admin'] },
   { label: 'Companies', to: '/admin/companies', icon: Building2, roles: ['Admin'] },
   { label: 'Recruiters', to: '/admin/employers', icon: Building2, roles: ['Admin'] },
+  { label: 'Recruiter Documents', to: '/admin/recruiter-documents', icon: FileCheck2, roles: ['Admin'] },
   { label: 'Candidates', to: '/admin/candidates', icon: UsersRound, roles: ['Admin'] },
   { label: 'Applications', to: '/admin/applications', icon: FileCheck2, roles: ['Admin'] },
   { label: 'Resume Database', to: '/admin/resumes', icon: Database, roles: ['Admin'] },
@@ -290,7 +303,8 @@ function SidebarContent({ isEmployer, role }) {
 
             if (item.children?.length) {
               const isExpanded = openGroups[item.label]
-              const isGroupActive = item.children.some((child) => location.pathname === child.to)
+              const currentPath = `${location.pathname}${location.search}`
+              const isGroupActive = item.children.some((child) => location.pathname === child.to.split('?')[0])
 
               return (
                 <div key={item.label}>
@@ -313,8 +327,8 @@ function SidebarContent({ isEmployer, role }) {
                         return (
                           <NavLink
                             className={({ isActive }) =>
-                              `flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-bold transition ${
-                                isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-950'
+                              `flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                                isActive && currentPath === child.to ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-950'
                               }`
                             }
                             key={child.label}

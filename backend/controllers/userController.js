@@ -1,4 +1,6 @@
 const asyncHandler = require('../middleware/asyncHandler')
+const Employer = require('../models/Employer')
+const RecruiterDocument = require('../models/RecruiterDocument')
 const User = require('../models/User')
 
 function normalizeRole(role) {
@@ -16,7 +18,13 @@ function normalizeRole(role) {
 function normalizeUser(user) {
   if (!user) return user
   const data = typeof user.toObject === 'function' ? user.toObject() : user
-  return { ...data, role: normalizeRole(data.role), status: data.status || 'Active' }
+  return {
+    ...data,
+    role: normalizeRole(data.role),
+    status: data.status || 'Active',
+    recruiterVerificationStatus: data.recruiterVerificationStatus || (normalizeRole(data.role) === 'recruiter' ? 'documents_required' : 'approved'),
+    recruiterVerificationRemark: data.recruiterVerificationRemark || '',
+  }
 }
 
 function buildUserFilter(query) {
@@ -70,7 +78,15 @@ const createUser = asyncHandler(async (req, res) => {
     throw new Error('Password is required')
   }
 
-  const user = await User.create({ name, email, password, role: normalizeRole(role), status })
+  const normalizedRole = normalizeRole(role)
+  const user = await User.create({
+    name,
+    email,
+    password,
+    role: normalizedRole,
+    status,
+    recruiterVerificationStatus: normalizedRole === 'recruiter' ? 'documents_required' : 'approved',
+  })
   const safeUser = await User.findById(user._id).select('-password')
   res.status(201).json({ success: true, data: normalizeUser(safeUser) })
 })
@@ -86,6 +102,8 @@ const updateUser = asyncHandler(async (req, res) => {
   user.email = req.body.email ?? user.email
   user.role = normalizeRole(req.body.role ?? user.role)
   user.status = req.body.status ?? user.status
+  user.recruiterVerificationStatus = req.body.recruiterVerificationStatus ?? user.recruiterVerificationStatus
+  user.recruiterVerificationRemark = req.body.recruiterVerificationRemark ?? user.recruiterVerificationRemark
   if (req.body.password) user.password = req.body.password
 
   await user.save()
@@ -99,7 +117,18 @@ const deleteUser = asyncHandler(async (req, res) => {
     res.status(404)
     throw new Error('User not found')
   }
-  res.json({ success: true, data: normalizeUser(user) })
+
+  const normalized = normalizeUser(user)
+
+  if (normalized.role === 'recruiter') {
+    const email = String(normalized.email || '').toLowerCase()
+    await Promise.all([
+      Employer.deleteMany({ businessEmail: email }),
+      RecruiterDocument.deleteMany({ recruiterEmail: email }),
+    ])
+  }
+
+  res.json({ success: true, data: normalized })
 })
 
 module.exports = { createUser, deleteUser, getUser, getUsers, updateUser }

@@ -49,11 +49,12 @@ export const api = {
   createApplication: (data) => apiRequest('/applications', { method: 'POST', body: JSON.stringify(data) }),
   login: (data) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   register: (data) => apiRequest('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  updateRecruiterStatus: (status) => apiRequest('/auth/recruiter-status', { method: 'PATCH', body: JSON.stringify({ status }), authRequired: true }),
   employerLogin: (data) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   employerRegister: (data) => apiRequest('/employers', { method: 'POST', body: JSON.stringify(data) }),
   gstDetails: (gstNumber) => apiRequest(`/gst/${encodeURIComponent(gstNumber)}`),
   list: (resource, params = '') => apiRequest(`/${resource}${params}`, { authRequired: resource === 'users' }),
   create: (resource, data) => apiRequest(`/${resource}`, { method: 'POST', body: JSON.stringify(data), authRequired: resource === 'users' }),
   update: (resource, id, data) => apiRequest(`/${resource}/${id}`, { method: 'PUT', body: JSON.stringify(data), authRequired: resource === 'users' }),
-  remove: (resource, id) => apiRequest(`/${resource}/${id}`, { method: 'DELETE', authRequired: resource === 'users' }),
+  remove: (resource, id) => apiRequest(`/${resource}/${id}`, { method: 'DELETE', authRequired: true }),
 }

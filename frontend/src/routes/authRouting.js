@@ -35,7 +35,7 @@ export function getDashboardPath(role) {
 export function getRecruiterVerificationStatus(user = getStoredUser()) {
   if (!user || normalizeRole(user.role) !== 'recruiter') return 'approved'
 
-  return user.recruiterVerificationStatus || 'approved'
+  return user.recruiterVerificationStatus || 'documents_required'
 }
 
 export function getRecruiterVerificationPath(status) {
@@ -58,25 +58,18 @@ export function updateStoredRecruiterVerificationStatus(status) {
 
   const nextUser = { ...user, recruiterVerificationStatus: status }
   localStorage.setItem('authUser', JSON.stringify(nextUser))
-  if (nextUser.email) {
-    localStorage.setItem(`recruiterVerification:${nextUser.email.toLowerCase()}`, status)
-  }
   return nextUser
 }
 
 export function getRecruiterVerificationRemark(email) {
-  const key = email || getStoredUser()?.email
-  if (!key) return ''
+  const user = getStoredUser()
+  if (email && user?.email?.toLowerCase() !== email.toLowerCase()) return ''
 
-  return localStorage.getItem(`recruiterVerificationRemark:${key.toLowerCase()}`) || ''
+  return user?.recruiterVerificationRemark || ''
 }
 
 export function updateRecruiterVerificationRemark(email, remark) {
   if (!email) return
-
-  const storageKey = `recruiterVerificationRemark:${email.toLowerCase()}`
-  if (remark) localStorage.setItem(storageKey, remark)
-  else localStorage.removeItem(storageKey)
 
   const user = getStoredUser()
   if (user?.email?.toLowerCase() === email.toLowerCase()) {

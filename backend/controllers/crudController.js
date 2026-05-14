@@ -67,6 +67,7 @@ function crudController(Model, options = {}) {
         res.status(404)
         throw new Error(`${Model.modelName} not found`)
       }
+      if (options.afterRemove) await options.afterRemove(item)
       res.json({ success: true, data: item })
     }),
   }

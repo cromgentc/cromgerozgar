@@ -21,6 +21,7 @@ router.use('/applications', crudRoutes(controllers.applications))
 router.use('/categories', crudRoutes(controllers.categories))
 router.use('/locations', crudRoutes(controllers.locations))
 router.use('/payments', crudRoutes(controllers.payments))
+router.use('/recruiter-documents', crudRoutes(controllers.recruiterDocuments))
 router.use('/resumes', crudRoutes(controllers.resumes))
 router.use('/settings', crudRoutes(controllers.settings))
 

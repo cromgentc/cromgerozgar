@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { Building2, CheckCircle2, Clock3, FileCheck2, FileText, ShieldCheck, Upload } from 'lucide-react'
-import { Button } from '../../components/Button'
+import { CheckCircle2, Clock3, FileCheck2, FileText, ShieldCheck, Upload } from 'lucide-react'
 import { getRecruiterVerificationRemark, getRecruiterVerificationStatus, getStoredUser, updateStoredRecruiterVerificationStatus } from '../../routes/authRouting'
 import { api } from '../../services/api'
 
@@ -39,7 +38,6 @@ const gstStateCodes = {
 }
 
 export function RecruiterVerificationPage() {
-  const navigate = useNavigate()
   const user = getStoredUser()
   const status = getRecruiterVerificationStatus(user)
   const remark = getRecruiterVerificationRemark(user?.email) || user?.recruiterVerificationRemark || ''
@@ -56,11 +54,6 @@ export function RecruiterVerificationPage() {
   if (status === 'documents_review') return <Navigate replace to="/recruiter-document-review" />
   if (status === 'approved') return <Navigate replace to="/recruiter-dashboard" />
 
-  const continueAfterManagerVerification = () => {
-    updateStoredRecruiterVerificationStatus('documents_required')
-    navigate('/recruiter-documents', { replace: true })
-  }
-
   return (
     <VerificationShell
       icon={Clock3}
@@ -74,13 +67,8 @@ export function RecruiterVerificationPage() {
         </div>
       )}
       <div className="mt-6 rounded-2xl bg-blue-50 p-5 text-sm font-semibold leading-7 text-blue-800">
-        {blocked ? 'Remark resolve hone ke baad account manager aapka status update karega.' : 'Verification ke baad aap PAN card, GST, aur company documents submit kar paayenge.'}
+        {blocked ? 'Remark resolve hone ke baad admin aapka status update karega.' : 'Admin review ke baad next step unlock hoga. Aapka dashboard access approval ke baad hi active hoga.'}
       </div>
-      {!blocked && (
-        <button className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white" onClick={continueAfterManagerVerification} type="button">
-          Account Manager Verified
-        </button>
-      )}
     </VerificationShell>
   )
 }
@@ -102,6 +90,7 @@ export function RecruiterDocumentsPage() {
   const [message, setMessage] = useState('')
   const [gstDetails, setGstDetails] = useState(null)
   const [gstLoading, setGstLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   if (!user) return <Navigate replace to="/recruiter-login" />
   if (status === 'account_review') return <Navigate replace to="/recruiter-verification" />
@@ -144,7 +133,7 @@ export function RecruiterDocumentsPage() {
     }
   }
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault()
 
     if (!form.documentType) {
@@ -172,9 +161,29 @@ export function RecruiterDocumentsPage() {
       return
     }
 
-    localStorage.setItem('recruiterDocuments', JSON.stringify({ ...form, submittedAt: new Date().toISOString() }))
-    updateStoredRecruiterVerificationStatus('documents_review')
-    navigate('/recruiter-document-review', { replace: true })
+    const submittedAt = new Date().toISOString()
+    const payload = {
+      ...form,
+      recruiterName: user.name || '',
+      recruiterEmail: user.email || '',
+      gstLegalName: gstDetails?.legalName || '',
+      gstTradeName: gstDetails?.tradeName || '',
+      gstStatus: gstDetails?.status || '',
+      submittedAt,
+    }
+
+    setSubmitting(true)
+    try {
+      await api.create('recruiter-documents', payload)
+      const statusPayload = await api.updateRecruiterStatus('documents_review').catch(() => null)
+      if (statusPayload?.data) localStorage.setItem('authUser', JSON.stringify(statusPayload.data))
+      else updateStoredRecruiterVerificationStatus('documents_review')
+      navigate('/recruiter-document-review', { replace: true })
+    } catch (error) {
+      setMessage(error.message || 'Unable to submit documents to backend.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -228,8 +237,8 @@ export function RecruiterDocumentsPage() {
         )}
 
         {message && <p className="rounded-2xl bg-rose-50 p-3 text-sm font-bold text-rose-700">{message}</p>}
-        <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white" type="submit">
-          Submit Documents
+        <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" disabled={submitting} type="submit">
+          {submitting ? 'Submitting...' : 'Submit Documents'}
         </button>
       </form>
     </VerificationShell>
@@ -240,22 +249,21 @@ export function RecruiterDocumentReviewPage() {
   const navigate = useNavigate()
   const user = getStoredUser()
   const status = getRecruiterVerificationStatus(user)
+  const [submittedDocument, setSubmittedDocument] = useState(null)
 
   useEffect(() => {
-    if (status === 'documents_review' && !localStorage.getItem('recruiterDocumentReviewStartedAt')) {
-      localStorage.setItem('recruiterDocumentReviewStartedAt', new Date().toISOString())
-    }
-  }, [status])
+    if (!user?.email) return
+
+    api
+      .list('recruiter-documents', `?recruiterEmail=${encodeURIComponent(user.email)}&limit=1`)
+      .then((payload) => setSubmittedDocument(payload.data?.[0] || null))
+      .catch(() => setSubmittedDocument(null))
+  }, [user?.email])
 
   if (!user) return <Navigate replace to="/recruiter-login" />
   if (status === 'account_review') return <Navigate replace to="/recruiter-verification" />
   if (status === 'documents_required') return <Navigate replace to="/recruiter-documents" />
   if (status === 'approved') return <Navigate replace to="/recruiter-dashboard" />
-
-  const approveAccount = () => {
-    updateStoredRecruiterVerificationStatus('approved')
-    navigate('/recruiter-dashboard', { replace: true })
-  }
 
   return (
     <VerificationShell
@@ -265,16 +273,16 @@ export function RecruiterDocumentReviewPage() {
     >
       <StatusSteps active="approval" />
       <div className="mt-6 grid gap-3">
-        {getSubmittedDocumentLabels().map((item) => (
+        {getSubmittedDocumentLabels(submittedDocument).map((item) => (
           <p className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-700" key={item}>
             <CheckCircle2 className="text-teal-500" size={18} />
             {item}
           </p>
         ))}
       </div>
-      <button className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white" onClick={approveAccount} type="button">
-        Account Manager Approve
-      </button>
+      <div className="mt-6 rounded-2xl bg-blue-50 p-5 text-sm font-semibold leading-7 text-blue-800">
+        Admin verification complete hone ke baad login se recruiter dashboard access milega.
+      </div>
     </VerificationShell>
   )
 }
@@ -321,16 +329,19 @@ function GstDetailsPanel({ details }) {
     )
   }
 
-  const rows = [
+  const verifiedRows = [
     ['GST number', details.gstNumber],
     ['PAN number', details.panNumber],
     ['State', details.state],
     ['Registration', details.registrationType],
+  ]
+  const liveRows = [
     ['Legal name', details.legalName],
     ['Trade name', details.tradeName],
     ['GST active status', details.status],
     ['Address', typeof details.address === 'string' ? details.address : 'Fetched from GST API'],
-  ].filter(([, value]) => Boolean(value))
+  ]
+  const rows = [...verifiedRows, ...(details.lookupConfigured === false ? [] : liveRows)].filter(([, value]) => Boolean(value))
 
   return (
     <div className="rounded-2xl bg-teal-50 p-4 text-sm text-teal-900 ring-1 ring-teal-100">
@@ -350,18 +361,16 @@ function GstDetailsPanel({ details }) {
   )
 }
 
-function getSubmittedDocumentLabels() {
-  const savedDocuments = JSON.parse(localStorage.getItem('recruiterDocuments') || '{}')
-
-  if (savedDocuments.documentType === 'GST') {
+function getSubmittedDocumentLabels(savedDocuments = {}) {
+  if (savedDocuments?.documentType === 'GST') {
     return ['PAN number submitted', 'GST number submitted', 'PAN document submitted', 'GST certificate submitted', 'Account manager review pending']
   }
 
-  if (savedDocuments.documentType === 'Offer Letter') {
+  if (savedDocuments?.documentType === 'Offer Letter') {
     return ['PAN number submitted', 'PAN document submitted', 'Offer letter submitted', 'Account manager review pending']
   }
 
-  if (savedDocuments.documentType === 'Aadhar Card') {
+  if (savedDocuments?.documentType === 'Aadhar Card') {
     return ['PAN number submitted', 'PAN document submitted', 'Aadhar number submitted', 'Aadhar card submitted', 'Account manager review pending']
   }
 
@@ -378,10 +387,6 @@ function VerificationShell({ children, icon: Icon, subtitle, title }) {
         <h1 className="mt-6 text-3xl font-black text-slate-950 sm:text-4xl">{title}</h1>
         <p className="mt-3 leading-7 text-slate-500">{subtitle}</p>
         {children}
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Button className="flex-1" to="/recruiter" variant="secondary"><Building2 size={18} /> Recruiter Website</Button>
-          <Button className="flex-1" to="/recruiter-login" variant="secondary">Login Page</Button>
-        </div>
       </div>
     </section>
   )

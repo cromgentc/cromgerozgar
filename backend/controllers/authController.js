@@ -19,11 +19,16 @@ function signToken(user) {
 }
 
 function authPayload(user) {
+  const role = normalizeRole(user.role)
+
   return {
     id: user._id,
     name: user.name,
     email: user.email,
-    role: normalizeRole(user.role),
+    role,
+    status: user.status,
+    recruiterVerificationStatus: user.recruiterVerificationStatus || (role === 'recruiter' ? 'documents_required' : 'approved'),
+    recruiterVerificationRemark: user.recruiterVerificationRemark,
   }
 }
 
@@ -36,7 +41,14 @@ const register = asyncHandler(async (req, res) => {
     throw new Error('User already exists')
   }
 
-  const user = await User.create({ name, email, password, role })
+  const normalizedRole = normalizeRole(role)
+  const user = await User.create({
+    name,
+    email,
+    password,
+    role: normalizedRole,
+    recruiterVerificationStatus: normalizedRole === 'recruiter' ? 'documents_required' : 'approved',
+  })
   res.status(201).json({ success: true, token: signToken(user), data: authPayload(user) })
 })
 
@@ -52,4 +64,18 @@ const login = asyncHandler(async (req, res) => {
   res.json({ success: true, token: signToken(user), data: authPayload(user) })
 })
 
-module.exports = { login, register }
+const updateRecruiterStatus = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+
+  if (!user || normalizeRole(user.role) !== 'recruiter') {
+    res.status(403)
+    throw new Error('Only recruiter accounts can update recruiter verification status')
+  }
+
+  user.recruiterVerificationStatus = req.body.status || user.recruiterVerificationStatus
+  await user.save()
+
+  res.json({ success: true, data: authPayload(user) })
+})
+
+module.exports = { login, register, updateRecruiterStatus }
