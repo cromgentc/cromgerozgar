@@ -7,11 +7,11 @@ import { EmployerFooter } from './EmployerFooter'
 
 const employerNav = [
   ['Home', '/recruiter'],
-  ['Solutions', '/recruiter#solutions'],
+  ['Solutions', '/recruiter-solutions'],
   ['Pricing', '/recruiter-pricing'],
-  ['Talent Pool', '/recruiter#talent'],
+  ['Talent Pool', '/recruiter-talent'],
   ['Dashboard', '/recruiter-dashboard'],
-  ['Resources', '/recruiter#resources'],
+  ['Resources', '/recruiter-resources'],
 ]
 
 const recruiterDashboardPath = '/recruiter-dashboard'
