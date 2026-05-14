@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Bell,
@@ -8,24 +8,24 @@ import {
   ChevronDown,
   ClipboardList,
   CreditCard,
-  Database,
   ExternalLink,
   FileCheck2,
-  FolderTree,
-  LineChart,
+  HelpCircle,
   LayoutDashboard,
   LogOut,
-  MapPin,
   Menu,
+  MessageCircle,
   Moon,
+  Send,
   Sun,
   Search,
-  Settings,
-  UserPlus,
+  Star,
+  Wallet,
   UsersRound,
   X,
 } from 'lucide-react'
 import { adminRoles } from '../data/adminData'
+import { api } from '../../services/api'
 
 const sidebarItems = [
   { label: 'Dashboard', to: '/admin', icon: LayoutDashboard, roles: ['Admin'] },
@@ -43,36 +43,48 @@ const sidebarItems = [
     ],
   },
   { label: 'Jobs Management', to: '/admin/jobs', icon: BriefcaseBusiness, roles: ['Admin'] },
-  { label: 'Companies', to: '/admin/companies', icon: Building2, roles: ['Admin'] },
-  { label: 'Recruiters', to: '/admin/employers', icon: Building2, roles: ['Admin'] },
-  { label: 'Recruiter Documents', to: '/admin/recruiter-documents', icon: FileCheck2, roles: ['Admin'] },
+  {
+    label: 'Recruiters',
+    to: '/admin/employers',
+    icon: Building2,
+    roles: ['Admin'],
+    children: [
+      { label: 'Recruiter Management', to: '/admin/employers', icon: Building2 },
+      { label: 'Recruiter Documents', to: '/admin/recruiter-documents', icon: FileCheck2 },
+    ],
+  },
   { label: 'Candidates', to: '/admin/candidates', icon: UsersRound, roles: ['Admin'] },
   { label: 'Applications', to: '/admin/applications', icon: FileCheck2, roles: ['Admin'] },
-  { label: 'Resume Database', to: '/admin/resumes', icon: Database, roles: ['Admin'] },
-  { label: 'Categories', to: '/admin/categories', icon: FolderTree, roles: ['Admin'] },
-  { label: 'Locations', to: '/admin/locations', icon: MapPin, roles: ['Admin'] },
-  { label: 'Payments', to: '/admin/payments', icon: CreditCard, roles: ['Admin'] },
-  { label: 'Reports', to: '/admin/reports', icon: FileCheck2, roles: ['Admin'] },
-  { label: 'Settings', to: '/admin/settings', icon: Settings, roles: ['Admin'] },
+  {
+    label: 'Website Content',
+    to: '/admin/testimonials',
+    icon: Star,
+    roles: ['Admin'],
+    children: [
+      { label: 'Testimonials', to: '/admin/testimonials', icon: Star },
+      { label: 'FAQs', to: '/admin/faqs', icon: HelpCircle },
+      { label: 'Hiring Insights', to: '/admin/hiring-insights', icon: Send },
+      { label: 'Support Messages', to: '/admin/support-messages', icon: MessageCircle },
+    ],
+  },
+  {
+    label: 'Package',
+    to: '/admin/package/pricing',
+    icon: CreditCard,
+    roles: ['Admin'],
+    children: [
+      { label: 'Pricing', to: '/admin/package/pricing', icon: CreditCard },
+      { label: 'Discount Coupon', to: '/admin/package/discount-coupons', icon: CreditCard },
+    ],
+  },
 ]
 
 const employerSidebarItems = [
   { label: 'Dashboard', to: '/recruiter-dashboard', icon: LayoutDashboard },
   { label: 'Post a Job', to: '/post-job', icon: BriefcaseBusiness },
   { label: 'Applications', to: '/recruiter-applications', icon: ClipboardList },
-  {
-    label: 'Talent Pool',
-    to: '/recruiter-talent',
-    icon: UsersRound,
-    children: [
-      { label: 'Talent Overview', to: '/recruiter-talent', icon: UsersRound },
-      { label: 'Find Resume', to: '/recruiter-find-resume', icon: Database },
-    ],
-  },
-  { label: 'Interviews', to: '/recruiter-interviews', icon: CalendarDays },
-  { label: 'Analytics', to: '/recruiter-analytics', icon: LineChart },
-  { label: 'Team', to: '/recruiter-team', icon: UserPlus },
   { label: 'Pricing', to: '/recruiter-pricing', icon: CreditCard },
+  { label: 'Profile', to: '/recruiter-profile', icon: UsersRound },
   { label: 'Resources', to: '/recruiter-resources', icon: FileCheck2 },
 ]
 
@@ -80,7 +92,11 @@ export function AdminLayout() {
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [notificationsLoading, setNotificationsLoading] = useState(false)
+  const [clearedNotificationIds, setClearedNotificationIds] = useState([])
   const [lightActive, setLightActive] = useState(true)
+  const [wallet, setWallet] = useState(null)
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -91,6 +107,100 @@ export function AdminLayout() {
     .split('/')
     .filter(Boolean)
     .map((item) => item.replace(/-/g, ' '))
+
+  useEffect(() => {
+    if (!isEmployer || !user?.email) {
+      setWallet(null)
+      return
+    }
+
+    let mounted = true
+    const loadWallet = () => {
+      api
+        .currentRecruiterPackage(user.email)
+        .then((payload) => {
+          if (mounted) setWallet(payload.data || null)
+        })
+        .catch(() => {
+          if (mounted) setWallet(null)
+        })
+    }
+
+    loadWallet()
+    window.addEventListener('focus', loadWallet)
+    window.addEventListener('recruiter-wallet-updated', loadWallet)
+
+    return () => {
+      mounted = false
+      window.removeEventListener('focus', loadWallet)
+      window.removeEventListener('recruiter-wallet-updated', loadWallet)
+    }
+  }, [isEmployer, user?.email])
+
+  useEffect(() => {
+    if (!user?.email) {
+      setNotifications([])
+      setClearedNotificationIds([])
+      return
+    }
+
+    try {
+      setClearedNotificationIds(JSON.parse(localStorage.getItem(getNotificationClearKey(user)) || '[]'))
+    } catch {
+      setClearedNotificationIds([])
+    }
+
+    let mounted = true
+    const loadNotifications = async () => {
+      setNotificationsLoading(true)
+      try {
+        const [dashboardPayload, walletPayload] = isEmployer
+          ? await Promise.all([
+              api.employerDashboard(user.email),
+              api.currentRecruiterPackage(user.email).catch(() => ({ data: null })),
+            ])
+          : await Promise.all([
+              api.adminDashboard(),
+              Promise.resolve({ data: null }),
+            ])
+        if (!mounted) return
+
+        const nextNotifications = isEmployer
+          ? buildRecruiterNotifications({
+              dashboard: dashboardPayload.data || {},
+              wallet: walletPayload.data || null,
+            })
+          : buildAdminNotifications(dashboardPayload.data || {})
+        const clearedIds = JSON.parse(localStorage.getItem(getNotificationClearKey(user)) || '[]')
+        setClearedNotificationIds(clearedIds)
+        setNotifications(nextNotifications.filter((item) => !clearedIds.includes(item.id)))
+      } catch {
+        if (mounted) setNotifications([])
+      } finally {
+        if (mounted) setNotificationsLoading(false)
+      }
+    }
+
+    loadNotifications()
+    window.addEventListener('focus', loadNotifications)
+    window.addEventListener('recruiter-wallet-updated', loadNotifications)
+
+    return () => {
+      mounted = false
+      window.removeEventListener('focus', loadNotifications)
+      window.removeEventListener('recruiter-wallet-updated', loadNotifications)
+    }
+  }, [isEmployer, user?.email, user?.role])
+
+  const clearNotifications = () => {
+    const ids = notifications.map((item) => item.id)
+    const nextIds = [...new Set([...clearedNotificationIds, ...ids])]
+    if (user?.email) {
+      localStorage.setItem(getNotificationClearKey(user), JSON.stringify(nextIds))
+    }
+    setClearedNotificationIds(nextIds)
+    setNotifications([])
+  }
 
   const logout = () => {
     localStorage.removeItem('authToken')
@@ -143,13 +253,23 @@ export function AdminLayout() {
                   Visit Recruiter Website
                 </Link>
               )}
-              <button
-                className={`hidden h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold sm:inline-flex ${lightActive ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600'}`}
-                onClick={() => setLightActive((value) => !value)}
-                type="button"
-              >
-                {lightActive ? <Sun size={17} /> : <Moon size={17} />} {lightActive ? 'Light On' : 'Light'}
-              </button>
+              {isEmployer ? (
+                <Link
+                  className="hidden h-11 items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-4 text-sm font-bold text-teal-700 transition hover:bg-teal-100 sm:inline-flex"
+                  to="/recruiter-pricing"
+                >
+                  <Wallet size={17} />
+                  Wallet: {wallet?.coinBalance || 0} coins
+                </Link>
+              ) : (
+                <button
+                  className={`hidden h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold sm:inline-flex ${lightActive ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600'}`}
+                  onClick={() => setLightActive((value) => !value)}
+                  type="button"
+                >
+                  {lightActive ? <Sun size={17} /> : <Moon size={17} />} {lightActive ? 'Light On' : 'Light'}
+                </button>
+              )}
               <div className="relative">
                 <button
                   className="relative grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-600"
@@ -160,9 +280,13 @@ export function AdminLayout() {
                   type="button"
                 >
                   <Bell size={19} />
-                  <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-teal-500 ring-2 ring-white" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-teal-500 px-1 text-[10px] font-black text-white ring-2 ring-white">
+                      {notifications.length}
+                    </span>
+                  )}
                 </button>
-                {notificationsOpen && <NotificationMenu />}
+                {notificationsOpen && <NotificationMenu isEmployer={isEmployer} loading={notificationsLoading} notifications={notifications} onClear={clearNotifications} />}
               </div>
               <div className="relative">
                 <button
@@ -186,7 +310,7 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <main className="max-w-full overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
           <Outlet />
         </main>
       </div>
@@ -194,27 +318,270 @@ export function AdminLayout() {
   )
 }
 
-function NotificationMenu() {
-  const items = [
-    '12 new applications received',
-    '4 recruiter accounts need review',
-    '2 payments marked as failed',
-    'Candidate shortlist updated',
-  ]
+function buildRecruiterNotifications({ dashboard = {}, wallet = null }) {
+  const metrics = dashboard.metrics || {}
+  const applications = Array.isArray(dashboard.applications) ? dashboard.applications : []
+  const items = []
+
+  if (Number(metrics.activeApplications || 0) > 0) {
+    items.push({
+      id: 'active-applications',
+      title: `${metrics.activeApplications} active applications`,
+      description: 'New, reviewed, aur interview stage candidates pending hain.',
+      to: '/recruiter-applications?status=active',
+      icon: ClipboardList,
+      tone: 'blue',
+      meta: 'Live pipeline',
+    })
+  }
+
+  if (Number(metrics.shortlistedCandidates || 0) > 0) {
+    items.push({
+      id: 'shortlisted',
+      title: `${metrics.shortlistedCandidates} shortlisted candidates`,
+      description: 'Shortlisted candidates ko next hiring step par move karein.',
+      to: '/recruiter-applications?status=shortlisted',
+      icon: UsersRound,
+      tone: 'teal',
+      meta: 'Candidate stage',
+    })
+  }
+
+  if (Number(metrics.interviewSchedule || 0) > 0) {
+    items.push({
+      id: 'interviews',
+      title: `${metrics.interviewSchedule} interview invites`,
+      description: 'Interview stage candidates ko track karein.',
+      to: '/recruiter-applications?status=interview',
+      icon: CalendarDays,
+      tone: 'violet',
+      meta: 'Schedule',
+    })
+  }
+
+  if (wallet) {
+    const coinBalance = Number(wallet.coinBalance || 0)
+    const coinPerJob = Number(wallet.packageSnapshot?.coinPerJob || 10)
+    items.push({
+      id: 'wallet',
+      title: `${coinBalance} wallet coins available`,
+      description: coinBalance < coinPerJob ? `One job ke liye ${coinPerJob} coins required hain. Coins buy karein.` : 'Wallet ready hai, job post kar sakte hain.',
+      to: '/recruiter-pricing',
+      icon: Wallet,
+      tone: coinBalance < coinPerJob ? 'rose' : 'emerald',
+      meta: wallet.packageSnapshot?.name || 'Active package',
+    })
+  } else {
+    items.push({
+      id: 'package-required',
+      title: 'Package not active',
+      description: 'Job post aur wallet coins ke liye recruiter package activate karein.',
+      to: '/recruiter-pricing',
+      icon: CreditCard,
+      tone: 'rose',
+      meta: 'Action required',
+    })
+  }
+
+  applications.slice(0, 3).forEach((application) => {
+    items.push({
+      id: application._id || `${application.candidateEmail}-${application.jobTitle}`,
+      title: `${application.candidateName || 'Candidate'} applied`,
+      description: `${application.jobTitle || 'Job'} / ${application.company || 'Company'} / ${application.status || 'New'}`,
+      to: application.candidateEmail ? `/recruiter-applications/candidate/${encodeURIComponent(application.candidateEmail)}` : '/recruiter-applications',
+      icon: FileCheck2,
+      tone: 'slate',
+      meta: application.createdAt ? new Date(application.createdAt).toLocaleDateString() : 'Recent',
+    })
+  })
+
+  return items
+}
+
+function buildAdminNotifications(dashboard = {}) {
+  const metrics = dashboard.metrics || {}
+  const pendingReviews = Array.isArray(dashboard.pendingReviews) ? dashboard.pendingReviews : []
+  const supportMessages = Array.isArray(dashboard.supportMessages) ? dashboard.supportMessages : []
+  const recentJobs = Array.isArray(dashboard.recentJobs) ? dashboard.recentJobs : []
+  const recentApplications = Array.isArray(dashboard.recentApplications) ? dashboard.recentApplications : []
+  const items = []
+
+  if (Number(metrics.pendingJobs || 0) > 0) {
+    items.push({
+      id: 'admin-pending-jobs',
+      title: `${metrics.pendingJobs} jobs awaiting approval`,
+      description: 'Account department ko pending job posts review karna hai.',
+      to: '/admin/jobs',
+      icon: BriefcaseBusiness,
+      tone: 'blue',
+      meta: 'Jobs',
+    })
+  }
+
+  if (Number(metrics.rejectedJobs || 0) > 0) {
+    items.push({
+      id: 'admin-rejected-jobs',
+      title: `${metrics.rejectedJobs} rejected jobs`,
+      description: 'Rejected job posts aur remarks audit karein.',
+      to: '/admin/jobs?status=Rejected',
+      icon: FileCheck2,
+      tone: 'rose',
+      meta: 'Review',
+    })
+  }
+
+  if (Number(metrics.pendingDocuments || 0) > 0) {
+    items.push({
+      id: 'admin-pending-documents',
+      title: `${metrics.pendingDocuments} recruiter documents pending`,
+      description: 'PAN, GST, offer letter, aur company document verification pending hai.',
+      to: '/admin/recruiter-documents',
+      icon: ClipboardList,
+      tone: 'violet',
+      meta: 'Documents',
+    })
+  }
+
+  if (Number(metrics.openSupportMessages || 0) > 0) {
+    items.push({
+      id: 'admin-open-support',
+      title: `${metrics.openSupportMessages} support messages open`,
+      description: 'Candidate/recruiter support chats need response.',
+      to: '/admin/support-messages',
+      icon: MessageCircle,
+      tone: 'teal',
+      meta: 'Support',
+    })
+  }
+
+  if (Number(metrics.activeSubscriptions || 0) > 0) {
+    items.push({
+      id: 'admin-active-packages',
+      title: `${metrics.activeSubscriptions} active recruiter packages`,
+      description: 'Recruiter package and wallet activity live hai.',
+      to: '/admin/package/pricing',
+      icon: CreditCard,
+      tone: 'emerald',
+      meta: 'Package',
+    })
+  }
+
+  pendingReviews.slice(0, 2).forEach((document) => {
+    items.push({
+      id: `admin-document-${document._id}`,
+      title: `${document.recruiterName || 'Recruiter'} document review`,
+      description: `${document.documentType || 'Document'} / ${document.status || 'Pending'}`,
+      to: `/admin/recruiter-documents/${document._id}`,
+      icon: FileCheck2,
+      tone: 'slate',
+      meta: 'KYC',
+    })
+  })
+
+  supportMessages.slice(0, 2).forEach((message) => {
+    items.push({
+      id: `admin-support-${message._id}`,
+      title: `${message.name || 'User'} support chat`,
+      description: `${message.subject || 'Support message'} / ${message.status || 'Open'}`,
+      to: `/admin/support-messages/${message._id}`,
+      icon: MessageCircle,
+      tone: 'rose',
+      meta: 'Chat',
+    })
+  })
+
+  recentJobs.slice(0, 2).forEach((job) => {
+    items.push({
+      id: `admin-job-${job._id}`,
+      title: `${job.title || 'Job'} posted`,
+      description: `${job.company || 'Company'} / ${job.location || 'Location'} / ${job.approval || job.accountDepartmentStatus || job.status || 'Pending'}`,
+      to: '/admin/jobs',
+      icon: BriefcaseBusiness,
+      tone: 'blue',
+      meta: job.createdAt ? new Date(job.createdAt).toLocaleDateString() : 'Recent',
+    })
+  })
+
+  recentApplications.slice(0, 2).forEach((application) => {
+    items.push({
+      id: `admin-application-${application._id}`,
+      title: `${application.candidateName || 'Candidate'} application`,
+      description: `${application.jobTitle || 'Job'} / ${application.company || 'Company'} / ${application.status || 'New'}`,
+      to: '/admin/applications',
+      icon: UsersRound,
+      tone: 'teal',
+      meta: application.createdAt ? new Date(application.createdAt).toLocaleDateString() : 'Recent',
+    })
+  })
+
+  return items
+}
+
+function getNotificationClearKey(user = {}) {
+  const role = user.role || 'user'
+  const email = String(user.email || '').toLowerCase()
+  return `${role}NotificationsCleared:${email}`
+}
+
+function getNotificationTone(tone) {
+  const tones = {
+    blue: 'bg-blue-50 text-blue-700 ring-blue-100',
+    teal: 'bg-teal-50 text-teal-700 ring-teal-100',
+    violet: 'bg-violet-50 text-violet-700 ring-violet-100',
+    emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+    rose: 'bg-rose-50 text-rose-700 ring-rose-100',
+    slate: 'bg-slate-50 text-slate-700 ring-slate-200',
+  }
+
+  return tones[tone] || tones.blue
+}
+
+function NotificationMenu({ isEmployer, loading, notifications, onClear }) {
+  const items = notifications
 
   return (
-    <div className="absolute right-0 top-14 z-50 w-80 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-2xl shadow-blue-100">
+    <div className="absolute right-0 top-14 z-50 w-[24rem] max-w-[calc(100vw-2rem)] rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-2xl shadow-blue-100">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-black text-slate-950">Notifications</h3>
-        <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-700">Live</span>
+        <div className="flex items-center gap-2">
+          {items.length > 0 && (
+            <button className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 transition hover:bg-rose-50 hover:text-rose-700" onClick={onClear} type="button">
+              Clear
+            </button>
+          )}
+          <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-700">{isEmployer ? 'Recruiter live' : 'Admin live'}</span>
+        </div>
       </div>
-      <div className="grid gap-2">
-        {items.map((item) => (
-          <button className="rounded-2xl bg-slate-50 p-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-blue-50 hover:text-blue-700" key={item} type="button">
-            {item}
-          </button>
-        ))}
-      </div>
+      {loading ? (
+        <div className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-500">Loading recruiter notifications...</div>
+      ) : items.length ? (
+        <div className="grid max-h-[26rem] gap-2 overflow-y-auto pr-1">
+          {items.map((item) => {
+            const Icon = item.icon
+            return (
+              <Link className="group rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-blue-100 hover:bg-blue-50/50" key={item.id} to={item.to}>
+                <div className="flex gap-3">
+                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ring-1 ${getNotificationTone(item.tone)}`}>
+                    <Icon size={18} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-start justify-between gap-3">
+                      <span className="font-black text-slate-950">{item.title}</span>
+                      <span className="shrink-0 rounded-full bg-slate-50 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-400 group-hover:bg-white">{item.meta}</span>
+                    </span>
+                    <span className="mt-1 block text-sm font-semibold leading-5 text-slate-500">{item.description}</span>
+                  </span>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="rounded-2xl bg-slate-50 p-4">
+          <p className="font-black text-slate-950">All clear</p>
+          <p className="mt-1 text-sm font-semibold text-slate-500">Abhi recruiter workspace mein koi new notification nahi hai.</p>
+        </div>
+      )}
     </div>
   )
 }
@@ -264,7 +631,7 @@ function AdminSidebar({ isEmployer, mobileOpen, onClose, role }) {
 }
 
 function SidebarContent({ isEmployer, role }) {
-  const [openGroups, setOpenGroups] = useState({ 'Talent Pool': true })
+  const [openGroups, setOpenGroups] = useState({})
   const navigate = useNavigate()
   const location = useLocation()
   const items = isEmployer ? employerSidebarItems : role === 'Admin' ? sidebarItems : []

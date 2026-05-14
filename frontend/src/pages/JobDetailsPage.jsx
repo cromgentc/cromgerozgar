@@ -1,21 +1,46 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Bookmark, Briefcase, CalendarDays, Copy, Mail, MapPin, MessageCircle, Monitor, Send, Share2, Wallet, X } from 'lucide-react'
 import { Button } from '../components/Button'
 import { JobCard } from '../components/JobCard'
-import { jobs } from '../data/portalData'
 import { useApiResource } from '../hooks/useApiResource'
 import { api } from '../services/api'
 import { canSaveJobs, isJobSaved, toggleSavedJob } from '../utils/savedJobs'
+import { getStoredUser } from '../routes/authRouting'
+import { isSameAppliedJob } from '../utils/candidateActivity'
 
 export function JobDetailsPage({ onApply }) {
   const { jobId } = useParams()
-  const fallbackJob = jobs.find((item) => item.id === jobId) ?? jobs[0]
+  const navigate = useNavigate()
+  const user = getStoredUser()
+  const fallbackJob = {
+    id: jobId,
+    title: 'Job not found',
+    company: 'Cromgen Rozgar',
+    companyLogo: 'CR',
+    department: '',
+    location: '',
+    salary: '',
+    experience: '',
+    type: '',
+    workMode: '',
+    posted: '',
+    deadline: '',
+    skills: [],
+    description: 'This job is not available right now.',
+    responsibilities: [],
+    requirements: [],
+    benefits: [],
+    aboutCompany: '',
+  }
   const shouldFetchById = /^[a-f\d]{24}$/i.test(jobId)
   const { data: apiJob } = useApiResource(() => (shouldFetchById ? api.job(jobId) : Promise.resolve({ data: fallbackJob })), fallbackJob, [jobId])
   const job = apiJob || fallbackJob
   const [saved, setSaved] = useState(() => isJobSaved(job))
   const [shareOpen, setShareOpen] = useState(false)
+  const [alreadyApplied, setAlreadyApplied] = useState(false)
+  const [similarJobs, setSimilarJobs] = useState([])
+  const [similarLoading, setSimilarLoading] = useState(true)
 
   useEffect(() => {
     const syncSaved = () => setSaved(isJobSaved(job))
@@ -26,6 +51,64 @@ export function JobDetailsPage({ onApply }) {
     return () => {
       window.removeEventListener('savedJobsChanged', syncSaved)
       window.removeEventListener('storage', syncSaved)
+    }
+  }, [job])
+
+  useEffect(() => {
+    let active = true
+
+    const syncApplications = async () => {
+      if (user?.role !== 'Candidate' || !user?.email) {
+        setAlreadyApplied(false)
+        return
+      }
+
+      try {
+        const payload = await api.list('applications', `?candidateEmail=${encodeURIComponent(user.email)}&limit=100`)
+        const applications = Array.isArray(payload.data) ? payload.data : []
+        if (active) setAlreadyApplied(applications.some((application) => isSameAppliedJob(application, job)))
+      } catch {
+        if (active) setAlreadyApplied(false)
+      }
+    }
+
+    window.addEventListener('candidateActivityChanged', syncApplications)
+    window.addEventListener('storage', syncApplications)
+    syncApplications()
+
+    return () => {
+      active = false
+      window.removeEventListener('candidateActivityChanged', syncApplications)
+      window.removeEventListener('storage', syncApplications)
+    }
+  }, [job, user?.email, user?.role])
+
+  useEffect(() => {
+    let active = true
+
+    const loadSimilarJobs = async () => {
+      setSimilarLoading(true)
+      try {
+        const payload = await api.jobs('?sort=-createdAt&limit=100')
+        const list = Array.isArray(payload.data) ? payload.data : []
+        const ranked = rankSimilarJobs(list, job)
+        if (active) setSimilarJobs(ranked.slice(0, 3))
+      } catch {
+        if (active) setSimilarJobs([])
+      } finally {
+        if (active) setSimilarLoading(false)
+      }
+    }
+
+    if (job?.title && job.title !== 'Job not found') {
+      loadSimilarJobs()
+    } else {
+      setSimilarJobs([])
+      setSimilarLoading(false)
+    }
+
+    return () => {
+      active = false
     }
   }, [job])
 
@@ -65,14 +148,14 @@ export function JobDetailsPage({ onApply }) {
                 [Monitor, job.type],
                 [CalendarDays, `Posted ${job.posted}`],
                 [CalendarDays, `Deadline ${job.deadline}`],
-              ].map(([Icon, text]) => (
-                <div className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-600" key={text}>
-                  <Icon className="mb-2 text-blue-600" size={20} /> {text}
+              ].map(([Icon, text], index) => (
+                <div className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-600" key={`job-meta-${index}-${text || 'empty'}`}>
+                  <Icon className="mb-2 text-blue-600" size={20} /> {text || 'Not specified'}
                 </div>
               ))}
             </div>
             <div className="mt-7 flex flex-wrap gap-2">
-              {job.skills.map((item) => <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700" key={item}>{item}</span>)}
+              {(job.skills || []).filter(Boolean).map((item, index) => <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700" key={`skill-${index}-${item}`}>{item}</span>)}
             </div>
             {[
               ['Job Description', [job.description]],
@@ -84,7 +167,8 @@ export function JobDetailsPage({ onApply }) {
               <section className="mt-9" key={title}>
                 <h2 className="text-2xl font-black text-slate-950">{title}</h2>
                 <div className="mt-4 grid gap-3 text-slate-600">
-                  {items.map((item) => <p className="rounded-2xl bg-slate-50 p-4 leading-7" key={item}>{item}</p>)}
+                  {(items || []).filter(Boolean).map((item, index) => <p className="rounded-2xl bg-slate-50 p-4 leading-7" key={`${title}-${index}`}>{item}</p>)}
+                  {!(items || []).filter(Boolean).length && <p className="rounded-2xl bg-slate-50 p-4 leading-7">Not added</p>}
                 </div>
               </section>
             ))}
@@ -93,7 +177,9 @@ export function JobDetailsPage({ onApply }) {
             <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl shadow-blue-100/50">
               <h2 className="text-xl font-black text-slate-950">Apply for this role</h2>
               <p className="mt-2 text-sm text-slate-500">Submit your profile before {job.deadline}.</p>
-              <Button className="mt-5 w-full" onClick={() => onApply(job)}>Apply Now</Button>
+              <Button className="mt-5 w-full" onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply(job))}>
+                {alreadyApplied ? 'Already Applied' : 'Apply Now'}
+              </Button>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Button onClick={saveJob} variant={saved ? 'primary' : 'secondary'}><Bookmark fill={saved ? 'currentColor' : 'none'} size={17} /> {saved ? 'Saved' : 'Save'}</Button>
                 <Button onClick={() => setShareOpen(true)} variant="secondary"><Share2 size={17} /> Share</Button>
@@ -101,9 +187,15 @@ export function JobDetailsPage({ onApply }) {
             </div>
             <div className="mt-5 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="text-xl font-black text-slate-950">Similar Jobs</h2>
-              <div className="mt-5 grid gap-4">
-                {jobs.filter((item) => item.id !== job.id).slice(0, 2).map((item) => <JobCard job={item} key={item.id} onApply={onApply} />)}
-              </div>
+              {similarLoading ? (
+                <p className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Finding related jobs...</p>
+              ) : similarJobs.length ? (
+                <div className="mt-5 grid gap-4">
+                  {similarJobs.map((item) => <JobCard job={item} key={item._id || item.id} onApply={onApply} />)}
+                </div>
+              ) : (
+                <p className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">No similar jobs available right now.</p>
+              )}
             </div>
           </aside>
         </div>
@@ -111,6 +203,66 @@ export function JobDetailsPage({ onApply }) {
       {shareOpen && <ShareModal job={job} onClose={() => setShareOpen(false)} />}
     </section>
   )
+}
+
+function normalizeText(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9+#.\s-]/g, ' ')
+}
+
+function getSimilarJobTerms(job) {
+  return [
+    job.title,
+    job.department,
+    job.industry,
+    job.type,
+    job.workMode,
+    job.location,
+    ...(Array.isArray(job.skills) ? job.skills : []),
+  ]
+    .flatMap((value) => normalizeText(value).split(/\s+|,\s*/))
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 2)
+}
+
+function isSameJob(left, right) {
+  const leftId = String(left?._id || left?.id || '')
+  const rightId = String(right?._id || right?.id || '')
+  if (leftId && rightId && leftId === rightId) return true
+
+  return normalizeText(left?.title) === normalizeText(right?.title)
+    && normalizeText(left?.company) === normalizeText(right?.company)
+}
+
+function rankSimilarJobs(list, currentJob) {
+  const terms = getSimilarJobTerms(currentJob)
+  if (!terms.length) return []
+
+  const currentDepartment = normalizeText(currentJob.department)
+  const currentTitle = normalizeText(currentJob.title)
+  const currentLocation = normalizeText(currentJob.location)
+
+  return list
+    .filter((item) => !isSameJob(item, currentJob))
+    .map((item) => {
+      const seoText = normalizeText([
+        item.title,
+        item.company,
+        item.department,
+        item.industry,
+        item.description,
+        item.location,
+        item.type,
+        item.workMode,
+        ...(Array.isArray(item.skills) ? item.skills : []),
+      ].filter(Boolean).join(' '))
+      const keywordScore = terms.reduce((score, term) => score + (seoText.includes(term) ? 1 : 0), 0)
+      const departmentBoost = currentDepartment && normalizeText(item.department).includes(currentDepartment) ? 4 : 0
+      const titleBoost = currentTitle && normalizeText(item.title).split(/\s+/).some((word) => word.length > 2 && currentTitle.includes(word)) ? 3 : 0
+      const locationBoost = currentLocation && normalizeText(item.location).includes(currentLocation) ? 1 : 0
+      return { ...item, similarScore: keywordScore + departmentBoost + titleBoost + locationBoost }
+    })
+    .filter((item) => item.similarScore > 0)
+    .sort((a, b) => b.similarScore - a.similarScore)
 }
 
 function ShareModal({ job, onClose }) {

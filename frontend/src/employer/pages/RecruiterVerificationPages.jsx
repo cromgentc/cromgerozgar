@@ -38,6 +38,7 @@ const gstStateCodes = {
 }
 
 export function RecruiterVerificationPage() {
+  const navigate = useNavigate()
   const user = getStoredUser()
   const status = getRecruiterVerificationStatus(user)
   const remark = getRecruiterVerificationRemark(user?.email) || user?.recruiterVerificationRemark || ''
@@ -54,6 +55,13 @@ export function RecruiterVerificationPage() {
   if (status === 'documents_review') return <Navigate replace to="/recruiter-document-review" />
   if (status === 'approved') return <Navigate replace to="/recruiter-dashboard" />
 
+  const fillAgain = async () => {
+    const payload = await api.updateRecruiterStatus('documents_required').catch(() => null)
+    if (payload?.data) localStorage.setItem('authUser', JSON.stringify(payload.data))
+    else updateStoredRecruiterVerificationStatus('documents_required')
+    navigate('/recruiter-documents', { replace: true })
+  }
+
   return (
     <VerificationShell
       icon={Clock3}
@@ -67,8 +75,13 @@ export function RecruiterVerificationPage() {
         </div>
       )}
       <div className="mt-6 rounded-2xl bg-blue-50 p-5 text-sm font-semibold leading-7 text-blue-800">
-        {blocked ? 'Remark resolve hone ke baad admin aapka status update karega.' : 'Admin review ke baad next step unlock hoga. Aapka dashboard access approval ke baad hi active hoga.'}
+        {blocked ? 'Please fill company documents again and submit updated details for admin review.' : 'Admin review ke baad next step unlock hoga. Aapka dashboard access approval ke baad hi active hoga.'}
       </div>
+      {blocked && (
+        <button className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white" onClick={fillAgain} type="button">
+          Again
+        </button>
+      )}
     </VerificationShell>
   )
 }
@@ -77,6 +90,7 @@ export function RecruiterDocumentsPage() {
   const navigate = useNavigate()
   const user = getStoredUser()
   const status = getRecruiterVerificationStatus(user)
+  const canRefillDocuments = ['rejected', 'hold', 'suspended'].includes(status)
   const [form, setForm] = useState({
     documentType: '',
     panNumber: '',
@@ -93,12 +107,16 @@ export function RecruiterDocumentsPage() {
   const [submitting, setSubmitting] = useState(false)
 
   if (!user) return <Navigate replace to="/recruiter-login" />
-  if (status === 'account_review') return <Navigate replace to="/recruiter-verification" />
+  if (status === 'account_review' && !canRefillDocuments) return <Navigate replace to="/recruiter-verification" />
   if (status === 'documents_review') return <Navigate replace to="/recruiter-document-review" />
   if (status === 'approved') return <Navigate replace to="/recruiter-dashboard" />
 
   const update = (key, value) => {
-    const nextValue = key === 'gstNumber' || key === 'panNumber' ? value.toUpperCase() : value
+    const nextValue = key === 'gstNumber' || key === 'panNumber'
+      ? value.toUpperCase()
+      : key === 'aadhaarNumber'
+        ? value.replace(/\D/g, '').slice(0, 12)
+        : value
     setForm((current) => ({ ...current, [key]: nextValue }))
     if (key === 'gstNumber' || key === 'panNumber' || key === 'documentType') setGstDetails(null)
     setMessage('')
@@ -118,19 +136,8 @@ export function RecruiterDocumentsPage() {
     setGstLoading(true)
     setMessage('')
 
-    try {
-      const fetchedDetails = await fetchGstDetails(gstNumber)
-      setGstDetails({ ...validation.details, ...fetchedDetails, valid: true })
-    } catch (error) {
-      setGstDetails({
-        ...validation.details,
-        error: error.message,
-        valid: false,
-      })
-      setMessage(error.message)
-    } finally {
-      setGstLoading(false)
-    }
+    setGstDetails({ ...validation.details, valid: true })
+    setGstLoading(false)
   }
 
   const submit = async (event) => {
@@ -138,6 +145,13 @@ export function RecruiterDocumentsPage() {
 
     if (!form.documentType) {
       setMessage('Please choose a recruiter document type.')
+      return
+    }
+
+    const panValidation = validatePanNumber(form.panNumber)
+
+    if (!panValidation.valid) {
+      setMessage(panValidation.error)
       return
     }
 
@@ -161,14 +175,16 @@ export function RecruiterDocumentsPage() {
       return
     }
 
+    if (form.documentType === 'Aadhar Card' && !/^\d{12}$/.test(form.aadhaarNumber)) {
+      setMessage('Please enter a valid 12 digit Aadhar number.')
+      return
+    }
+
     const submittedAt = new Date().toISOString()
     const payload = {
       ...form,
       recruiterName: user.name || '',
       recruiterEmail: user.email || '',
-      gstLegalName: gstDetails?.legalName || '',
-      gstTradeName: gstDetails?.tradeName || '',
-      gstStatus: gstDetails?.status || '',
       submittedAt,
     }
 
@@ -231,7 +247,7 @@ export function RecruiterDocumentsPage() {
           <>
             <input className="input" onChange={(event) => update('panNumber', event.target.value)} placeholder="Company PAN number" required value={form.panNumber} />
             <DocumentField label="PAN card document" onChange={(value) => update('panDocument', value)} required value={form.panDocument} />
-            <input className="input" onChange={(event) => update('aadhaarNumber', event.target.value)} placeholder="Aadhar number" required value={form.aadhaarNumber} />
+            <input className="input" inputMode="numeric" maxLength={12} onChange={(event) => update('aadhaarNumber', event.target.value)} pattern="[0-9]*" placeholder="Aadhar number" required value={form.aadhaarNumber} />
             <DocumentField label="Aadhar card" onChange={(value) => update('aadhaarDocument', value)} required value={form.aadhaarDocument} />
           </>
         )}
@@ -250,15 +266,31 @@ export function RecruiterDocumentReviewPage() {
   const user = getStoredUser()
   const status = getRecruiterVerificationStatus(user)
   const [submittedDocument, setSubmittedDocument] = useState(null)
+  const documentStatus = String(submittedDocument?.status || '').toLowerCase()
+  const reviewBlocked = ['rejected', 'suspend', 'suspended'].includes(documentStatus)
+  const adminRemark = submittedDocument?.remark || user?.recruiterVerificationRemark || ''
+  const reviewTitle = reviewBlocked
+    ? documentStatus === 'rejected' ? 'Documents rejected' : 'Documents suspended'
+    : 'Documents submitted. Please wait 24 hours'
+  const reviewSubtitle = reviewBlocked
+    ? 'Admin ne aapke submitted documents par remark diya hai. Details dobara fill karke documents resubmit karein.'
+    : 'Aapke company documents submit ho gaye hain. Account manager 24 hours ke andar review karke approve karega.'
 
   useEffect(() => {
     if (!user?.email) return
 
     api
-      .list('recruiter-documents', `?recruiterEmail=${encodeURIComponent(user.email)}&limit=1`)
+      .list('recruiter-documents', `?recruiterEmail=${encodeURIComponent(user.email)}&limit=1&sort=-updatedAt`)
       .then((payload) => setSubmittedDocument(payload.data?.[0] || null))
       .catch(() => setSubmittedDocument(null))
   }, [user?.email])
+
+  const refillDocuments = async () => {
+    const payload = await api.updateRecruiterStatus('documents_required').catch(() => null)
+    if (payload?.data) localStorage.setItem('authUser', JSON.stringify(payload.data))
+    else updateStoredRecruiterVerificationStatus('documents_required')
+    navigate('/recruiter-documents', { replace: true })
+  }
 
   if (!user) return <Navigate replace to="/recruiter-login" />
   if (status === 'account_review') return <Navigate replace to="/recruiter-verification" />
@@ -268,10 +300,15 @@ export function RecruiterDocumentReviewPage() {
   return (
     <VerificationShell
       icon={ShieldCheck}
-      title="Documents submitted. Please wait 24 hours"
-      subtitle="Aapke company documents submit ho gaye hain. Account manager 24 hours ke andar review karke approve karega."
+      title={reviewTitle}
+      subtitle={reviewSubtitle}
     >
       <StatusSteps active="approval" />
+      {reviewBlocked && adminRemark && (
+        <div className="mt-6 rounded-2xl bg-rose-50 p-5 text-sm font-semibold leading-7 text-rose-800">
+          <span className="font-black">Admin remark:</span> {adminRemark}
+        </div>
+      )}
       <div className="mt-6 grid gap-3">
         {getSubmittedDocumentLabels(submittedDocument).map((item) => (
           <p className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-700" key={item}>
@@ -281,8 +318,13 @@ export function RecruiterDocumentReviewPage() {
         ))}
       </div>
       <div className="mt-6 rounded-2xl bg-blue-50 p-5 text-sm font-semibold leading-7 text-blue-800">
-        Admin verification complete hone ke baad login se recruiter dashboard access milega.
+        {reviewBlocked ? 'Please fill company documents again and submit updated details for admin review.' : 'Admin verification complete hone ke baad login se recruiter dashboard access milega.'}
       </div>
+      {reviewBlocked && (
+        <button className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white" onClick={refillDocuments} type="button">
+          Fill Company Documents Again
+        </button>
+      )}
     </VerificationShell>
   )
 }
@@ -314,9 +356,14 @@ function validateGstin(gstNumber, panNumber) {
   }
 }
 
-async function fetchGstDetails(gstNumber) {
-  const payload = await api.gstDetails(gstNumber)
-  return payload.data
+function validatePanNumber(panNumber) {
+  const normalizedPan = String(panNumber || '').trim().toUpperCase()
+
+  if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(normalizedPan)) {
+    return { valid: false, error: 'Please enter a valid PAN number.' }
+  }
+
+  return { valid: true, panNumber: normalizedPan }
 }
 
 function GstDetailsPanel({ details }) {
@@ -324,31 +371,20 @@ function GstDetailsPanel({ details }) {
     return (
       <div className="rounded-2xl bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-700">
         <p className="font-black">GST live details not fetched</p>
-        <p className="mt-1">{details.error || 'Please connect a GST lookup API to fetch legal name, trade name, and active status.'}</p>
+        <p className="mt-1">{details.error || 'GST verification service is not configured. Please contact admin.'}</p>
       </div>
     )
   }
 
-  const verifiedRows = [
+  const rows = [
     ['GST number', details.gstNumber],
-    ['PAN number', details.panNumber],
     ['State', details.state],
-    ['Registration', details.registrationType],
+    ['PAN number', details.panNumber],
   ]
-  const liveRows = [
-    ['Legal name', details.legalName],
-    ['Trade name', details.tradeName],
-    ['GST active status', details.status],
-    ['Address', typeof details.address === 'string' ? details.address : 'Fetched from GST API'],
-  ]
-  const rows = [...verifiedRows, ...(details.lookupConfigured === false ? [] : liveRows)].filter(([, value]) => Boolean(value))
 
   return (
     <div className="rounded-2xl bg-teal-50 p-4 text-sm text-teal-900 ring-1 ring-teal-100">
-      <p className="font-black">{details.lookupConfigured === false ? 'GST number validated' : 'GST details fetched'}</p>
-      {details.lookupConfigured === false && (
-        <p className="mt-1 font-semibold text-teal-800">{details.message}</p>
-      )}
+      <p className="font-black">GST number validated</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         {rows.map(([label, value]) => (
           <div className="rounded-xl bg-white/80 p-3" key={label}>
@@ -362,19 +398,24 @@ function GstDetailsPanel({ details }) {
 }
 
 function getSubmittedDocumentLabels(savedDocuments = {}) {
+  const status = String(savedDocuments?.status || '').toLowerCase()
+  const reviewStatusLabel = ['rejected', 'suspend', 'suspended'].includes(status)
+    ? status === 'rejected' ? 'Documents rejected by admin' : 'Documents suspended by admin'
+    : 'Account manager review pending'
+
   if (savedDocuments?.documentType === 'GST') {
-    return ['PAN number submitted', 'GST number submitted', 'PAN document submitted', 'GST certificate submitted', 'Account manager review pending']
+    return ['PAN number submitted', 'GST number submitted', 'PAN document submitted', 'GST certificate submitted', reviewStatusLabel]
   }
 
   if (savedDocuments?.documentType === 'Offer Letter') {
-    return ['PAN number submitted', 'PAN document submitted', 'Offer letter submitted', 'Account manager review pending']
+    return ['PAN number submitted', 'PAN document submitted', 'Offer letter submitted', reviewStatusLabel]
   }
 
   if (savedDocuments?.documentType === 'Aadhar Card') {
-    return ['PAN number submitted', 'PAN document submitted', 'Aadhar number submitted', 'Aadhar card submitted', 'Account manager review pending']
+    return ['PAN number submitted', 'PAN document submitted', 'Aadhar number submitted', 'Aadhar card submitted', reviewStatusLabel]
   }
 
-  return ['Documents submitted', 'Account manager review pending']
+  return ['Documents submitted', reviewStatusLabel]
 }
 
 function VerificationShell({ children, icon: Icon, subtitle, title }) {

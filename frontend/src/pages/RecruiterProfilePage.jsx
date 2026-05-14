@@ -1,12 +1,15 @@
-import { useState } from 'react'
-import { Building2, Mail, MapPin, Phone } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Camera, Mail, MapPin, Phone } from 'lucide-react'
 import { getStoredUser } from '../routes/authRouting'
+import { api } from '../services/api'
 import { DashboardShell, Panel } from './CandidateDashboard'
 
 export function RecruiterProfilePage() {
   const user = getStoredUser()
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [employerId, setEmployerId] = useState('')
   const [profile, setProfile] = useState(() => ({
     name: user?.name || 'Recruiter',
     email: user?.email || 'recruiter@cromgen.test',
@@ -15,6 +18,7 @@ export function RecruiterProfilePage() {
     industry: 'Recruitment',
     companySize: '',
     website: '',
+    logo: '',
   }))
   const initials = profile.name
     .split(' ')
@@ -28,10 +32,94 @@ export function RecruiterProfilePage() {
     setMessage('')
   }
 
-  const save = () => {
-    setEditing(false)
-    setMessage('Recruiter profile updated.')
-    window.setTimeout(() => setMessage(''), 3000)
+  useEffect(() => {
+    if (!user?.email) return
+
+    api
+      .list('employers', `?businessEmail=${encodeURIComponent(user.email)}&limit=1`)
+      .then((payload) => {
+        const employer = payload.data?.[0]
+        if (!employer) return
+
+        setEmployerId(employer._id || '')
+        setProfile({
+          name: employer.companyName || user.name || 'Recruiter',
+          email: employer.businessEmail || user.email,
+          phone: employer.phone || user.phone || '',
+          location: employer.location || 'India',
+          industry: employer.industry || 'Recruitment',
+          companySize: employer.companySize || '',
+          website: employer.website || '',
+          logo: employer.logo || employer.logoUrl || '',
+        })
+      })
+      .catch(() => null)
+  }, [user?.email])
+
+  const save = async () => {
+    if (!profile.name.trim() || !profile.email.trim()) {
+      setMessage('Company name and business email are required.')
+      return
+    }
+
+    setSaving(true)
+    try {
+      const body = {
+        companyName: profile.name,
+        businessEmail: profile.email,
+        phone: profile.phone,
+        industry: profile.industry,
+        companySize: profile.companySize,
+        website: profile.website,
+        location: profile.location,
+        logo: profile.logo,
+        logoUrl: profile.logo,
+        status: 'Approved',
+        verified: true,
+      }
+      const payload = employerId
+        ? await api.update('employers', employerId, body)
+        : await api.create('employers', body)
+      const employer = payload.data
+      setEmployerId(employer._id || employerId)
+      setProfile({
+        name: employer.companyName || profile.name,
+        email: employer.businessEmail || profile.email,
+        phone: employer.phone || profile.phone,
+        location: employer.location || profile.location,
+        industry: employer.industry || profile.industry,
+        companySize: employer.companySize || profile.companySize,
+        website: employer.website || profile.website,
+        logo: employer.logo || employer.logoUrl || profile.logo,
+      })
+
+      const currentUser = getStoredUser()
+      if (currentUser) {
+        localStorage.setItem('authUser', JSON.stringify({
+          ...currentUser,
+          name: employer.companyName || profile.name,
+          email: employer.businessEmail || profile.email,
+          phone: employer.phone || profile.phone,
+        }))
+      }
+
+      setEditing(false)
+      setMessage('Recruiter profile saved successfully.')
+      window.setTimeout(() => setMessage(''), 3000)
+    } catch (error) {
+      setMessage(error.message || 'Recruiter profile save failed.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const updateLogo = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => update('logo', reader.result || '')
+    reader.readAsDataURL(file)
   }
 
   return (
@@ -42,19 +130,28 @@ export function RecruiterProfilePage() {
             {editing ? (
               <div className="flex gap-2">
                 <button className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-200" onClick={() => setEditing(false)} type="button">Cancel</button>
-                <button className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700" onClick={save} type="button">Save</button>
+                <button className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300" disabled={saving} onClick={save} type="button">{saving ? 'Saving...' : 'Save'}</button>
               </div>
             ) : (
               <button className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700" onClick={() => setEditing(true)} type="button">Edit Profile</button>
             )}
           </div>
           <div className="flex items-center gap-4">
-            <span className="grid h-20 w-20 place-items-center rounded-3xl bg-blue-600 text-2xl font-black text-white shadow-lg shadow-blue-100">
-              {initials}
-            </span>
+            <div className="relative">
+              <span className="grid h-24 w-24 place-items-center overflow-hidden rounded-3xl bg-blue-600 text-2xl font-black text-white shadow-lg shadow-blue-100">
+                {profile.logo ? <img alt={`${profile.name} logo`} className="h-full w-full object-cover" src={profile.logo} /> : initials}
+              </span>
+              {editing && (
+                <label className="absolute -bottom-2 -right-2 grid h-10 w-10 cursor-pointer place-items-center rounded-full bg-slate-950 text-white shadow-lg transition hover:bg-blue-600">
+                  <Camera size={17} />
+                  <input accept="image/*" className="hidden" onChange={updateLogo} type="file" />
+                </label>
+              )}
+            </div>
             <div>
               <h2 className="text-2xl font-black text-slate-950">{profile.name}</h2>
               <p className="mt-1 text-sm font-semibold text-blue-700">Recruiter</p>
+              {editing && <p className="mt-2 text-xs font-bold text-slate-400">Click camera icon to update company logo</p>}
             </div>
           </div>
           {message && <p className="mt-5 rounded-2xl bg-teal-50 p-3 text-sm font-bold text-teal-700">{message}</p>}
@@ -98,24 +195,6 @@ export function RecruiterProfilePage() {
             )}
           </Panel>
 
-          <Panel title="Hiring Workspace">
-            <div className="grid gap-4 md:grid-cols-3">
-              <InfoItem label="Hiring role" value="Recruiter" />
-              <InfoItem label="Default dashboard" value="/recruiter-dashboard" />
-              <InfoItem label="Access level" value="Recruiter workspace" />
-            </div>
-          </Panel>
-
-          <Panel title="Profile Checklist">
-            <div className="grid gap-3">
-              {['Add company logo', 'Update phone number', 'Add office address', 'Post first active job'].map((item) => (
-                <p className="flex items-center gap-3 rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-700" key={item}>
-                  <Building2 size={17} />
-                  {item}
-                </p>
-              ))}
-            </div>
-          </Panel>
         </div>
       </div>
     </DashboardShell>

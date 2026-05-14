@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { City, Country, State } from 'country-state-city'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Download, Eye, EyeOff, FileText, ShieldCheck } from 'lucide-react'
 import {
   ActionButtons,
@@ -17,6 +17,7 @@ import {
 import { reportRows } from '../data/adminData'
 import { api } from '../../services/api'
 import { updateRecruiterVerificationRemark } from '../../routes/authRouting'
+import { fetchPricingPackages, getPricingPackages, seedDefaultPricingPackages } from '../../utils/pricingPackages'
 
 const configs = {
   users: {
@@ -55,16 +56,19 @@ const configs = {
     modalTitle: 'Add / Edit Job',
     extra: 'Approve',
     columns: [
-      { key: '_id', label: 'Job ID' },
-      { key: 'title', label: 'Job Title' },
-      { key: 'company', label: 'Company' },
-      { key: 'industry', label: 'Industry' },
-      { key: 'department', label: 'Department' },
-      { key: 'location', label: 'Location' },
-      { key: 'status', label: 'Status', badge: true },
-      { key: 'approval', label: 'Approval', badge: true },
+      { key: 'recruiterId', label: 'Recruiter ID' },
+      { key: 'recruiterName', label: 'Recruiter' },
+      { key: 'recruiterEmail', label: 'Email' },
+      { key: 'latestJobTitle', label: 'Latest Job' },
+      { key: 'latestCompany', label: 'Company' },
+      { key: 'latestDepartment', label: 'Department' },
+      { key: 'latestLocation', label: 'Location' },
+      { key: 'jobPostCount', label: 'Jobs Posted' },
+      { key: 'activeJobs', label: 'Active' },
+      { key: 'pendingJobs', label: 'Pending' },
+      { key: 'rejectedJobs', label: 'Rejected' },
+      { key: 'candidateClicks', label: 'Clicks' },
       { key: 'applicationsCount', label: 'Applications' },
-      { key: 'views', label: 'Views' },
     ],
     fields: [
       ['title', 'Job title'],
@@ -77,19 +81,28 @@ const configs = {
       ['workMode', 'Work mode'],
       ['posted', 'Posted date', 'date'],
       ['deadline', 'Application deadline', 'date'],
+      ['accountDepartmentStatus', 'Account department status'],
+      ['accountDepartmentRemark', 'Reject remark', 'textarea'],
       ['skills', 'Skills comma separated'],
       ['description', 'Description', 'jobDescription'],
     ],
     required: ['title', 'company', 'location'],
-    transform: (form) => ({
-      ...form,
-      location: formatJobLocation(form),
-      interviewAddress: form.interviewSameAsOffice ? form.officeAddress : form.interviewAddress,
-      posted: form.posted ? new Date(form.posted).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today',
-      deadline: form.deadline ? new Date(form.deadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
-      skills: splitComma(form.skills),
-      companyLogo: form.company?.slice(0, 2).toUpperCase(),
-    }),
+    transform: (form) => {
+      const accountActive = form.accountDepartmentStatus === 'Active'
+      const accountRejected = form.accountDepartmentStatus === 'Rejected'
+      return {
+        ...form,
+        status: accountActive ? 'Active' : accountRejected ? 'Closed' : form.status,
+        approval: accountActive ? 'Approved' : accountRejected ? 'Rejected' : form.approval,
+        accountDepartmentRemark: accountActive ? '' : form.accountDepartmentRemark,
+        location: formatJobLocation(form),
+        interviewAddress: form.interviewSameAsOffice ? form.officeAddress : form.interviewAddress,
+        posted: form.posted ? new Date(form.posted).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today',
+        deadline: form.deadline ? new Date(form.deadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
+        skills: splitComma(form.skills),
+        companyLogo: form.company?.slice(0, 2).toUpperCase(),
+      }
+    },
   },
   companies: {
     resource: 'companies',
@@ -115,7 +128,7 @@ const configs = {
     subtitle: 'Approve accounts, verify documents, edit details, and block recruiters.',
     actionLabel: 'Add Recruiter',
     modalTitle: 'Add / Edit Recruiter',
-    extra: 'Approve',
+    extra: '',
     columns: [
       { key: '_id', label: 'Recruiter ID' },
       { key: 'companyName', label: 'Recruiter' },
@@ -220,12 +233,15 @@ const configs = {
     modalTitle: 'Recruiter Document Details',
     extra: 'View',
     columns: [
-      { key: '_id', label: 'Document ID' },
+      { key: 'recruiterId', label: 'Recruiter ID' },
       { key: 'recruiterName', label: 'Recruiter' },
       { key: 'recruiterEmail', label: 'Email' },
       { key: 'documentType', label: 'Document Type', badge: true },
       { key: 'panNumber', label: 'PAN' },
+      { key: 'panDocument', label: 'PAN Card' },
       { key: 'gstNumber', label: 'GSTIN' },
+      { key: 'gstDocument', label: 'GST Certificate' },
+      { key: 'submissionsCount', label: 'Requests' },
       { key: 'status', label: 'Status', badge: true },
       { key: 'createdAt', label: 'Created' },
     ],
@@ -243,9 +259,150 @@ const configs = {
       ['gstLegalName', 'GST legal name'],
       ['gstTradeName', 'GST trade name'],
       ['gstStatus', 'GST status'],
+      ['remark', 'Admin remark', 'textarea'],
       ['status', 'Review status'],
     ],
     required: ['recruiterEmail', 'documentType'],
+  },
+  testimonials: {
+    resource: 'testimonials',
+    title: 'Testimonials Management',
+    subtitle: 'Add recruiter and candidate feedback that appears dynamically on the website carousel.',
+    actionLabel: 'Add Testimonial',
+    modalTitle: 'Add / Edit Testimonial',
+    extra: 'Feature',
+    columns: [
+      { key: '_id', label: 'Testimonial ID' },
+      { key: 'name', label: 'Name' },
+      { key: 'role', label: 'Role' },
+      { key: 'company', label: 'Company' },
+      { key: 'type', label: 'Type', badge: true },
+      { key: 'rating', label: 'Rating' },
+      { key: 'featured', label: 'Featured', badge: true },
+      { key: 'status', label: 'Status', badge: true },
+      { key: 'createdAt', label: 'Created' },
+    ],
+    fields: [
+      ['name', 'Name'],
+      ['role', 'Role / Designation'],
+      ['company', 'Company'],
+      ['type', 'User type', 'testimonialType'],
+      ['rating', 'Rating', 'number'],
+      ['featured', 'Featured', 'featuredToggle'],
+      ['status', 'Status'],
+      ['text', 'Feedback text', 'textarea'],
+    ],
+    required: ['name', 'text', 'status'],
+    transform: (form) => ({
+      ...form,
+      rating: Math.min(Math.max(Number(form.rating || 5), 1), 5),
+      featured: ['true', 'Yes', 'Featured', true].includes(form.featured),
+    }),
+  },
+  faqs: {
+    resource: 'faqs',
+    title: 'FAQ Management',
+    subtitle: 'Add and publish MongoDB FAQs that automatically appear on the website Common Questions section.',
+    actionLabel: 'Add FAQ',
+    modalTitle: 'Add / Edit FAQ',
+    extra: 'Publish',
+    statusOptions: ['Active', 'Inactive'],
+    columns: [
+      { key: '_id', label: 'FAQ ID' },
+      { key: 'category', label: 'Category' },
+      { key: 'question', label: 'Question' },
+      { key: 'answer', label: 'Answer' },
+      { key: 'featured', label: 'Featured', badge: true },
+      { key: 'sortOrder', label: 'Sort' },
+      { key: 'status', label: 'Status', badge: true },
+      { key: 'createdAt', label: 'Created' },
+    ],
+    fields: [
+      ['category', 'Category', 'faqCategory'],
+      ['question', 'Question'],
+      ['answer', 'Answer', 'textarea'],
+      ['featured', 'Featured', 'featuredToggle'],
+      ['sortOrder', 'Sort order', 'number'],
+      ['status', 'Status', 'faqStatus'],
+    ],
+    required: ['question', 'answer', 'status'],
+    transform: (form) => ({
+      ...form,
+      category: form.category || 'General',
+      sortOrder: Number(form.sortOrder || 0),
+      featured: ['true', 'Yes', 'Featured', true].includes(form.featured),
+    }),
+  },
+  newsletterSubscribers: {
+    resource: 'newsletter-subscribers',
+    title: 'Hiring Insights Subscribers',
+    subtitle: 'Manage users who subscribed from Get hiring insights. These records are saved in MongoDB.',
+    actionLabel: 'Add Subscriber',
+    modalTitle: 'Add / Edit Subscriber',
+    extra: 'Email',
+    export: true,
+    statusOptions: ['Subscribed', 'Unsubscribed'],
+    columns: [
+      { key: '_id', label: 'Subscriber ID' },
+      { key: 'email', label: 'Email' },
+      { key: 'source', label: 'Source' },
+      { key: 'topics', label: 'Topics' },
+      { key: 'status', label: 'Status', badge: true },
+      { key: 'lastSubscribedAt', label: 'Subscribed' },
+      { key: 'createdAt', label: 'Created' },
+    ],
+    fields: [
+      ['email', 'Email address'],
+      ['source', 'Source'],
+      ['topics', 'Topics comma separated', 'textarea'],
+      ['status', 'Subscription status', 'subscriberStatus'],
+    ],
+    required: ['email', 'status'],
+    transform: (form) => ({
+      ...form,
+      email: String(form.email || '').trim().toLowerCase(),
+      source: form.source || 'admin',
+      topics: splitComma(form.topics).length ? splitComma(form.topics) : ['Hiring insights', 'Latest jobs', 'Recruiter updates'],
+      lastSubscribedAt: form.status === 'Subscribed' ? new Date().toISOString() : form.lastSubscribedAt,
+    }),
+  },
+  supportMessages: {
+    resource: 'support-messages',
+    title: 'Support Messages',
+    subtitle: 'View customer care chat requests from users, candidates, recruiters, and guests.',
+    actionLabel: 'Add Ticket',
+    modalTitle: 'Support Message Details',
+    extra: 'Reply',
+    statusOptions: ['Open', 'In Progress', 'Resolved', 'Closed'],
+    columns: [
+      { key: '_id', label: 'Message ID' },
+      { key: 'name', label: 'Name' },
+      { key: 'email', label: 'Email' },
+      { key: 'role', label: 'Role', badge: true },
+      { key: 'subject', label: 'Subject' },
+      { key: 'message', label: 'Message' },
+      { key: 'messagesCount', label: 'Requests' },
+      { key: 'status', label: 'Status', badge: true },
+      { key: 'createdAt', label: 'Created' },
+    ],
+    fields: [
+      ['name', 'Name'],
+      ['email', 'Email'],
+      ['role', 'Role'],
+      ['subject', 'Subject'],
+      ['status', 'Support status', 'supportStatus'],
+      ['message', 'Customer message', 'textarea'],
+      ['adminReply', 'Admin reply / internal note', 'textarea'],
+    ],
+    required: ['message', 'status'],
+    transform: (form) => ({
+      ...form,
+      name: form.name || 'Guest User',
+      role: form.role || 'Guest',
+      subject: form.subject || 'Support chat',
+      status: form.status || 'Open',
+      source: form.source || 'admin-panel',
+    }),
   },
   reports: {
     resource: null,
@@ -262,7 +419,7 @@ const configs = {
 }
 
 const accessByRole = {
-  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'categories', 'locations', 'payments', 'reports', 'settings'],
+  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'categories', 'locations', 'payments', 'testimonials', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
   staff: [],
   recruiter: [],
   users: [],
@@ -273,6 +430,13 @@ const fieldOptions = {
   status: ['Active', 'Inactive', 'Pending', 'Approved', 'Blocked', 'Open', 'Closed', 'New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected', 'Rejected'],
   userStatus: ['Active', 'Inactive', 'Suspend'],
   documentType: ['GST', 'Offer Letter', 'Aadhar Card'],
+  testimonialType: ['Candidate', 'Recruiter', 'Company', 'Admin'],
+  faqCategory: ['General', 'Candidate', 'Recruiter', 'Jobs', 'Applications', 'Payments', 'Account', 'Support'],
+  faqStatus: ['Active', 'Inactive'],
+  subscriberStatus: ['Subscribed', 'Unsubscribed'],
+  featuredToggle: ['false', 'true'],
+  supportStatus: ['Open', 'In Progress', 'Resolved', 'Closed'],
+  accountDepartmentStatus: ['Pending', 'Active', 'Rejected'],
   company: ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'Cromgen Solutions'],
   department: ['Engineering', 'Product', 'Design', 'Growth', 'Marketing', 'Sales', 'Customer Success', 'Support', 'HR & Recruitment', 'Finance', 'Operations', 'Research Operations', 'AI Operations'],
   experience: ['Fresher', '0-1 years', '1-3 years', '3-6 years', '6-10 years', '10+ years'],
@@ -290,8 +454,6 @@ const industryOptions = ['IT & Software', 'SaaS', 'Fintech', 'Recruitment', 'HR 
 
 const recruiterReviewActions = [
   { label: 'Account Reviews', value: 'account_review', status: 'account_review' },
-  { label: 'Account Verify', value: 'account_verify', status: 'documents_required' },
-  { label: 'Approve Login', value: 'approved', status: 'approved' },
   { label: 'Rejected', value: 'rejected', status: 'rejected' },
   { label: 'Hold', value: 'hold', status: 'hold' },
   { label: 'Suspended', value: 'suspended', status: 'suspended' },
@@ -324,6 +486,7 @@ function getStoredAdminUser() {
 
 export function AdminManagementPage({ type }) {
   const user = getStoredAdminUser()
+  const navigate = useNavigate()
   const allowedTypes = accessByRole[user?.role] || accessByRole.Admin
 
   if (!allowedTypes.includes(type)) {
@@ -341,6 +504,7 @@ export function AdminManagementPage({ type }) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [reviewAction, setReviewAction] = useState(null)
   const [reviewRemark, setReviewRemark] = useState('')
+  const [documentViewer, setDocumentViewer] = useState(null)
   const [selectedRow, setSelectedRow] = useState(null)
   const [form, setForm] = useState({})
   const [message, setMessage] = useState('')
@@ -363,6 +527,7 @@ export function AdminManagementPage({ type }) {
     const resource = type === 'resumes' && resumeMode === 'lead' ? 'candidates' : config.resource
     const params = new URLSearchParams()
     if (type === 'users' && role) params.set('role', role)
+    if (type === 'jobs') params.set('includeAll', 'true')
     if (search) params.set('search', search)
     if (status) params.set('status', status)
 
@@ -370,6 +535,30 @@ export function AdminManagementPage({ type }) {
       .list(resource, params.toString() ? `?${params.toString()}` : '')
       .then((payload) => {
         const data = payload.data || []
+        if (type === 'recruiterDocuments') {
+          api
+            .list('employers')
+            .then((employersPayload) => setRows(groupRecruiterDocuments(attachRecruiterIdsToDocuments(data, employersPayload.data || []))))
+            .catch(() => setRows(groupRecruiterDocuments(data.map((document) => ({ ...document, recruiterId: document.recruiterId || '' })))))
+          return
+        }
+
+        if (type === 'employers') {
+          api
+            .list('recruiter-documents', '?sort=-updatedAt')
+            .then((documentsPayload) => setRows(mergeRecruiterDocumentStatus(data, documentsPayload.data || [])))
+            .catch(() => setRows(data.map((row) => ({ ...row, source: row.source || 'Admin Upload' }))))
+          return
+        }
+
+        if (type === 'jobs') {
+          api
+            .list('employers')
+            .then((employersPayload) => setRows(groupJobsByRecruiter(attachRecruiterIdsToJobs(data, employersPayload.data || []))))
+            .catch(() => setRows(groupJobsByRecruiter(data.map((row) => ({ ...row, recruiterId: getShortId(row.recruiterId) })))))
+          return
+        }
+
         setRows(type === 'resumes' && resumeMode === 'lead' ? data.map((row) => ({ ...row, source: 'Lead Resume' })) : data.map((row) => ({ ...row, source: row.source || 'Admin Upload' })))
       })
       .catch((error) => {
@@ -541,6 +730,86 @@ export function AdminManagementPage({ type }) {
     }
   }
 
+  const applyRecruiterDocumentAction = async (row, action, remark = '') => {
+    if (action === 'delete') {
+      requestDelete(row)
+      return
+    }
+
+    const statusMap = {
+      approve: { documentStatus: 'Approved', recruiterStatus: 'approved', userStatus: 'Active', message: 'Recruiter documents approved. Recruiter can login to dashboard now.' },
+      reject: { documentStatus: 'Rejected', recruiterStatus: 'rejected', userStatus: 'Inactive', message: 'Recruiter documents rejected. Remark sent to recruiter.' },
+      suspend: { documentStatus: 'Suspend', recruiterStatus: 'suspended', userStatus: 'Suspend', message: 'Recruiter documents suspended. Remark sent to recruiter.' },
+    }
+    const next = statusMap[action]
+    const email = row.recruiterEmail
+
+    if (!next || !email) {
+      setMessage('Recruiter email is missing on this document.')
+      return
+    }
+
+    try {
+      await api.update('recruiter-documents', row._id, { status: next.documentStatus, remark })
+      const usersPayload = await api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`)
+      const recruiter = (usersPayload.data || []).find((item) => item.email?.toLowerCase() === email.toLowerCase())
+
+      if (recruiter?._id) {
+        await api.update('users', recruiter._id, { status: next.userStatus, recruiterVerificationStatus: next.recruiterStatus, recruiterVerificationRemark: remark })
+      }
+
+      setRows((current) => current.map((item) => (item._id === row._id ? { ...item, status: next.documentStatus, remark } : item)))
+      setMessage(next.message)
+      loadRows()
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  const selectRecruiterDocumentAction = (row, action) => {
+    if (['reject', 'suspend'].includes(action)) {
+      setReviewAction({ row, action, type: 'recruiterDocument' })
+      setReviewRemark('')
+      return
+    }
+
+    applyRecruiterDocumentAction(row, action)
+  }
+
+  const applyJobReviewAction = async (row, action, remark = '') => {
+    const payload = action === 'active'
+      ? { accountDepartmentStatus: 'Active', status: 'Active', approval: 'Approved', accountDepartmentRemark: '' }
+      : { accountDepartmentStatus: 'Rejected', status: 'Closed', approval: 'Rejected', accountDepartmentRemark: remark }
+
+    try {
+      const response = await api.update('jobs', row._id, payload)
+      setRows((current) => current.map((item) => (item._id === row._id ? response.data : item)))
+      setMessage(action === 'active' ? 'Job active ho gaya. Ab users ko dikhega.' : 'Job rejected. Remark recruiter ko show hoga.')
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  const selectJobReviewAction = (row, action) => {
+    if (action === 'reject') {
+      setReviewAction({ row, action, type: 'jobReview' })
+      setReviewRemark('')
+      return
+    }
+
+    applyJobReviewAction(row, action)
+  }
+
+  const openRecruiterJobs = (row) => {
+    const recruiterObjectId = row.recruiterObjectId || row._id
+
+    if (recruiterObjectId) {
+      window.open(`/admin/recruiters/${recruiterObjectId}`, '_blank', 'noopener,noreferrer')
+    } else {
+      setMessage('Recruiter profile not linked with this job group.')
+    }
+  }
+
   const submitReviewRemark = () => {
     if (!reviewAction) return
 
@@ -549,7 +818,13 @@ export function AdminManagementPage({ type }) {
       return
     }
 
-    applyRecruiterReviewAction(reviewAction.row, reviewAction.action, reviewRemark.trim())
+    if (reviewAction.type === 'jobReview') {
+      applyJobReviewAction(reviewAction.row, reviewAction.action, reviewRemark.trim())
+    } else if (reviewAction.type === 'recruiterDocument') {
+      applyRecruiterDocumentAction(reviewAction.row, reviewAction.action, reviewRemark.trim())
+    } else {
+      applyRecruiterReviewAction(reviewAction.row, reviewAction.action, reviewRemark.trim())
+    }
     setReviewAction(null)
     setReviewRemark('')
   }
@@ -561,7 +836,11 @@ export function AdminManagementPage({ type }) {
       }
 
       if (type === 'recruiterDocuments') {
-        return <RecruiterDocumentActions onApprove={() => approveRecruiterDocument(row)} onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} />
+        return <RecruiterDocumentActions onAction={(action) => selectRecruiterDocumentAction(row, action)} onView={() => setDocumentViewer(row)} />
+      }
+
+      if (type === 'jobs') {
+        return <JobGroupActions onView={() => openRecruiterJobs(row)} />
       }
 
       return (
@@ -574,6 +853,11 @@ export function AdminManagementPage({ type }) {
     },
     [config.extra, resumeMode, type],
   )
+  const displayRows = type === 'jobs'
+    ? (rows.some((row) => !row.jobPostCount) ? groupJobsByRecruiter(rows) : rows)
+    : type === 'supportMessages'
+      ? groupSupportMessagesByEmail(rows)
+      : rows
 
   return (
     <div className="grid gap-5">
@@ -584,12 +868,13 @@ export function AdminManagementPage({ type }) {
         onStatusChange={(value) => updateQuery('status', value)}
         searchValue={search}
         statusValue={status}
+        statusOptions={config.statusOptions}
         subtitle={config.subtitle}
         title={config.title}
       />
       <div className="flex flex-col justify-between gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
         <div className="flex flex-wrap gap-2">
-          {(type === 'users' ? fieldOptions.role : ['Admin', 'staff', 'recruiter', 'users']).map((item) => <StatusBadge key={item} status={item} />)}
+          {(type === 'users' ? fieldOptions.role : config.statusOptions || ['Admin', 'staff', 'recruiter', 'users']).map((item) => <StatusBadge key={item} status={item} />)}
         </div>
         {type === 'resumes' && (
           <select className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 outline-none" onChange={(event) => updateQuery('resumeMode', event.target.value)} value={resumeMode}>
@@ -602,10 +887,247 @@ export function AdminManagementPage({ type }) {
       {message && <p className="rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
       {type === 'applications' && <ApplicationStatusPanel />}
       {type === 'payments' && <RevenueSummary />}
-      <DataTable actions={actions} columns={config.columns} rows={formatRows(rows)} />
-      {!rows.length && <EmptyAdminState title={`${config.title} empty state`} />}
+      <DataTable
+        actions={actions}
+        columns={config.columns}
+        onRowClick={
+          type === 'recruiterDocuments'
+            ? (row) => navigate(`/admin/recruiter-documents/${row._id}`)
+            : type === 'jobs'
+              ? openRecruiterJobs
+            : type === 'employers'
+              ? (row) => window.open(`/admin/recruiters/${row._id}`, '_blank', 'noopener,noreferrer')
+              : type === 'supportMessages'
+                ? (row) => window.open(`/admin/support-messages/${row.latestMessageId || row._id}`, '_blank', 'noopener,noreferrer')
+              : undefined
+        }
+        rows={type === 'recruiterDocuments' ? displayRows : formatRows(displayRows)}
+      />
+      {!displayRows.length && <EmptyAdminState title={`${config.title} empty state`} />}
       <CrudModal companyOptions={companyOptions} companyRows={companyRows} config={config} form={form} isCreate={!selectedRow} onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))} onClose={() => setModalOpen(false)} onSave={save} open={modalOpen} type={type} />
-      <AdminModal open={Boolean(reviewAction)} title="Add recruiter account remark" onClose={() => setReviewAction(null)}>
+      <AdminModal open={Boolean(reviewAction)} title={reviewAction?.type === 'jobReview' ? 'Add job reject remark' : reviewAction?.type === 'recruiterDocument' ? 'Add document review remark' : 'Add recruiter account remark'} onClose={() => setReviewAction(null)}>
+        <p className="text-sm leading-6 text-slate-500">{reviewAction?.type === 'jobReview' ? 'This remark will be shown to the recruiter on their posted jobs page.' : 'This remark will be shown to the recruiter on their verification screen.'}</p>
+        <textarea className="input mt-4 min-h-32" onChange={(event) => setReviewRemark(event.target.value)} placeholder="Write reason or next steps for recruiter" value={reviewRemark} />
+        <div className="mt-5 flex justify-end gap-2">
+          <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setReviewAction(null)} type="button">Cancel</button>
+          <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={submitReviewRemark} type="button">Save Remark</button>
+        </div>
+      </AdminModal>
+      <DocumentViewerModal onClose={() => setDocumentViewer(null)} row={documentViewer} />
+      <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={remove} />
+    </div>
+  )
+}
+
+export function RecruiterDocumentDetailPage() {
+  const user = getStoredAdminUser()
+  const { documentId } = useParams()
+  const navigate = useNavigate()
+  const allowedTypes = accessByRole[user?.role] || accessByRole.Admin
+  const [documents, setDocuments] = useState([])
+  const [selectedDocument, setSelectedDocument] = useState(null)
+  const [message, setMessage] = useState('')
+  const [reviewAction, setReviewAction] = useState(null)
+  const [reviewRemark, setReviewRemark] = useState('')
+  const [documentViewer, setDocumentViewer] = useState(null)
+  const [remarkViewer, setRemarkViewer] = useState(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
+  if (!allowedTypes.includes('recruiterDocuments')) {
+    return <Navigate replace to="/admin" />
+  }
+
+  const loadDocuments = async () => {
+    if (!documentId) return
+
+    try {
+      const payload = await api.get('recruiter-documents', documentId)
+      const document = payload.data || payload
+      const email = document.recruiterEmail
+
+      if (!email) {
+        setDocuments(document?._id ? [document] : [])
+        return
+      }
+
+      const historyPayload = await api.list('recruiter-documents', `?recruiterEmail=${encodeURIComponent(email)}&sort=-updatedAt`)
+      const history = historyPayload.data || []
+      const documentsToShow = history.length ? history : [document]
+      try {
+        const recruitersPayload = await api.list('employers', `?search=${encodeURIComponent(email)}`)
+        setDocuments(attachRecruiterIdsToDocuments(documentsToShow, recruitersPayload.data || []))
+      } catch {
+        setDocuments(documentsToShow.map((item) => ({ ...item, recruiterId: item.recruiterId || '' })))
+      }
+    } catch (error) {
+      setMessage(error.message)
+      setDocuments([])
+    }
+  }
+
+  useEffect(() => {
+    setMessage('')
+    loadDocuments()
+  }, [documentId])
+
+  const primaryDocument = documents[0] || {}
+
+  const applyDocumentAction = async (document, action, remark = '') => {
+    if (action === 'delete') {
+      setSelectedDocument(document)
+      setConfirmOpen(true)
+      return
+    }
+
+    const statusMap = {
+      approve: { documentStatus: 'Approved', recruiterStatus: 'approved', userStatus: 'Active', message: 'Recruiter documents approved. Recruiter can login to dashboard now.' },
+      reject: { documentStatus: 'Rejected', recruiterStatus: 'rejected', userStatus: 'Inactive', message: 'Recruiter documents rejected. Remark sent to recruiter.' },
+      suspend: { documentStatus: 'Suspend', recruiterStatus: 'suspended', userStatus: 'Suspend', message: 'Recruiter documents suspended. Remark sent to recruiter.' },
+    }
+    const next = statusMap[action]
+    const email = document.recruiterEmail
+
+    if (!next || !email) {
+      setMessage('Recruiter email is missing on this document.')
+      return
+    }
+
+    try {
+      await api.update('recruiter-documents', document._id, { status: next.documentStatus, remark: action === 'approve' ? '' : remark })
+      const usersPayload = await api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`)
+      const recruiter = (usersPayload.data || []).find((item) => item.email?.toLowerCase() === email.toLowerCase())
+
+      if (recruiter?._id) {
+        await api.update('users', recruiter._id, {
+          status: next.userStatus,
+          recruiterVerificationStatus: next.recruiterStatus,
+          recruiterVerificationRemark: action === 'approve' ? '' : remark,
+        })
+      }
+
+      setMessage(next.message)
+      loadDocuments()
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  const selectDocumentAction = (document, action) => {
+    if (action === 'view') {
+      setDocumentViewer(document)
+      return
+    }
+
+    if (['reject', 'suspend'].includes(action)) {
+      setReviewAction({ document, action })
+      setReviewRemark('')
+      return
+    }
+
+    applyDocumentAction(document, action)
+  }
+
+  const submitReviewRemark = () => {
+    if (!reviewAction) return
+
+    if (!reviewRemark.trim()) {
+      setMessage('Remark is required for rejected and suspended documents.')
+      return
+    }
+
+    applyDocumentAction(reviewAction.document, reviewAction.action, reviewRemark.trim())
+    setReviewAction(null)
+    setReviewRemark('')
+  }
+
+  const removeDocument = async () => {
+    if (!selectedDocument?._id) {
+      setConfirmOpen(false)
+      return
+    }
+
+    try {
+      await api.remove('recruiter-documents', selectedDocument._id)
+      setMessage('Recruiter document request deleted successfully.')
+      setConfirmOpen(false)
+      setSelectedDocument(null)
+      loadDocuments()
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  return (
+    <div className="grid gap-5">
+      <Toolbar
+        actionLabel="Back"
+        onAction={() => navigate('/admin/recruiter-documents')}
+        subtitle="Recruiter ke sabhi document requests yahan full page par show honge."
+        title="Recruiter document request history"
+      />
+      {message && <p className="rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
+      <AdminCard>
+        <p className="text-lg font-black text-slate-950">{primaryDocument.recruiterName || 'Recruiter'}</p>
+        <p className="mt-1 text-sm font-semibold text-slate-500">{primaryDocument.recruiterEmail || 'Email not available'}</p>
+        <p className="mt-3 text-xs font-black uppercase tracking-wide text-slate-400">Recruiter ID {primaryDocument.recruiterId || 'Not available'} · {documents.length} request{submissionSuffix(documents.length)}</p>
+      </AdminCard>
+      <AdminCard className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                {['Requests No', 'Recruiter ID', 'Recruiter', 'Email', 'Document Type', 'PAN', 'PAN Card', 'GSTIN', 'GST Certificate', 'Status', 'Created', 'Actions'].map((label) => (
+                  <th className="whitespace-nowrap px-5 py-4 font-bold" key={label}>{label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {documents.map((document, index) => (
+                <tr className="transition hover:bg-blue-50/40" key={document._id || index}>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">#{documents.length - index}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.recruiterId || 'Not available'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-bold text-slate-700">{document.recruiterName || 'Recruiter'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.recruiterEmail || 'Not added'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.documentType || 'Not added'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.panNumber || 'Not added'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.panDocument || 'Not uploaded'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.gstNumber || 'Not added'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.gstDocument || 'Not uploaded'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">
+                    {document.remark && ['rejected', 'suspend', 'suspended'].includes(String(document.status || '').toLowerCase()) ? (
+                      <button className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-700" onClick={() => setRemarkViewer({ status: document.status, remark: document.remark })} type="button">
+                        {document.status}
+                      </button>
+                    ) : (
+                      <StatusBadge status={document.status || 'Submitted'} />
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.createdAt ? new Date(document.createdAt).toLocaleString() : 'Not available'}</td>
+                  <td className="whitespace-nowrap px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <button aria-label="View documents" className="grid h-8 w-8 place-items-center rounded-full bg-blue-50 text-blue-700 transition hover:bg-blue-100" onClick={() => setDocumentViewer(document)} type="button">
+                        <Eye size={16} />
+                      </button>
+                      <select className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 outline-none" onChange={(event) => {
+                        if (event.target.value) selectDocumentAction(document, event.target.value)
+                        event.target.value = ''
+                      }} defaultValue="">
+                        <option value="">Actions</option>
+                        <option value="approve">Approve</option>
+                        <option value="reject">Reject</option>
+                        <option value="suspend">Suspend</option>
+                        <option value="delete">Delete</option>
+                      </select>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </AdminCard>
+      {!documents.length && <EmptyAdminState title="No recruiter document requests found" />}
+      <AdminModal open={Boolean(reviewAction)} title="Add document review remark" onClose={() => setReviewAction(null)}>
         <p className="text-sm leading-6 text-slate-500">This remark will be shown to the recruiter on their verification screen.</p>
         <textarea className="input mt-4 min-h-32" onChange={(event) => setReviewRemark(event.target.value)} placeholder="Write reason or next steps for recruiter" value={reviewRemark} />
         <div className="mt-5 flex justify-end gap-2">
@@ -613,7 +1135,9 @@ export function AdminManagementPage({ type }) {
           <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={submitReviewRemark} type="button">Save Remark</button>
         </div>
       </AdminModal>
-      <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={remove} />
+      <DocumentViewerModal onClose={() => setDocumentViewer(null)} row={documentViewer} />
+      <RemarkViewerModal onClose={() => setRemarkViewer(null)} remark={remarkViewer} />
+      <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={removeDocument} />
     </div>
   )
 }
@@ -654,6 +1178,7 @@ function getInitialForm(type, companyOptions = fieldOptions.company) {
       workMode: fieldOptions.workMode[0],
       status: 'Open',
       approval: 'Pending',
+      accountDepartmentStatus: 'Pending',
       interviewSameAsOffice: true,
     }
   }
@@ -681,18 +1206,819 @@ function RecruiterReviewActions({ onAction, onDelete, onEdit }) {
   )
 }
 
-function RecruiterDocumentActions({ onApprove, onDelete, onEdit }) {
+function RecruiterDocumentActions({ onAction, onView }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <button className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700" onClick={onEdit} type="button">View</button>
-      <button className="rounded-full bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700" onClick={onApprove} type="button">Approve</button>
-      {onDelete && <button className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700" onClick={onDelete} type="button">Delete</button>}
+      <button aria-label="View documents" className="grid h-8 w-8 place-items-center rounded-full bg-blue-50 text-blue-700" onClick={onView} type="button">
+        <Eye size={16} />
+      </button>
+      <select className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 outline-none" onChange={(event) => {
+        if (event.target.value) onAction(event.target.value)
+        event.target.value = ''
+      }} defaultValue="">
+        <option value="">Actions</option>
+        <option value="approve">Approve</option>
+        <option value="reject">Reject</option>
+        <option value="suspend">Suspend</option>
+        <option value="delete">Delete</option>
+      </select>
     </div>
   )
 }
 
+function JobReviewActions({ onAction }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <select className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 outline-none" onChange={(event) => {
+        if (event.target.value) onAction(event.target.value)
+        event.target.value = ''
+      }} defaultValue="">
+        <option value="">Actions</option>
+        <option value="active">Active</option>
+        <option value="reject">Reject</option>
+      </select>
+    </div>
+  )
+}
+
+function JobGroupActions({ onView }) {
+  return (
+    <button className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700" onClick={onView} type="button">
+      View Details
+    </button>
+  )
+}
+
+function DocumentViewerModal({ onClose, row }) {
+  if (!row) return null
+
+  const documents = [
+    ['PAN Card', row.panDocument],
+    ['GST Certificate', row.gstDocument],
+    ['Offer Letter', row.offerLetter],
+    ['Aadhar Card', row.aadhaarDocument],
+  ].filter(([, value]) => Boolean(value))
+  const primaryDocument = documents[0]?.[1]
+
+  return (
+    <AdminModal open={Boolean(row)} title="Uploaded recruiter documents" onClose={onClose}>
+      <div className="grid gap-3 text-sm">
+        <div className="rounded-2xl bg-slate-50 p-4">
+          <p className="font-black text-slate-950">{row.recruiterName || 'Recruiter'}</p>
+          <p className="mt-1 font-semibold text-slate-500">{row.recruiterEmail}</p>
+        </div>
+        {documents.map(([label, value]) => (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3" key={label}>
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
+              <p className="mt-1 font-bold text-slate-700">{value}</p>
+            </div>
+            {isDocumentUrl(value) && (
+              <a className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700" href={value} rel="noreferrer" target="_blank">Open PDF</a>
+            )}
+          </div>
+        ))}
+        {primaryDocument && isDocumentUrl(primaryDocument) ? (
+          <iframe className="h-[520px] w-full rounded-2xl border border-slate-200" src={primaryDocument} title="Recruiter document preview" />
+        ) : (
+          <div className="rounded-2xl bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-800">
+            PDF preview requires a document URL. Current upload stores file reference/name only.
+          </div>
+        )}
+      </div>
+    </AdminModal>
+  )
+}
+
+function RemarkViewerModal({ onClose, remark }) {
+  if (!remark) return null
+
+  return (
+    <AdminModal open={Boolean(remark)} title={`${remark.status || 'Document'} remark`} onClose={onClose}>
+      <div className="rounded-2xl bg-rose-50 p-5 text-sm font-semibold leading-7 text-rose-800">
+        {remark.remark}
+      </div>
+    </AdminModal>
+  )
+}
+
+export function RecruiterDetailPage() {
+  const user = getStoredAdminUser()
+  const { recruiterId } = useParams()
+  const allowedTypes = accessByRole[user?.role] || accessByRole.Admin
+  const [recruiter, setRecruiter] = useState(null)
+  const [jobs, setJobs] = useState([])
+  const [applications, setApplications] = useState([])
+  const [documents, setDocuments] = useState([])
+  const [subscription, setSubscription] = useState(null)
+  const [selectedJob, setSelectedJob] = useState(null)
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  if (!allowedTypes.includes('employers')) {
+    return <Navigate replace to="/admin" />
+  }
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadRecruiter = async () => {
+      setLoading(true)
+      setMessage('')
+
+      try {
+        const recruiterPayload = await api.get('employers', recruiterId)
+        const nextRecruiter = recruiterPayload.data
+        const email = nextRecruiter?.businessEmail || ''
+
+        const [jobsPayload, applicationsPayload, documentsPayload, packagePayload] = await Promise.all([
+          api.jobs(`?recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`),
+          api.list('applications', `?recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`),
+          api.list('recruiter-documents', `?recruiterEmail=${encodeURIComponent(email)}&sort=-updatedAt&limit=100`),
+          api.currentRecruiterPackage(email).catch(() => ({ data: null })),
+        ])
+
+        if (!mounted) return
+        setRecruiter(nextRecruiter)
+        setJobs(jobsPayload.data || [])
+        setApplications(applicationsPayload.data || [])
+        setDocuments(documentsPayload.data || [])
+        setSubscription(packagePayload.data || null)
+      } catch (error) {
+        if (mounted) setMessage(error.message)
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    loadRecruiter()
+
+    return () => {
+      mounted = false
+    }
+  }, [recruiterId])
+
+  const activeJobs = jobs.filter((job) => job.accountDepartmentStatus === 'Active' || job.approval === 'Approved').length
+  const pendingJobs = jobs.filter((job) => job.accountDepartmentStatus === 'Pending' || job.approval === 'Pending').length
+  const rejectedJobs = jobs.filter((job) => job.accountDepartmentStatus === 'Rejected' || job.approval === 'Rejected').length
+  const totalViews = jobs.reduce((sum, job) => sum + Number(job.views || 0), 0)
+  const uniqueCandidates = new Set(applications.map((item) => item.candidateEmail).filter(Boolean).map((email) => email.toLowerCase())).size
+  const latestDocument = documents[0]
+
+  return (
+    <div className="grid max-w-full gap-5 overflow-x-hidden">
+      <div className="min-w-0 rounded-[1.75rem] bg-gradient-to-br from-blue-600 to-teal-500 p-6 text-white shadow-xl shadow-blue-100">
+        <p className="text-sm font-black uppercase tracking-wide text-blue-100">Recruiter profile</p>
+        <h1 className="mt-2 break-words text-3xl font-black">{recruiter?.companyName || 'Recruiter'}</h1>
+        <p className="mt-2 break-words font-semibold text-blue-50">{getShortId(recruiter?._id)} / {recruiter?.businessEmail || 'Email not available'} / {recruiter?.location || 'Location not added'}</p>
+      </div>
+
+      {message && <p className="rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-700">{message}</p>}
+      {loading ? (
+        <AdminCard><p className="text-sm font-bold text-slate-500">Loading recruiter full details...</p></AdminCard>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <RecruiterMetric label="Total Jobs" value={jobs.length} />
+            <RecruiterMetric label="Active Jobs" value={activeJobs} />
+            <RecruiterMetric label="Pending Jobs" value={pendingJobs} />
+            <RecruiterMetric label="Rejected Jobs" value={rejectedJobs} />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <RecruiterMetric label="Candidates Arrived" value={uniqueCandidates} />
+            <RecruiterMetric label="Candidate Clicks" value={totalViews} />
+            <RecruiterMetric label="Applications" value={applications.length} />
+            <RecruiterMetric label="Wallet Balance" value={`${subscription?.coinBalance || 0} coins`} />
+          </div>
+
+          <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="grid min-w-0 gap-5">
+              <AdminCard className="min-w-0 overflow-hidden">
+                <h2 className="text-xl font-black text-slate-950">Posted Jobs</h2>
+                {jobs.length ? (
+                  <div className="mt-4 max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <tr>
+                          {['Sr No', 'Job ID', 'Job Title', 'Company', 'Department', 'Location', 'Type', 'Work Mode', 'Account Status', 'Approval', 'Remark', 'Created'].map((label) => (
+                            <th className="whitespace-nowrap px-4 py-3 font-black" key={label}>{label}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {jobs.map((job, index) => (
+                          <tr className="cursor-pointer transition hover:bg-blue-50/60" key={job._id} onClick={() => setSelectedJob(job)}>
+                            <td className="whitespace-nowrap px-4 py-3 font-bold text-slate-600">#{index + 1}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-bold text-slate-600">{getShortId(job._id)}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-black text-slate-900">{job.title}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">{job.company}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">{job.department || 'Not added'}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">{job.location}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">{job.type || 'Not added'}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">{job.workMode || 'Not added'}</td>
+                            <td className="whitespace-nowrap px-4 py-3"><StatusBadge status={job.accountDepartmentStatus || 'Pending'} /></td>
+                            <td className="whitespace-nowrap px-4 py-3"><StatusBadge status={job.approval || 'Pending'} /></td>
+                            <td className="max-w-[240px] truncate px-4 py-3 font-semibold text-rose-700">{job.accountDepartmentRemark || '-'}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">{job.createdAt ? new Date(job.createdAt).toLocaleDateString() : 'Not added'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : <p className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-500">No jobs posted yet.</p>}
+              </AdminCard>
+
+              <AdminCard className="min-w-0">
+                <h2 className="text-xl font-black text-slate-950">Candidate Activity</h2>
+                <div className="mt-4 grid gap-3">
+                  {applications.length ? applications.map((application) => (
+                    <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[1fr_auto] md:items-center" key={application._id}>
+                      <div>
+                        <p className="font-black text-slate-950">{application.candidateName}</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-500">{application.jobTitle} / {application.candidateEmail}</p>
+                      </div>
+                      <StatusBadge status={application.status || 'New'} />
+                    </div>
+                  )) : <p className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-500">No candidate activity yet.</p>}
+                </div>
+              </AdminCard>
+            </div>
+
+            <div className="grid h-max min-w-0 gap-5">
+              <AdminCard className="min-w-0">
+                <h2 className="text-xl font-black text-slate-950">Package & Wallet</h2>
+                <div className="mt-4 grid gap-3 text-sm font-bold text-slate-700">
+                  <ProfileLine label="Package" value={subscription?.packageSnapshot?.name || 'No active package'} />
+                  <ProfileLine label="Price" value={subscription?.packageSnapshot?.price || 'Not available'} />
+                  <ProfileLine label="Wallet balance" value={`${subscription?.coinBalance || 0} coins`} />
+                  <ProfileLine label="Jobs used" value={`${subscription?.jobsUsed || 0} / ${subscription?.packageSnapshot?.jobLimit || 0}`} />
+                  <ProfileLine label="Valid till" value={subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString() : 'Not available'} />
+                </div>
+              </AdminCard>
+
+              <AdminCard className="min-w-0">
+                <h2 className="text-xl font-black text-slate-950">Full Profile</h2>
+                <div className="mt-4 grid gap-3 text-sm font-bold text-slate-700">
+                  <ProfileLine label="Recruiter ID" value={getShortId(recruiter?._id)} />
+                  <ProfileLine label="Company" value={recruiter?.companyName || 'Not added'} />
+                  <ProfileLine label="Email" value={recruiter?.businessEmail || 'Not added'} />
+                  <ProfileLine label="Phone" value={recruiter?.phone || 'Not added'} />
+                  <ProfileLine label="Industry" value={recruiter?.industry || 'Not added'} />
+                  <ProfileLine label="Company size" value={recruiter?.companySize || 'Not added'} />
+                  <ProfileLine label="Website" value={recruiter?.website || 'Not added'} />
+                  <ProfileLine label="Status" value={recruiter?.status || 'Pending'} />
+                  <ProfileLine label="Document status" value={latestDocument?.status || 'Not submitted'} />
+                </div>
+              </AdminCard>
+
+              <AdminCard className="min-w-0">
+                <h2 className="text-xl font-black text-slate-950">Job Summary</h2>
+                <div className="mt-4 grid gap-3 text-sm font-bold text-slate-700">
+                  <ProfileLine label="Active jobs" value={activeJobs} />
+                  <ProfileLine label="Pending jobs" value={pendingJobs} />
+                  <ProfileLine label="Rejected jobs" value={rejectedJobs} />
+                  <ProfileLine label="Total applications" value={applications.length} />
+                </div>
+              </AdminCard>
+            </div>
+          </div>
+          <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
+        </>
+      )}
+    </div>
+  )
+}
+
+export function SupportMessageDetailPage() {
+  const { messageId } = useParams()
+  const [ticket, setTicket] = useState(null)
+  const [reply, setReply] = useState('')
+  const [status, setStatus] = useState('Open')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [now, setNow] = useState(Date.now())
+
+  const loadTicket = () => {
+    setLoading(true)
+    api
+      .get('support-messages', messageId)
+      .then((payload) => {
+        const data = normalizeSupportTicket(payload.data || {})
+        setTicket(data)
+        setStatus(data.status || 'Open')
+        setMessage('')
+      })
+      .catch((error) => setMessage(error.message))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadTicket()
+  }, [messageId])
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(interval)
+  }, [])
+
+  const sessionEndsAt = ticket?.sessionEndsAt ? new Date(ticket.sessionEndsAt).getTime() : 0
+  const isSessionClosed = ['Closed', 'Resolved'].includes(ticket?.status)
+  const sessionExpired = Boolean(ticket && sessionEndsAt && now >= sessionEndsAt && !isSessionClosed)
+  const remainingSeconds = sessionEndsAt ? Math.max(0, Math.ceil((sessionEndsAt - now) / 1000)) : 0
+
+  useEffect(() => {
+    if (!sessionExpired || !ticket?._id) return
+
+    const closeExpiredTicket = async () => {
+      try {
+        const chatMessages = [
+          ...getSupportChatMessages(ticket),
+          { sender: 'system', text: 'Session ended automatically because user did not respond within 10 minutes.', sentAt: new Date().toISOString() },
+        ]
+        await api.update('support-messages', ticket._id, {
+          status: 'Closed',
+          endedReason: 'No user response within 10 minutes.',
+          chatMessages,
+        })
+        setTicket((current) => current ? { ...current, status: 'Closed', endedReason: 'No user response within 10 minutes.', chatMessages } : current)
+        setStatus('Closed')
+      } catch (error) {
+        setMessage(error.message)
+      }
+    }
+
+    closeExpiredTicket()
+  }, [sessionExpired, ticket?._id])
+
+  const sendReply = async () => {
+    const text = reply.trim()
+    if (!text || !ticket?._id || isSessionClosed) return
+
+    const chatMessages = [
+      ...getSupportChatMessages(ticket),
+      { sender: 'admin', text, sentAt: new Date().toISOString() },
+    ]
+
+    try {
+      const payload = await api.update('support-messages', ticket._id, {
+        adminReply: text,
+        status: status === 'Open' ? 'In Progress' : status,
+        chatMessages,
+      })
+      setTicket(normalizeSupportTicket(payload.data || {}))
+      setStatus(payload.data?.status || 'In Progress')
+      setReply('')
+      setMessage('Reply saved. Waiting for user response.')
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  const updateTicketStatus = async (nextStatus) => {
+    if (!ticket?._id) return
+
+    try {
+      const payload = await api.update('support-messages', ticket._id, { status: nextStatus })
+      setTicket(normalizeSupportTicket(payload.data || {}))
+      setStatus(nextStatus)
+      setMessage(`Ticket marked as ${nextStatus}.`)
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  if (loading) return <LoadingSkeleton />
+  if (!ticket) return <EmptyAdminState title={message || 'Support message not found'} />
+
+  return (
+    <div className="mx-auto grid max-w-6xl gap-5">
+      <section className="rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-teal-50 p-5 shadow-xl shadow-blue-100/50 sm:p-7">
+        <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">Customer Care Session</p>
+            <h1 className="mt-2 text-3xl font-black text-slate-950">{ticket.subject || 'Support chat'}</h1>
+            <p className="mt-2 text-sm font-semibold text-slate-500">
+              {ticket.name || 'Guest User'} / {ticket.email || 'No email'} / {ticket.role || 'Guest'} / {formatDateTime(ticket.createdAt)}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={ticket.status || 'Open'} />
+            {!isSessionClosed && (
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700">
+                Session ends in {formatCountdown(remainingSeconds)}
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {message && <p className="rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <AdminCard className="min-h-[560px] min-w-0">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-xl font-black text-slate-950">Live Chat Box</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Admin aur user conversation history</p>
+            </div>
+            <button className="rounded-full bg-slate-100 px-4 py-2 text-xs font-black text-slate-600" onClick={loadTicket} type="button">Refresh</button>
+          </div>
+
+          <div className="mt-5 grid max-h-[420px] gap-3 overflow-y-auto rounded-[1.5rem] bg-slate-50 p-4">
+            {getSupportChatMessages(ticket).map((item, index) => (
+              <div
+                className={`max-w-[82%] rounded-2xl p-4 text-sm font-semibold leading-6 shadow-sm ${
+                  item.sender === 'admin'
+                    ? 'ml-auto rounded-tr-md bg-blue-600 text-white'
+                    : item.sender === 'system'
+                      ? 'mx-auto bg-amber-50 text-amber-700'
+                      : 'rounded-tl-md bg-white text-slate-700'
+                }`}
+                key={`${item.sender}-${item.sentAt}-${index}`}
+              >
+                <p>{item.text}</p>
+                <p className={`mt-2 text-[11px] font-black uppercase ${item.sender === 'admin' ? 'text-blue-100' : 'text-slate-400'}`}>{formatDateTime(item.sentAt)}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 grid gap-3">
+            <textarea
+              className="input min-h-28"
+              disabled={isSessionClosed}
+              onChange={(event) => setReply(event.target.value)}
+              placeholder={isSessionClosed ? 'Session ended' : 'Type admin reply'}
+              value={reply}
+            />
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+              <p className="text-xs font-semibold text-slate-500">Reply save karne par ticket In Progress ho jayega. User response nahi aaya to 10 minutes ke baad session auto close.</p>
+              <button className="rounded-full bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:cursor-not-allowed disabled:opacity-50" disabled={!reply.trim() || isSessionClosed} onClick={sendReply} type="button">
+                Send Reply
+              </button>
+            </div>
+          </div>
+        </AdminCard>
+
+        <div className="grid h-max gap-5">
+          <AdminCard>
+            <h3 className="text-lg font-black text-slate-950">Session Control</h3>
+            <div className="mt-4 grid gap-3">
+              <select className="input" onChange={(event) => setStatus(event.target.value)} value={status}>
+                {fieldOptions.supportStatus.map((option) => <option key={option}>{option}</option>)}
+              </select>
+              <button className="rounded-full bg-slate-900 px-5 py-3 text-sm font-black text-white" onClick={() => updateTicketStatus(status)} type="button">Update Status</button>
+              <button className="rounded-full bg-teal-50 px-5 py-3 text-sm font-black text-teal-700" onClick={() => updateTicketStatus('Resolved')} type="button">Mark Resolved</button>
+              <button className="rounded-full bg-rose-50 px-5 py-3 text-sm font-black text-rose-700" onClick={() => updateTicketStatus('Closed')} type="button">End Session</button>
+            </div>
+          </AdminCard>
+          <AdminCard>
+            <h3 className="text-lg font-black text-slate-950">Customer Details</h3>
+            <div className="mt-4 grid gap-3">
+              <ProfileLine label="Name" value={ticket.name || 'Guest User'} />
+              <ProfileLine label="Email" value={ticket.email || 'No email'} />
+              <ProfileLine label="Role" value={ticket.role || 'Guest'} />
+              <ProfileLine label="Source" value={ticket.source || 'support-chat'} />
+              <ProfileLine label="Ended reason" value={ticket.endedReason || '-'} />
+            </div>
+          </AdminCard>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function JobDetailModal({ job, onClose }) {
+  if (!job) return null
+
+  const fields = [
+    ['Job ID', getShortId(job._id)],
+    ['Recruiter ID', job.recruiterId || 'Not added'],
+    ['Title', job.title],
+    ['Company', job.company],
+    ['Recruiter email', job.recruiterEmail || 'Not added'],
+    ['Department', job.department || 'Not added'],
+    ['Industry', job.industry || 'Not added'],
+    ['Location', job.location || 'Not added'],
+    ['Country', job.country || 'Not added'],
+    ['State', job.state || 'Not added'],
+    ['City', job.city || 'Not added'],
+    ['Office address', job.officeAddress || 'Not added'],
+    ['Interview address', job.interviewAddress || 'Not added'],
+    ['Salary', job.salary || 'Not disclosed'],
+    ['Experience', job.experience || 'Not added'],
+    ['Job type', job.type || 'Not added'],
+    ['Work mode', job.workMode || 'Not added'],
+    ['Posted', job.posted || 'Not added'],
+    ['Deadline', job.deadline || 'Not added'],
+    ['Package', job.packageName || 'Not added'],
+    ['Account status', job.accountDepartmentStatus || 'Pending'],
+    ['Approval', job.approval || 'Pending'],
+    ['Public status', job.status || 'Open'],
+    ['Applications', job.applicationsCount || 0],
+    ['Candidate clicks', job.views || 0],
+    ['Created', job.createdAt ? new Date(job.createdAt).toLocaleString() : 'Not added'],
+  ]
+
+  return (
+    <AdminModal open={Boolean(job)} title="Job full details" onClose={onClose}>
+      <div className="rounded-2xl bg-blue-50 p-4">
+        <p className="text-xs font-black uppercase tracking-wide text-blue-700">Selected job</p>
+        <h2 className="mt-2 text-2xl font-black text-slate-950">{job.title}</h2>
+        <p className="mt-1 text-sm font-semibold text-slate-600">{job.company} / {job.location}</p>
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        {fields.map(([label, value]) => (
+          <ProfileLine key={label} label={label} value={value} />
+        ))}
+      </div>
+
+      {job.accountDepartmentRemark && (
+        <div className="mt-5 rounded-2xl bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-800">
+          <span className="font-black">Reject remark:</span> {job.accountDepartmentRemark}
+        </div>
+      )}
+
+      <div className="mt-5 grid gap-4">
+        <JobLongField label="Skills" value={Array.isArray(job.skills) ? job.skills.join(', ') : job.skills} />
+        <JobLongField label="Description" value={job.description} />
+        <JobLongField label="Responsibilities" value={Array.isArray(job.responsibilities) ? job.responsibilities.join('\n') : job.responsibilities} />
+        <JobLongField label="Requirements" value={Array.isArray(job.requirements) ? job.requirements.join('\n') : job.requirements} />
+        <JobLongField label="Benefits" value={Array.isArray(job.benefits) ? job.benefits.join('\n') : job.benefits} />
+        <JobLongField label="About company" value={job.aboutCompany} />
+      </div>
+    </AdminModal>
+  )
+}
+
+function JobLongField({ label, value }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-2 whitespace-pre-line text-sm font-semibold leading-6 text-slate-700">{value || 'Not added'}</p>
+    </div>
+  )
+}
+
+function RecruiterMetric({ label, value }) {
+  return (
+    <AdminCard>
+      <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
+    </AdminCard>
+  )
+}
+
+function ProfileLine({ label, value }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-1 break-words text-slate-800">{value}</p>
+    </div>
+  )
+}
+
+function normalizeSupportTicket(ticket) {
+  const messages = getSupportChatMessages(ticket)
+  const lastUserMessage = [...messages].reverse().find((item) => item.sender === 'user')
+  const lastUserTime = lastUserMessage?.sentAt || ticket.lastUserMessageAt || ticket.createdAt || new Date().toISOString()
+  const sessionEndsAt = ticket.sessionEndsAt || new Date(new Date(lastUserTime).getTime() + 10 * 60 * 1000).toISOString()
+
+  return {
+    ...ticket,
+    chatMessages: messages,
+    lastUserMessageAt: lastUserTime,
+    sessionEndsAt,
+  }
+}
+
+function getSupportChatMessages(ticket = {}) {
+  if (Array.isArray(ticket.chatMessages) && ticket.chatMessages.length) {
+    return ticket.chatMessages.filter((item) => item?.text).map((item) => ({
+      sender: item.sender || 'user',
+      text: item.text,
+      sentAt: item.sentAt || ticket.createdAt || new Date().toISOString(),
+    }))
+  }
+
+  const messages = []
+  if (ticket.message) {
+    messages.push({ sender: 'user', text: ticket.message, sentAt: ticket.createdAt || new Date().toISOString() })
+  }
+  if (ticket.adminReply) {
+    messages.push({ sender: 'admin', text: ticket.adminReply, sentAt: ticket.updatedAt || new Date().toISOString() })
+  }
+  return messages
+}
+
+function formatDateTime(value) {
+  if (!value) return '-'
+  return new Date(value).toLocaleString()
+}
+
+function formatCountdown(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
+function submissionSuffix(count) {
+  return count === 1 ? '' : 's'
+}
+
+function isDocumentUrl(value) {
+  return /^https?:\/\//i.test(String(value || ''))
+}
+
 function getSelectOptions(key, companyOptions) {
   return key === 'company' ? companyOptions : fieldOptions[key]
+}
+
+function getShortId(value) {
+  return value ? String(value).slice(-8) : ''
+}
+
+function attachRecruiterIdsToDocuments(documents, recruiters) {
+  const recruiterIdByEmail = new Map()
+
+  recruiters.forEach((recruiter) => {
+    const email = (recruiter.businessEmail || recruiter.email || '').toLowerCase()
+    if (email) recruiterIdByEmail.set(email, getShortId(recruiter._id))
+  })
+
+  return documents.map((document) => {
+    const email = (document.recruiterEmail || '').toLowerCase()
+    return {
+      ...document,
+      recruiterId: recruiterIdByEmail.get(email) || getShortId(document.recruiterId),
+    }
+  })
+}
+
+function attachRecruiterIdsToJobs(jobs, recruiters) {
+  const recruiterIdByEmail = new Map()
+  const recruiterByEmail = new Map()
+
+  recruiters.forEach((recruiter) => {
+    const email = (recruiter.businessEmail || recruiter.email || '').toLowerCase()
+    if (email) {
+      recruiterIdByEmail.set(email, getShortId(recruiter._id))
+      recruiterByEmail.set(email, recruiter)
+    }
+  })
+
+  return jobs.map((job) => {
+    const email = (job.recruiterEmail || '').toLowerCase()
+    const recruiter = recruiterByEmail.get(email)
+
+    return {
+      ...job,
+      recruiterId: recruiterIdByEmail.get(email) || getShortId(job.recruiterId),
+      recruiterObjectId: recruiter?._id || job.recruiterObjectId || '',
+      recruiterName: job.recruiterName || recruiter?.companyName || job.company || 'Recruiter',
+    }
+  })
+}
+
+function groupJobsByRecruiter(jobs) {
+  const grouped = new Map()
+
+  jobs.forEach((job) => {
+    const groupKey = job.recruiterObjectId || job.recruiterEmail || job.recruiterId || job._id
+    const current = grouped.get(groupKey)
+    const jobCreatedAt = new Date(job.createdAt || 0).getTime()
+
+    if (!current) {
+      grouped.set(groupKey, {
+        _id: groupKey,
+        recruiterObjectId: job.recruiterObjectId,
+        recruiterId: job.recruiterId || getShortId(job.recruiterObjectId),
+        recruiterName: job.recruiterName || job.company || 'Recruiter',
+        recruiterEmail: job.recruiterEmail || 'Not linked',
+        latestJobTitle: job.title,
+        latestCompany: job.company,
+        latestDepartment: job.department || 'Not added',
+        latestLocation: job.location,
+        latestCreatedAt: jobCreatedAt,
+        jobPostCount: 1,
+        activeJobs: job.accountDepartmentStatus === 'Active' || job.approval === 'Approved' ? 1 : 0,
+        pendingJobs: job.accountDepartmentStatus === 'Pending' || job.approval === 'Pending' ? 1 : 0,
+        rejectedJobs: job.accountDepartmentStatus === 'Rejected' || job.approval === 'Rejected' ? 1 : 0,
+        candidateClicks: Number(job.views || 0),
+        applicationsCount: Number(job.applicationsCount || 0),
+        jobHistory: [job],
+      })
+      return
+    }
+
+    current.jobPostCount += 1
+    current.activeJobs += job.accountDepartmentStatus === 'Active' || job.approval === 'Approved' ? 1 : 0
+    current.pendingJobs += job.accountDepartmentStatus === 'Pending' || job.approval === 'Pending' ? 1 : 0
+    current.rejectedJobs += job.accountDepartmentStatus === 'Rejected' || job.approval === 'Rejected' ? 1 : 0
+    current.candidateClicks += Number(job.views || 0)
+    current.applicationsCount += Number(job.applicationsCount || 0)
+    current.jobHistory.push(job)
+
+    if (jobCreatedAt > current.latestCreatedAt) {
+      current.latestJobTitle = job.title
+      current.latestCompany = job.company
+      current.latestDepartment = job.department || 'Not added'
+      current.latestLocation = job.location
+      current.latestCreatedAt = jobCreatedAt
+    }
+  })
+
+  return Array.from(grouped.values()).sort((a, b) => b.latestCreatedAt - a.latestCreatedAt)
+}
+
+function groupRecruiterDocuments(documents) {
+  const grouped = new Map()
+
+  documents.forEach((document) => {
+    const groupKey = document.recruiterEmail || document.recruiterName || document._id
+    const current = grouped.get(groupKey)
+
+    if (!current) {
+      grouped.set(groupKey, { ...document, submissionsCount: 1, submissionHistory: [document] })
+      return
+    }
+
+    current.submissionsCount += 1
+    current.submissionHistory.push(document)
+
+    const currentDate = new Date(current.updatedAt || current.createdAt || 0).getTime()
+    const documentDate = new Date(document.updatedAt || document.createdAt || 0).getTime()
+
+    if (documentDate > currentDate) {
+      grouped.set(groupKey, { ...document, submissionsCount: current.submissionsCount, submissionHistory: current.submissionHistory })
+    }
+  })
+
+  return Array.from(grouped.values())
+}
+
+function groupSupportMessagesByEmail(messages) {
+  const grouped = new Map()
+
+  messages.forEach((message) => {
+    const email = String(message.email || '').trim().toLowerCase()
+    const groupKey = email || `guest-${message._id}`
+    const current = grouped.get(groupKey)
+    const messageDate = new Date(message.updatedAt || message.createdAt || 0).getTime()
+    const chatCount = Array.isArray(message.chatMessages) && message.chatMessages.length ? message.chatMessages.length : 1
+
+    if (!current) {
+      grouped.set(groupKey, {
+        ...message,
+        latestMessageId: message._id,
+        messagesCount: 1,
+        chatMessagesCount: chatCount,
+        latestCreatedAt: messageDate,
+        messageHistory: [message],
+      })
+      return
+    }
+
+    current.messagesCount += 1
+    current.chatMessagesCount += chatCount
+    current.messageHistory.push(message)
+
+    if (messageDate > current.latestCreatedAt) {
+      grouped.set(groupKey, {
+        ...message,
+        latestMessageId: message._id,
+        messagesCount: current.messagesCount,
+        chatMessagesCount: current.chatMessagesCount,
+        latestCreatedAt: messageDate,
+        messageHistory: current.messageHistory,
+      })
+    }
+  })
+
+  return Array.from(grouped.values()).sort((a, b) => b.latestCreatedAt - a.latestCreatedAt)
+}
+
+function mergeRecruiterDocumentStatus(recruiters, documents) {
+  const latestStatusByEmail = new Map()
+
+  documents.forEach((document) => {
+    const email = document.recruiterEmail?.toLowerCase()
+    if (!email) return
+
+    const current = latestStatusByEmail.get(email)
+    const currentDate = new Date(current?.updatedAt || current?.createdAt || 0).getTime()
+    const documentDate = new Date(document.updatedAt || document.createdAt || 0).getTime()
+
+    if (!current || documentDate > currentDate) {
+      latestStatusByEmail.set(email, document)
+    }
+  })
+
+  return recruiters.map((recruiter) => {
+    const document = latestStatusByEmail.get(recruiter.businessEmail?.toLowerCase())
+    return document ? { ...recruiter, status: document.status || recruiter.status } : recruiter
+  })
 }
 
 function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChange, onClose, onSave, open, type }) {
@@ -721,6 +2047,28 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
               <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
               <input className="input" onChange={(event) => onChange(key, event.target.value)} type="date" value={toDateInputValue(form[key])} />
             </label>
+          ) : fieldType === 'testimonialType' ? (
+            <select className="input" key={key} onChange={(event) => onChange(key, event.target.value)} value={form[key] || fieldOptions.testimonialType[0]}>
+              {fieldOptions.testimonialType.map((option) => <option key={option}>{option}</option>)}
+            </select>
+          ) : fieldType === 'featuredToggle' ? (
+            <select className="input" key={key} onChange={(event) => onChange(key, event.target.value)} value={String(form[key] ?? 'false')}>
+              {fieldOptions.featuredToggle.map((option) => <option key={option} value={option}>{option === 'true' ? 'Featured' : 'Not Featured'}</option>)}
+            </select>
+          ) : fieldType === 'supportStatus' ? (
+            <select className="input" key={key} onChange={(event) => onChange(key, event.target.value)} value={form[key] || fieldOptions.supportStatus[0]}>
+              {fieldOptions.supportStatus.map((option) => <option key={option}>{option}</option>)}
+            </select>
+          ) : fieldType === 'faqCategory' ? (
+            <input className="input" key={key} list="faq-category-options" onChange={(event) => onChange(key, event.target.value)} placeholder={label} value={form[key] || fieldOptions.faqCategory[0]} />
+          ) : fieldType === 'faqStatus' ? (
+            <select className="input" key={key} onChange={(event) => onChange(key, event.target.value)} value={form[key] || fieldOptions.faqStatus[0]}>
+              {fieldOptions.faqStatus.map((option) => <option key={option}>{option}</option>)}
+            </select>
+          ) : fieldType === 'subscriberStatus' ? (
+            <select className="input" key={key} onChange={(event) => onChange(key, event.target.value)} value={form[key] || fieldOptions.subscriberStatus[0]}>
+              {fieldOptions.subscriberStatus.map((option) => <option key={option}>{option}</option>)}
+            </select>
           ) : key === 'skills' ? (
             <SkillSelect key={key} onChange={(value) => onChange(key, value)} value={form[key] || ''} />
           ) : key === 'title' ? (
@@ -791,6 +2139,9 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
           ),
         )}
       </div>
+      <datalist id="faq-category-options">
+        {fieldOptions.faqCategory.map((option) => <option key={option} value={option} />)}
+      </datalist>
       {type === 'applications' && (
         <select className="input mt-3" onChange={(event) => onChange('status', event.target.value)} value={form.status || 'New'}>
           {['New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected', 'Rejected'].map((status) => <option key={status}>{status}</option>)}
@@ -1073,6 +2424,293 @@ function RevenueSummary() {
           <p className="mt-1 text-sm font-semibold text-slate-500">{label}</p>
         </AdminCard>
       ))}
+    </div>
+  )
+}
+
+function LabeledInput({ className = '', label, min, onChange, placeholder, type = 'text', value }) {
+  const handleChange = (event) => {
+    const nextValue = type === 'number' ? event.target.value.replace(/\D/g, '') : event.target.value
+    onChange(nextValue)
+  }
+
+  return (
+    <label className={`grid gap-1 ${className}`}>
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <input className="input" inputMode={type === 'number' ? 'numeric' : undefined} min={min} onChange={handleChange} pattern={type === 'number' ? '[0-9]*' : undefined} placeholder={placeholder} type={type} value={value} />
+    </label>
+  )
+}
+
+export function AdminPricingPage() {
+  const loadedPackagesRef = useRef(false)
+  const [plans, setPlans] = useState(() => getPricingPackages())
+  const [packageModalOpen, setPackageModalOpen] = useState(false)
+  const [editingPackageIndex, setEditingPackageIndex] = useState(null)
+  const [pricingMessage, setPricingMessage] = useState('')
+  const [packageForm, setPackageForm] = useState({
+    name: '',
+    description: '',
+    price: '',
+    features: '',
+    badge: '',
+    buttonLabel: 'Start Hiring',
+    status: 'Active',
+    sortOrder: '',
+    jobLimit: '',
+    validityDays: '',
+    discountPercent: '',
+    coinPerJob: 10,
+  })
+
+  useEffect(() => {
+    const syncPlans = () => setPlans(getPricingPackages())
+
+    if (!loadedPackagesRef.current) {
+      loadedPackagesRef.current = true
+      seedDefaultPricingPackages()
+        .then(setPlans)
+        .catch(() => setPlans(getPricingPackages()))
+    }
+
+    window.addEventListener('pricing-packages-updated', syncPlans)
+    window.addEventListener('storage', syncPlans)
+
+    return () => {
+      window.removeEventListener('pricing-packages-updated', syncPlans)
+      window.removeEventListener('storage', syncPlans)
+    }
+  }, [])
+
+  const openPackageModal = (plan = null, index = null) => {
+    setEditingPackageIndex(index)
+    setPackageForm({
+      name: plan?.name || '',
+      description: plan?.description || '',
+      price: plan?.price || '',
+      features: Array.isArray(plan?.features) ? plan.features.join(', ') : '',
+      badge: plan?.badge || '',
+      buttonLabel: plan?.buttonLabel || 'Start Hiring',
+      status: plan?.status || 'Active',
+      sortOrder: plan?.sortOrder || '',
+      jobLimit: plan?.jobLimit || '',
+      validityDays: plan?.validityDays || '',
+      discountPercent: plan?.discountPercent || '',
+      coinPerJob: plan?.coinPerJob || 10,
+    })
+    setPackageModalOpen(true)
+  }
+
+  const savePackage = async () => {
+    if (!packageForm.name.trim() || !packageForm.price.trim()) return
+
+    const nextPackage = {
+      ...packageForm,
+      sortOrder: Number(packageForm.sortOrder || plans.length + 1),
+      jobLimit: Number(packageForm.jobLimit || 1),
+      validityDays: Number(packageForm.validityDays || 30),
+      discountPercent: Number(packageForm.discountPercent || 0),
+      coinPerJob: Number(packageForm.coinPerJob || 10),
+      features: splitComma(packageForm.features),
+    }
+
+    try {
+      const editingPlan = editingPackageIndex === null ? null : plans[editingPackageIndex]
+      if (editingPlan?._id) {
+        await api.update('pricing-packages', editingPlan._id, nextPackage)
+      } else {
+        await api.create('pricing-packages', nextPackage)
+      }
+      const savedPlans = await fetchPricingPackages()
+      setPlans(savedPlans)
+      setPricingMessage('Package saved to MongoDB successfully. Recruiter pricing updated.')
+      setPackageForm({ name: '', description: '', price: '', features: '', badge: '', buttonLabel: 'Start Hiring', status: 'Active', sortOrder: '', jobLimit: '', validityDays: '', discountPercent: '', coinPerJob: 10 })
+      setEditingPackageIndex(null)
+      setPackageModalOpen(false)
+    } catch (error) {
+      setPricingMessage(error.message)
+    }
+  }
+
+  const deletePackage = async (indexToDelete) => {
+    const plan = plans[indexToDelete]
+
+    try {
+      if (plan?._id) await api.remove('pricing-packages', plan._id)
+      const savedPlans = await fetchPricingPackages()
+      setPlans(savedPlans)
+      setPricingMessage('Package deleted from MongoDB successfully. Recruiter pricing updated.')
+    } catch (error) {
+      setPricingMessage(error.message)
+    }
+  }
+
+  return (
+    <div className="grid gap-5">
+      <Toolbar
+        actionLabel="Add Package"
+        onAction={() => openPackageModal()}
+        subtitle="Choose a hiring plan for posting jobs, reviewing candidates, and scaling your recruitment workflow."
+        title="Recruiter Pricing"
+      />
+      {pricingMessage && <p className="rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-700">{pricingMessage}</p>}
+      <div className="grid gap-5 lg:grid-cols-3">
+        {plans.map((plan, index) => (
+          <AdminCard className={`relative flex min-h-[420px] flex-col ${plan.badge ? 'border-blue-200 shadow-xl shadow-blue-100' : ''}`} key={plan.name}>
+            {plan.badge && (
+              <span className="absolute right-5 top-5 rounded-full bg-blue-600 px-3 py-1 text-xs font-black text-white">
+                {plan.badge}
+              </span>
+            )}
+            <div>
+              <div className="flex items-start justify-between gap-3 pr-20">
+                <h2 className="text-2xl font-black text-slate-950">{plan.name}</h2>
+                <StatusBadge status={plan.status || 'Active'} />
+              </div>
+              <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-slate-500">{plan.description}</p>
+              <p className="mt-6 text-3xl font-black text-slate-950">{plan.price}</p>
+              <p className="mt-2 text-xs font-black uppercase tracking-wide text-slate-400">{plan.jobLimit || 1} jobs / {plan.validityDays || 30} days / {plan.discountPercent || 0}% discount / {plan.coinPerJob || 10} coins per job / Sort {plan.sortOrder || index + 1}</p>
+            </div>
+            <div className="mt-7 grid gap-3">
+              {plan.features.map((feature) => (
+                <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700" key={feature}>
+                  <span className="grid h-6 w-6 place-items-center rounded-full bg-teal-50 text-teal-700">
+                    <ShieldCheck size={15} />
+                  </span>
+                  {feature}
+                </div>
+              ))}
+            </div>
+            <button className="mt-auto rounded-full bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700" type="button">
+              {plan.buttonLabel || 'Start Hiring'}
+            </button>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <button className="rounded-full bg-slate-100 px-4 py-2 text-xs font-black text-slate-700" onClick={() => openPackageModal(plan, index)} type="button">Edit</button>
+              <button className="rounded-full bg-rose-50 px-4 py-2 text-xs font-black text-rose-700" onClick={() => deletePackage(index)} type="button">Delete</button>
+            </div>
+          </AdminCard>
+        ))}
+      </div>
+      <AdminModal open={packageModalOpen} title={editingPackageIndex === null ? 'Add Package' : 'Edit Package'} onClose={() => setPackageModalOpen(false)}>
+        <div className="grid gap-5">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-black uppercase tracking-wide text-slate-400">Package Identity</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <LabeledInput label="Package name" onChange={(value) => setPackageForm((current) => ({ ...current, name: value }))} placeholder="Starter, Growth, Enterprise" value={packageForm.name} />
+              <LabeledInput label="Display badge" onChange={(value) => setPackageForm((current) => ({ ...current, badge: value }))} placeholder="Popular, Best Value, Optional" value={packageForm.badge} />
+              <LabeledInput className="sm:col-span-2" label="Short description" onChange={(value) => setPackageForm((current) => ({ ...current, description: value }))} placeholder="For growing hiring teams" value={packageForm.description} />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-black uppercase tracking-wide text-slate-400">Commercial Rules</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <LabeledInput label="Package price" onChange={(value) => setPackageForm((current) => ({ ...current, price: value }))} placeholder="INR 4,999" value={packageForm.price} />
+              <LabeledInput label="Job post limit" min="1" onChange={(value) => setPackageForm((current) => ({ ...current, jobLimit: value }))} placeholder="10" type="number" value={packageForm.jobLimit} />
+              <LabeledInput label="Validity days" min="1" onChange={(value) => setPackageForm((current) => ({ ...current, validityDays: value }))} placeholder="30" type="number" value={packageForm.validityDays} />
+              <LabeledInput label="Discount percent" min="0" onChange={(value) => setPackageForm((current) => ({ ...current, discountPercent: value }))} placeholder="0" type="number" value={packageForm.discountPercent} />
+              <LabeledInput label="Coins per job" min="1" onChange={(value) => setPackageForm((current) => ({ ...current, coinPerJob: value }))} placeholder="10" type="number" value={packageForm.coinPerJob} />
+              <LabeledInput label="Sort order" min="1" onChange={(value) => setPackageForm((current) => ({ ...current, sortOrder: value }))} placeholder="1" type="number" value={packageForm.sortOrder} />
+              <label className="grid gap-1">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">Package status</span>
+                <select className="input" onChange={(event) => setPackageForm((current) => ({ ...current, status: event.target.value }))} value={packageForm.status}>
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-black uppercase tracking-wide text-slate-400">Recruiter Experience</p>
+            <div className="mt-3 grid gap-3">
+              <LabeledInput label="CTA button label" onChange={(value) => setPackageForm((current) => ({ ...current, buttonLabel: value }))} placeholder="Start Hiring" value={packageForm.buttonLabel} />
+              <label className="grid gap-1">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">Package features</span>
+                <textarea className="input min-h-32" onChange={(event) => setPackageForm((current) => ({ ...current, features: event.target.value }))} placeholder="1 active job, Basic candidate visibility, Recruiter profile" value={packageForm.features} />
+                <span className="text-xs font-semibold text-slate-400">Separate each feature with comma.</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setPackageModalOpen(false)} type="button">Cancel</button>
+          <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={savePackage} type="button">Save Package</button>
+        </div>
+      </AdminModal>
+    </div>
+  )
+}
+
+const defaultCoupons = [
+  { code: 'WELCOME10', discount: '10%', packageName: 'Starter', status: 'Active', validTill: '31 Dec 2026' },
+  { code: 'GROWTH20', discount: '20%', packageName: 'Growth', status: 'Active', validTill: '31 Dec 2026' },
+]
+
+export function AdminDiscountCouponPage() {
+  const packageOptions = getPricingPackages()
+  const [coupons, setCoupons] = useState(defaultCoupons)
+  const [couponModalOpen, setCouponModalOpen] = useState(false)
+  const [couponForm, setCouponForm] = useState({ code: '', discount: '', packageName: 'Starter', validTill: '', status: 'Active' })
+
+  const saveCoupon = () => {
+    if (!couponForm.code.trim() || !couponForm.discount.trim()) return
+
+    setCoupons((current) => [...current, couponForm])
+    setCouponForm({ code: '', discount: '', packageName: 'Starter', validTill: '', status: 'Active' })
+    setCouponModalOpen(false)
+  }
+
+  return (
+    <div className="grid gap-5">
+      <Toolbar
+        actionLabel="Add Coupon"
+        onAction={() => setCouponModalOpen(true)}
+        subtitle="Create and manage recruiter package discount coupons."
+        title="Discount Coupon"
+      />
+      <AdminCard className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                {['Coupon Code', 'Discount', 'Package', 'Status', 'Valid Till'].map((label) => (
+                  <th className="whitespace-nowrap px-5 py-4 font-bold" key={label}>{label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {coupons.map((coupon) => (
+                <tr className="transition hover:bg-blue-50/40" key={coupon.code}>
+                  <td className="whitespace-nowrap px-5 py-4 font-black text-slate-800">{coupon.code}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{coupon.discount}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{coupon.packageName}</td>
+                  <td className="whitespace-nowrap px-5 py-4"><StatusBadge status={coupon.status} /></td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{coupon.validTill || 'No expiry'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </AdminCard>
+      <AdminModal open={couponModalOpen} title="Add Discount Coupon" onClose={() => setCouponModalOpen(false)}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <input className="input" onChange={(event) => setCouponForm((current) => ({ ...current, code: event.target.value.toUpperCase() }))} placeholder="Coupon code" value={couponForm.code} />
+          <input className="input" onChange={(event) => setCouponForm((current) => ({ ...current, discount: event.target.value }))} placeholder="Discount e.g. 10%" value={couponForm.discount} />
+          <select className="input" onChange={(event) => setCouponForm((current) => ({ ...current, packageName: event.target.value }))} value={couponForm.packageName}>
+            {packageOptions.map((plan) => <option key={plan.name}>{plan.name}</option>)}
+          </select>
+          <select className="input" onChange={(event) => setCouponForm((current) => ({ ...current, status: event.target.value }))} value={couponForm.status}>
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+          <input className="input sm:col-span-2" onChange={(event) => setCouponForm((current) => ({ ...current, validTill: event.target.value }))} placeholder="Valid till" value={couponForm.validTill} />
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setCouponModalOpen(false)} type="button">Cancel</button>
+          <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={saveCoupon} type="button">Save Coupon</button>
+        </div>
+      </AdminModal>
     </div>
   )
 }

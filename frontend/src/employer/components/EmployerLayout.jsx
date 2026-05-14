@@ -19,6 +19,7 @@ export function EmployerLayout() {
   const [profileOpen, setProfileOpen] = useState(false)
   const navigate = useNavigate()
   const user = getStoredUser()
+  const isLoggedIn = Boolean(user?.email)
   const isRecruiterAccount = user?.role === 'recruiter'
   const brandLabel = 'Rozgar Recruiter'
   const navItems = employerNav.map(([label, to]) => (isRecruiterAccount ? [label, recruiterDashboardPath] : [label, to]))
@@ -56,7 +57,7 @@ export function EmployerLayout() {
             ) : (
               <>
                 <Button to="/recruiter-login" variant="ghost">Recruiter Login</Button>
-                <Button to="/recruiter-register" variant="secondary">Register Recruiter</Button>
+                {!isLoggedIn && <Button to="/recruiter-register" variant="secondary">Register Recruiter</Button>}
                 <Button to="/post-job">Post a Job</Button>
               </>
             )}
@@ -86,7 +87,7 @@ export function EmployerLayout() {
               ) : (
                 <div className="grid gap-2 pt-2 sm:grid-cols-3">
                   <Button to="/recruiter-login" variant="secondary">Login</Button>
-                  <Button to="/recruiter-register" variant="secondary">Register</Button>
+                  {!isLoggedIn && <Button to="/recruiter-register" variant="secondary">Register</Button>}
                   <Button to="/post-job">Post Job</Button>
                 </div>
               )}

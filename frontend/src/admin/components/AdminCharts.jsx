@@ -36,12 +36,12 @@ function ChartContainer({ children }) {
   )
 }
 
-export function AnalyticsGrid() {
+export function AnalyticsGrid({ monthlyData = monthlyJobsData, categoryData = categoryChartData, recruiterData = employerPerformance }) {
   return (
     <div className="grid gap-5 xl:grid-cols-2">
       <ChartCard title="Monthly Job Posting Chart">
         <ChartContainer>
-          <AreaChart data={monthlyJobsData}>
+          <AreaChart data={monthlyData}>
             <defs><linearGradient id="jobs" x1="0" x2="0" y1="0" y2="1"><stop offset="5%" stopColor="#2563EB" stopOpacity={0.28} /><stop offset="95%" stopColor="#2563EB" stopOpacity={0} /></linearGradient></defs>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
             <XAxis dataKey="month" stroke="#64748B" />
@@ -53,7 +53,7 @@ export function AnalyticsGrid() {
       </ChartCard>
       <ChartCard title="Application Trend Chart">
         <ChartContainer>
-          <LineChart data={monthlyJobsData}>
+          <LineChart data={monthlyData}>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
             <XAxis dataKey="month" stroke="#64748B" />
             <YAxis stroke="#64748B" />
@@ -65,8 +65,8 @@ export function AnalyticsGrid() {
       <ChartCard title="Category-wise Jobs Chart">
         <ChartContainer>
           <PieChart>
-            <Pie data={categoryChartData} dataKey="value" nameKey="name" outerRadius={92} innerRadius={54} paddingAngle={4}>
-              {categoryChartData.map((entry, index) => <Cell fill={colors[index % colors.length]} key={entry.name} />)}
+            <Pie data={categoryData} dataKey="value" nameKey="name" outerRadius={92} innerRadius={54} paddingAngle={4}>
+              {categoryData.map((entry, index) => <Cell fill={colors[index % colors.length]} key={entry.name} />)}
             </Pie>
             <Tooltip />
           </PieChart>
@@ -74,7 +74,7 @@ export function AnalyticsGrid() {
       </ChartCard>
       <ChartCard title="Recruiter Performance Chart">
         <ChartContainer>
-          <BarChart data={employerPerformance}>
+          <BarChart data={recruiterData}>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
             <XAxis dataKey="company" stroke="#64748B" />
             <YAxis stroke="#64748B" />
@@ -86,7 +86,7 @@ export function AnalyticsGrid() {
       </ChartCard>
       <ChartCard title="Revenue Chart">
         <ChartContainer>
-          <AreaChart data={monthlyJobsData}>
+          <AreaChart data={monthlyData}>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
             <XAxis dataKey="month" stroke="#64748B" />
             <YAxis stroke="#64748B" />
@@ -97,7 +97,7 @@ export function AnalyticsGrid() {
       </ChartCard>
       <ChartCard title="Candidate Registration Graph">
         <ChartContainer>
-          <BarChart data={monthlyJobsData}>
+          <BarChart data={monthlyData}>
             <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
             <XAxis dataKey="month" stroke="#64748B" />
             <YAxis stroke="#64748B" />

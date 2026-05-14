@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Bookmark, Briefcase, Clock, Flame, MapPin, Sparkles, Wallet } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from './Button'
 import { canSaveJobs, isJobSaved, toggleSavedJob } from '../utils/savedJobs'
+import { getStoredUser } from '../routes/authRouting'
+import { api } from '../services/api'
+import { isSameAppliedJob } from '../utils/candidateActivity'
 
 export function JobCard({ job, onApply, featured = false }) {
   const jobRouteId = job._id || job.id
+  const navigate = useNavigate()
+  const user = getStoredUser()
   const [saved, setSaved] = useState(() => isJobSaved(job))
+  const [alreadyApplied, setAlreadyApplied] = useState(false)
 
   useEffect(() => {
     const syncSaved = () => setSaved(isJobSaved(job))
@@ -19,6 +25,35 @@ export function JobCard({ job, onApply, featured = false }) {
       window.removeEventListener('storage', syncSaved)
     }
   }, [job])
+
+  useEffect(() => {
+    let active = true
+
+    const syncApplications = async () => {
+      if (user?.role !== 'Candidate' || !user?.email) {
+        setAlreadyApplied(false)
+        return
+      }
+
+      try {
+        const payload = await api.list('applications', `?candidateEmail=${encodeURIComponent(user.email)}&limit=100`)
+        const applications = Array.isArray(payload.data) ? payload.data : []
+        if (active) setAlreadyApplied(applications.some((application) => isSameAppliedJob(application, job)))
+      } catch {
+        if (active) setAlreadyApplied(false)
+      }
+    }
+
+    window.addEventListener('candidateActivityChanged', syncApplications)
+    window.addEventListener('storage', syncApplications)
+    syncApplications()
+
+    return () => {
+      active = false
+      window.removeEventListener('candidateActivityChanged', syncApplications)
+      window.removeEventListener('storage', syncApplications)
+    }
+  }, [job, user?.email, user?.role])
 
   const saveJob = () => {
     if (!canSaveJobs()) {
@@ -79,7 +114,9 @@ export function JobCard({ job, onApply, featured = false }) {
       <p className="mt-5 line-clamp-2 text-sm leading-6 text-slate-500">{job.description}</p>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <Button className="flex-1" onClick={() => onApply?.(job)}>Apply Now</Button>
+        <Button className="flex-1" onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}>
+          {alreadyApplied ? 'Already Applied' : 'Apply Now'}
+        </Button>
         <Button className="flex-1" to={`/jobs/${jobRouteId}`} variant="secondary">View Details</Button>
       </div>
     </article>

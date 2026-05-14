@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Building2, CloudUpload, FileCheck2, Rocket, SearchCheck, ShieldCheck, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { JobCard } from '../components/JobCard'
-import { jobs } from '../data/portalData'
 import { getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
 import { getAppliedJobs, getCandidateProfileStrength, getInterviewInvites, getJobAlerts } from '../utils/candidateActivity'
@@ -10,12 +10,17 @@ import { getSavedJobs } from '../utils/savedJobs'
 
 export function CandidateDashboard({ onApply }) {
 const user = getStoredUser()
+  const navigate = useNavigate()
   const [savedJobs, setSavedJobs] = useState(() => getSavedJobs())
   const [appliedJobs, setAppliedJobs] = useState(() => getAppliedJobs())
   const [applications, setApplications] = useState([])
+  const [recommendedJobs, setRecommendedJobs] = useState([])
+  const [recommendationsLoading, setRecommendationsLoading] = useState(true)
   const [interviewInvites, setInterviewInvites] = useState(() => getInterviewInvites())
   const [jobAlerts, setJobAlerts] = useState(() => getJobAlerts())
   const [profileStrength, setProfileStrength] = useState(() => getCandidateProfileStrength())
+
+  const candidateProfile = useMemo(() => getStoredCandidateProfile(user), [user?.email, user?.name])
 
   useEffect(() => {
     const loadApplications = async () => {
@@ -49,6 +54,30 @@ const user = getStoredUser()
     }
   }, [user?.email])
 
+  useEffect(() => {
+    let active = true
+
+    const loadRecommendedJobs = async () => {
+      setRecommendationsLoading(true)
+      try {
+        const payload = await api.jobs('?sort=-createdAt&limit=100')
+        const list = Array.isArray(payload.data) ? payload.data : []
+        const ranked = rankRecommendedJobs(list, candidateProfile, applications)
+        if (active) setRecommendedJobs(ranked.slice(0, 4))
+      } catch {
+        if (active) setRecommendedJobs([])
+      } finally {
+        if (active) setRecommendationsLoading(false)
+      }
+    }
+
+    loadRecommendedJobs()
+
+    return () => {
+      active = false
+    }
+  }, [applications, candidateProfile])
+
   const trackedApplications = applications.length
     ? applications.map((item) => ({
         id: item._id,
@@ -66,9 +95,9 @@ const user = getStoredUser()
   const dashboardItems = [
     { label: 'Profile strength', value: `${profileStrength}%`, icon: ShieldCheck },
     { label: 'Applied jobs', value: String(trackedApplications.length), icon: SearchCheck },
-    { label: 'Saved jobs', value: String(savedJobs.length), icon: Sparkles },
-    { label: 'Interview invites', value: String(trackedApplications.filter((item) => ['Interview', 'Selected'].includes(item.status)).length || interviewInvites.length), icon: Building2 },
-    { label: 'Job alerts', value: String(jobAlerts.length), icon: Rocket },
+    { label: 'Saved jobs', value: String(savedJobs.length), icon: Sparkles, to: '/candidate-saved-jobs' },
+    { label: 'Interview invites', value: String(trackedApplications.filter((item) => ['Interview', 'Selected'].includes(item.status)).length || interviewInvites.length), icon: Building2, to: '/candidate-interview-invites' },
+    { label: 'Job alerts', value: String(jobAlerts.length), icon: Rocket, to: '/candidate-job-alerts' },
   ]
 
   return (
@@ -76,7 +105,7 @@ const user = getStoredUser()
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {dashboardItems.map((item) => {
           const Icon = item.icon
-          return <MetricCard icon={Icon} key={item.label} label={item.label} value={item.value} />
+          return <MetricCard icon={Icon} key={item.label} label={item.label} onClick={item.to ? () => navigate(item.to) : item.label === 'Applied jobs' ? () => navigate('/candidate-applied-jobs') : undefined} value={item.value} />
         })}
       </div>
 
@@ -95,7 +124,7 @@ const user = getStoredUser()
             </div>
           </Panel>
 
-          <Panel title="Applied Jobs">
+          <Panel action={<Button onClick={() => navigate('/candidate-applied-jobs')} variant="secondary">View All</Button>} title="Applied Jobs">
             <StatusRows applications={trackedApplications} />
           </Panel>
 
@@ -104,7 +133,17 @@ const user = getStoredUser()
           </Panel>
 
           <Panel title="Recommended Jobs">
-            <div className="grid gap-4 xl:grid-cols-2">{jobs.slice(0, 2).map((job) => <JobCard job={job} key={job.id} onApply={onApply} />)}</div>
+            {recommendationsLoading ? (
+              <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Finding jobs related to your profile...</p>
+            ) : recommendedJobs.length ? (
+              <div className="grid gap-4 xl:grid-cols-2">
+                {recommendedJobs.map((job) => <JobCard job={job} key={job._id || job.id} onApply={onApply} />)}
+              </div>
+            ) : (
+              <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">
+                No related jobs found yet. Update your profile skills or search jobs to find matching openings.
+              </p>
+            )}
           </Panel>
         </div>
 
@@ -114,7 +153,7 @@ const user = getStoredUser()
               <CloudUpload className="mx-auto text-blue-600" size={34} />
               <p className="mt-3 font-bold text-slate-950">Upload latest resume</p>
               <p className="mt-2 text-sm text-slate-500">PDF or DOCX up to 5MB</p>
-              <Button className="mt-5">Choose File</Button>
+              <Button className="mt-5" to="/candidate-profile?missing=Resume">Choose File</Button>
             </div>
           </Panel>
 
@@ -162,6 +201,244 @@ const user = getStoredUser()
   )
 }
 
+export function CandidateAppliedJobsPage() {
+  const user = getStoredUser()
+  const [applications, setApplications] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadApplications = async () => {
+      setLoading(true)
+      try {
+        const payload = await api.list('applications', `?candidateEmail=${encodeURIComponent(user?.email || '')}&sort=-createdAt&limit=100`)
+        const list = Array.isArray(payload.data) ? payload.data : []
+        setApplications(list)
+      } catch {
+        setApplications([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadApplications()
+  }, [user?.email])
+
+  return (
+    <DashboardShell title="Applied Jobs" subtitle="Track every job you applied for, company details, application status, and submitted resume.">
+      <Panel title="Your Applications">
+        {loading ? (
+          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">Loading applied jobs...</p>
+        ) : applications.length ? (
+          <div className="max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full min-w-[900px] text-left text-sm">
+              <thead className="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
+                <tr>
+                  {['Sr No', 'Job Title', 'Company', 'Status', 'Resume', 'Applied Date', 'Actions'].map((label) => (
+                    <th className="px-4 py-3" key={label}>{label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {applications.map((application, index) => (
+                  <tr className="hover:bg-blue-50/40" key={application._id || `${application.jobTitle}-${index}`}>
+                    <td className="px-4 py-3 font-black text-slate-500">#{index + 1}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-black text-slate-950">{application.jobTitle}</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-500">Application ID: {String(application._id || '').slice(-8)}</p>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{application.company}</td>
+                    <td className="px-4 py-3"><span className={`rounded-full px-3 py-1 text-xs font-black ${getStatusTone(application.status)}`}>{normalizeStatus(application.status)}</span></td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{application.resumeUrl ? 'Submitted' : 'Not attached'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{application.createdAt ? new Date(application.createdAt).toLocaleString() : 'Recently'}</td>
+                    <td className="px-4 py-3">
+                      <Button to={application.jobId ? `/jobs/${application.jobId}` : '/jobs'} variant="secondary">View Job</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">No applied jobs yet.</p>
+        )}
+      </Panel>
+    </DashboardShell>
+  )
+}
+
+export function CandidateSavedJobsPage() {
+  const user = getStoredUser()
+  const [savedJobs, setSavedJobs] = useState(() => getSavedJobs(user))
+
+  useEffect(() => {
+    const syncSavedJobs = () => setSavedJobs(getSavedJobs(user))
+    window.addEventListener('savedJobsChanged', syncSavedJobs)
+    window.addEventListener('storage', syncSavedJobs)
+    syncSavedJobs()
+
+    return () => {
+      window.removeEventListener('savedJobsChanged', syncSavedJobs)
+      window.removeEventListener('storage', syncSavedJobs)
+    }
+  }, [user?.email, user?.id])
+
+  return (
+    <DashboardShell title="Saved Jobs" subtitle="Aapke saved jobs table view mein, company, location, salary, aur action ke saath.">
+      <Panel title="Saved Jobs Table">
+        {savedJobs.length ? (
+          <div className="max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full min-w-[920px] text-left text-sm">
+              <thead className="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
+                <tr>
+                  {['Sr No', 'Job Title', 'Company', 'Location', 'Type', 'Salary', 'Saved Date', 'Actions'].map((label) => (
+                    <th className="px-4 py-3" key={label}>{label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {savedJobs.map((job, index) => (
+                  <tr className="hover:bg-blue-50/40" key={job._id || job.id || `${job.title}-${index}`}>
+                    <td className="px-4 py-3 font-black text-slate-500">#{index + 1}</td>
+                    <td className="px-4 py-3 font-black text-slate-950">{job.title || '-'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{job.company || '-'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{job.location || '-'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{job.type || '-'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{job.salary || '-'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{job.savedAt ? new Date(job.savedAt).toLocaleString() : '-'}</td>
+                    <td className="px-4 py-3">
+                      <Button to={job._id || job.id ? `/jobs/${job._id || job.id}` : '/jobs'} variant="secondary">View Job</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">No saved jobs yet.</p>
+        )}
+      </Panel>
+    </DashboardShell>
+  )
+}
+
+export function CandidateInterviewInvitesPage() {
+  const user = getStoredUser()
+  const [invites, setInvites] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadInvites = async () => {
+      setLoading(true)
+      try {
+        const payload = await api.list('applications', `?candidateEmail=${encodeURIComponent(user?.email || '')}&sort=-createdAt&limit=100`)
+        const list = Array.isArray(payload.data) ? payload.data : []
+        const applicationInvites = list.filter((item) => ['Interview', 'Selected'].includes(item.status))
+        setInvites(applicationInvites.length ? applicationInvites : getInterviewInvites(user))
+      } catch {
+        setInvites(getInterviewInvites(user))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadInvites()
+  }, [user?.email, user?.id])
+
+  return (
+    <DashboardShell title="Interview Invites" subtitle="Recruiter interview invites aur selected-stage applications ek table mein.">
+      <Panel title="Interview Invites Table">
+        {loading ? (
+          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">Loading interview invites...</p>
+        ) : invites.length ? (
+          <div className="max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full min-w-[900px] text-left text-sm">
+              <thead className="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
+                <tr>
+                  {['Sr No', 'Job Title', 'Company', 'Status', 'Email', 'Invite Date', 'Actions'].map((label) => (
+                    <th className="px-4 py-3" key={label}>{label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {invites.map((invite, index) => (
+                  <tr className="hover:bg-blue-50/40" key={invite._id || invite.id || `${invite.jobTitle || invite.title}-${index}`}>
+                    <td className="px-4 py-3 font-black text-slate-500">#{index + 1}</td>
+                    <td className="px-4 py-3 font-black text-slate-950">{invite.jobTitle || invite.title || '-'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{invite.company || '-'}</td>
+                    <td className="px-4 py-3"><span className={`rounded-full px-3 py-1 text-xs font-black ${getStatusTone(invite.status)}`}>{normalizeStatus(invite.status || 'Interview')}</span></td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{invite.recruiterEmail || invite.email || '-'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{invite.createdAt || invite.invitedAt ? new Date(invite.createdAt || invite.invitedAt).toLocaleString() : '-'}</td>
+                    <td className="px-4 py-3">
+                      <Button to={invite.jobId ? `/jobs/${invite.jobId}` : '/candidate-applied-jobs'} variant="secondary">View Details</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">No interview invites yet.</p>
+        )}
+      </Panel>
+    </DashboardShell>
+  )
+}
+
+export function CandidateJobAlertsPage() {
+  const user = getStoredUser()
+  const [jobAlerts, setJobAlerts] = useState(() => getJobAlerts(user))
+
+  useEffect(() => {
+    const syncAlerts = () => setJobAlerts(getJobAlerts(user))
+    window.addEventListener('candidateActivityChanged', syncAlerts)
+    window.addEventListener('storage', syncAlerts)
+    syncAlerts()
+
+    return () => {
+      window.removeEventListener('candidateActivityChanged', syncAlerts)
+      window.removeEventListener('storage', syncAlerts)
+    }
+  }, [user?.email, user?.id])
+
+  return (
+    <DashboardShell title="Job Alerts" subtitle="Aapke saved alert preferences aur matching job alert rules table mein.">
+      <Panel title="Job Alerts Table">
+        {jobAlerts.length ? (
+          <div className="max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full min-w-[820px] text-left text-sm">
+              <thead className="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
+                <tr>
+                  {['Sr No', 'Alert Name', 'Keyword', 'Location', 'Frequency', 'Status', 'Created', 'Actions'].map((label) => (
+                    <th className="px-4 py-3" key={label}>{label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {jobAlerts.map((alert, index) => (
+                  <tr className="hover:bg-blue-50/40" key={alert.id || alert._id || `${alert.keyword || alert.title}-${index}`}>
+                    <td className="px-4 py-3 font-black text-slate-500">#{index + 1}</td>
+                    <td className="px-4 py-3 font-black text-slate-950">{alert.title || alert.name || 'Job alert'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{alert.keyword || alert.role || '-'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{alert.location || '-'}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{alert.frequency || 'Instant'}</td>
+                    <td className="px-4 py-3"><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">{alert.status || 'Active'}</span></td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{alert.createdAt ? new Date(alert.createdAt).toLocaleString() : '-'}</td>
+                    <td className="px-4 py-3">
+                      <Button to="/jobs" variant="secondary">Find Jobs</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">No job alerts yet.</p>
+        )}
+      </Panel>
+    </DashboardShell>
+  )
+}
+
 const headlineSuggestions = [
   'Frontend Developer', 'React Developer', 'Next.js Developer', 'Full Stack Developer', 'Backend Developer', 'Node.js Developer', 'Python Developer',
   'Java Developer', 'Mobile App Developer', 'UI/UX Designer', 'QA Engineer', 'DevOps Engineer', 'Data Analyst', 'Data Scientist',
@@ -173,6 +450,75 @@ const locationSuggestions = [
   'Noida, Uttar Pradesh', 'Gurugram, Haryana', 'Kolkata, West Bengal', 'Ahmedabad, Gujarat', 'Jaipur, Rajasthan', 'Kochi, Kerala',
   'Remote', 'Work from Home', 'Hybrid - Bengaluru', 'Hybrid - Mumbai', 'Hybrid - Delhi NCR', 'International Remote',
 ]
+
+function getStoredCandidateProfile(user) {
+  try {
+    const profile = JSON.parse(localStorage.getItem('candidateProfile') || '{}')
+    return {
+      ...profile,
+      name: profile.name || user?.name || '',
+      email: profile.email || user?.email || '',
+      skills: Array.isArray(profile.skills) ? profile.skills : [],
+      workMode: Array.isArray(profile.workMode) ? profile.workMode : [],
+    }
+  } catch {
+    return { name: user?.name || '', email: user?.email || '', skills: [], workMode: [] }
+  }
+}
+
+function normalizeText(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9+#.\s-]/g, ' ')
+}
+
+function getSeoTerms(profile) {
+  const terms = [
+    profile.headline,
+    profile.preferredRole,
+    profile.experience,
+    profile.city,
+    profile.state,
+    profile.country,
+    ...(Array.isArray(profile.skills) ? profile.skills : []),
+    ...(Array.isArray(profile.workMode) ? profile.workMode : []),
+  ]
+
+  return terms
+    .flatMap((value) => normalizeText(value).split(/\s+|,\s*/))
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 2)
+}
+
+function rankRecommendedJobs(list, profile, applications = []) {
+  const terms = getSeoTerms(profile)
+  if (!terms.length) return []
+
+  const appliedKeys = new Set(applications.map((item) => `${normalizeText(item.jobTitle)}|${normalizeText(item.company)}`))
+  const profileLocation = normalizeText([profile.city, profile.state, profile.country].filter(Boolean).join(' '))
+
+  return list
+    .filter((job) => !appliedKeys.has(`${normalizeText(job.title)}|${normalizeText(job.company)}`))
+    .map((job) => {
+      const seoText = normalizeText([
+        job.title,
+        job.company,
+        job.department,
+        job.industry,
+        job.description,
+        job.location,
+        job.type,
+        job.workMode,
+        ...(Array.isArray(job.skills) ? job.skills : []),
+      ].filter(Boolean).join(' '))
+      const keywordScore = terms.reduce((score, term) => score + (seoText.includes(term) ? 1 : 0), 0)
+      const roleTerm = normalizeText(profile.preferredRole || profile.headline)
+      const locationTerm = normalizeText(profile.city || profile.state)
+      const roleBoost = roleTerm && normalizeText(job.title).includes(roleTerm) ? 4 : 0
+      const locationBoost = profileLocation && locationTerm && normalizeText(job.location).includes(locationTerm) ? 2 : 0
+      return { ...job, recommendationScore: keywordScore + roleBoost + locationBoost }
+    })
+    .filter((job) => job.recommendationScore > 0)
+    .sort((a, b) => b.recommendationScore - a.recommendationScore)
+}
 
 function StatusRows({ applications }) {
   if (!applications.length) {
@@ -273,20 +619,24 @@ export function DashboardShell({ title, subtitle, children }) {
   )
 }
 
-export function MetricCard({ icon: Icon, label, value }) {
+export function MetricCard({ icon: Icon, label, onClick, value }) {
+  const Component = onClick ? 'button' : 'div'
   return (
-    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+    <Component className={`rounded-[1.5rem] border border-slate-200 bg-white p-5 text-left shadow-sm ${onClick ? 'transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100' : ''}`} onClick={onClick} type={onClick ? 'button' : undefined}>
       <Icon className="text-blue-600" size={24} />
       <p className="mt-5 text-3xl font-black text-slate-950">{value}</p>
       <p className="mt-1 text-sm font-medium text-slate-500">{label}</p>
-    </div>
+    </Component>
   )
 }
 
-export function Panel({ title, children }) {
+export function Panel({ action, title, children }) {
   return (
     <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="mb-5 text-xl font-bold text-slate-950">{title}</h2>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold text-slate-950">{title}</h2>
+        {action}
+      </div>
       {children}
     </section>
   )

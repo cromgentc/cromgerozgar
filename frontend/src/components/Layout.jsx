@@ -4,6 +4,7 @@ import { BriefcaseBusiness, ChevronDown, LogOut, Mail, MapPin, Menu, MessageCirc
 import { Button } from './Button'
 import { getStoredUser } from '../routes/authRouting'
 import { EmployerFooter } from '../employer/components/EmployerFooter'
+import { api } from '../services/api'
 
 const navItems = [
   { label: 'Home', to: '/' },
@@ -20,14 +21,18 @@ export function Layout() {
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [user, setUser] = useState(() => getStoredUser())
+  const [newsletterEmail, setNewsletterEmail] = useState('')
+  const [newsletterStatus, setNewsletterStatus] = useState({ type: '', message: '' })
+  const [newsletterLoading, setNewsletterLoading] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const isCandidate = user?.role === 'Candidate'
+  const isUserAccount = ['Candidate', 'users'].includes(user?.role)
   const isRecruiterAccount = user?.role === 'recruiter'
   const visibleNavItems = navItems
-    .filter((item) => !isCandidate || item.label !== 'Recruiter')
+    .filter((item) => !isUserAccount || item.label !== 'Recruiter')
     .map((item) => {
-      if (isCandidate && item.label === 'Candidates') return { ...item, label: 'Accounts' }
+      if (isUserAccount && item.label === 'Candidates') return { ...item, label: 'Accounts' }
       if (isRecruiterAccount && item.label === 'Recruiter') return { ...item, to: recruiterDashboardPath }
       return item
     })
@@ -44,6 +49,32 @@ export function Layout() {
     setUser(null)
     setProfileOpen(false)
     navigate('/auth')
+  }
+
+  const subscribeNewsletter = async (event) => {
+    event.preventDefault()
+    const email = newsletterEmail.trim().toLowerCase()
+    setNewsletterStatus({ type: '', message: '' })
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setNewsletterStatus({ type: 'error', message: 'Please enter a valid email address.' })
+      return
+    }
+
+    setNewsletterLoading(true)
+    try {
+      const payload = await api.create('newsletter-subscribers', {
+        email,
+        source: user?.role ? `${user.role} footer` : 'public footer',
+        topics: ['Hiring insights', 'Latest jobs', 'Recruiter updates'],
+      })
+      setNewsletterEmail('')
+      setNewsletterStatus({ type: 'success', message: payload.message || 'Subscribed successfully. You will receive hiring updates.' })
+    } catch (error) {
+      setNewsletterStatus({ type: 'error', message: error.message || 'Subscription failed. Please try again.' })
+    } finally {
+      setNewsletterLoading(false)
+    }
   }
 
   return (
@@ -74,7 +105,7 @@ export function Layout() {
           </div>
 
           <div className="hidden items-center gap-2 lg:flex">
-            {isCandidate ? (
+            {isUserAccount ? (
               <CandidateProfileMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
             ) : isRecruiterAccount ? (
               <CompanyProfileMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
@@ -109,7 +140,7 @@ export function Layout() {
                   {item.label}
                 </NavLink>
               ))}
-              {isCandidate ? (
+              {isUserAccount ? (
                 <div className="grid gap-2 pt-2">
                   <div className="flex items-center gap-3 rounded-2xl bg-blue-50 px-4 py-3 text-sm font-black text-slate-950">
                     <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-600 text-white">
@@ -117,7 +148,7 @@ export function Layout() {
                     </span>
                     {user.name || 'Candidate'}
                   </div>
-                  <Button to="/candidate-profile" variant="secondary">Profile</Button>
+                  {isCandidate && <Button to="/candidate-profile" variant="secondary">Profile</Button>}
                   <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100" onClick={logout} type="button">
                     Logout
                   </button>
@@ -154,27 +185,25 @@ export function Layout() {
         <Outlet />
       </main>
 
-      {isRecruiterAccount ? <EmployerFooter /> : !isCandidate && <footer className="border-t border-slate-200 bg-white">
+      {isRecruiterAccount ? <EmployerFooter /> : <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          {!isCandidate && (
-            <div className="overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-teal-50 shadow-xl shadow-blue-100/50">
-              <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
-                <div>
-                  <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">Enterprise Hiring Network</p>
-                  <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                    Hire faster or find your next role with trusted companies.
-                  </h2>
-                  <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-                    Premium job discovery, company dashboards, candidate profiles, and scalable recruitment workflows in one clean platform.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button to="/jobs">Find Jobs</Button>
-                  <Button to="/post-job" variant="secondary">Post a Job</Button>
-                </div>
+          <div className="overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-teal-50 shadow-xl shadow-blue-100/50">
+            <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">Enterprise Hiring Network</p>
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                  Hire faster or find your next role with trusted companies.
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
+                  Premium job discovery, company dashboards, candidate profiles, and scalable recruitment workflows in one clean platform.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button to="/jobs">Find Jobs</Button>
+                {!isUserAccount && <Button to="/post-job" variant="secondary">Post a Job</Button>}
               </div>
             </div>
-          )}
+          </div>
 
           <div className="grid gap-10 py-12 lg:grid-cols-[1.35fr_0.9fr_0.9fr_0.9fr_1.1fr]">
             <div>
@@ -204,22 +233,31 @@ export function Layout() {
             />
             <FooterColumn
               title="Candidates"
-              links={[
-                ['Candidate Login', '/auth'],
-                ['Dashboard', '/candidate-dashboard'],
-                ['Saved Jobs', '/candidate-dashboard'],
-                ['Job Alerts', '/candidate-dashboard'],
-              ]}
+              links={isUserAccount
+                ? [
+                    ['Dashboard', '/candidate-dashboard'],
+                    ['Applied Jobs', '/candidate-applied-jobs'],
+                    ['Saved Jobs', '/candidate-dashboard'],
+                    ['Job Alerts', '/candidate-dashboard'],
+                  ]
+                : [
+                    ['Candidate Login', '/auth'],
+                    ['Dashboard', '/candidate-dashboard'],
+                    ['Saved Jobs', '/candidate-dashboard'],
+                    ['Job Alerts', '/candidate-dashboard'],
+                  ]}
             />
-            <FooterColumn
-              title="Recruiter"
-              links={[
-                ['Recruiter Dashboard', recruiterDashboardPath],
-                ['Post a Job', '/post-job'],
-                ['Applications', recruiterDashboardPath],
-                ['Company Profile', '/companies'],
-              ]}
-            />
+            {!isUserAccount && (
+              <FooterColumn
+                title="Recruiter"
+                links={[
+                  ['Recruiter Dashboard', recruiterDashboardPath],
+                  ['Post a Job', '/post-job'],
+                  ['Applications', recruiterDashboardPath],
+                  ['Company Profile', '/companies'],
+                ]}
+              />
+            )}
 
             <div>
               <h3 className="text-sm font-black uppercase tracking-wide text-slate-950">Contact & Updates</h3>
@@ -230,12 +268,22 @@ export function Layout() {
               </div>
               <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-3">
                 <p className="mb-3 text-sm font-bold text-slate-800">Get hiring insights</p>
-                <div className="flex gap-2">
-                  <input className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-blue-500" placeholder="Email address" />
-                  <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-100" type="button">
-                    <Send size={17} />
+                <form className="flex gap-2" onSubmit={subscribeNewsletter}>
+                  <input
+                    className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-blue-500"
+                    disabled={newsletterLoading}
+                    onChange={(event) => setNewsletterEmail(event.target.value)}
+                    placeholder="Email address"
+                    type="email"
+                    value={newsletterEmail}
+                  />
+                  <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-100 disabled:cursor-not-allowed disabled:opacity-60" disabled={newsletterLoading} type="submit" aria-label="Subscribe to hiring insights">
+                    {newsletterLoading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <Send size={17} />}
                   </button>
-                </div>
+                </form>
+                <p className={`mt-3 text-xs font-bold ${newsletterStatus.type === 'error' ? 'text-rose-600' : newsletterStatus.type === 'success' ? 'text-teal-700' : 'text-slate-500'}`}>
+                  {newsletterStatus.message || 'Subscribe for latest jobs, hiring trends, and recruiter updates.'}
+                </p>
               </div>
             </div>
           </div>
@@ -248,9 +296,9 @@ export function Layout() {
             </div>
             <div className="flex flex-wrap gap-4 md:justify-end">
               <span>© 2026 Cromgen Rozgar</span>
-              <Link to="/contact">Privacy</Link>
-              <Link to="/contact">Terms</Link>
-              <Link to="/contact">Support</Link>
+              <Link to="/privacy">Privacy</Link>
+              <Link to="/terms">Terms</Link>
+              <Link to="/support">Support</Link>
             </div>
           </div>
         </div>

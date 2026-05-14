@@ -1,20 +1,53 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Quote, Star } from 'lucide-react'
-import { testimonials } from '../data/portalData'
+import { Quote, Star, UsersRound } from 'lucide-react'
+import { api } from '../services/api'
 
 export function TestimonialSlider() {
   const [active, setActive] = useState(0)
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setActive((current) => (current + 1) % testimonials.length)
-    }, 3500)
+    let mounted = true
 
-    return () => window.clearInterval(timer)
+    api.list('testimonials', '?status=Active&sort=-featured,-createdAt&limit=20')
+      .then((payload) => {
+        if (!mounted) return
+        setItems(Array.isArray(payload.data) ? payload.data : [])
+      })
+      .catch(() => {
+        if (mounted) setItems([])
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
   }, [])
 
+  const testimonials = useMemo(() => items.filter((item) => item.name && item.text), [items])
+
+  useEffect(() => {
+    if (testimonials.length <= 1) return undefined
+
+    const timer = window.setInterval(() => {
+      setActive((current) => (current + 1) % testimonials.length)
+    }, 4500)
+
+    return () => window.clearInterval(timer)
+  }, [testimonials.length])
+
+  useEffect(() => {
+    if (active >= testimonials.length) setActive(0)
+  }, [active, testimonials.length])
+
   const item = testimonials[active]
+  const averageRating = testimonials.length
+    ? (testimonials.reduce((total, testimonial) => total + Number(testimonial.rating || 5), 0) / testimonials.length).toFixed(1)
+    : '0.0'
 
   return (
     <section className="bg-white py-16 sm:py-20">
@@ -29,41 +62,91 @@ export function TestimonialSlider() {
           </p>
         </div>
 
-        <div className="mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-blue-50 via-white to-teal-50 p-4 shadow-xl shadow-blue-100/60 sm:p-6">
-          <AnimatePresence mode="wait">
-            <motion.article
-              animate={{ opacity: 1, x: 0 }}
-              className="rounded-[1.75rem] border border-white bg-white/85 p-6 text-center shadow-sm backdrop-blur sm:p-10"
-              exit={{ opacity: 0, x: -40 }}
-              initial={{ opacity: 0, x: 40 }}
-              key={item.name}
-              transition={{ duration: 0.45, ease: 'easeOut' }}
-            >
-              <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-100">
-                <Quote size={26} />
-              </div>
-              <div className="mt-5 flex justify-center gap-1 text-amber-400">
-                {[1, 2, 3, 4, 5].map((star) => <Star fill="currentColor" key={star} size={18} />)}
-              </div>
-              <p className="mx-auto mt-5 max-w-2xl text-lg font-medium leading-8 text-slate-700">“{item.text}”</p>
-              <p className="mt-6 text-xl font-black text-slate-950">{item.name}</p>
-              <p className="mt-1 text-sm font-semibold text-slate-500">{item.role}</p>
-            </motion.article>
-          </AnimatePresence>
+        {loading ? (
+          <div className="mx-auto h-80 max-w-4xl animate-pulse rounded-[2rem] bg-slate-100" />
+        ) : item ? (
+          <div className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-blue-50 via-white to-teal-50 p-4 shadow-xl shadow-blue-100/60 sm:p-6">
+            <div className="mb-5 grid gap-3 sm:grid-cols-3">
+              <TrustMetric label="Live testimonials" value={testimonials.length} />
+              <TrustMetric label="Average rating" value={averageRating} />
+              <TrustMetric label="Featured stories" value={testimonials.filter((testimonial) => testimonial.featured).length} />
+            </div>
 
-          <div className="mt-5 flex justify-center gap-2">
-            {testimonials.map((testimonial, index) => (
-              <button
-                aria-label={`Show testimonial from ${testimonial.name}`}
-                className={`h-2.5 rounded-full transition-all ${active === index ? 'w-8 bg-blue-600' : 'w-2.5 bg-slate-300 hover:bg-blue-300'}`}
-                key={testimonial.name}
-                onClick={() => setActive(index)}
-                type="button"
-              />
-            ))}
+            <AnimatePresence mode="wait">
+              <motion.article
+                animate={{ opacity: 1, x: 0 }}
+                className="rounded-[1.75rem] border border-white bg-white/90 p-6 shadow-sm backdrop-blur sm:p-10"
+                exit={{ opacity: 0, x: -40 }}
+                initial={{ opacity: 0, x: 40 }}
+                key={item._id || item.name}
+                transition={{ duration: 0.45, ease: 'easeOut' }}
+              >
+                <div className="grid gap-6 lg:grid-cols-[auto_1fr] lg:items-start">
+                  <div className="grid h-16 w-16 place-items-center rounded-2xl bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-100">
+                    {getInitials(item.name)}
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">
+                        <Quote size={14} /> {item.type || 'Candidate'}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-amber-400">
+                        {Array.from({ length: Number(item.rating || 5) }).map((_, index) => <Star fill="currentColor" key={index} size={16} />)}
+                      </span>
+                    </div>
+                    <p className="mt-5 max-w-3xl text-lg font-semibold leading-8 text-slate-700">"{item.text}"</p>
+                    <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+                      <div>
+                        <p className="text-xl font-black text-slate-950">{item.name}</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-500">{[item.role, item.company].filter(Boolean).join(' · ') || 'Platform user'}</p>
+                      </div>
+                      {item.featured && <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-black text-teal-700">Featured review</span>}
+                    </div>
+                  </div>
+                </div>
+              </motion.article>
+            </AnimatePresence>
+
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {testimonials.map((testimonial, index) => (
+                <button
+                  aria-label={`Show testimonial from ${testimonial.name}`}
+                  className={`h-2.5 rounded-full transition-all ${active === index ? 'w-8 bg-blue-600' : 'w-2.5 bg-slate-300 hover:bg-blue-300'}`}
+                  key={testimonial._id || testimonial.name}
+                  onClick={() => setActive(index)}
+                  type="button"
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="mx-auto max-w-4xl rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center">
+            <UsersRound className="mx-auto text-blue-500" size={36} />
+            <h3 className="mt-4 text-2xl font-black text-slate-950">No testimonials published yet</h3>
+            <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-500">
+              Admin testimonials MongoDB me add karega to yaha automatically professional carousel me show hoga.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   )
+}
+
+function TrustMetric({ label, value }) {
+  return (
+    <div className="rounded-2xl bg-white/85 p-4 text-center ring-1 ring-white">
+      <p className="text-2xl font-black text-slate-950">{value}</p>
+      <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
+    </div>
+  )
+}
+
+function getInitials(name) {
+  return String(name || 'User')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase())
+    .join('') || 'U'
 }

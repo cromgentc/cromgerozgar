@@ -1,5 +1,6 @@
 import { Mail, MapPin, MessageCircle, Phone, Send, Share2 } from 'lucide-react'
 import { Button } from '../components/Button'
+import { SupportChatButton } from '../components/SupportChat'
 
 export function ContactPage() {
   return (
@@ -38,7 +39,7 @@ export function ContactPage() {
           <div className="rounded-[2rem] bg-gradient-to-br from-blue-600 to-teal-500 p-6 text-white shadow-xl shadow-blue-100">
             <h2 className="text-2xl font-black">Need hiring support?</h2>
             <p className="mt-2 text-blue-50">Our support team can help candidates and recruiters with onboarding, listings, and applications.</p>
-            <Button className="mt-5" variant="secondary">Contact Support</Button>
+            <SupportChatButton className="mt-5" variant="secondary" />
           </div>
         </div>
       </div>

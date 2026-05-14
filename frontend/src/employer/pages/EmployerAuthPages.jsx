@@ -173,7 +173,10 @@ export function EmployerRegisterPage() {
   }, [form.country, form.locationType, form.state])
   const fullAddressOpen = Boolean(form.city)
 
-  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+  const update = (key, value) => {
+    const nextValue = key === 'phone' ? value.replace(/\D/g, '').slice(0, 10) : value
+    setForm((current) => ({ ...current, [key]: nextValue }))
+  }
 
   const isBusinessEmail = (email) => {
     const domain = email.split('@')[1]?.toLowerCase()
@@ -188,6 +191,11 @@ export function EmployerRegisterPage() {
 
     if (!isBusinessEmail(form.businessEmail)) {
       setMessage('Please use a business email address. Personal email domains are not accepted.')
+      return
+    }
+
+    if (!/^[6-9]\d{9}$/.test(form.phone)) {
+      setMessage('Please enter a valid 10 digit mobile number.')
       return
     }
 
@@ -212,6 +220,11 @@ export function EmployerRegisterPage() {
       return
     }
 
+    if (!/^[6-9]\d{9}$/.test(form.phone)) {
+      setMessage('Please enter a valid 10 digit mobile number.')
+      return
+    }
+
     if (form.password !== form.confirmPassword) {
       setMessage('Password and confirm password do not match.')
       return
@@ -226,6 +239,7 @@ export function EmployerRegisterPage() {
       const payload = await api.register({
         name: form.companyName,
         email: form.businessEmail,
+        phone: form.phone,
         password: form.password,
         role: 'recruiter',
       })
@@ -239,7 +253,7 @@ export function EmployerRegisterPage() {
         website: form.website,
         location,
         fullAddress: form.fullAddress,
-      }).catch(() => null)
+      })
 
       saveSession(payload)
       setMessage('Recruiter registered successfully. Redirecting...')
@@ -262,7 +276,7 @@ export function EmployerRegisterPage() {
           <>
             <input className="input" list="register-company-suggestions" onChange={(e) => update('companyName', e.target.value)} placeholder="Company Name" required value={form.companyName} />
             <input className="input" onChange={(e) => update('businessEmail', e.target.value)} placeholder="Business Email" required type="email" value={form.businessEmail} />
-            <input className="input" onChange={(e) => update('phone', e.target.value)} placeholder="Phone Number" value={form.phone} />
+            <input className="input" inputMode="numeric" maxLength={10} onChange={(e) => update('phone', e.target.value)} pattern="[0-9]*" placeholder="Phone Number" value={form.phone} />
             <input className="input" list="register-industry-suggestions" onChange={(e) => update('industry', e.target.value)} placeholder="Industry" value={form.industry} />
             <datalist id="register-company-suggestions">{companySuggestions.map((item) => <option key={item} value={item} />)}</datalist>
             <datalist id="register-industry-suggestions">{industrySuggestions.map((item) => <option key={item} value={item} />)}</datalist>

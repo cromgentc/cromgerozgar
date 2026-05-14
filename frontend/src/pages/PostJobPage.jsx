@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, Plus, Send, Sparkles, X } from 'lucide-react'
-import { Button } from '../components/Button'
 import { getRecruiterVerificationPath, getRecruiterVerificationStatus, getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
+import { fetchPricingPackages, getPricingPackages } from '../utils/pricingPackages'
 
 const jobTitleSuggestions = [
   'Senior React Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'Node.js Developer', 'Python Developer',
@@ -122,6 +122,11 @@ export function PostJobPage() {
   const user = useMemo(() => getStoredUser(), [])
   const [form, setForm] = useState(initialForm)
   const [message, setMessage] = useState('')
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [packageOpen, setPackageOpen] = useState(false)
+  const [packages, setPackages] = useState(() => getPricingPackages())
+  const [activePackage, setActivePackage] = useState(null)
+  const [pendingJobPayload, setPendingJobPayload] = useState(null)
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
@@ -141,6 +146,13 @@ export function PostJobPage() {
       navigate(getRecruiterVerificationPath(status), { replace: true })
     }
   }, [navigate, user])
+
+  useEffect(() => {
+    fetchPricingPackages({ activeOnly: true }).then(setPackages).catch(() => setPackages(getPricingPackages()))
+    if (user?.email) {
+      api.currentRecruiterPackage(user.email).then((payload) => setActivePackage(payload.data || null)).catch(() => setActivePackage(null))
+    }
+  }, [user?.email])
 
   const stateOptions = useMemo(() => {
     if (form.locationType === 'India') return Object.keys(indiaLocations)
@@ -197,44 +209,92 @@ export function PostJobPage() {
     }))
   }
 
-  const submit = async (event) => {
-    event.preventDefault()
+  const buildJobPayload = () => {
+    const location = [form.city, form.state, form.country].filter(Boolean).join(', ')
+    const interviewAddress = form.interviewSameAsOffice ? form.officeAddress : form.interviewAddress
 
+    return {
+      ...form,
+      recruiterEmail: user?.email,
+      recruiterName: user?.name,
+      location,
+      fullAddress: form.officeAddress,
+      officeAddress: form.officeAddress,
+      interviewAddress,
+      companyLogo: form.company.slice(0, 2).toUpperCase(),
+      skills: form.skills,
+      responsibilities: form.responsibilities.split('\n').filter(Boolean),
+      requirements: form.requirements.split('\n').filter(Boolean),
+      benefits: form.benefits.split('\n').filter(Boolean),
+      posted: form.postedDate || 'Today',
+    }
+  }
+
+  const ensureRecruiterCanSubmit = () => {
     if (user?.role !== 'recruiter') {
       navigate(user ? '/recruiter-register' : '/recruiter-login', { replace: true })
-      return
+      return false
     }
 
     const status = getRecruiterVerificationStatus(user)
     if (status !== 'approved') {
       navigate(getRecruiterVerificationPath(status), { replace: true })
+      return false
+    }
+
+    return true
+  }
+
+  const postJobWithPackage = async (payload) => {
+    setMessage('Submitting...')
+
+    try {
+      const result = await api.submitRecruiterJob(payload)
+      setActivePackage(result.subscription || activePackage)
+      window.dispatchEvent(new Event('recruiter-wallet-updated'))
+      setForm(initialForm)
+      setPackageOpen(false)
+      setPendingJobPayload(null)
+      setMessage('Job submitted to Account Department for verification. It will go live after approval.')
+    } catch (error) {
+      if (error.message.toLowerCase().includes('package') || error.message.toLowerCase().includes('payment') || error.message.toLowerCase().includes('limit')) {
+        setPendingJobPayload(payload)
+        setPackageOpen(true)
+        setMessage(error.message)
+      } else {
+        setMessage(`Backend unavailable: ${error.message}`)
+      }
+    }
+  }
+
+  const submit = async (event) => {
+    event.preventDefault()
+    if (!ensureRecruiterCanSubmit()) return
+    const payload = buildJobPayload()
+
+    if (!activePackage) {
+      setPendingJobPayload(payload)
+      setPackageOpen(true)
+      setMessage('Please choose a package and complete payment to submit this job.')
       return
     }
 
-    setMessage('Submitting...')
+    postJobWithPackage(payload)
+  }
 
-    const location = [form.city, form.state, form.country].filter(Boolean).join(', ')
-    const interviewAddress = form.interviewSameAsOffice ? form.officeAddress : form.interviewAddress
-
+  const choosePackageAndSubmit = async (plan) => {
     try {
-      await api.createJob({
-        ...form,
-        location,
-        fullAddress: form.officeAddress,
-        interviewAddress,
-        companyLogo: form.company.slice(0, 2).toUpperCase(),
-        skills: form.skills,
-        responsibilities: form.responsibilities.split('\n').filter(Boolean),
-        requirements: form.requirements.split('\n').filter(Boolean),
-        benefits: form.benefits.split('\n').filter(Boolean),
-        posted: form.postedDate || 'Today',
-        status: 'Open',
-        approval: 'Pending',
+      setMessage('Processing payment and activating package...')
+      const payload = await api.activateRecruiterPackage({
+        recruiterEmail: user.email,
+        recruiterName: user.name,
+        packageId: plan._id,
       })
-      setForm(initialForm)
-      setMessage('Job submitted successfully.')
+      setActivePackage(payload.data)
+      window.dispatchEvent(new Event('recruiter-wallet-updated'))
+      await postJobWithPackage(pendingJobPayload || buildJobPayload())
     } catch (error) {
-      setMessage(`Backend unavailable: ${error.message}`)
+      setMessage(error.message)
     }
   }
 
@@ -348,12 +408,80 @@ export function PostJobPage() {
 
             {message && <p className="rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button className="flex-1" variant="secondary"><Eye size={18} /> Preview Job</Button>
+              <button className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200" onClick={() => setPreviewOpen(true)} type="button"><Eye size={18} /> Preview Job</button>
               <button className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-100 transition hover:-translate-y-0.5 hover:bg-teal-600" type="submit"><Send size={18} /> Submit Job</button>
             </div>
           </form>
         </div>
       </div>
+      {previewOpen && <JobPreviewModal form={form} onClose={() => setPreviewOpen(false)} />}
+      {packageOpen && <PackageSelectionModal activePackage={activePackage} onChoose={choosePackageAndSubmit} onClose={() => setPackageOpen(false)} packages={packages} />}
     </section>
+  )
+}
+
+function JobPreviewModal({ form, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-600">Job Preview</p>
+            <h2 className="mt-2 text-3xl font-black text-slate-950">{form.title || 'Job title'}</h2>
+            <p className="mt-2 font-semibold text-slate-500">{form.company || 'Company'} · {[form.city, form.state, form.country].filter(Boolean).join(', ') || 'Location'}</p>
+          </div>
+          <button className="grid h-10 w-10 place-items-center rounded-full bg-slate-100" onClick={onClose} type="button"><X size={18} /></button>
+        </div>
+        <div className="mt-6 grid gap-4 text-sm font-semibold text-slate-600">
+          <p><strong>Department:</strong> {form.department || 'Not added'}</p>
+          <p><strong>Salary:</strong> {form.salary || 'Not disclosed'}</p>
+          <p><strong>Experience:</strong> {form.experience}</p>
+          <p><strong>Work:</strong> {form.type} / {form.workMode}</p>
+          <p><strong>Deadline:</strong> {form.deadline || 'Not added'}</p>
+          <div><strong>Skills:</strong> <div className="mt-2 flex flex-wrap gap-2">{form.skills.map((skill) => <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700" key={skill}>{skill}</span>)}</div></div>
+          <p className="whitespace-pre-line"><strong>Description:</strong><br />{form.description || 'Not added'}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function getPackageAmount(plan) {
+  const amount = Number(String(plan?.price || '').replace(/[^\d.]/g, ''))
+  return Number.isFinite(amount) ? amount : 0
+}
+
+function PackageSelectionModal({ activePackage, onChoose, onClose, packages }) {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
+      <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-600">Choose Package</p>
+            <h2 className="mt-2 text-3xl font-black text-slate-950">{activePackage ? 'Wallet coins are required to post this job' : 'Activate package and submit job'}</h2>
+            {activePackage && <p className="mt-2 text-sm font-bold text-slate-500">Current wallet: {activePackage.coinBalance || 0} coins. One job requires {activePackage.packageSnapshot?.coinPerJob || 10} coins.</p>}
+          </div>
+          <button className="grid h-10 w-10 place-items-center rounded-full bg-slate-100" onClick={onClose} type="button"><X size={18} /></button>
+        </div>
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          {packages.map((plan) => (
+            <div className="rounded-[1.5rem] border border-slate-200 p-5" key={plan._id || plan.name}>
+              <h3 className="text-xl font-black text-slate-950">{plan.name}</h3>
+              <p className="mt-2 text-2xl font-black text-blue-600">{plan.price}</p>
+              <p className="mt-2 text-sm font-bold text-slate-500">{plan.jobLimit || 1} jobs / {plan.validityDays || 30} days / {plan.discountPercent || 0}% discount</p>
+              <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-400">100 rupees = 10 coins / {plan.coinPerJob || 10} coins per job</p>
+              {getPackageAmount(plan) > 0 && (
+                <div className="mt-4 grid gap-2 rounded-2xl bg-slate-50 p-3 text-xs font-black text-slate-600">
+                  <span>Payment options</span>
+                  <span className="rounded-xl bg-white px-3 py-2">UPI / QR Payment</span>
+                  <span className="rounded-xl bg-white px-3 py-2">Card / Net Banking</span>
+                </div>
+              )}
+              <button className="mt-5 w-full rounded-full bg-blue-600 px-4 py-3 text-sm font-black text-white" onClick={() => onChoose(plan)} type="button">{getPackageAmount(plan) > 0 ? 'Pay & Activate' : 'Activate Free Package'}</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }

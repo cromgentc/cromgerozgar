@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { City, Country, State } from 'country-state-city'
 import { BriefcaseBusiness, Camera, CheckCircle2, FileText, Image, Mail, MapPin, Pencil, Phone, Plus, Save, ShieldCheck, Upload, UserRound, X } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { getStoredUser } from '../routes/authRouting'
 import { DashboardShell, Panel } from './CandidateDashboard'
 import { getSavedJobs } from '../utils/savedJobs'
+import { getCandidateProfileCompletion } from '../utils/candidateActivity'
 
 const profileStats = [
   ['Profile Strength', '86%'],
@@ -84,6 +86,9 @@ function getStoredCandidateProfile(user) {
     skills: defaultSkills,
     avatar: '',
     banner: '',
+    resumeName: '',
+    resumeUrl: '',
+    resumeUpdatedAt: '',
   }
 
   try {
@@ -118,8 +123,9 @@ function getStoredCandidateProfile(user) {
 
 export function CandidateProfilePage() {
   const user = getStoredUser()
+  const [searchParams] = useSearchParams()
   const [profile, setProfile] = useState(() => getStoredCandidateProfile(user))
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(() => Boolean(searchParams.get('missing')))
   const [message, setMessage] = useState('')
   const [skillQuery, setSkillQuery] = useState('')
   const [savedJobs, setSavedJobs] = useState(() => getSavedJobs(user))
@@ -135,6 +141,22 @@ export function CandidateProfilePage() {
     }
   }, [user])
 
+  useEffect(() => {
+    const missingFromApply = searchParams.get('missing')
+    if (!missingFromApply) return
+
+    let missing = [missingFromApply]
+    try {
+      const storedMissing = JSON.parse(sessionStorage.getItem('candidateProfileMissing') || '[]')
+      if (Array.isArray(storedMissing) && storedMissing.length) missing = storedMissing
+    } catch {
+      missing = [missingFromApply]
+    }
+
+    setEditing(true)
+    setMessage(`Job apply karne se pehle ye details complete karein: ${missing.join(', ')}.`)
+  }, [searchParams])
+
   const update = (key, value) => {
     setProfile((current) => ({ ...current, [key]: value }))
     setMessage('')
@@ -149,6 +171,8 @@ export function CandidateProfilePage() {
       localStorage.setItem('authUser', JSON.stringify({ ...user, name: nextProfile.name, email: nextProfile.email }))
     }
 
+    sessionStorage.removeItem('candidateProfileMissing')
+    window.dispatchEvent(new CustomEvent('candidateActivityChanged'))
     setEditing(false)
     setMessage('Profile updated successfully.')
   }
@@ -158,6 +182,22 @@ export function CandidateProfilePage() {
 
     const reader = new FileReader()
     reader.onload = () => update(key, reader.result)
+    reader.readAsDataURL(file)
+  }
+
+  const uploadResume = (file) => {
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setProfile((current) => ({
+        ...current,
+        resumeName: file.name,
+        resumeUrl: reader.result,
+        resumeUpdatedAt: new Date().toISOString(),
+      }))
+      setMessage('Resume selected. Update Profile click karke save karein.')
+    }
     reader.readAsDataURL(file)
   }
 
@@ -245,6 +285,7 @@ export function CandidateProfilePage() {
     .filter((skill) => skill.toLowerCase().includes(skillQuery.trim().toLowerCase()))
     .filter((skill) => !profile.skills.includes(skill))
     .slice(0, 18)
+  const completion = getCandidateProfileCompletion(user)
 
   return (
     <DashboardShell title="Candidate Profile" subtitle="Your professional profile, contact details, skills, resume, and job preferences.">
@@ -297,6 +338,11 @@ export function CandidateProfilePage() {
                   <div className="h-full w-[86%] rounded-full bg-teal-500" />
                 </div>
                 {message && <p className="mt-4 rounded-2xl bg-teal-50 p-3 text-sm font-black text-teal-700">{message}</p>}
+                {!completion.complete && (
+                  <div className="mt-4 rounded-2xl bg-amber-50 p-3 text-sm font-black text-amber-700">
+                    Pending details: {completion.missing.join(', ')}
+                  </div>
+                )}
               </div>
             </div>
           </Panel>
@@ -427,14 +473,16 @@ export function CandidateProfilePage() {
                   <FileText size={22} />
                 </span>
                 <div>
-                  <p className="font-black text-slate-950">Latest Resume.pdf</p>
-                  <p className="text-sm font-semibold text-slate-500">Updated May 2026</p>
+                  <p className="font-black text-slate-950">{profile.resumeName || 'Resume not uploaded'}</p>
+                  <p className="text-sm font-semibold text-slate-500">
+                    {profile.resumeUpdatedAt ? `Updated ${new Date(profile.resumeUpdatedAt).toLocaleDateString()}` : 'Upload resume to apply for jobs'}
+                  </p>
                 </div>
               </div>
               <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-100">
                 <Upload size={18} />
-                Update Resume
-                <input className="hidden" type="file" />
+                {profile.resumeName ? 'Update Resume' : 'Upload Resume'}
+                <input accept=".pdf,.doc,.docx" className="hidden" onChange={(event) => uploadResume(event.target.files?.[0])} type="file" />
               </label>
             </div>
           </Panel>

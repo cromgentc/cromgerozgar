@@ -3,6 +3,7 @@ import { CheckCircle2, Loader2, LogIn, Mail, UserPlus, X } from 'lucide-react'
 import { Button } from './Button'
 import { api } from '../services/api'
 import { getStoredUser } from '../routes/authRouting'
+import { getCandidateProfileCompletion, getCandidateProfileRedirect, isSameAppliedJob } from '../utils/candidateActivity'
 
 function getAppliedJobsKey(user) {
   return user?.id || user?.email ? `appliedJobs:${user.id || user.email}` : null
@@ -31,34 +32,47 @@ export function ApplyModal({ job, onClose }) {
 
     submittedRef.current = true
     setStatus('loading')
-    setMessage('Submitting your application...')
+    setMessage('Checking your profile...')
 
     const submit = async () => {
-      const existing = await api.list('applications')
-      const applications = existing.data || []
-      const alreadyApplied = applications.some(
-        (item) =>
-          item.candidateEmail?.toLowerCase() === user.email?.toLowerCase() &&
-          item.jobTitle === job.title &&
-          item.company === job.company,
-      )
-
-      if (!alreadyApplied) {
-        await api.createApplication({
-          candidateName: user.name || 'Candidate',
-          candidateEmail: user.email,
-          jobTitle: job.title,
-          company: job.company,
-          status: 'New',
-        })
+      const completion = getCandidateProfileCompletion(user)
+      if (!completion.complete) {
+        sessionStorage.setItem('candidateProfileMissing', JSON.stringify(completion.missing))
+        window.location.assign(getCandidateProfileRedirect(completion.missing))
+        return 'redirecting'
       }
+
+      const existing = await api.list('applications', `?candidateEmail=${encodeURIComponent(user.email)}&limit=100`)
+      const applications = existing.data || []
+      const alreadyApplied = applications.some((item) => isSameAppliedJob(item, job))
+
+      if (alreadyApplied) {
+        saveAppliedJob(user, job)
+        return 'already-applied'
+      }
+
+      await api.createApplication({
+        jobId: job._id || job.id,
+        recruiterEmail: job.recruiterEmail || '',
+        recruiterName: job.recruiterName || '',
+        candidateName: completion.profile.name || user.name || 'Candidate',
+        candidateEmail: user.email,
+        candidatePhone: completion.profile.phone || user.phone || '',
+        jobTitle: job.title,
+        company: job.company,
+        resumeUrl: completion.profile.resumeUrl || completion.profile.resumeName || '',
+        status: 'New',
+      })
+
+      return 'applied'
     }
 
     submit()
-      .then(() => {
+      .then((result) => {
+        if (result === 'redirecting') return
         saveAppliedJob(user, job)
         setStatus('success')
-        setMessage('Application submitted successfully.')
+        setMessage(result === 'already-applied' ? 'You have already applied for this job.' : 'Application submitted successfully.')
       })
       .catch((error) => {
         setStatus('error')
@@ -91,7 +105,12 @@ export function ApplyModal({ job, onClose }) {
             )}
             <h3 className="mt-4 text-xl font-black text-slate-950">{status === 'loading' ? 'Applying now' : status === 'error' ? 'Application failed' : 'Application sent'}</h3>
             <p className="mt-2 text-sm font-semibold text-slate-500">{message}</p>
-            {status !== 'loading' && <Button className="mt-5 w-full" onClick={onClose}>Done</Button>}
+            {status !== 'loading' && (
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <Button className="w-full" onClick={onClose} variant="secondary">Done</Button>
+                <Button className="w-full" onClick={() => window.location.assign('/candidate-applied-jobs')}>Applied Jobs</Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5 text-center">
@@ -101,8 +120,12 @@ export function ApplyModal({ job, onClose }) {
               Job apply karne ke liye candidate account se login karein. Agar account nahi hai to pehle register karein.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <Button to="/auth" variant="secondary"><LogIn size={18} /> Login</Button>
-              <Button to="/auth"><UserPlus size={18} /> Register</Button>
+              <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-slate-50" onClick={() => window.location.assign('/auth')} type="button">
+                <LogIn size={18} /> Login
+              </button>
+              <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700" onClick={() => window.location.assign('/auth')} type="button">
+                <UserPlus size={18} /> Register
+              </button>
             </div>
           </div>
         )}

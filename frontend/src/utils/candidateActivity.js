@@ -44,3 +44,56 @@ export function getCandidateProfileStrength() {
     return 0
   }
 }
+
+export function getCandidateProfileCompletion(user = getStoredUser()) {
+  try {
+    const profile = JSON.parse(localStorage.getItem('candidateProfile') || '{}')
+    const required = [
+      ['name', 'Full name'],
+      ['email', 'Email'],
+      ['phone', 'Phone'],
+      ['city', 'City'],
+      ['state', 'State'],
+      ['headline', 'Headline'],
+      ['experience', 'Experience'],
+      ['preferredRole', 'Preferred role'],
+      ['workMode', 'Work mode'],
+      ['expectedSalary', 'Expected salary'],
+      ['noticePeriod', 'Notice period'],
+      ['skills', 'Skills'],
+      ['resumeName', 'Resume'],
+    ]
+
+    const merged = {
+      ...profile,
+      name: profile.name || user?.name || '',
+      email: profile.email || user?.email || '',
+    }
+
+    const missing = required
+      .filter(([key]) => {
+        const value = merged[key]
+        return Array.isArray(value) ? value.length === 0 : !String(value || '').trim()
+      })
+      .map(([, label]) => label)
+
+    return { complete: missing.length === 0, missing, profile: merged }
+  } catch {
+    return { complete: false, missing: ['Candidate profile', 'Resume'], profile: {} }
+  }
+}
+
+export function getCandidateProfileRedirect(missing = []) {
+  const target = missing[0] || 'Candidate profile'
+  const params = new URLSearchParams({ missing: target })
+  return `/candidate-profile?${params.toString()}`
+}
+
+export function isSameAppliedJob(application, job) {
+  const applicationJobId = String(application?.jobId || application?._id || application?.id || '')
+  const jobId = String(job?._id || job?.id || '')
+  if (applicationJobId && jobId && applicationJobId === jobId) return true
+
+  return String(application?.jobTitle || application?.title || '').trim().toLowerCase() === String(job?.title || '').trim().toLowerCase()
+    && String(application?.company || '').trim().toLowerCase() === String(job?.company || '').trim().toLowerCase()
+}

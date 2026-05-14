@@ -36,6 +36,11 @@ router.get('/:gstNumber', async (req, res, next) => {
 
     if (apiKey) {
       headers[apiKeyHeader] = apiKey
+    } else {
+      return res.status(503).json({
+        success: false,
+        message: 'GST verification service is not configured. Please add GST_LOOKUP_API_KEY in backend environment variables.',
+      })
     }
 
     const response = await fetch(url, { headers })

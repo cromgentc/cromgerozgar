@@ -3,9 +3,13 @@ import { ArrowRight, BadgeCheck, BriefcaseBusiness, Building2, CheckCircle2, Tre
 import { Button } from './Button'
 import { SearchBar } from './SearchBar'
 import { jobs, stats } from '../data/portalData'
+import { getStoredUser } from '../routes/authRouting'
 import heroIllustration from '../assets/enterprise-hiring-banner.png'
 
 export function HeroBanner() {
+  const user = getStoredUser()
+  const isUserAccount = ['Candidate', 'users'].includes(user?.role)
+
   return (
     <section className="relative isolate overflow-hidden bg-slate-50">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_12%_12%,#E0F2FE_0,transparent_34%),radial-gradient(circle_at_88%_18%,#F3E8FF_0,transparent_32%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)]" />
@@ -37,9 +41,11 @@ export function HeroBanner() {
             <Button className="w-full lg:w-auto" to="/jobs">
               Find Jobs <ArrowRight size={18} />
             </Button>
-            <Button className="w-full lg:w-auto" to="/post-job" variant="secondary">
-              Post a Job
-            </Button>
+            {!isUserAccount && (
+              <Button className="w-full lg:w-auto" to="/post-job" variant="secondary">
+                Post a Job
+              </Button>
+            )}
           </div>
 
           <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">

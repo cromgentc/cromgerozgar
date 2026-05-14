@@ -21,15 +21,19 @@ function crudController(Model, options = {}) {
       const skip = (page - 1) * limit
       const filter = buildQuery(req.query)
 
+      if (options.beforeGetAll) await options.beforeGetAll(filter, req)
+
       if (req.query.search && searchFields.length) {
         filter.$or = searchFields.map((field) => ({ [field]: { $regex: req.query.search, $options: 'i' } }))
       }
 
       try {
-        const [items, total] = await Promise.all([
+        let [items, total] = await Promise.all([
           Model.find(filter).sort(req.query.sort || '-createdAt').skip(skip).limit(limit),
           Model.countDocuments(filter),
         ])
+
+        if (options.afterGetAll) items = await options.afterGetAll(items, req)
 
         res.json({ success: true, data: items, pagination: { page, limit, total, pages: Math.ceil(total / limit) } })
       } catch (error) {
@@ -48,11 +52,16 @@ function crudController(Model, options = {}) {
     }),
 
     create: asyncHandler(async (req, res) => {
+      if (options.beforeCreate) {
+        const handled = await options.beforeCreate(req.body, req)
+        if (handled) return
+      }
       const item = await Model.create(req.body)
       res.status(201).json({ success: true, data: item })
     }),
 
     update: asyncHandler(async (req, res) => {
+      if (options.beforeUpdate) await options.beforeUpdate(req.body, req)
       const item = await Model.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
       if (!item) {
         res.status(404)

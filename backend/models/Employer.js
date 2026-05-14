@@ -9,6 +9,8 @@ const employerSchema = new mongoose.Schema(
     companySize: { type: String, default: '' },
     website: { type: String, default: '' },
     location: { type: String, default: '' },
+    logo: { type: String, default: '' },
+    logoUrl: { type: String, default: '' },
     status: { type: String, enum: ['Pending', 'Approved', 'Blocked'], default: 'Pending' },
     verified: { type: Boolean, default: false },
   },

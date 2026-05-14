@@ -40,7 +40,13 @@ app.use(
 app.use(express.json({ limit: '1mb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan('dev'))
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300 }))
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: Number(process.env.RATE_LIMIT || 2000),
+    skip: (req) => req.path.startsWith('/api/pricing-packages'),
+  }),
+)
 
 app.use('/api', apiRoutes)
 app.use(notFound)

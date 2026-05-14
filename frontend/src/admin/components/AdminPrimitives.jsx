@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Download, FileSpreadsheet, FileText, Plus, Search, X } from 'lucide-react'
 
 export function AdminCard({ children, className = '' }) {
@@ -29,6 +29,7 @@ export function Toolbar({
   onSearchChange,
   statusValue = '',
   onStatusChange,
+  statusOptions = ['Active', 'Pending', 'Blocked', 'Approved', 'Rejected'],
 }) {
   return (
     <div className="mb-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
@@ -52,11 +53,7 @@ export function Toolbar({
           value={statusValue}
         >
           <option value="">All statuses</option>
-          <option value="Active">Active</option>
-          <option value="Pending">Pending</option>
-          <option value="Blocked">Blocked</option>
-          <option value="Approved">Approved</option>
-          <option value="Rejected">Rejected</option>
+          {statusOptions.map((option) => <option key={option} value={option}>{option}</option>)}
         </select>
         <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-700" onClick={onAction} type="button">
           <Plus size={17} /> {actionLabel}
@@ -66,7 +63,7 @@ export function Toolbar({
   )
 }
 
-export function DataTable({ columns, rows, actions }) {
+export function DataTable({ columns, rows, actions, expandedRowId, renderExpandedRow, onRowClick }) {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize))
@@ -93,16 +90,30 @@ export function DataTable({ columns, rows, actions }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {visibleRows.map((row) => (
-              <tr className="transition hover:bg-blue-50/40" key={row._id || row.id}>
-                {columns.map((column) => (
-                  <td className="whitespace-nowrap px-5 py-4 text-slate-600" key={column.key}>
-                    {column.badge ? <StatusBadge status={row[column.key]} /> : formatCell(column.key, row[column.key])}
-                  </td>
-                ))}
-                {actions && <td className="px-5 py-4">{actions(row)}</td>}
-              </tr>
-            ))}
+            {visibleRows.map((row) => {
+              const rowId = row._id || row.id
+              const expanded = expandedRowId === rowId
+
+              return (
+                <Fragment key={rowId}>
+                  <tr className={`transition hover:bg-blue-50/40 ${onRowClick ? 'cursor-pointer' : ''}`} onClick={() => onRowClick?.(row)}>
+                    {columns.map((column) => (
+                      <td className="whitespace-nowrap px-5 py-4 text-slate-600" key={column.key}>
+                        {column.badge ? <StatusBadge status={row[column.key]} /> : formatCell(column.key, row[column.key])}
+                      </td>
+                    ))}
+                    {actions && <td className="px-5 py-4" onClick={(event) => event.stopPropagation()}>{actions(row)}</td>}
+                  </tr>
+                  {expanded && renderExpandedRow && (
+                    <tr>
+                      <td className="bg-slate-50 px-5 py-4" colSpan={columns.length + (actions ? 1 : 0)}>
+                        {renderExpandedRow(row)}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              )
+            })}
           </tbody>
         </table>
       </div>
@@ -136,6 +147,7 @@ function formatCell(key, value) {
   if (Array.isArray(value)) return value.join(', ')
   if (key === '_id' && value) return String(value).slice(-8)
   if (key === 'createdAt' && value) return new Date(value).toLocaleDateString()
+  if (['panDocument', 'gstDocument', 'offerLetter', 'aadhaarDocument'].includes(key)) return value ? String(value).slice(0, 28) : 'Not uploaded'
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
   return value
 }
@@ -144,7 +156,7 @@ export function ActionButtons({ onEdit, onDelete, extra = 'Approve' }) {
   return (
     <div className="flex flex-wrap gap-2">
       <button className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700" onClick={onEdit} type="button">Edit</button>
-      <button className="rounded-full bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700" type="button">{extra}</button>
+      {extra && <button className="rounded-full bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700" type="button">{extra}</button>}
       {onDelete && <button className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700" onClick={onDelete} type="button">Delete</button>}
     </div>
   )

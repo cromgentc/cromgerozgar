@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { Navigate, createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ApplyModal, Toast } from './components/PortalUI'
 import { AdminLayout } from './admin/components/AdminLayout'
-import { AdminManagementPage, AdminSettingsPage } from './admin/pages/AdminManagementPage'
+import { AdminDiscountCouponPage, AdminManagementPage, AdminPricingPage, AdminSettingsPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
 import { AdminRoleDashboard } from './admin/pages/AdminRoleDashboard'
 import { Layout } from './components/Layout'
 import { EmployerLayout } from './employer/components/EmployerLayout'
@@ -10,10 +10,12 @@ import { EmployerLoginPage, EmployerRegisterPage } from './employer/pages/Employ
 import { EmployerLandingPage } from './employer/pages/EmployerLandingPage'
 import { RecruiterDocumentReviewPage, RecruiterDocumentsPage, RecruiterVerificationPage } from './employer/pages/RecruiterVerificationPages'
 import { AuthPage } from './pages/AuthPage'
-import { CandidateDashboard } from './pages/CandidateDashboard'
+import { CandidateAppliedJobsPage, CandidateDashboard, CandidateInterviewInvitesPage, CandidateJobAlertsPage, CandidateSavedJobsPage } from './pages/CandidateDashboard'
 import { CandidateProfilePage } from './pages/CandidateProfilePage'
-import { CompaniesPage } from './pages/CompaniesPage'
+import { CategoryJobsPage } from './pages/CategoryJobsPage'
+import { CompaniesPage, CompanyDetailsPage } from './pages/CompaniesPage'
 import { ContactPage } from './pages/ContactPage'
+import { ContentPage } from './pages/ContentPage'
 import { EmployerDashboard } from './pages/EmployerDashboard'
 import { HomePage } from './pages/HomePage'
 import { JobDetailsPage } from './pages/JobDetailsPage'
@@ -21,10 +23,11 @@ import { JobsPage } from './pages/JobsPage'
 import { PostJobPage } from './pages/PostJobPage'
 import { RecruiterProfilePage } from './pages/RecruiterProfilePage'
 import { RecruiterFindResumePage } from './pages/RecruiterFindResumePage'
+import { RecruiterJobsPage } from './pages/RecruiterJobsPage'
 import { RecruiterPricingPage } from './pages/RecruiterPricingPage'
 import { RecruiterResourcesPage } from './pages/RecruiterResourcesPage'
 import { RecruiterTalentPoolPage } from './pages/RecruiterTalentPoolPage'
-import { RecruiterAnalyticsPage, RecruiterApplicationsPage, RecruiterInterviewsPage, RecruiterTeamPage } from './pages/RecruiterWorkspacePages'
+import { RecruiterAnalyticsPage, RecruiterApplicationsPage, RecruiterCandidateApplicationsPage, RecruiterInterviewsPage, RecruiterTeamPage } from './pages/RecruiterWorkspacePages'
 import { ProtectedRoute, RoleRedirect } from './routes/ProtectedRoute'
 
 function App() {
@@ -36,7 +39,9 @@ function App() {
       children: [
         { path: '/', element: <HomePage onApply={setSelectedJob} /> },
         { path: '/jobs', element: <JobsPage onApply={setSelectedJob} /> },
+        { path: '/categories/:categorySlug', element: <CategoryJobsPage onApply={setSelectedJob} /> },
         { path: '/companies', element: <CompaniesPage /> },
+        { path: '/companies/:companySlug', element: <CompanyDetailsPage onApply={setSelectedJob} /> },
         { path: '/jobs/:jobId', element: <JobDetailsPage onApply={setSelectedJob} /> },
         { path: '/auth', element: <AuthPage /> },
         {
@@ -55,10 +60,45 @@ function App() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: '/candidate-applied-jobs',
+          element: (
+            <ProtectedRoute allowedRoles={['Candidate']}>
+              <CandidateAppliedJobsPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/candidate-saved-jobs',
+          element: (
+            <ProtectedRoute allowedRoles={['Candidate']}>
+              <CandidateSavedJobsPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/candidate-interview-invites',
+          element: (
+            <ProtectedRoute allowedRoles={['Candidate']}>
+              <CandidateInterviewInvitesPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/candidate-job-alerts',
+          element: (
+            <ProtectedRoute allowedRoles={['Candidate']}>
+              <CandidateJobAlertsPage />
+            </ProtectedRoute>
+          ),
+        },
         { path: '/candidate-dashoard', element: <RoleRedirect /> },
         { path: '/employer-dashoard', element: <RoleRedirect /> },
         { path: '/post-job', element: <PostJobPage /> },
         { path: '/contact', element: <ContactPage /> },
+        { path: '/privacy', element: <ContentPage slug="privacy" /> },
+        { path: '/terms', element: <ContentPage slug="terms" /> },
+        { path: '/support', element: <ContentPage slug="support" /> },
       ],
     },
     {
@@ -74,13 +114,23 @@ function App() {
         { path: 'jobs', element: <AdminManagementPage type="jobs" /> },
         { path: 'companies', element: <AdminManagementPage type="companies" /> },
         { path: 'employers', element: <AdminManagementPage type="employers" /> },
+        { path: 'recruiters/:recruiterId', element: <RecruiterDetailPage /> },
         { path: 'recruiter-documents', element: <AdminManagementPage type="recruiterDocuments" /> },
+        { path: 'recruiter-documents/:documentId', element: <RecruiterDocumentDetailPage /> },
         { path: 'candidates', element: <AdminManagementPage type="candidates" /> },
         { path: 'applications', element: <AdminManagementPage type="applications" /> },
         { path: 'resumes', element: <AdminManagementPage type="resumes" /> },
         { path: 'categories', element: <AdminManagementPage type="categories" /> },
         { path: 'locations', element: <AdminManagementPage type="locations" /> },
-        { path: 'payments', element: <AdminManagementPage type="payments" /> },
+        { path: 'testimonials', element: <AdminManagementPage type="testimonials" /> },
+        { path: 'faqs', element: <AdminManagementPage type="faqs" /> },
+        { path: 'hiring-insights', element: <AdminManagementPage type="newsletterSubscribers" /> },
+        { path: 'support-messages', element: <AdminManagementPage type="supportMessages" /> },
+        { path: 'support-messages/:messageId', element: <SupportMessageDetailPage /> },
+        { path: 'payments', element: <Navigate replace to="/admin/package/pricing" /> },
+        { path: 'discount-coupons', element: <Navigate replace to="/admin/package/discount-coupons" /> },
+        { path: 'package/pricing', element: <AdminPricingPage /> },
+        { path: 'package/discount-coupons', element: <AdminDiscountCouponPage /> },
         { path: 'reports', element: <AdminManagementPage type="reports" /> },
         { path: 'settings', element: <AdminSettingsPage /> },
       ],
@@ -105,6 +155,14 @@ function App() {
           ),
         },
         {
+          path: '/recruiter-jobs',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterJobsPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: '/recruiter-profile',
           element: (
             <ProtectedRoute allowedRoles={['recruiter']}>
@@ -117,6 +175,14 @@ function App() {
           element: (
             <ProtectedRoute allowedRoles={['recruiter']}>
               <RecruiterApplicationsPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/recruiter-applications/candidate/:candidateEmail',
+          element: (
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterCandidateApplicationsPage />
             </ProtectedRoute>
           ),
         },
