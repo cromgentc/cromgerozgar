@@ -39,9 +39,45 @@ const defaultPages = {
       { heading: 'Response Workflow', body: 'Support requests are reviewed based on priority, account status, and available verification data. Keep your account information updated for faster resolution.' },
     ],
   },
+  'recruiter-privacy': {
+    slug: 'recruiter-privacy',
+    category: 'Privacy',
+    frontendPlacement: 'Recruiter Frontend',
+    title: 'Recruiter Privacy Policy',
+    subtitle: 'How Cromgen Rozgar handles recruiter, company, document, package, and hiring workflow data.',
+    sections: [
+      { heading: 'Recruiter Data We Collect', body: 'We collect company profile details, recruiter contact information, verification documents, job posts, package activity, wallet records, and hiring workflow data.' },
+      { heading: 'How Recruiter Data Is Used', body: 'Recruiter data is used for account verification, job approval, candidate pipeline management, package activation, billing support, and platform security.' },
+      { heading: 'Recruiter Controls', body: 'Recruiters can update profile details, manage job posts, review package activity, and contact support for data or verification concerns.' },
+    ],
+  },
+  'recruiter-terms': {
+    slug: 'recruiter-terms',
+    category: 'Terms',
+    frontendPlacement: 'Recruiter Frontend',
+    title: 'Recruiter Terms Of Service',
+    subtitle: 'Hiring platform rules for recruiter accounts, job posts, verification, payments, and candidate handling.',
+    sections: [
+      { heading: 'Account And Company Verification', body: 'Recruiters must provide accurate company, GST, PAN, address, contact, and hiring information. Incomplete or misleading submissions may be rejected.' },
+      { heading: 'Job Posting Rules', body: 'Job posts may require admin or account department approval before becoming visible. Recruiters are responsible for accurate salary, location, role, and application details.' },
+      { heading: 'Packages And Hiring Usage', body: 'Recruiter packages, wallet coins, and posting limits are controlled by the selected plan and current account status.' },
+    ],
+  },
+  'recruiter-support': {
+    slug: 'recruiter-support',
+    category: 'Support',
+    frontendPlacement: 'Recruiter Frontend',
+    title: 'Recruiter Support Policy',
+    subtitle: 'Support guidance for recruiter verification, packages, wallet, job approval, and hiring operations.',
+    sections: [
+      { heading: 'Verification Support', body: 'Recruiters can contact support for GST, PAN, offer letter, company profile, or document review issues.' },
+      { heading: 'Job And Candidate Support', body: 'Support can help with job approval status, rejected post remarks, applications, shortlists, and candidate workflow concerns.' },
+      { heading: 'Package Support', body: 'For package activation, wallet coins, billing records, or plan access issues, recruiters should contact the account department with registered business email details.' },
+    ],
+  },
 }
 
-export function ContentPage({ slug }) {
+export function ContentPage({ placement = 'Users Frontend', slug }) {
   const { pageSlug } = useParams()
   const resolvedSlug = slug || pageSlug || 'support'
   const [page, setPage] = useState(null)
@@ -52,7 +88,10 @@ export function ContentPage({ slug }) {
     let active = true
     setLoading(true)
 
-    api.list('content-pages', `?slug=${encodeURIComponent(resolvedSlug)}&status=Published&limit=1`)
+    const params = new URLSearchParams({ slug: resolvedSlug, status: 'Published', limit: '1' })
+    if (placement) params.set('frontendPlacement', placement)
+
+    api.list('content-pages', `?${params.toString()}`)
       .then((payload) => {
         if (!active) return
         const item = Array.isArray(payload.data) ? payload.data[0] : null

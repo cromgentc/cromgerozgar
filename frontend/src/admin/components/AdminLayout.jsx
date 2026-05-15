@@ -10,6 +10,8 @@ import {
   CreditCard,
   ExternalLink,
   FileCheck2,
+  FileText,
+  Globe2,
   HelpCircle,
   LayoutDashboard,
   LogOut,
@@ -63,6 +65,7 @@ const sidebarItems = [
     children: [
       { label: 'Testimonials', to: '/admin/testimonials', icon: Star },
       { label: 'FAQs', to: '/admin/faqs', icon: HelpCircle },
+      { label: 'Policy', to: '/admin/policy', icon: FileText },
       { label: 'Hiring Insights', to: '/admin/hiring-insights', icon: Send },
       { label: 'Support Messages', to: '/admin/support-messages', icon: MessageCircle },
     ],
@@ -75,6 +78,15 @@ const sidebarItems = [
     children: [
       { label: 'Pricing', to: '/admin/package/pricing', icon: CreditCard },
       { label: 'Discount Coupon', to: '/admin/package/discount-coupons', icon: CreditCard },
+    ],
+  },
+  {
+    label: 'Settings',
+    to: '/admin/settings/google-auth',
+    icon: Globe2,
+    roles: ['Admin'],
+    children: [
+      { label: 'Google Auth API', to: '/admin/settings/google-auth', icon: Globe2 },
     ],
   },
 ]

@@ -237,7 +237,7 @@ module.exports = {
   candidates: crudController(Candidate, { searchFields: ['name', 'email', 'role', 'location'] }),
   categories: crudController(Category, { searchFields: ['name', 'status'] }),
   companies: crudController(Company, { searchFields: ['name', 'industry', 'location', 'status'] }),
-  contentPages: crudController(ContentPage, { searchFields: ['slug', 'title', 'subtitle', 'category', 'status'] }),
+  contentPages: crudController(ContentPage, { searchFields: ['slug', 'title', 'subtitle', 'category', 'frontendPlacement', 'status'] }),
   employers: crudController(Employer, {
     searchFields: ['companyName', 'businessEmail', 'industry', 'location'],
     beforeCreate: ensureUniqueEmployerIdentity,
@@ -272,5 +272,5 @@ module.exports = {
   resumes: crudController(Resume, { searchFields: ['name', 'email', 'role', 'skills', 'experience', 'source'] }),
   settings: crudController(Setting, { searchFields: ['key', 'group'] }),
   supportMessages: crudController(SupportMessage, { searchFields: ['name', 'email', 'role', 'subject', 'message', 'status'] }),
-  testimonials: crudController(Testimonial, { searchFields: ['name', 'role', 'company', 'type', 'text', 'status'] }),
+  testimonials: crudController(Testimonial, { searchFields: ['name', 'role', 'company', 'type', 'frontendPlacement', 'text', 'status'] }),
 }

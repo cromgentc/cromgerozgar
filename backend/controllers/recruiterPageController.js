@@ -13,7 +13,10 @@ const getRecruiterPage = asyncHandler(async (req, res) => {
     Application.countDocuments(),
     Testimonial.find({
       status: 'Active',
-      type: { $in: ['Recruiter', 'Company'] },
+      $or: [
+        { frontendPlacement: 'Recruiter Frontend' },
+        { frontendPlacement: { $exists: false }, type: { $in: ['Recruiter', 'Company'] } },
+      ],
     }).sort('-featured -createdAt').limit(20),
   ])
 

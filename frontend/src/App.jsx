@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Navigate, createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ApplyModal, Toast } from './components/PortalUI'
 import { AdminLayout } from './admin/components/AdminLayout'
-import { AdminDiscountCouponPage, AdminManagementPage, AdminPricingPage, AdminSettingsPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
+import { AdminBulkHiringPage, AdminHiringPage, AdminSingleHiringPage } from './admin/pages/AdminHiringPages'
+import { AdminDiscountCouponPage, AdminGoogleAuthPage, AdminManagementPage, AdminPricingPage, AdminSettingsPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
 import { AdminRoleDashboard } from './admin/pages/AdminRoleDashboard'
 import { Layout } from './components/Layout'
 import { EmployerLayout } from './employer/components/EmployerLayout'
@@ -119,6 +120,9 @@ function App() {
         { path: 'recruiter-documents/:documentId', element: <RecruiterDocumentDetailPage /> },
         { path: 'candidates', element: <AdminManagementPage type="candidates" /> },
         { path: 'applications', element: <AdminManagementPage type="applications" /> },
+        { path: 'crm/hiring', element: <AdminHiringPage /> },
+        { path: 'crm/hiring/bulk', element: <AdminBulkHiringPage /> },
+        { path: 'crm/hiring/single', element: <AdminSingleHiringPage /> },
         { path: 'resumes', element: <AdminManagementPage type="resumes" /> },
         { path: 'categories', element: <AdminManagementPage type="categories" /> },
         { path: 'locations', element: <AdminManagementPage type="locations" /> },
@@ -127,12 +131,17 @@ function App() {
         { path: 'hiring-insights', element: <AdminManagementPage type="newsletterSubscribers" /> },
         { path: 'support-messages', element: <AdminManagementPage type="supportMessages" /> },
         { path: 'support-messages/:messageId', element: <SupportMessageDetailPage /> },
+        { path: 'policy', element: <AdminManagementPage type="contentPages" /> },
+        { path: 'policy/users', element: <AdminManagementPage fixedFilters={{ frontendPlacement: 'Users Frontend' }} type="contentPages" /> },
+        { path: 'policy/recruiter', element: <AdminManagementPage fixedFilters={{ frontendPlacement: 'Recruiter Frontend' }} type="contentPages" /> },
         { path: 'payments', element: <Navigate replace to="/admin/package/pricing" /> },
         { path: 'discount-coupons', element: <Navigate replace to="/admin/package/discount-coupons" /> },
         { path: 'package/pricing', element: <AdminPricingPage /> },
         { path: 'package/discount-coupons', element: <AdminDiscountCouponPage /> },
+        { path: 'package/google-auth', element: <Navigate replace to="/admin/settings/google-auth" /> },
         { path: 'reports', element: <AdminManagementPage type="reports" /> },
         { path: 'settings', element: <AdminSettingsPage /> },
+        { path: 'settings/google-auth', element: <AdminGoogleAuthPage /> },
       ],
     },
     {
@@ -304,6 +313,9 @@ function App() {
       children: [
         { path: '/recruiter', element: <EmployerLandingPage /> },
         { path: '/employers', element: <EmployerLandingPage /> },
+        { path: '/recruiter/privacy', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-privacy" /> },
+        { path: '/recruiter/terms', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-terms" /> },
+        { path: '/recruiter/support', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-support" /> },
         { path: '/recruiter-login', element: <EmployerLoginPage /> },
         { path: '/employer-login', element: <EmployerLoginPage /> },
         { path: '/recruiter-register', element: <EmployerRegisterPage /> },

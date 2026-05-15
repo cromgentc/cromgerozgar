@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Globe2, Lock, Mail, Phone, UserRound } from 'lucide-react'
-import { Button } from '../components/Button'
+import { Eye, EyeOff, Lock, Mail, Phone, UserRound } from 'lucide-react'
+import { GoogleAuthButton } from '../components/GoogleAuthButton'
 import { getDashboardPath, normalizeRole } from '../routes/authRouting'
 import { api } from '../services/api'
 
@@ -46,6 +46,22 @@ export function AuthPage() {
 
       saveSession(payload)
       setMessage(`${getRoleLabel(payload.data.role)} login successful. Redirecting...`)
+      navigate(getDashboardPath(payload.data.role))
+    } catch (error) {
+      setMessage(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const googleSubmit = async (credential) => {
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const payload = await api.googleAuth({ credential, mode, role })
+      saveSession(payload)
+      setMessage(`${getRoleLabel(payload.data.role)} Google login successful. Redirecting...`)
       navigate(getDashboardPath(payload.data.role))
     } catch (error) {
       setMessage(error.message)
@@ -121,7 +137,7 @@ export function AuthPage() {
             <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700" disabled={loading} type="submit">
               {loading ? 'Please wait...' : isLogin ? 'Login' : `Create ${getRoleLabel(role)} Account`}
             </button>
-            <Button className="w-full" variant="secondary"><Globe2 size={18} /> Continue with Google</Button>
+            <GoogleAuthButton disabled={loading} onCredential={googleSubmit} />
           </form>
         </div>
       </div>

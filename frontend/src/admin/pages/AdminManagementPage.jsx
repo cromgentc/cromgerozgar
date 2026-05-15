@@ -264,10 +264,48 @@ const configs = {
     ],
     required: ['recruiterEmail', 'documentType'],
   },
+  contentPages: {
+    resource: 'content-pages',
+    title: 'Policy Management',
+    subtitle: 'Maintain separate published policy pages for the user frontend and recruiter frontend.',
+    actionLabel: 'Add Policy',
+    modalTitle: 'Add / Edit Policy',
+    extra: 'Publish',
+    statusOptions: ['Published', 'Draft'],
+    columns: [
+      { key: '_id', label: 'Policy ID' },
+      { key: 'title', label: 'Title' },
+      { key: 'slug', label: 'Slug' },
+      { key: 'category', label: 'Category', badge: true },
+      { key: 'frontendPlacement', label: 'Frontend', badge: true },
+      { key: 'status', label: 'Status', badge: true },
+      { key: 'effectiveDate', label: 'Effective' },
+      { key: 'createdAt', label: 'Created' },
+    ],
+    fields: [
+      ['title', 'Policy title'],
+      ['slug', 'URL slug'],
+      ['category', 'Policy category', 'policyCategory'],
+      ['frontendPlacement', 'Frontend placement', 'policyPlacement'],
+      ['subtitle', 'Short summary', 'textarea'],
+      ['sectionsText', 'Policy sections', 'contentSections'],
+      ['status', 'Status', 'policyStatus'],
+      ['effectiveDate', 'Effective date', 'date'],
+    ],
+    required: ['title', 'slug', 'frontendPlacement', 'status'],
+    transform: (form) => ({
+      ...form,
+      slug: String(form.slug || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      category: form.category || 'Policy',
+      frontendPlacement: form.frontendPlacement || fieldOptions.policyPlacement[0],
+      sections: parsePolicySections(form.sectionsText),
+      effectiveDate: form.effectiveDate || new Date().toISOString(),
+    }),
+  },
   testimonials: {
     resource: 'testimonials',
     title: 'Testimonials Management',
-    subtitle: 'Add recruiter and candidate feedback that appears dynamically on the website carousel.',
+    subtitle: 'Publish polished testimonial stories to the Users frontend or Recruiter frontend carousel.',
     actionLabel: 'Add Testimonial',
     modalTitle: 'Add / Edit Testimonial',
     extra: 'Feature',
@@ -277,6 +315,7 @@ const configs = {
       { key: 'role', label: 'Role' },
       { key: 'company', label: 'Company' },
       { key: 'type', label: 'Type', badge: true },
+      { key: 'frontendPlacement', label: 'Frontend', badge: true },
       { key: 'rating', label: 'Rating' },
       { key: 'featured', label: 'Featured', badge: true },
       { key: 'status', label: 'Status', badge: true },
@@ -287,6 +326,7 @@ const configs = {
       ['role', 'Role / Designation'],
       ['company', 'Company'],
       ['type', 'User type', 'testimonialType'],
+      ['frontendPlacement', 'Show on frontend', 'testimonialPlacement'],
       ['rating', 'Rating', 'number'],
       ['featured', 'Featured', 'featuredToggle'],
       ['status', 'Status'],
@@ -295,6 +335,7 @@ const configs = {
     required: ['name', 'text', 'status'],
     transform: (form) => ({
       ...form,
+      frontendPlacement: form.frontendPlacement || fieldOptions.testimonialPlacement[0],
       rating: Math.min(Math.max(Number(form.rating || 5), 1), 5),
       featured: ['true', 'Yes', 'Featured', true].includes(form.featured),
     }),
@@ -419,7 +460,7 @@ const configs = {
 }
 
 const accessByRole = {
-  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'categories', 'locations', 'payments', 'testimonials', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
+  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'categories', 'locations', 'payments', 'contentPages', 'testimonials', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
   staff: [],
   recruiter: [],
   users: [],
@@ -431,6 +472,10 @@ const fieldOptions = {
   userStatus: ['Active', 'Inactive', 'Suspend'],
   documentType: ['GST', 'Offer Letter', 'Aadhar Card'],
   testimonialType: ['Candidate', 'Recruiter', 'Company', 'Admin'],
+  testimonialPlacement: ['Users Frontend', 'Recruiter Frontend'],
+  policyPlacement: ['Users Frontend', 'Recruiter Frontend'],
+  policyCategory: ['Policy', 'Privacy', 'Terms', 'Support', 'General'],
+  policyStatus: ['Published', 'Draft'],
   faqCategory: ['General', 'Candidate', 'Recruiter', 'Jobs', 'Applications', 'Payments', 'Account', 'Support'],
   faqStatus: ['Active', 'Inactive'],
   subscriberStatus: ['Subscribed', 'Unsubscribed'],
@@ -484,7 +529,7 @@ function getStoredAdminUser() {
   }
 }
 
-export function AdminManagementPage({ type }) {
+export function AdminManagementPage({ fixedFilters = {}, type }) {
   const user = getStoredAdminUser()
   const navigate = useNavigate()
   const allowedTypes = accessByRole[user?.role] || accessByRole.Admin
@@ -499,6 +544,7 @@ export function AdminManagementPage({ type }) {
   const status = searchParams.get('status') || ''
   const role = searchParams.get('role') || ''
   const resumeMode = searchParams.get('resumeMode') || 'lead'
+  const frontendPlacement = fixedFilters.frontendPlacement || searchParams.get('frontendPlacement') || ''
   const [rows, setRows] = useState(config.staticRows || [])
   const [modalOpen, setModalOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -528,6 +574,7 @@ export function AdminManagementPage({ type }) {
     const params = new URLSearchParams()
     if (type === 'users' && role) params.set('role', role)
     if (type === 'jobs') params.set('includeAll', 'true')
+    if (type === 'contentPages' && frontendPlacement) params.set('frontendPlacement', frontendPlacement)
     if (search) params.set('search', search)
     if (status) params.set('status', status)
 
@@ -572,7 +619,7 @@ export function AdminManagementPage({ type }) {
     setSelectedRow(null)
     setForm({})
     loadRows()
-  }, [type, search, status, role, resumeMode])
+  }, [type, search, status, role, resumeMode, frontendPlacement])
 
   useEffect(() => {
     api
@@ -604,6 +651,9 @@ export function AdminManagementPage({ type }) {
         initialForm.industry = company.industry
         initialForm.department = company.industry
       }
+    }
+    if (type === 'contentPages' && frontendPlacement) {
+      initialForm.frontendPlacement = frontendPlacement
     }
     setForm(initialForm)
     setModalOpen(true)
@@ -858,6 +908,10 @@ export function AdminManagementPage({ type }) {
     : type === 'supportMessages'
       ? groupSupportMessagesByEmail(rows)
       : rows
+  const toolbarTitle = type === 'contentPages' && frontendPlacement ? `${frontendPlacement} Policies` : config.title
+  const toolbarSubtitle = type === 'contentPages' && frontendPlacement
+    ? `Manage ${frontendPlacement.toLowerCase()} privacy, terms, support, and general policy pages separately.`
+    : config.subtitle
 
   return (
     <div className="grid gap-5">
@@ -869,8 +923,8 @@ export function AdminManagementPage({ type }) {
         searchValue={search}
         statusValue={status}
         statusOptions={config.statusOptions}
-        subtitle={config.subtitle}
-        title={config.title}
+        subtitle={toolbarSubtitle}
+        title={toolbarTitle}
       />
       <div className="flex flex-col justify-between gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
         <div className="flex flex-wrap gap-2">
@@ -880,6 +934,12 @@ export function AdminManagementPage({ type }) {
           <select className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 outline-none" onChange={(event) => updateQuery('resumeMode', event.target.value)} value={resumeMode}>
             <option value="lead">Lead Resume</option>
             <option value="upload">Upload Resume</option>
+          </select>
+        )}
+        {type === 'contentPages' && !fixedFilters.frontendPlacement && (
+          <select className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 outline-none" onChange={(event) => updateQuery('frontendPlacement', event.target.value)} value={frontendPlacement}>
+            <option value="">All Frontends</option>
+            {fieldOptions.policyPlacement.map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
         )}
         {config.export && <ExportButtons />}
@@ -1180,6 +1240,33 @@ function getInitialForm(type, companyOptions = fieldOptions.company) {
       approval: 'Pending',
       accountDepartmentStatus: 'Pending',
       interviewSameAsOffice: true,
+    }
+  }
+
+  if (type === 'testimonials') {
+    return {
+      name: '',
+      role: '',
+      company: '',
+      type: fieldOptions.testimonialType[0],
+      frontendPlacement: fieldOptions.testimonialPlacement[0],
+      rating: 5,
+      featured: 'false',
+      status: 'Active',
+      text: '',
+    }
+  }
+
+  if (type === 'contentPages') {
+    return {
+      title: '',
+      slug: '',
+      category: 'Policy',
+      frontendPlacement: fieldOptions.policyPlacement[0],
+      subtitle: '',
+      sectionsText: '',
+      status: 'Published',
+      effectiveDate: new Date().toISOString().slice(0, 10),
     }
   }
 
@@ -2048,9 +2135,25 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
               <input className="input" onChange={(event) => onChange(key, event.target.value)} type="date" value={toDateInputValue(form[key])} />
             </label>
           ) : fieldType === 'testimonialType' ? (
-            <select className="input" key={key} onChange={(event) => onChange(key, event.target.value)} value={form[key] || fieldOptions.testimonialType[0]}>
-              {fieldOptions.testimonialType.map((option) => <option key={option}>{option}</option>)}
-            </select>
+            <SelectWithLabel key={key} label={label} onChange={(value) => onChange(key, value)} options={fieldOptions.testimonialType} value={form[key] || fieldOptions.testimonialType[0]} />
+          ) : fieldType === 'testimonialPlacement' ? (
+            <TestimonialPlacementSelect key={key} label={label} onChange={(value) => onChange(key, value)} value={form[key] || fieldOptions.testimonialPlacement[0]} />
+          ) : fieldType === 'policyPlacement' ? (
+            <PolicyPlacementSelect key={key} label={label} onChange={(value) => onChange(key, value)} value={form[key] || fieldOptions.policyPlacement[0]} />
+          ) : fieldType === 'policyCategory' ? (
+            <SelectWithLabel key={key} label={label} onChange={(value) => onChange(key, value)} options={fieldOptions.policyCategory} value={form[key] || fieldOptions.policyCategory[0]} />
+          ) : fieldType === 'policyStatus' ? (
+            <SelectWithLabel key={key} label={label} onChange={(value) => onChange(key, value)} options={fieldOptions.policyStatus} value={form[key] || fieldOptions.policyStatus[0]} />
+          ) : fieldType === 'contentSections' ? (
+            <label className="grid gap-1 sm:col-span-2" key={key}>
+              <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+              <textarea
+                className="input min-h-48"
+                onChange={(event) => onChange(key, event.target.value)}
+                placeholder={'Data We Collect\nWrite section body here\n\nHow We Use Data\nWrite next section body here'}
+                value={form[key] || ''}
+              />
+            </label>
           ) : fieldType === 'featuredToggle' ? (
             <select className="input" key={key} onChange={(event) => onChange(key, event.target.value)} value={String(form[key] ?? 'false')}>
               {fieldOptions.featuredToggle.map((option) => <option key={option} value={option}>{option === 'true' ? 'Featured' : 'Not Featured'}</option>)}
@@ -2195,6 +2298,93 @@ function SkillSelect({ onChange, value }) {
           )
         })}
         {!filteredSkills.length && <p className="text-sm font-semibold text-slate-500">No skills found.</p>}
+      </div>
+    </div>
+  )
+}
+
+function SelectWithLabel({ label, onChange, options, value }) {
+  return (
+    <label className="grid gap-1">
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <select className="input" onChange={(event) => onChange(event.target.value)} value={value}>
+        {options.map((option) => <option key={option} value={option}>{option}</option>)}
+      </select>
+    </label>
+  )
+}
+
+function TestimonialPlacementSelect({ label, onChange, value }) {
+  const options = [
+    {
+      value: 'Users Frontend',
+      title: 'Users Frontend',
+      text: 'Candidate/user website testimonial carousel par show hoga.',
+    },
+    {
+      value: 'Recruiter Frontend',
+      title: 'Recruiter Frontend',
+      text: 'Recruiter/employer landing page testimonial section par show hoga.',
+    },
+  ]
+
+  return (
+    <div className="grid gap-2 sm:col-span-2">
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <div className="grid gap-3 md:grid-cols-2">
+        {options.map((option) => (
+          <button
+            className={`rounded-2xl border p-4 text-left transition ${
+              value === option.value
+                ? 'border-blue-200 bg-blue-50 text-blue-800 shadow-sm'
+                : 'border-slate-200 bg-white text-slate-600 hover:border-blue-100 hover:bg-slate-50'
+            }`}
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            type="button"
+          >
+            <span className="block text-sm font-black">{option.title}</span>
+            <span className={`mt-1 block text-xs font-semibold leading-5 ${value === option.value ? 'text-blue-600' : 'text-slate-500'}`}>{option.text}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PolicyPlacementSelect({ label, onChange, value }) {
+  const options = [
+    {
+      value: 'Users Frontend',
+      title: 'Users Frontend',
+      text: 'Candidate/user website ke privacy, terms, support aur platform policy pages.',
+    },
+    {
+      value: 'Recruiter Frontend',
+      title: 'Recruiter Frontend',
+      text: 'Recruiter/employer website ke hiring, account, package aur compliance policy pages.',
+    },
+  ]
+
+  return (
+    <div className="grid gap-2 sm:col-span-2">
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <div className="grid gap-3 md:grid-cols-2">
+        {options.map((option) => (
+          <button
+            className={`rounded-2xl border p-4 text-left transition ${
+              value === option.value
+                ? 'border-blue-200 bg-blue-50 text-blue-800 shadow-sm'
+                : 'border-slate-200 bg-white text-slate-600 hover:border-blue-100 hover:bg-slate-50'
+            }`}
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            type="button"
+          >
+            <span className="block text-sm font-black">{option.title}</span>
+            <span className={`mt-1 block text-xs font-semibold leading-5 ${value === option.value ? 'text-blue-600' : 'text-slate-500'}`}>{option.text}</span>
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -2715,6 +2905,181 @@ export function AdminDiscountCouponPage() {
   )
 }
 
+const defaultGoogleAuthConfig = {
+  enabled: true,
+  clientId: '',
+  projectId: '',
+  authorizedDomains: '',
+  notes: '',
+}
+
+export function AdminGoogleAuthPage() {
+  const [settingId, setSettingId] = useState('')
+  const [form, setForm] = useState(defaultGoogleAuthConfig)
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const loadConfig = () => {
+    setLoading(true)
+    setMessage('')
+    api
+      .list('settings', '?search=googleAuthLogin&limit=10')
+      .then((payload) => {
+        const setting = (payload.data || []).find((item) => item.key === 'googleAuthLogin')
+        const value = setting?.value || {}
+        setSettingId(setting?._id || '')
+        setForm({
+          enabled: value.enabled !== false,
+          clientId: value.clientId || '',
+          projectId: value.projectId || '',
+          authorizedDomains: Array.isArray(value.authorizedDomains) ? value.authorizedDomains.join(', ') : '',
+          notes: value.notes || '',
+        })
+      })
+      .catch((error) => setMessage(error.message || 'Google auth config could not be loaded.'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadConfig()
+  }, [])
+
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+
+  const save = async () => {
+    setSaving(true)
+    setMessage('')
+
+    const payload = {
+      key: 'googleAuthLogin',
+      group: 'package',
+      value: {
+        enabled: Boolean(form.enabled),
+        clientId: form.clientId.trim(),
+        projectId: form.projectId.trim(),
+        authorizedDomains: splitComma(form.authorizedDomains),
+        notes: form.notes.trim(),
+      },
+    }
+
+    if (!payload.value.clientId) {
+      setSaving(false)
+      setMessage('Google OAuth Client ID is required.')
+      return
+    }
+
+    try {
+      if (settingId) {
+        await api.update('settings', settingId, payload)
+      } else {
+        const created = await api.create('settings', payload)
+        setSettingId(created.data?._id || '')
+      }
+      setMessage('Google Auth Login API saved successfully. Frontend login buttons will use this dynamic config.')
+    } catch (error) {
+      setMessage(error.message || 'Google auth config could not be saved.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-6">
+      <section className="overflow-hidden rounded-[2rem] border border-blue-100 bg-white shadow-xl shadow-blue-100/50">
+        <div className="grid gap-5 bg-gradient-to-br from-blue-600 via-sky-500 to-teal-400 p-6 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-50">Settings / API Configuration</p>
+            <h2 className="mt-3 text-3xl font-black sm:text-4xl">Google Auth Login API</h2>
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-50">
+              Configure Google OAuth login dynamically for user, candidate, and recruiter registration/login workflows.
+            </p>
+          </div>
+          <StatusBadge status={form.enabled ? 'Active' : 'Inactive'} />
+        </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_0.75fr]">
+        <AdminCard>
+          <div className="flex flex-col justify-between gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-sm font-black uppercase tracking-wide text-blue-600">OAuth Client</p>
+              <h3 className="mt-1 text-2xl font-black text-slate-950">Google login configuration</h3>
+            </div>
+            <label className="flex items-center gap-3 rounded-full bg-slate-50 px-4 py-2 text-sm font-black text-slate-600">
+              <input checked={form.enabled} onChange={(event) => update('enabled', event.target.checked)} type="checkbox" />
+              Enable Google Auth
+            </label>
+          </div>
+
+          {loading ? (
+            <div className="mt-5 h-48 animate-pulse rounded-2xl bg-slate-100" />
+          ) : (
+            <div className="mt-5 grid gap-4">
+              <LabeledInput label="Google OAuth Client ID" onChange={(value) => update('clientId', value)} placeholder="xxxx.apps.googleusercontent.com" value={form.clientId} />
+              <LabeledInput label="Google Cloud Project ID" onChange={(value) => update('projectId', value)} placeholder="cromgen-rozgar-auth" value={form.projectId} />
+              <label className="grid gap-1">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">Authorized domains</span>
+                <textarea
+                  className="input min-h-24"
+                  onChange={(event) => update('authorizedDomains', event.target.value)}
+                  placeholder="localhost, 127.0.0.1, cromgenrozgar.com"
+                  value={form.authorizedDomains}
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">Internal notes</span>
+                <textarea
+                  className="input min-h-24"
+                  onChange={(event) => update('notes', event.target.value)}
+                  placeholder="OAuth consent screen, production domain, support owner..."
+                  value={form.notes}
+                />
+              </label>
+              {message && <p className="rounded-2xl bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-700" onClick={loadConfig} type="button">Refresh</button>
+                <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:opacity-60" disabled={saving} onClick={save} type="button">
+                  {saving ? 'Saving...' : 'Save Google Auth API'}
+                </button>
+              </div>
+            </div>
+          )}
+        </AdminCard>
+
+        <div className="grid gap-5">
+          <AdminCard>
+            <p className="text-sm font-black uppercase tracking-wide text-teal-600">Runtime Usage</p>
+            <h3 className="mt-1 text-xl font-black text-slate-950">Dynamic login behavior</h3>
+            <div className="mt-4 grid gap-3">
+              {[
+                ['User frontend', 'Candidate/user Google login and registration buttons use this client ID.'],
+                ['Recruiter frontend', 'Recruiter login/register Google buttons use the same verified config.'],
+                ['Backend verify', 'Server verifies Google ID tokens against this dynamic client ID.'],
+              ].map(([title, text]) => (
+                <div className="rounded-2xl bg-slate-50 p-4" key={title}>
+                  <p className="font-black text-slate-950">{title}</p>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">{text}</p>
+                </div>
+              ))}
+            </div>
+          </AdminCard>
+
+          <AdminCard>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-600">Setup Checklist</p>
+            <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-600">
+              <p>1. Create OAuth Client ID in Google Cloud Console.</p>
+              <p>2. Add frontend domains in Authorized JavaScript origins.</p>
+              <p>3. Paste Client ID here and save.</p>
+              <p>4. Test user and recruiter Google login flows.</p>
+            </div>
+          </AdminCard>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function AdminSettingsPage() {
   return (
     <div className="grid gap-5">
@@ -2729,8 +3094,30 @@ function splitComma(value) {
   return String(value || '').split(',').map((item) => item.trim()).filter(Boolean)
 }
 
+function parsePolicySections(value) {
+  if (Array.isArray(value)) return value
+  return String(value || '')
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block) => {
+      const [heading = '', ...bodyLines] = block.split('\n')
+      return {
+        heading: heading.trim(),
+        body: bodyLines.join('\n').trim(),
+      }
+    })
+    .filter((section) => section.heading || section.body)
+}
+
 function rowToForm(row, fields) {
   return fields.reduce((acc, [key]) => {
+    if (key === 'sectionsText') {
+      acc[key] = Array.isArray(row.sections)
+        ? row.sections.map((section) => [section.heading, section.body].filter(Boolean).join('\n')).join('\n\n')
+        : ''
+      return acc
+    }
     acc[key] = Array.isArray(row[key]) ? row[key].join(', ') : toDateInputValue(row[key]) || row[key] || ''
     return acc
   }, {})

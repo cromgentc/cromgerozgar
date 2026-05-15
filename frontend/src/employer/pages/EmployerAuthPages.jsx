@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Building2, CheckCircle2, Eye, EyeOff, Globe2, Lock, Mail } from 'lucide-react'
+import { Building2, CheckCircle2, Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { Button } from '../../components/Button'
+import { GoogleAuthButton } from '../../components/GoogleAuthButton'
 import { getDashboardPath, getRecruiterVerificationPath, getRecruiterVerificationStatus, normalizeRole } from '../../routes/authRouting'
 import { api } from '../../services/api'
 import employerImage from '../../assets/employer-hiring-suite.png'
@@ -136,6 +137,30 @@ export function EmployerLoginPage() {
     }
   }
 
+  const googleSubmit = async (credential) => {
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const payload = await api.googleAuth({ credential, mode: 'login', role: 'recruiter' })
+      if (normalizeRole(payload.data.role) !== 'recruiter') {
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('authUser')
+        setMessage('Only recruiter accounts can login from this page.')
+        return
+      }
+
+      saveSession(payload)
+      const status = getRecruiterVerificationStatus()
+      setMessage('Recruiter Google login successful. Redirecting...')
+      navigate(status === 'approved' ? getDashboardPath(payload.data.role) : getRecruiterVerificationPath(status))
+    } catch (error) {
+      setMessage(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <EmployerAuthShell title="Recruiter Login" subtitle="Access your recruiter hiring workspace, review applications, and manage hiring workflows.">
       <form className="grid gap-4" onSubmit={submit}>
@@ -149,7 +174,7 @@ export function EmployerLoginPage() {
         <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700" disabled={loading} type="submit">
           {loading ? 'Logging in...' : 'Login to Recruiter Portal'}
         </button>
-        <Button className="w-full" variant="secondary"><Globe2 size={18} /> Continue with Google</Button>
+        <GoogleAuthButton disabled={loading} onCredential={googleSubmit} />
         <p className="text-center text-sm text-slate-500">New recruiter? <Link className="font-black text-blue-600" to="/recruiter-register">Register Recruiter</Link></p>
       </form>
     </EmployerAuthShell>
@@ -265,6 +290,22 @@ export function EmployerRegisterPage() {
     }
   }
 
+  const googleSubmit = async (credential) => {
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const payload = await api.googleAuth({ credential, mode: 'register', role: 'recruiter' })
+      saveSession(payload)
+      setMessage('Recruiter registered with Google. Redirecting...')
+      navigate('/recruiter-documents')
+    } catch (error) {
+      setMessage(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <EmployerAuthShell title="Register Recruiter" subtitle="Create your recruiter account and start building a premium hiring pipeline.">
       <div className="mb-6">
@@ -324,6 +365,9 @@ export function EmployerRegisterPage() {
         >
           {loading ? 'Please wait...' : step === 1 ? 'Continue' : 'Register Recruiter'}
         </button>
+      </div>
+      <div className="mt-4">
+        <GoogleAuthButton disabled={loading} label="Register with Google" onCredential={googleSubmit} />
       </div>
       <p className="mt-5 text-center text-sm text-slate-500">Already registered? <Link className="font-black text-blue-600" to="/recruiter-login">Login</Link></p>
     </EmployerAuthShell>
