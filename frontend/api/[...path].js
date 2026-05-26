@@ -14,16 +14,39 @@ process.env.NODE_PATH = [
   .join(path.delimiter)
 Module._initPaths()
 
-const app = require('../../backend/server.js')
-const connectDB = require('../../backend/config/db.js')
-
+let app
+let connectDB
 let dbPromise
 
-export default async function handler(req, res) {
-  if (!dbPromise) {
-    dbPromise = connectDB()
+function getStartupStatus() {
+  return {
+    success: false,
+    message: 'API function is deployed, but server environment is not ready.',
+    env: {
+      hasMongoUri: Boolean(process.env.MONGO_URI),
+      hasJwtSecret: Boolean(process.env.JWT_SECRET),
+      nodeEnv: process.env.NODE_ENV || '',
+    },
   }
+}
 
-  await dbPromise
-  return app(req, res)
+export default async function handler(req, res) {
+  try {
+    if (!app || !connectDB) {
+      app = require('../../backend/server.js')
+      connectDB = require('../../backend/config/db.js')
+    }
+
+    if (!dbPromise) {
+      dbPromise = connectDB()
+    }
+
+    await dbPromise
+    return app(req, res)
+  } catch (error) {
+    console.error(error)
+    const status = getStartupStatus()
+    status.error = error.message
+    return res.status(500).json(status)
+  }
 }
