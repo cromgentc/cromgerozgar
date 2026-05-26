@@ -83,7 +83,7 @@ module.exports = async function handler(req, res) {
       const fallback = getFallbackPayload(req)
       if (fallback) return sendJson(res, 200, fallback)
       const authUnavailable = getAuthUnavailablePayload(req)
-      if (authUnavailable) return sendJson(res, 503, authUnavailable)
+      if (authUnavailable) return sendJson(res, 200, authUnavailable)
     }
 
     if (!app || !connectDB) {
@@ -103,7 +103,7 @@ module.exports = async function handler(req, res) {
     const fallback = getFallbackPayload(req)
     if (fallback) return sendJson(res, 200, fallback)
     const authUnavailable = getAuthUnavailablePayload(req)
-    if (authUnavailable) return sendJson(res, 503, authUnavailable)
+    if (authUnavailable) return sendJson(res, 200, authUnavailable)
 
     return sendJson(res, 500, {
       success: false,

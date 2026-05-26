@@ -22,6 +22,10 @@ export async function apiRequest(path, options = {}) {
 
   const payload = await response.json().catch(() => ({}))
 
+  if (response.ok && payload?.success === false) {
+    throw new Error(payload.message || 'API request failed')
+  }
+
   if (!response.ok) {
     if (response.status === 401) {
       if (authRequired) {

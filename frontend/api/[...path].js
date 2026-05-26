@@ -171,7 +171,7 @@ export default async function handler(req, res) {
       const fallback = getFallbackPayload(req)
       if (fallback) return sendJson(res, 200, fallback)
       const authUnavailable = getAuthUnavailablePayload(req)
-      if (authUnavailable) return sendJson(res, 503, authUnavailable)
+      if (authUnavailable) return sendJson(res, 200, authUnavailable)
     }
 
     if (!app || !connectDB) {
@@ -191,7 +191,7 @@ export default async function handler(req, res) {
     const fallback = getFallbackPayload(req)
     if (fallback) return sendJson(res, 200, fallback)
     const authUnavailable = getAuthUnavailablePayload(req)
-    if (authUnavailable) return sendJson(res, 503, authUnavailable)
+    if (authUnavailable) return sendJson(res, 200, authUnavailable)
 
     const status = getStartupStatus()
     status.error = error.message
