@@ -13,10 +13,10 @@ npm install
 Update `.env`:
 
 ```env
-PORT=5000
+PORT=5050
 MONGO_URI=mongodb://127.0.0.1:27017/cromgen-rozgar
 JWT_SECRET=change-this-secret
-CLIENT_URL=http://127.0.0.1:5173
+CLIENT_URL=https://www.cromgenrozgar.in
 ```
 
 ## Run
@@ -28,7 +28,7 @@ npm run dev
 API health:
 
 ```bash
-GET http://localhost:5000/api/health
+GET https://www.cromgenrozgar.in/api/health
 ```
 
 ## Seed Demo Data

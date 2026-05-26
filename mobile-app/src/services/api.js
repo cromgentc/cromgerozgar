@@ -8,7 +8,7 @@ function getApiBaseUrl() {
     (window.Capacitor?.isNativePlatform?.() || window.location.protocol === 'capacitor:')
 
   if (isNative) return LIVE_API_BASE_URL
-  return import.meta.env.DEV ? 'http://localhost:5050/api' : LIVE_API_BASE_URL
+  return LIVE_API_BASE_URL
 }
 
 const API_BASE_URL = getApiBaseUrl()

@@ -342,7 +342,7 @@ const requestEmailReset = asyncHandler(async (req, res) => {
   }
 
   const resetToken = signResetToken(user)
-  const resetBaseUrl = value.resetUrl || `${process.env.CLIENT_URL || 'http://127.0.0.1:5173'}/auth`
+  const resetBaseUrl = value.resetUrl || `${process.env.CLIENT_URL || 'https://www.cromgenrozgar.in'}/auth`
   const resetLink = `${resetBaseUrl}${resetBaseUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(resetToken)}&email=${encodeURIComponent(email)}`
 
   await sendPasswordResetEmail({ config: value, provider, resetLink, user })

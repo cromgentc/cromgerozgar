@@ -25,18 +25,13 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
   'https://www.cromgenrozgar.in',
   'https://cromgenrozgar.in',
-  'https://cromgerozgar.vercel.app',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:5174',
-  'http://127.0.0.1:5174',
 ].filter(Boolean)
 
 function isAllowedOrigin(origin) {
   if (!origin) return true
   if (allowedOrigins.includes(origin)) return true
   if (process.env.NODE_ENV !== 'production' && /^http:\/\/(?:localhost|127\.0\.0\.1):\d+$/i.test(origin)) return true
-  return process.env.NODE_ENV !== 'production' && /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)
+  return false
 }
 
 requireJwtSecret()
@@ -81,7 +76,7 @@ app.use(errorHandler)
 
 async function startServer() {
   await connectDB()
-  app.listen(port, () => console.log(`API running on http://localhost:${port}`))
+  app.listen(port, () => console.log(`API running on port ${port}`))
 }
 
 if (require.main === module) {

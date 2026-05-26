@@ -3904,7 +3904,7 @@ export function AdminGoogleAuthPage() {
                 <textarea
                   className="input min-h-24"
                   onChange={(event) => update('authorizedDomains', event.target.value)}
-                  placeholder="localhost, 127.0.0.1, cromgenrozgar.com"
+                  placeholder="www.cromgenrozgar.in, cromgenrozgar.in"
                   value={form.authorizedDomains}
                 />
               </label>
@@ -4229,7 +4229,7 @@ export function AdminMongoDbPage() {
                 <LabeledInput label="Host / Cluster" onChange={(value) => update('host', value)} placeholder="cluster.mongodb.net" value={form.host} />
                 <LabeledInput label="Username" onChange={(value) => update('username', value)} placeholder="database user" value={form.username} />
                 <LabeledInput label="Backend Port" onChange={(value) => update('port', value)} placeholder="5050" value={form.port} />
-                <LabeledInput label="Client URL" onChange={(value) => update('clientUrl', value)} placeholder="http://127.0.0.1:5173" value={form.clientUrl} />
+                <LabeledInput label="Client URL" onChange={(value) => update('clientUrl', value)} placeholder="https://www.cromgenrozgar.in" value={form.clientUrl} />
               </div>
               <label className="grid gap-1">
                 <span className="text-xs font-black uppercase tracking-wide text-slate-400">Internal Notes</span>
