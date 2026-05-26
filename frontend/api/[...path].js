@@ -30,6 +30,12 @@ function getStartupStatus() {
   }
 }
 
+function sendJson(res, statusCode, payload) {
+  res.statusCode = statusCode
+  res.setHeader('Content-Type', 'application/json')
+  return res.end(JSON.stringify(payload))
+}
+
 export default async function handler(req, res) {
   try {
     if (!app || !connectDB) {
@@ -47,6 +53,6 @@ export default async function handler(req, res) {
     console.error(error)
     const status = getStartupStatus()
     status.error = error.message
-    return res.status(500).json(status)
+    return sendJson(res, 500, status)
   }
 }
