@@ -33,8 +33,8 @@ function getStartupStatus() {
 export default async function handler(req, res) {
   try {
     if (!app || !connectDB) {
-      app = require('../../backend/server.js')
-      connectDB = require('../../backend/config/db.js')
+      app = require('../backend/server.js')
+      connectDB = require('../backend/config/db.js')
     }
 
     if (!dbPromise) {
