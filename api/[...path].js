@@ -35,10 +35,10 @@ function getFallbackPayload(req) {
   const pathname = url.pathname.replace(/^\/api(?=\/|$)/, '')
 
   if (pathname === '/health') return { success: true, message: 'Cromgen Rozgar API fallback is running' }
-  if (pathname === '/settings/public/site-branding') {
+  if (pathname === '/settings/public/site-branding' || pathname.endsWith('/public/site-branding')) {
     return { success: true, data: { key: 'siteSeoBranding', group: 'website', value: { siteName: 'Cromgen Rozgar', adminName: 'Rozgar Admin', recruiterName: 'Rozgar Recruiter', logoUrl: '/cromgen-rozgar-logo.png' } }, fallback: true }
   }
-  if (pathname === '/settings/public/social-links') return { success: true, data: [], fallback: true }
+  if (pathname === '/settings/public/social-links' || pathname.endsWith('/public/social-links')) return { success: true, data: [], fallback: true }
 
   const resource = pathname.split('/').filter(Boolean)[0]
   if (['jobs', 'companies', 'faqs', 'testimonials'].includes(resource)) {
@@ -59,6 +59,11 @@ function normalizeApiUrl(req) {
 
 module.exports = async function handler(req, res) {
   try {
+    const publicSettingsFallback = getFallbackPayload(req)
+    if (publicSettingsFallback && (req.url || '').includes('/public/')) {
+      return sendJson(res, 200, publicSettingsFallback)
+    }
+
     if (!process.env.MONGO_URI) {
       const fallback = getFallbackPayload(req)
       if (fallback) return sendJson(res, 200, fallback)

@@ -102,7 +102,7 @@ function getFallbackPayload(req) {
     return { success: true, message: 'Cromgen Rozgar API fallback is running' }
   }
 
-  if (pathname === '/settings/public/site-branding') {
+  if (pathname === '/settings/public/site-branding' || pathname.endsWith('/public/site-branding')) {
     return {
       success: true,
       data: {
@@ -119,7 +119,7 @@ function getFallbackPayload(req) {
     }
   }
 
-  if (pathname === '/settings/public/social-links') {
+  if (pathname === '/settings/public/social-links' || pathname.endsWith('/public/social-links')) {
     return { success: true, data: [], fallback: true }
   }
 
@@ -147,6 +147,11 @@ function normalizeApiUrl(req) {
 
 export default async function handler(req, res) {
   try {
+    const publicSettingsFallback = getFallbackPayload(req)
+    if (publicSettingsFallback && (req.url || '').includes('/public/')) {
+      return sendJson(res, 200, publicSettingsFallback)
+    }
+
     if (!process.env.MONGO_URI) {
       const fallback = getFallbackPayload(req)
       if (fallback) return sendJson(res, 200, fallback)
