@@ -50,6 +50,21 @@ function getFallbackPayload(req) {
   return null
 }
 
+function getAuthUnavailablePayload(req) {
+  const url = new URL(req.url || '/', 'https://local.test')
+  const pathname = url.pathname.replace(/^\/api(?=\/|$)/, '')
+  if (!pathname.startsWith('/auth/')) return null
+
+  return {
+    success: false,
+    message: 'Authentication service is not fully configured. Add MONGO_URI and JWT_SECRET in Vercel environment variables.',
+    env: {
+      hasMongoUri: Boolean(process.env.MONGO_URI),
+      hasJwtSecret: Boolean(process.env.JWT_SECRET),
+    },
+  }
+}
+
 function normalizeApiUrl(req) {
   const currentUrl = req.url || '/'
   const parsed = new URL(currentUrl, 'https://local.test')
@@ -67,6 +82,8 @@ module.exports = async function handler(req, res) {
     if (!process.env.MONGO_URI) {
       const fallback = getFallbackPayload(req)
       if (fallback) return sendJson(res, 200, fallback)
+      const authUnavailable = getAuthUnavailablePayload(req)
+      if (authUnavailable) return sendJson(res, 503, authUnavailable)
     }
 
     if (!app || !connectDB) {
@@ -85,6 +102,8 @@ module.exports = async function handler(req, res) {
     console.error(error)
     const fallback = getFallbackPayload(req)
     if (fallback) return sendJson(res, 200, fallback)
+    const authUnavailable = getAuthUnavailablePayload(req)
+    if (authUnavailable) return sendJson(res, 503, authUnavailable)
 
     return sendJson(res, 500, {
       success: false,
