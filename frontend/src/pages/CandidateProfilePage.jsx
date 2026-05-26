@@ -7,6 +7,7 @@ import { getStoredUser } from '../routes/authRouting'
 import { DashboardShell, Panel } from './CandidateDashboard'
 import { getSavedJobs } from '../utils/savedJobs'
 import { getCandidateProfileCompletion } from '../utils/candidateActivity'
+import { api } from '../services/api'
 
 const profileStats = [
   ['Profile Strength', '86%'],
@@ -127,6 +128,7 @@ export function CandidateProfilePage() {
   const [profile, setProfile] = useState(() => getStoredCandidateProfile(user))
   const [editing, setEditing] = useState(() => Boolean(searchParams.get('missing')))
   const [message, setMessage] = useState('')
+  const [resumeUploading, setResumeUploading] = useState(false)
   const [skillQuery, setSkillQuery] = useState('')
   const [savedJobs, setSavedJobs] = useState(() => getSavedJobs(user))
 
@@ -154,7 +156,7 @@ export function CandidateProfilePage() {
     }
 
     setEditing(true)
-    setMessage(`Job apply karne se pehle ye details complete karein: ${missing.join(', ')}.`)
+    setMessage(`Complete these details before applying for a job: ${missing.join(', ')}.`)
   }, [searchParams])
 
   const update = (key, value) => {
@@ -185,20 +187,50 @@ export function CandidateProfilePage() {
     reader.readAsDataURL(file)
   }
 
-  const uploadResume = (file) => {
+  const uploadResume = async (file) => {
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      setProfile((current) => ({
-        ...current,
-        resumeName: file.name,
-        resumeUrl: reader.result,
-        resumeUpdatedAt: new Date().toISOString(),
-      }))
-      setMessage('Resume selected. Update Profile click karke save karein.')
+    if (file.type !== 'application/pdf') {
+      setMessage('Only PDF resume upload is allowed.')
+      return
     }
-    reader.readAsDataURL(file)
+
+    setResumeUploading(true)
+    setMessage('Uploading resume to Supa Cloud...')
+
+    const data = new FormData()
+    data.append('resume', file)
+    data.append('candidateName', profile.name)
+    data.append('emailId', profile.email)
+    data.append('mobileNumber', profile.phone)
+    data.append('role', profile.preferredRole || profile.headline)
+    data.append('companyName', 'Candidate Profile')
+    data.append('state', profile.state)
+    data.append('location', formatLocation(profile))
+    data.append('entity', 'Candidate Profile')
+    data.append('department', profile.headline)
+    data.append('qualification', profile.experience)
+
+    try {
+      const payload = await api.uploadResumeToSupaCloud(data)
+      const resume = payload.data || {}
+      const nextProfile = {
+        ...profile,
+        resumeName: file.name,
+        resumeUrl: resume.resumeUrl || '',
+        resumeMongoId: resume._id || '',
+        resumeJson: payload.resumeJson || resume.resumeJson || null,
+        resumeUpdatedAt: new Date().toISOString(),
+      }
+      setProfile(nextProfile)
+      localStorage.setItem('candidateProfile', JSON.stringify(nextProfile))
+      window.dispatchEvent(new CustomEvent('candidateActivityChanged'))
+      setMessage('Resume uploaded to Supa Cloud and saved in MongoDB.')
+    } catch (error) {
+      setMessage(error.message || 'Resume upload failed. Please check Supa Cloud settings.')
+    } finally {
+      setResumeUploading(false)
+    }
   }
 
   const addSkill = (skill) => {
@@ -292,10 +324,10 @@ export function CandidateProfilePage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="grid gap-6">
           <Panel title="Profile Overview">
-            <div className="overflow-hidden rounded-[1.75rem] bg-slate-50">
+            <div className="overflow-hidden rounded-[7px] bg-slate-50">
               <div className="relative min-h-44 bg-gradient-to-br from-blue-600 via-sky-500 to-teal-400">
                 {profile.banner && <img className="absolute inset-0 h-full w-full object-cover" src={profile.banner} alt="Candidate profile cover" />}
-                <label className="absolute right-4 top-4 inline-flex cursor-pointer items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-black text-slate-700 shadow-lg shadow-slate-900/10 backdrop-blur hover:bg-white">
+                <label className="absolute right-4 top-4 inline-flex cursor-pointer items-center gap-2 rounded-[7px] bg-white/90 px-4 py-2 text-sm font-black text-slate-700 shadow-lg shadow-slate-900/10 backdrop-blur hover:bg-white">
                   <Image size={17} />
                   Profile Image
                   <input accept="image/*" className="hidden" onChange={(event) => uploadImage('banner', event.target.files?.[0])} type="file" />
@@ -305,13 +337,13 @@ export function CandidateProfilePage() {
               <div className="p-5">
                 <div className="-mt-16 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                    <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-[1.75rem] bg-blue-600 text-white ring-4 ring-white">
+                    <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-[7px] bg-blue-600 text-white ring-4 ring-white">
                       {profile.avatar ? (
                         <img className="h-full w-full object-cover" src={profile.avatar} alt="Candidate avatar" />
                       ) : (
                         <div className="grid h-full w-full place-items-center text-3xl font-black">{getInitials(profile.name)}</div>
                       )}
-                      <label className="absolute bottom-2 right-2 grid h-9 w-9 cursor-pointer place-items-center rounded-full bg-white text-blue-600 shadow-lg">
+                      <label className="absolute bottom-2 right-2 grid h-9 w-9 cursor-pointer place-items-center rounded-[7px] bg-white text-blue-600 shadow-lg">
                         <Camera size={17} />
                         <input accept="image/*" className="hidden" onChange={(event) => uploadImage('avatar', event.target.files?.[0])} type="file" />
                       </label>
@@ -323,23 +355,23 @@ export function CandidateProfilePage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <span className="inline-flex w-max items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-sm font-black text-teal-700">
+                    <span className="inline-flex w-max items-center gap-2 rounded-[7px] bg-teal-50 px-3 py-1 text-sm font-black text-teal-700">
                       <CheckCircle2 size={16} />
                       Verified
                     </span>
-                    <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-100 hover:bg-blue-700" onClick={() => setEditing((value) => !value)} type="button">
+                    <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-100 hover:bg-blue-700" onClick={() => setEditing((value) => !value)} type="button">
                       <Pencil size={16} />
                       {editing ? 'Cancel Edit' : 'Edit Profile'}
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full w-[86%] rounded-full bg-teal-500" />
+                <div className="mt-5 h-3 overflow-hidden rounded-[7px] bg-slate-100">
+                  <div className="h-full w-[86%] rounded-[7px] bg-teal-500" />
                 </div>
-                {message && <p className="mt-4 rounded-2xl bg-teal-50 p-3 text-sm font-black text-teal-700">{message}</p>}
+                {message && <p className="mt-4 rounded-[7px] bg-teal-50 p-3 text-sm font-black text-teal-700">{message}</p>}
                 {!completion.complete && (
-                  <div className="mt-4 rounded-2xl bg-amber-50 p-3 text-sm font-black text-amber-700">
+                  <div className="mt-4 rounded-[7px] bg-amber-50 p-3 text-sm font-black text-amber-700">
                     Pending details: {completion.missing.join(', ')}
                   </div>
                 )}
@@ -351,20 +383,20 @@ export function CandidateProfilePage() {
             <div className="grid gap-3 md:grid-cols-2">
               {savedJobs.length ? (
                 savedJobs.map((job) => (
-                  <div className="rounded-2xl bg-slate-50 p-4" key={job._id || job.id}>
+                  <div className="rounded-[7px] bg-slate-50 p-4" key={job._id || job.id}>
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-black text-slate-950">{job.title}</p>
                         <p className="mt-1 text-sm font-semibold text-slate-500">{job.company}</p>
                       </div>
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">{job.workMode}</span>
+                      <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">{job.workMode}</span>
                     </div>
                     <p className="mt-3 text-sm font-semibold text-slate-500">{job.location} - {job.salary}</p>
                     <Button className="mt-4 w-full" to={`/jobs/${job._id || job.id}`} variant="secondary">View Details</Button>
                   </div>
                 ))
               ) : (
-                <div className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500 md:col-span-2">
+                <div className="rounded-[7px] bg-slate-50 p-5 text-sm font-semibold text-slate-500 md:col-span-2">
                   No saved jobs yet. Save jobs from listings and they will appear here.
                 </div>
               )}
@@ -399,7 +431,7 @@ export function CandidateProfilePage() {
                   {experienceOptions.map((item) => <option key={item} value={item} />)}
                 </datalist>
                 <div className="flex items-end">
-                  <button className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 hover:bg-blue-700" onClick={saveProfile} type="button">
+                  <button className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 hover:bg-blue-700" onClick={saveProfile} type="button">
                     <Save size={18} />
                     Update Profile
                   </button>
@@ -420,12 +452,12 @@ export function CandidateProfilePage() {
 
           <Panel title="Skills">
             {editing && (
-              <div className="mb-5 rounded-2xl bg-slate-50 p-4">
+              <div className="mb-5 rounded-[7px] bg-slate-50 p-4">
                 <label>
                   <span className="text-sm font-bold text-slate-700">Add Skills</span>
                   <div className="mt-2 flex gap-2">
                     <input
-                      className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500"
+                      className="min-w-0 flex-1 rounded-[7px] border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500"
                       onChange={(event) => setSkillQuery(event.target.value)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter') {
@@ -436,7 +468,7 @@ export function CandidateProfilePage() {
                       placeholder="Search or type a skill"
                       value={skillQuery}
                     />
-                    <button className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-blue-600 text-white hover:bg-blue-700" onClick={() => addSkill(skillQuery)} type="button" aria-label="Add skill">
+                    <button className="grid h-12 w-12 shrink-0 place-items-center rounded-[7px] bg-blue-600 text-white hover:bg-blue-700" onClick={() => addSkill(skillQuery)} type="button" aria-label="Add skill">
                       <Plus size={18} />
                     </button>
                   </div>
@@ -444,7 +476,7 @@ export function CandidateProfilePage() {
 
                 <div className="mt-4 flex max-h-48 flex-wrap gap-2 overflow-y-auto">
                   {filteredSkillOptions.map((skill) => (
-                    <button className="rounded-full bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 hover:bg-blue-50 hover:text-blue-700" key={skill} onClick={() => addSkill(skill)} type="button">
+                    <button className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 hover:bg-blue-50 hover:text-blue-700" key={skill} onClick={() => addSkill(skill)} type="button">
                       {skill}
                     </button>
                   ))}
@@ -454,10 +486,10 @@ export function CandidateProfilePage() {
 
             <div className="flex flex-wrap gap-3">
               {profile.skills.map((skill) => (
-                <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-black text-blue-700" key={skill}>
+                <span className="inline-flex items-center gap-2 rounded-[7px] bg-blue-50 px-4 py-2 text-sm font-black text-blue-700" key={skill}>
                   {skill}
                   {editing && (
-                    <button className="grid h-5 w-5 place-items-center rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200" onClick={() => removeSkill(skill)} type="button" aria-label={`Remove ${skill}`}>
+                    <button className="grid h-5 w-5 place-items-center rounded-[7px] bg-blue-100 text-blue-700 hover:bg-blue-200" onClick={() => removeSkill(skill)} type="button" aria-label={`Remove ${skill}`}>
                       <X size={13} />
                     </button>
                   )}
@@ -467,9 +499,9 @@ export function CandidateProfilePage() {
           </Panel>
 
           <Panel title="Resume">
-            <div className="flex flex-col justify-between gap-4 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center">
+            <div className="flex flex-col justify-between gap-4 rounded-[7px] bg-slate-50 p-4 sm:flex-row sm:items-center">
               <div className="flex items-center gap-3">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-blue-600 ring-1 ring-slate-200">
+                <span className="grid h-12 w-12 place-items-center rounded-[7px] bg-white text-blue-600 ring-1 ring-slate-200">
                   <FileText size={22} />
                 </span>
                 <div>
@@ -479,10 +511,10 @@ export function CandidateProfilePage() {
                   </p>
                 </div>
               </div>
-              <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-100">
+              <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[7px] bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-100">
                 <Upload size={18} />
-                {profile.resumeName ? 'Update Resume' : 'Upload Resume'}
-                <input accept=".pdf,.doc,.docx" className="hidden" onChange={(event) => uploadResume(event.target.files?.[0])} type="file" />
+                {resumeUploading ? 'Uploading...' : profile.resumeName ? 'Update Resume' : 'Upload Resume'}
+                <input accept="application/pdf,.pdf" className="hidden" disabled={resumeUploading} onChange={(event) => uploadResume(event.target.files?.[0])} type="file" />
               </label>
             </div>
           </Panel>
@@ -492,7 +524,7 @@ export function CandidateProfilePage() {
           <Panel title="Profile Stats">
             <div className="grid gap-3">
               {profileStats.map(([label, value]) => (
-                <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4" key={label}>
+                <div className="flex items-center justify-between rounded-[7px] bg-slate-50 p-4" key={label}>
                   <span className="text-sm font-bold text-slate-500">{label}</span>
                   <span className="text-xl font-black text-slate-950">{value}</span>
                 </div>
@@ -514,10 +546,10 @@ export function CandidateProfilePage() {
               </div>
             ) : (
               <div className="grid gap-3 text-sm font-semibold text-slate-600">
-                <p className="rounded-2xl bg-slate-50 p-4">Preferred role: {profile.preferredRole}</p>
-                <p className="rounded-2xl bg-slate-50 p-4">Work mode: {profile.workMode.join(', ')}</p>
-                <p className="rounded-2xl bg-slate-50 p-4">Expected salary: {profile.expectedSalary.join(', ')}</p>
-                <p className="rounded-2xl bg-slate-50 p-4">Notice period: {profile.noticePeriod.join(', ')}</p>
+                <p className="rounded-[7px] bg-slate-50 p-4">Preferred role: {profile.preferredRole}</p>
+                <p className="rounded-[7px] bg-slate-50 p-4">Work mode: {profile.workMode.join(', ')}</p>
+                <p className="rounded-[7px] bg-slate-50 p-4">Expected salary: {profile.expectedSalary.join(', ')}</p>
+                <p className="rounded-[7px] bg-slate-50 p-4">Notice period: {profile.noticePeriod.join(', ')}</p>
               </div>
             )}
           </Panel>
@@ -533,7 +565,7 @@ function EditField({ datalist, label, onChange, type = 'text', value }) {
   return (
     <label>
       <span className="text-sm font-bold text-slate-700">{label}</span>
-      <input className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500" list={datalist} onChange={(event) => onChange(event.target.value)} type={type} value={value} />
+      <input className="mt-2 w-full rounded-[7px] border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500" list={datalist} onChange={(event) => onChange(event.target.value)} type={type} value={value} />
     </label>
   )
 }
@@ -546,7 +578,7 @@ function LocationSelector({ className = '', onCityChange, onCountryChange, onFul
   return (
     <div className={className}>
       <p className="text-sm font-bold text-slate-700">Location</p>
-      <div className="mt-2 grid gap-3 rounded-2xl bg-slate-50 p-3 md:grid-cols-4">
+      <div className="mt-2 grid gap-3 rounded-[7px] bg-slate-50 p-3 md:grid-cols-4">
         <SelectField label="Region" onChange={onScopeChange} options={['India', 'International']} value={profile.locationScope} />
         <SelectField label="Country" onChange={onCountryChange} options={countryOptions.map((country) => ({ label: country.name, value: country.isoCode }))} value={profile.countryCode} />
         <SelectField label={profile.locationScope === 'India' ? 'State / UT' : 'State / Province'} onChange={onStateChange} options={stateOptions.map((state) => ({ label: state.name, value: state.isoCode }))} value={profile.stateCode} />
@@ -554,7 +586,7 @@ function LocationSelector({ className = '', onCityChange, onCountryChange, onFul
         <label className="md:col-span-4">
           <span className="text-xs font-black uppercase tracking-wide text-slate-400">Full Address</span>
           <textarea
-            className="mt-1 min-h-24 w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500"
+            className="mt-1 min-h-24 w-full resize-y rounded-[7px] border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500"
             onChange={(event) => onFullAddressChange(event.target.value)}
             placeholder="House/flat, street, landmark, area, PIN/ZIP code"
             value={profile.fullAddress}
@@ -569,7 +601,7 @@ function SelectField({ label, onChange, options, value }) {
   return (
     <label>
       <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
-      <select className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => onChange(event.target.value)} value={value}>
+      <select className="mt-1 w-full rounded-[7px] border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => onChange(event.target.value)} value={value}>
         {options.map((option) => {
           const normalized = typeof option === 'string' ? { label: option, value: option } : option
           return <option key={normalized.value} value={normalized.value}>{normalized.label}</option>
@@ -588,7 +620,7 @@ function MultiSelect({ label, onToggle, options, selected }) {
           const active = selected.includes(option)
           return (
             <button
-              className={`rounded-full px-3 py-2 text-xs font-black transition ${
+              className={`rounded-[7px] px-3 py-2 text-xs font-black transition ${
                 active ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-blue-50 hover:text-blue-700'
               }`}
               key={option}
@@ -618,8 +650,8 @@ function formatLocation(profile) {
 
 function InfoItem({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
-      <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-blue-600 ring-1 ring-slate-200">
+    <div className="flex items-center gap-3 rounded-[7px] bg-slate-50 p-4">
+      <span className="grid h-11 w-11 place-items-center rounded-[7px] bg-white text-blue-600 ring-1 ring-slate-200">
         <Icon size={19} />
       </span>
       <div>

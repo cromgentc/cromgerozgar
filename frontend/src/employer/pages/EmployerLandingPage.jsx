@@ -23,30 +23,42 @@ import heroImage from '../../assets/enterprise-hiring-banner.png'
 
 const slides = [
   {
-    title: 'Hire Top Talent Faster',
-    subtitle: 'Explore recruiter workflows, applications, and hiring tools in one workspace.',
+    badge: 'CromGen Rozgar Recruiter Portal',
+    title: 'Hire Verified Talent Faster With CromGen Rozgar',
+    subtitle: 'Post jobs, manage applications, shortlist candidates, and connect with skilled talent across India from one professional recruiter dashboard.',
     primary: 'Post a Job',
-    secondary: 'Explore Solutions',
+    secondary: 'View Candidates',
+    metric: '94%',
+    metricLabel: 'Candidate match',
+    proof: ['Verified recruiter workflows', 'Live applicant tracking', 'Resume-ready talent pool'],
     to: '/post-job',
   },
   {
+    badge: 'Pipeline control center',
     title: 'Manage Recruitment In One Place',
-    subtitle: 'Track recruiter hiring activity, shortlist candidates, and collaborate with your hiring team effortlessly.',
+    subtitle: 'Track recruiter activity, shortlist candidates, and keep your hiring team aligned with clean pipeline visibility.',
     primary: 'Start Hiring',
     secondary: 'View Dashboard',
+    metric: '+32%',
+    metricLabel: 'Job performance',
+    proof: ['Shortlist faster', 'Interview stage clarity', 'Team feedback tracking'],
     to: '/recruiter/recruiter-dashboard',
   },
   {
+    badge: 'Talent brand builder',
     title: 'Build Your Dream Team',
-    subtitle: 'Showcase your hiring brand, access skilled professionals, and manage talent from across industries.',
+    subtitle: 'Showcase your company, reach skilled professionals, and convert applications into reliable hires across industries.',
     primary: 'Register Recruiter',
     secondary: 'Explore Candidates',
+    metric: '4x',
+    metricLabel: 'Hiring reach',
+    proof: ['Branded recruiter profile', 'Role-based discovery', 'Structured hiring flow'],
     to: '/recruiter-register',
   },
 ]
 
 const features = [
-  [Sparkles, 'AI Candidate Matching', 'Match skills, location, salary, and availability with hiring needs.'],
+  [Sparkles, 'Verified Talent Matching', 'Match skills, location, salary, and availability with hiring needs.'],
   [Database, 'Resume Database', 'Search qualified profiles and build reusable candidate pools.'],
   [ListChecks, 'Applicant Tracking', 'Move candidates through review, shortlist, interview, and offer stages.'],
   [MessageSquare, 'Team Collaboration', 'Keep recruiters and hiring managers aligned with shared feedback.'],
@@ -116,37 +128,69 @@ export function EmployerLandingPage() {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,#E0F2FE_0,transparent_36%),radial-gradient(circle_at_90%_10%,#F3E8FF_0,transparent_34%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)]">
-        <div className="mx-auto grid min-h-[calc(100svh-76px)] max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_0.95fr] lg:px-8">
-          <div className="min-w-0">
+      <section className="relative overflow-hidden border-b border-[#0057B8]/10 bg-[linear-gradient(135deg,#FFFFFF_0%,#F8FBFF_48%,#FFF7ED_100%)]">
+        <div className="absolute inset-y-0 right-0 hidden w-[58%] lg:block">
+          <img className="h-full w-full object-cover object-left opacity-95" src={heroImage} alt="" aria-hidden="true" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#FFFFFF_0%,rgba(255,255,255,0.82)_24%,rgba(255,255,255,0.2)_58%,rgba(255,247,237,0.74)_100%)]" />
+        </div>
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#0057B8] to-transparent" />
+        <div className="relative mx-auto grid min-h-[620px] max-w-7xl items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,0.92fr)_minmax(420px,0.8fr)] lg:px-8">
+          <div className="min-w-0 lg:py-8">
             <AnimatePresence mode="wait">
               <motion.div key={active} initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -28 }} transition={{ duration: 0.45 }}>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-black text-blue-700 shadow-sm ring-1 ring-blue-100 backdrop-blur">
-                  <Rocket size={17} /> Enterprise recruiter platform
+                <span className="inline-flex items-center gap-2 rounded-[7px] border border-[#0057B8]/15 bg-white/90 px-4 py-2 text-sm font-black text-[#0057B8] shadow-sm shadow-[#0057B8]/10 backdrop-blur">
+                  <Rocket size={17} /> {slides[active].badge}
                 </span>
-                <h1 className="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">{slides[active].title}</h1>
-                <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">{slides[active].subtitle}</p>
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[1.02] text-slate-950 sm:text-5xl lg:text-6xl">{slides[active].title}</h1>
+                <p className="mt-5 max-w-2xl text-base font-semibold leading-7 text-slate-600 sm:text-lg">{slides[active].subtitle}</p>
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <Button to={activeSlideAction.to}>{activeSlideAction.label}</Button>
-                  <Button to="/recruiter#solutions" variant="secondary">{slides[active].secondary}</Button>
+                  <Button to="/recruiter-talent" variant="secondary">{slides[active].secondary}</Button>
+                </div>
+                <div className="mt-7 grid max-w-2xl gap-3 sm:grid-cols-3">
+                  {['10,000+ Active Candidates', 'Pan India Hiring', 'Verified Recruiters', 'Fast Shortlisting'].map((item) => (
+                    <span className="inline-flex min-h-12 items-center gap-2 rounded-[7px] border border-slate-200 bg-white/80 px-3 text-sm font-bold text-slate-700 shadow-sm backdrop-blur" key={item}>
+                      <CheckCircle2 className="shrink-0 text-[#3E9B28]" size={17} /> {item}
+                    </span>
+                  ))}
                 </div>
               </motion.div>
             </AnimatePresence>
-            <div className="mt-8 flex items-center gap-3">
-              <button className="grid h-11 w-11 place-items-center rounded-full bg-white text-slate-600 shadow-sm ring-1 ring-slate-200" onClick={() => setActive((active + slides.length - 1) % slides.length)} type="button"><ArrowLeft size={18} /></button>
-              <button className="grid h-11 w-11 place-items-center rounded-full bg-white text-slate-600 shadow-sm ring-1 ring-slate-200" onClick={() => setActive((active + 1) % slides.length)} type="button"><ArrowRight size={18} /></button>
-              <div className="flex gap-2">
-                {slides.map((slide, index) => <button className={`h-2.5 rounded-full transition-all ${active === index ? 'w-8 bg-blue-600' : 'w-2.5 bg-slate-300'}`} key={slide.title} onClick={() => setActive(index)} type="button" />)}
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <button className="grid h-11 w-11 place-items-center rounded-[7px] bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:text-blue-700 hover:shadow-lg hover:shadow-blue-100" onClick={() => setActive((active + slides.length - 1) % slides.length)} type="button" aria-label="Previous recruiter hero slide"><ArrowLeft size={18} /></button>
+              <button className="grid h-11 w-11 place-items-center rounded-[7px] bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:text-blue-700 hover:shadow-lg hover:shadow-blue-100" onClick={() => setActive((active + 1) % slides.length)} type="button" aria-label="Next recruiter hero slide"><ArrowRight size={18} /></button>
+              <div className="flex items-center gap-2 rounded-[7px] bg-white/80 px-3 py-2 shadow-sm ring-1 ring-slate-200 backdrop-blur">
+                {slides.map((slide, index) => <button className={`h-2.5 rounded-[7px] transition-all ${active === index ? 'w-9 bg-blue-600' : 'w-2.5 bg-slate-300 hover:bg-slate-400'}`} key={slide.title} onClick={() => setActive(index)} type="button" aria-label={`Show ${slide.title}`} />)}
               </div>
             </div>
           </div>
 
-          <div className="relative min-w-0">
-            <div className="absolute inset-8 rounded-[2rem] bg-blue-200/40 blur-3xl" />
-            <div className="relative rounded-[2rem] border border-white bg-white/75 p-4 shadow-2xl shadow-blue-100 backdrop-blur-xl">
+          <div className="relative min-w-0 lg:min-h-[460px]">
+            <div className="relative overflow-hidden rounded-[7px] border border-white/80 bg-white/75 p-3 shadow-2xl shadow-blue-100 backdrop-blur-xl lg:hidden">
               <img className="aspect-[16/11] w-full object-contain" src={heroImage} alt="Recruiter dashboard preview" />
-              <FloatingStat className="left-5 top-5" label="Candidate match" value="94%" />
-              <FloatingStat className="bottom-5 right-5" label="Job performance" value="+32%" teal />
+            </div>
+            <div className="hidden lg:block">
+              <FloatingStat className="right-5 top-8" label={slides[active].metricLabel} value={slides[active].metric} />
+              <FloatingStat className="bottom-16 left-2" label="Active pipeline" value="2.4k" teal />
+              <div className="absolute bottom-5 right-8 w-80 rounded-[7px] border border-white/80 bg-white/90 p-4 shadow-2xl shadow-blue-100 backdrop-blur">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-slate-400">Hiring momentum</p>
+                    <p className="mt-1 text-2xl font-black text-slate-950">{networkStats[2]?.[0] || '0+'}</p>
+                  </div>
+                  <span className="grid h-12 w-12 place-items-center rounded-[7px] bg-[#0057B8] text-white">
+                    <BarChart3 size={22} />
+                  </span>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {['Applied', 'Interview', 'Hired'].map((stage, index) => (
+                    <div className="rounded-[7px] bg-slate-50 p-2" key={stage}>
+                      <span className={`block h-1.5 rounded-[7px] ${index === 0 ? 'bg-[#0057B8]' : index === 1 ? 'bg-[#FF8A00]' : 'bg-[#3E9B28]'}`} />
+                      <p className="mt-2 text-[11px] font-black text-slate-500">{stage}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -164,7 +208,7 @@ export function EmployerLandingPage() {
       <section className="bg-white py-16">
         <div className="mx-auto grid max-w-7xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
           {networkStats.map(([value, label]) => (
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-100" key={label}>
+            <div className="rounded-[7px] border border-slate-200 bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-100" key={label}>
               <p className="text-3xl font-black text-slate-950">{value}</p>
               <p className="mt-2 text-sm font-bold text-slate-500">{label}</p>
             </div>
@@ -177,8 +221,8 @@ export function EmployerLandingPage() {
           <SectionHeading eyebrow="Recruitment process" title="From recruiter profile to successful hire" />
           <div className="grid gap-5 lg:grid-cols-4">
             {processSteps.map(([Icon, title], index) => (
-              <div className="relative rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm" key={title}>
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-blue-600 text-white"><Icon size={22} /></div>
+              <div className="relative rounded-[7px] border border-slate-200 bg-white p-6 shadow-sm" key={title}>
+                <div className="grid h-12 w-12 place-items-center rounded-[7px] bg-blue-600 text-white"><Icon size={22} /></div>
                 <p className="mt-5 text-sm font-black text-blue-600">Step {index + 1}</p>
                 <h3 className="mt-1 text-xl font-black text-slate-950">{title}</h3>
               </div>
@@ -195,7 +239,7 @@ export function EmployerLandingPage() {
 
 function FloatingStat({ className, label, value, teal = false }) {
   return (
-    <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className={`absolute hidden rounded-2xl border border-white bg-white/90 p-3 shadow-xl shadow-blue-100 backdrop-blur md:block ${className}`}>
+    <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className={`absolute hidden rounded-[7px] border border-white bg-white/90 p-3 shadow-xl shadow-blue-100 backdrop-blur md:block ${className}`}>
       <p className={`text-2xl font-black ${teal ? 'text-teal-600' : 'text-blue-600'}`}>{value}</p>
       <p className="text-xs font-bold text-slate-500">{label}</p>
     </motion.div>
@@ -213,8 +257,8 @@ function SectionHeading({ eyebrow, title }) {
 
 function FeatureCard({ Icon, title, text }) {
   return (
-    <motion.article whileHover={{ y: -6 }} className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm hover:shadow-xl hover:shadow-blue-100">
-      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-teal-400 text-white"><Icon size={22} /></div>
+    <motion.article whileHover={{ y: -6 }} className="rounded-[7px] border border-slate-200 bg-white p-6 shadow-sm hover:shadow-xl hover:shadow-blue-100">
+      <div className="grid h-12 w-12 place-items-center rounded-[7px] bg-gradient-to-br from-blue-600 to-teal-400 text-white"><Icon size={22} /></div>
       <h3 className="mt-5 text-xl font-black text-slate-950">{title}</h3>
       <p className="mt-3 text-sm leading-6 text-slate-500">{text}</p>
     </motion.article>
@@ -259,15 +303,15 @@ function EmployerTestimonials({ loading, testimonials = [] }) {
 
         {loading ? (
           <div className="grid gap-5 md:grid-cols-3">
-            {[1, 2, 3].map((item) => <div className="h-64 animate-pulse rounded-[1.75rem] bg-white ring-1 ring-slate-200" key={item} />)}
+            {[1, 2, 3].map((item) => <div className="h-64 animate-pulse rounded-[7px] bg-white ring-1 ring-slate-200" key={item} />)}
           </div>
         ) : visibleTestimonials.length ? (
-          <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl shadow-blue-100">
+          <div className="overflow-hidden rounded-[7px] border border-slate-200 bg-white p-5 shadow-xl shadow-blue-100">
             <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:items-stretch">
               <AnimatePresence mode="wait">
                 <motion.article
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex min-h-[340px] flex-col rounded-[1.75rem] bg-gradient-to-br from-blue-50 via-white to-teal-50 p-6"
+                  className="flex min-h-[340px] flex-col rounded-[7px] bg-gradient-to-br from-blue-50 via-white to-teal-50 p-6"
                   exit={{ opacity: 0, x: -24 }}
                   initial={{ opacity: 0, x: 24 }}
                   key={activeItem._id || activeItem.name}
@@ -275,7 +319,7 @@ function EmployerTestimonials({ loading, testimonials = [] }) {
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-teal-400 text-base font-black text-white shadow-lg shadow-blue-100">
+                      <span className="grid h-14 w-14 place-items-center rounded-[7px] bg-gradient-to-br from-blue-600 to-teal-400 text-base font-black text-white shadow-lg shadow-blue-100">
                         {getRecruiterInitials(activeItem.name)}
                       </span>
                       <div>
@@ -283,7 +327,7 @@ function EmployerTestimonials({ loading, testimonials = [] }) {
                         <p className="text-sm font-semibold text-slate-500">{activeItem.role || activeItem.company || 'Recruiter'}</p>
                       </div>
                     </div>
-                    {activeItem.featured && <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-black text-teal-700">Featured</span>}
+                    {activeItem.featured && <span className="rounded-[7px] bg-teal-50 px-3 py-1 text-xs font-black text-teal-700">Featured</span>}
                   </div>
                   <div className="mt-7 flex gap-1">
                     {Array.from({ length: 5 }, (_, index) => (
@@ -291,18 +335,18 @@ function EmployerTestimonials({ loading, testimonials = [] }) {
                     ))}
                   </div>
                   <p className="mt-6 flex-1 text-lg font-semibold leading-8 text-slate-700">{activeItem.text}</p>
-                  <div className="mt-6 rounded-2xl bg-white/80 p-4 ring-1 ring-slate-200">
+                  <div className="mt-6 rounded-[7px] bg-white/80 p-4 ring-1 ring-slate-200">
                     <p className="text-xs font-black uppercase tracking-wide text-slate-400">Company</p>
                     <p className="mt-1 font-black text-slate-800">{activeItem.company || 'Cromgen Rozgar recruiter network'}</p>
                   </div>
                 </motion.article>
               </AnimatePresence>
 
-              <div className="flex flex-col justify-between rounded-[1.75rem] bg-slate-50 p-4">
+              <div className="flex flex-col justify-between rounded-[7px] bg-slate-50 p-4">
                 <div className="grid gap-3">
                   {visibleTestimonials.slice(0, 5).map((item, index) => (
                     <button
-                      className={`rounded-2xl p-4 text-left transition ${activeTestimonial === index ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-blue-50'}`}
+                      className={`rounded-[7px] p-4 text-left transition ${activeTestimonial === index ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-blue-50'}`}
                       key={item._id || item.name}
                       onClick={() => setActiveTestimonial(index)}
                       type="button"
@@ -313,20 +357,20 @@ function EmployerTestimonials({ loading, testimonials = [] }) {
                   ))}
                 </div>
                 <div className="mt-5 flex items-center justify-between">
-                  <button className="grid h-11 w-11 place-items-center rounded-full bg-white text-slate-700 ring-1 ring-slate-200" onClick={() => setActiveTestimonial((activeTestimonial + visibleTestimonials.length - 1) % visibleTestimonials.length)} type="button"><ArrowLeft size={18} /></button>
+                  <button className="grid h-11 w-11 place-items-center rounded-[7px] bg-white text-slate-700 ring-1 ring-slate-200" onClick={() => setActiveTestimonial((activeTestimonial + visibleTestimonials.length - 1) % visibleTestimonials.length)} type="button"><ArrowLeft size={18} /></button>
                   <div className="flex gap-2">
-                    {visibleTestimonials.map((item, index) => <button className={`h-2.5 rounded-full transition-all ${activeTestimonial === index ? 'w-8 bg-blue-600' : 'w-2.5 bg-slate-300'}`} key={item._id || item.name} onClick={() => setActiveTestimonial(index)} type="button" />)}
+                    {visibleTestimonials.map((item, index) => <button className={`h-2.5 rounded-[7px] transition-all ${activeTestimonial === index ? 'w-8 bg-blue-600' : 'w-2.5 bg-slate-300'}`} key={item._id || item.name} onClick={() => setActiveTestimonial(index)} type="button" />)}
                   </div>
-                  <button className="grid h-11 w-11 place-items-center rounded-full bg-white text-slate-700 ring-1 ring-slate-200" onClick={() => setActiveTestimonial((activeTestimonial + 1) % visibleTestimonials.length)} type="button"><ArrowRight size={18} /></button>
+                  <button className="grid h-11 w-11 place-items-center rounded-[7px] bg-white text-slate-700 ring-1 ring-slate-200" onClick={() => setActiveTestimonial((activeTestimonial + 1) % visibleTestimonials.length)} type="button"><ArrowRight size={18} /></button>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-[7px] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
             <CheckCircle2 className="mx-auto text-teal-500" size={38} />
             <h3 className="mt-4 text-xl font-black text-slate-950">No recruiter testimonials published yet</h3>
-            <p className="mt-2 text-sm text-slate-500">Admin testimonials MongoDB me type Recruiter ya Company add karega to yaha automatically professional carousel show hoga.</p>
+            <p className="mt-2 text-sm text-slate-500">When admin adds Recruiter or Company testimonials in MongoDB, they will appear automatically in this professional carousel.</p>
           </div>
         )}
       </div>
@@ -335,7 +379,7 @@ function EmployerTestimonials({ loading, testimonials = [] }) {
 }
 function TestimonialMetric({ label, value }) {
   return (
-    <div className="rounded-2xl bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
+    <div className="rounded-[7px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
       <p className="text-2xl font-black text-slate-950">{value}</p>
       <p className="mt-1 text-[11px] font-black uppercase tracking-wide text-slate-400">{label}</p>
     </div>
@@ -374,12 +418,12 @@ function EmployerCTA({ isLoggedIn, isRecruiterAccount }) {
   return (
     <section className="bg-white py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-[2rem] bg-gradient-to-br from-blue-600 to-teal-500 p-8 text-white shadow-xl shadow-blue-100 sm:p-10">
+        <div className="rounded-[7px] bg-gradient-to-r from-[#0057B8] via-[#0057B8] to-[#FF8A00] p-8 text-white shadow-xl shadow-[#0057B8]/20 sm:p-10">
           <h2 className="text-3xl font-black sm:text-4xl">Start Hiring Smarter Today</h2>
           <p className="mt-3 max-w-2xl text-blue-50">Post jobs, connect with skilled professionals, and grow your team faster.</p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            {!isLoggedIn && <Button className="bg-white text-blue-700 ring-0 hover:bg-blue-50" to="/recruiter-register" variant="secondary">Register Recruiter</Button>}
-            {isRecruiterAccount && <Button className="bg-white text-blue-700 ring-0 hover:bg-blue-50" to="/recruiter-dashboard" variant="secondary">Recruiter Dashboard</Button>}
+            {!isLoggedIn && <Button className="bg-white !text-black ring-0 hover:bg-blue-50" to="/recruiter-register" variant="secondary">Register Recruiter</Button>}
+            {isRecruiterAccount && <Button className="bg-white !text-black ring-0 hover:bg-blue-50" to="/recruiter-dashboard" variant="secondary">Recruiter Dashboard</Button>}
             <Button className="bg-slate-950 text-white ring-0 hover:bg-slate-800" to="/post-job" variant="secondary">Post Your First Job</Button>
           </div>
         </div>

@@ -87,33 +87,33 @@ export function SupportChat({ onClose, open }) {
     <AnimatePresence>
       {open && (
         <motion.div animate={{ opacity: 1 }} className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm" exit={{ opacity: 0 }} initial={{ opacity: 0 }}>
-          <motion.div animate={{ opacity: 1, scale: 1, y: 0 }} className="w-full max-w-lg overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-slate-900/20" exit={{ opacity: 0, scale: 0.96, y: 16 }} initial={{ opacity: 0, scale: 0.96, y: 16 }} transition={{ duration: 0.2 }}>
+          <motion.div animate={{ opacity: 1, scale: 1, y: 0 }} className="w-full max-w-lg overflow-hidden rounded-[7px] bg-white shadow-2xl shadow-slate-900/20" exit={{ opacity: 0, scale: 0.96, y: 16 }} initial={{ opacity: 0, scale: 0.96, y: 16 }} transition={{ duration: 0.2 }}>
             <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-5">
               <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-blue-600 text-white"><Headphones size={20} /></span>
+                <span className="grid h-11 w-11 place-items-center rounded-[7px] bg-[#0057B8] text-white"><Headphones size={20} /></span>
                 <div>
                   <h3 className="text-lg font-black text-slate-950">Support Chat</h3>
                   <p className="text-sm font-semibold text-slate-500">Usually replies in a few minutes</p>
                   {activeTicket?.status && <p className="mt-1 text-xs font-black uppercase tracking-wide text-blue-600">Ticket {String(activeTicket._id || '').slice(-8)} / {activeTicket.status}</p>}
                 </div>
               </div>
-              <button className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200" onClick={onClose} type="button" aria-label="Close chat">
+              <button className="grid h-10 w-10 place-items-center rounded-[7px] bg-slate-100 text-slate-500 hover:bg-slate-200" onClick={onClose} type="button" aria-label="Close chat">
                 <X size={18} />
               </button>
             </div>
 
             <div className="grid max-h-[380px] gap-3 overflow-y-auto bg-slate-50 p-5">
               {messages.map((item, index) => (
-                <div className={`max-w-[84%] rounded-2xl p-4 text-sm font-semibold leading-6 shadow-sm ${item.from === 'user' ? 'ml-auto rounded-tr-md bg-blue-600 text-white' : item.from === 'system' ? 'mx-auto bg-amber-50 text-amber-700' : 'rounded-tl-md bg-white text-slate-600'}`} key={`${item.from}-${index}`}>
+                <div className={`max-w-[84%] rounded-[7px] p-4 text-sm font-semibold leading-6 shadow-sm ${item.from === 'user' ? 'ml-auto rounded-t-[7px]r-md bg-[#0057B8] text-white' : item.from === 'system' ? 'mx-auto bg-amber-50 text-amber-700' : 'rounded-t-[7px]l-md bg-white text-slate-600'}`} key={`${item.from}-${index}`}>
                   {item.text}
                 </div>
               ))}
             </div>
 
             <form className="flex gap-2 border-t border-slate-100 p-4" onSubmit={sendMessage}>
-              <input className="min-w-0 flex-1 rounded-full border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500" disabled={sending} onChange={(event) => setMessage(event.target.value)} placeholder="Type your message" value={message} />
-              <button className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-100 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60" disabled={sending} type="submit" aria-label="Send message">
-                {sending ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <Send size={18} />}
+              <input className="min-w-0 flex-1 rounded-[7px] border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500" disabled={sending} onChange={(event) => setMessage(event.target.value)} placeholder="Type your message" value={message} />
+              <button className="grid h-12 w-12 shrink-0 place-items-center rounded-[7px] bg-[#0057B8] text-white shadow-lg shadow-[#0057B8]/20 hover:bg-[#004694] disabled:cursor-not-allowed disabled:opacity-60" disabled={sending} type="submit" aria-label="Send message">
+                {sending ? <span className="h-4 w-4 animate-spin rounded-[7px] border-2 border-white/40 border-t-white" /> : <Send size={18} />}
               </button>
             </form>
           </motion.div>
@@ -180,10 +180,10 @@ function getChatMessages(ticket = {}) {
 
 export function SupportChatButton({ children = 'Contact Support', className = '', variant = 'primary' }) {
   const [open, setOpen] = useState(false)
-  const base = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-blue-100'
+  const base = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] px-5 py-2.5 text-sm font-semibold transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-blue-100'
   const variants = {
-    primary: 'bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700',
-    secondary: 'bg-white text-slate-900 ring-1 ring-slate-200 hover:bg-slate-50',
+    primary: 'bg-[#0057B8] text-white shadow-lg shadow-[#0057B8]/20 hover:bg-[#004694]',
+    secondary: 'bg-[#0057B8] text-white shadow-lg shadow-[#0057B8]/20 hover:bg-[#004694]',
   }
 
   return (

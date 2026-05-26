@@ -68,25 +68,28 @@ export function JobsPage({ onApply }) {
   }
 
   return (
-    <section className="py-10 sm:py-14">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-[2rem] bg-gradient-to-br from-blue-50 via-white to-teal-50 p-5 sm:p-8">
-          <h1 className="text-3xl font-black text-slate-950 sm:text-5xl">Enterprise Job Listings</h1>
-          <p className="mt-3 text-slate-500">Search, filter, save, and apply to trusted premium opportunities.</p>
-          <div className="mt-6"><SearchBar compact /></div>
+    <section className="w-full max-w-full overflow-x-hidden py-3 sm:py-14">
+      <div className="w-full max-w-full px-0 sm:mx-auto sm:max-w-7xl sm:px-6 lg:px-8">
+        <div className="w-full max-w-full overflow-hidden rounded-none border-y border-[#0057B8]/10 bg-white p-2 shadow-sm sm:rounded-[7px] sm:border sm:p-8">
+          <div className="hidden sm:block">
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-[#0057B8]">Verified job search</p>
+            <h1 className="mt-3 text-3xl font-black text-slate-950 sm:text-5xl">Explore roles matched to your ambition</h1>
+            <p className="mt-3 text-slate-500">Search, filter, save, and apply to trusted opportunities across India.</p>
+          </div>
+          <div className="sm:mt-6"><SearchBar compact /></div>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[310px_1fr]">
-          <aside className="h-max rounded-[1.75rem] border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur lg:sticky lg:top-24">
+        <div className="mt-4 grid w-full max-w-full gap-3 sm:mt-8 sm:gap-6 lg:grid-cols-[310px_minmax(0,1fr)]">
+          <aside className="hidden h-max rounded-[7px] border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur lg:sticky lg:top-24 lg:block">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <h2 className="font-black text-slate-950">Advanced Filters</h2>
                 <p className="mt-1 text-xs font-semibold text-slate-500">{activeFilterCount} active filters</p>
               </div>
-              <SlidersHorizontal className="text-blue-600" size={19} />
+              <SlidersHorizontal className="text-[#0057B8]" size={19} />
             </div>
             {activeFilterCount > 0 && (
-              <button className="mb-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-slate-100 px-4 text-sm font-black text-slate-600 hover:bg-blue-50 hover:text-blue-700" onClick={clearFilters} type="button">
+              <button className="mb-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[7px] bg-slate-100 px-4 text-sm font-black text-slate-600 hover:bg-blue-50 hover:text-blue-700" onClick={clearFilters} type="button">
                 <X size={16} /> Clear filters
               </button>
             )}
@@ -99,28 +102,28 @@ export function JobsPage({ onApply }) {
                       {filter.values.map((value) => {
                         const checked = selectedFilters[filter.key]?.includes(value)
                         return (
-                          <label className={`flex items-center justify-between gap-3 rounded-xl px-2 py-1.5 text-sm transition ${checked ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50'}`} key={value}>
+                          <label className={`flex items-center justify-between gap-3 rounded-[7px] px-2 py-1.5 text-sm transition ${checked ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50'}`} key={value}>
                             <span className="flex min-w-0 items-center gap-2">
-                              <input checked={checked || false} className="h-4 w-4 rounded border-slate-300 text-blue-600 accent-blue-600" onChange={() => toggleFilter(filter.key, value)} type="checkbox" />
+                              <input checked={checked || false} className="h-4 w-4 rounded-[7px] border-slate-300 text-blue-600 accent-blue-600" onChange={() => toggleFilter(filter.key, value)} type="checkbox" />
                               <span className="truncate">{value}</span>
                             </span>
-                            <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[11px] font-black text-slate-400 ring-1 ring-slate-200">{filter.counts[value]}</span>
+                            <span className="shrink-0 rounded-[7px] bg-white px-2 py-0.5 text-[11px] font-black text-slate-400 ring-1 ring-slate-200">{filter.counts[value]}</span>
                           </label>
                         )
                       })}
                     </div>
                   ) : (
-                    <p className="rounded-xl bg-slate-50 p-3 text-xs font-semibold text-slate-500">No options yet</p>
+                    <p className="rounded-[7px] bg-slate-50 p-3 text-xs font-semibold text-slate-500">No options yet</p>
                   )}
                 </div>
               ))}
             </div>
           </aside>
 
-          <div>
-            <div className="mb-5 flex flex-col justify-between gap-3 rounded-3xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
-              <p className="text-sm font-semibold text-slate-600">Showing {list.length} premium jobs{hasSearch ? ' for your search' : ''}</p>
-              <select className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 outline-none">
+          <div className="min-w-0">
+            <div className="mb-3 flex w-full max-w-full items-center justify-between gap-2 rounded-none border-y border-slate-200 bg-white p-2 sm:mb-5 sm:rounded-[7px] sm:border sm:p-4">
+              <p className="min-w-0 truncate text-xs font-semibold text-slate-600 sm:text-sm">Showing {list.length} premium jobs{hasSearch ? ' for your search' : ''}</p>
+              <select className="w-28 shrink-0 rounded-[7px] border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 outline-none sm:w-auto sm:px-4 sm:text-sm">
                 <option>Sort by relevance</option>
                 <option>Sort by newest</option>
                 <option>Sort by salary</option>
@@ -128,8 +131,8 @@ export function JobsPage({ onApply }) {
               </select>
             </div>
             {list.length ? (
-              <div className="grid gap-5 xl:grid-cols-2">
-                {list.map((job) => <JobCard job={job} key={job._id || job.id} onApply={onApply} />)}
+              <div className="grid w-full max-w-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 px-1 sm:grid-cols-1 sm:px-0 sm:gap-5">
+                {list.map((job) => <JobCard denseMobile job={job} key={job._id || job.id} onApply={onApply} />)}
               </div>
             ) : (
               <div className="mt-8"><EmptyState /></div>

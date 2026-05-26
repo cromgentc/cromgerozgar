@@ -7,9 +7,15 @@ const gstRoutes = require('./gstRoutes')
 const { getRecruiterPage } = require('../controllers/recruiterPageController')
 const recruiterPackageRoutes = require('./recruiterPackageRoutes')
 const recruiterJobRoutes = require('./recruiterJobRoutes')
+const resumeUploadRoutes = require('./resumeUploadRoutes')
+const settingsRoutes = require('./settingsRoutes')
+const { getMongoDbConfig, updateMongoDbConfig } = require('../controllers/settingsController')
 const userRoutes = require('./userRoutes')
+const userLocationRoutes = require('./userLocationRoutes')
+const { authorize, protect } = require('../middleware/authMiddleware')
 
 const router = express.Router()
+const accountRoles = ['Admin', 'staff', 'hiring', 'account team', 'recruiter', 'users', 'freelancer']
 
 router.get('/health', (req, res) => res.json({ success: true, message: 'Cromgen Rozgar API is running' }))
 router.use('/auth', authRoutes)
@@ -17,24 +23,44 @@ router.use('/dashboard', dashboardRoutes)
 router.use('/gst', gstRoutes)
 router.get('/recruiter-page', getRecruiterPage)
 router.use('/users', userRoutes)
-router.use('/jobs', crudRoutes(controllers.jobs))
-router.use('/companies', crudRoutes(controllers.companies))
-router.use('/content-pages', crudRoutes(controllers.contentPages))
-router.use('/employers', crudRoutes(controllers.employers))
-router.use('/faqs', crudRoutes(controllers.faqs))
-router.use('/candidates', crudRoutes(controllers.candidates))
-router.use('/applications', crudRoutes(controllers.applications))
-router.use('/categories', crudRoutes(controllers.categories))
-router.use('/locations', crudRoutes(controllers.locations))
-router.use('/newsletter-subscribers', crudRoutes(controllers.newsletterSubscribers))
-router.use('/payments', crudRoutes(controllers.payments))
-router.use('/pricing-packages', crudRoutes(controllers.pricingPackages))
+router.use('/user-locations', userLocationRoutes)
+router.use('/jobs', crudRoutes.protected(controllers.jobs, { publicRead: true }))
+router.use('/companies', crudRoutes.protected(controllers.companies, { publicRead: true }))
+router.use('/content-pages', crudRoutes.protected(controllers.contentPages, { publicRead: true }))
+router.use('/employers', crudRoutes.protected(controllers.employers, {
+  publicCreate: true,
+  readRoles: ['Admin', 'staff', 'account team', 'recruiter'],
+  updateRoles: ['Admin', 'staff', 'account team', 'recruiter'],
+}))
+router.use('/faqs', crudRoutes.protected(controllers.faqs, { publicRead: true }))
+router.use('/candidates', crudRoutes.protected(controllers.candidates, { readRoles: ['Admin', 'hiring', 'recruiter'] }))
+router.use('/applications', crudRoutes.protected(controllers.applications, {
+  publicCreate: true,
+  readRoles: accountRoles,
+  updateRoles: ['Admin', 'staff', 'hiring', 'account team', 'recruiter'],
+}))
+router.use('/categories', crudRoutes.protected(controllers.categories, { publicRead: true }))
+router.use('/locations', crudRoutes.protected(controllers.locations, { publicRead: true }))
+router.use('/newsletter-subscribers', crudRoutes.protected(controllers.newsletterSubscribers, { publicCreate: true }))
+router.use('/payments', crudRoutes.protected(controllers.payments))
+router.use('/pricing-packages', crudRoutes.protected(controllers.pricingPackages, { publicRead: true }))
 router.use('/recruiter-package-subscriptions', recruiterPackageRoutes)
 router.use('/recruiter-job-posts', recruiterJobRoutes)
-router.use('/recruiter-documents', crudRoutes(controllers.recruiterDocuments))
-router.use('/resumes', crudRoutes(controllers.resumes))
-router.use('/settings', crudRoutes(controllers.settings))
-router.use('/support-messages', crudRoutes(controllers.supportMessages))
-router.use('/testimonials', crudRoutes(controllers.testimonials))
+router.use('/recruiter-documents', crudRoutes.protected(controllers.recruiterDocuments, {
+  publicCreate: true,
+  readRoles: ['Admin', 'account team', 'recruiter'],
+  updateRoles: ['Admin', 'account team'],
+}))
+router.use('/resume-uploads', resumeUploadRoutes)
+router.use('/resumes', crudRoutes.protected(controllers.resumes, { readRoles: ['Admin', 'hiring', 'recruiter'] }))
+router.get('/settings/mongodb-config', protect, authorize('Admin'), getMongoDbConfig)
+router.put('/settings/mongodb-config', protect, authorize('Admin'), updateMongoDbConfig)
+router.use('/settings', settingsRoutes)
+router.use('/support-messages', crudRoutes.protected(controllers.supportMessages, {
+  publicCreate: true,
+  readRoles: accountRoles,
+  updateRoles: accountRoles,
+}))
+router.use('/testimonials', crudRoutes.protected(controllers.testimonials, { publicRead: true }))
 
 module.exports = router

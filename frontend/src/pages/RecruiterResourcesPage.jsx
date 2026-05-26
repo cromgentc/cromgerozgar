@@ -23,7 +23,7 @@ export function RecruiterResourcesPage() {
         <Panel title="Recruiter Library">
           <div className="grid gap-4 md:grid-cols-2">
             {resources.map(([title, text]) => (
-              <div className="rounded-2xl bg-slate-50 p-5" key={title}>
+              <div className="rounded-[7px] bg-slate-50 p-5" key={title}>
                 <p className="font-black text-slate-950">{title}</p>
                 <p className="mt-2 text-sm leading-6 text-slate-500">{text}</p>
                 <Button className="mt-4" variant="secondary">Open</Button>

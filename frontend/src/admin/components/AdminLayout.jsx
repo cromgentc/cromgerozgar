@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Bell,
@@ -13,21 +13,36 @@ import {
   FileText,
   Globe2,
   HelpCircle,
+  KeyRound,
   LayoutDashboard,
   LogOut,
+  Mail,
+  MapPin,
   Menu,
   MessageCircle,
-  Moon,
+  Cloud,
+  Database,
+  Plug,
+  PlugZap,
   Send,
-  Sun,
+  Share2,
   Search,
+  ScrollText,
   Star,
+  ReceiptText,
+  RefreshCw,
+  Route,
+  Moon,
+  Sun,
   Wallet,
+  UserPlus,
+  Shield,
   UsersRound,
   X,
 } from 'lucide-react'
-import { adminRoles } from '../data/adminData'
 import { api } from '../../services/api'
+import { useSiteBranding } from '../../utils/siteBranding'
+import { applyThemeMode, getInitialThemeMode } from '../../utils/themeMode'
 
 const sidebarItems = [
   { label: 'Dashboard', to: '/admin', icon: LayoutDashboard, roles: ['Admin'] },
@@ -42,9 +57,22 @@ const sidebarItems = [
       { label: 'Admin', to: '/admin/users?role=Admin', icon: UsersRound },
       { label: 'Staff', to: '/admin/users?role=staff', icon: UsersRound },
       { label: 'Recruiter', to: '/admin/users?role=recruiter', icon: UsersRound },
+      { label: 'Freelancer', to: '/admin/users?role=freelancer', icon: UsersRound },
+      { label: 'Hiring', to: '/admin/users?role=hiring', icon: UserPlus },
+      { label: 'Account Team', to: '/admin/users?role=account%20team', icon: Wallet },
     ],
   },
   { label: 'Jobs Management', to: '/admin/jobs', icon: BriefcaseBusiness, roles: ['Admin'] },
+  {
+    label: 'Projects Management',
+    to: '/admin/projects',
+    icon: ClipboardList,
+    roles: ['Admin'],
+    children: [
+      { label: 'Project Directory', to: '/admin/projects', icon: BriefcaseBusiness },
+      { label: 'Project Applications', to: '/admin/projects?view=applications', icon: FileCheck2 },
+    ],
+  },
   {
     label: 'Recruiters',
     to: '/admin/employers',
@@ -56,6 +84,7 @@ const sidebarItems = [
     ],
   },
   { label: 'Candidates', to: '/admin/candidates', icon: UsersRound, roles: ['Admin'] },
+  { label: 'Hiring Team', to: '/admin/hiring-team', icon: UserPlus, roles: ['Admin'] },
   { label: 'Applications', to: '/admin/applications', icon: FileCheck2, roles: ['Admin'] },
   {
     label: 'Website Content',
@@ -66,6 +95,8 @@ const sidebarItems = [
       { label: 'Testimonials', to: '/admin/testimonials', icon: Star },
       { label: 'FAQs', to: '/admin/faqs', icon: HelpCircle },
       { label: 'Policy', to: '/admin/policy', icon: FileText },
+      { label: 'SEO & Branding', to: '/admin/seo-branding', icon: Globe2 },
+      { label: 'Social Media', to: '/admin/social-media', icon: Share2 },
       { label: 'Hiring Insights', to: '/admin/hiring-insights', icon: Send },
       { label: 'Support Messages', to: '/admin/support-messages', icon: MessageCircle },
     ],
@@ -81,24 +112,57 @@ const sidebarItems = [
     ],
   },
   {
+    label: 'Payments',
+    to: '/admin/payments/transactions',
+    icon: Wallet,
+    roles: ['Admin'],
+    children: [
+      { label: 'Transactions', to: '/admin/payments/transactions', icon: ReceiptText },
+      { label: 'Payment Logs', to: '/admin/payments/logs', icon: ScrollText },
+      { label: 'Payment Methods', to: '/admin/payments/methods', icon: CreditCard },
+    ],
+  },
+  {
+    label: 'Plugins',
+    to: '/admin/plugins/installed',
+    icon: Plug,
+    roles: ['Admin'],
+    children: [
+      { label: 'Add New Plugins', to: '/admin/plugins/add-new', icon: PlugZap },
+      { label: 'Installed Plugins', to: '/admin/plugins/installed', icon: Plug },
+    ],
+  },
+  {
     label: 'Settings',
     to: '/admin/settings/google-auth',
     icon: Globe2,
     roles: ['Admin'],
     children: [
-      { label: 'Google Auth API', to: '/admin/settings/google-auth', icon: Globe2 },
+      { label: 'Google Auth API', to: '/admin/settings/google-auth', icon: KeyRound },
+      { label: 'WhatsApp API', to: '/admin/settings/whatsapp-api', icon: MessageCircle },
+      { label: 'Email API', to: '/admin/settings/email-api', icon: Mail },
+      { label: 'Supa Cloud Storage', to: '/admin/settings/supa-cloud', icon: Cloud },
+      { label: 'MongoDB Details', to: '/admin/settings/mongodb', icon: Database },
+      { label: 'Role & Permission', to: '/admin/settings/role-permission', icon: Shield },
     ],
   },
 ]
 
 const employerSidebarItems = [
-  { label: 'Dashboard', to: '/recruiter-dashboard', icon: LayoutDashboard },
-  { label: 'Post a Job', to: '/post-job', icon: BriefcaseBusiness },
+  { label: 'Recruiter Dashboard', to: '/recruiter-dashboard', icon: LayoutDashboard },
+  { label: 'Post Job', to: '/post-job', icon: BriefcaseBusiness },
   { label: 'Applications', to: '/recruiter-applications', icon: ClipboardList },
+  { label: 'Candidates', to: '/recruiter-talent', icon: UsersRound },
+  { label: 'Messages', to: '/recruiter-resources', icon: MessageCircle },
+  { label: 'Settings', to: '/recruiter-profile', icon: Globe2 },
   { label: 'Pricing', to: '/recruiter-pricing', icon: CreditCard },
-  { label: 'Profile', to: '/recruiter-profile', icon: UsersRound },
-  { label: 'Resources', to: '/recruiter-resources', icon: FileCheck2 },
 ]
+
+const freelancerSidebarItems = [
+  { label: 'Projects Management', to: '/admin/projects', icon: BriefcaseBusiness },
+]
+
+const liveLocationRoles = ['users', 'staff', 'recruiter', 'hiring', 'account team', 'Admin']
 
 export function AdminLayout() {
   const [open, setOpen] = useState(false)
@@ -107,18 +171,40 @@ export function AdminLayout() {
   const [notifications, setNotifications] = useState([])
   const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [clearedNotificationIds, setClearedNotificationIds] = useState([])
-  const [lightActive, setLightActive] = useState(true)
+  const [locationPanelVisible, setLocationPanelVisible] = useState(false)
   const [wallet, setWallet] = useState(null)
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true)
+  const [themeMode, setThemeMode] = useState(getInitialThemeMode)
+  const branding = useSiteBranding()
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const user = getStoredAdminUser()
   const isEmployer = user?.role === 'recruiter'
+  const isHiring = user?.role === 'hiring'
+  const isAccountTeam = user?.role === 'account team'
+  const isFreelancer = user?.role === 'freelancer'
   const searchValue = searchParams.get('search') || ''
   const crumbs = location.pathname
     .split('/')
     .filter(Boolean)
     .map((item) => item.replace(/-/g, ' '))
+
+  useEffect(() => {
+    applyThemeMode(themeMode)
+  }, [themeMode])
+
+  useEffect(() => {
+    if (isHiring && !['/admin/hiring-team', '/admin/profile'].includes(location.pathname)) {
+      navigate('/admin/hiring-team', { replace: true })
+    }
+    if (isAccountTeam && !['/admin/jobs', '/admin/employers', '/admin/recruiter-documents', '/admin/profile'].includes(location.pathname) && !location.pathname.startsWith('/admin/recruiters/') && !location.pathname.startsWith('/admin/recruiter-documents/')) {
+      navigate('/admin/employers', { replace: true })
+    }
+    if (isFreelancer && location.pathname !== '/admin/projects') {
+      navigate('/admin/projects', { replace: true })
+    }
+  }, [isAccountTeam, isFreelancer, isHiring, location.pathname, navigate])
 
   useEffect(() => {
     if (!isEmployer || !user?.email) {
@@ -166,6 +252,11 @@ export function AdminLayout() {
     const loadNotifications = async () => {
       setNotificationsLoading(true)
       try {
+        if (isHiring || isAccountTeam || isFreelancer) {
+          setNotifications([])
+          return
+        }
+
         const [dashboardPayload, walletPayload] = isEmployer
           ? await Promise.all([
               api.employerDashboard(user.email),
@@ -202,7 +293,7 @@ export function AdminLayout() {
       window.removeEventListener('focus', loadNotifications)
       window.removeEventListener('recruiter-wallet-updated', loadNotifications)
     }
-  }, [isEmployer, user?.email, user?.role])
+  }, [isAccountTeam, isEmployer, isFreelancer, isHiring, user?.email, user?.role])
 
   const clearNotifications = () => {
     const ids = notifications.map((item) => item.id)
@@ -228,14 +319,17 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <AdminSidebar isEmployer={isEmployer} mobileOpen={open} onClose={() => setOpen(false)} role={user?.role} />
+    <div className="admin-material-shell admin-light min-h-screen text-slate-900">
+      <AdminSidebar branding={branding} desktopOpen={desktopSidebarOpen} isEmployer={isEmployer} mobileOpen={open} onClose={() => setOpen(false)} role={user?.role} />
 
-      <div className="lg:pl-72">
-        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
+      <div className={`transition-[padding] duration-200 ${desktopSidebarOpen ? 'lg:pl-72' : 'lg:pl-0'}`}>
+        <header className="admin-material-topbar admin-material-lightbar sticky top-0 z-40 border-b border-slate-200 bg-white shadow-md shadow-slate-200/70">
           <div className="flex min-h-20 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
-              <button className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white lg:hidden" onClick={() => setOpen(true)} type="button">
+              <button className="admin-topbar-icon grid h-11 w-11 place-items-center rounded-[7px] lg:hidden" onClick={() => setOpen((value) => !value)} type="button" aria-label="Toggle sidebar menu">
+                <Menu size={20} />
+              </button>
+              <button className="admin-topbar-icon hidden h-11 w-11 place-items-center rounded-[7px] transition lg:grid" onClick={() => setDesktopSidebarOpen((value) => !value)} type="button" aria-label="Toggle sidebar panel">
                 <Menu size={20} />
               </button>
               <div>
@@ -244,13 +338,15 @@ export function AdminLayout() {
                     <span className="capitalize" key={crumb}>{index > 0 ? `/ ${crumb}` : crumb}</span>
                   ))}
                 </div>
-                <h1 className="mt-1 text-xl font-black text-slate-950">{isEmployer ? 'Recruiter Control Center' : 'Admin Control Center'}</h1>
+                {(isEmployer || isFreelancer || isHiring || isAccountTeam) && (
+                  <h1 className="mt-1 text-xl font-black text-slate-950">{isEmployer ? 'Recruiter Control Center' : isFreelancer ? 'Freelancer Project Center' : isHiring ? 'Hiring Team Center' : 'Account Team Center'}</h1>
+                )}
               </div>
             </div>
 
             <div className="hidden flex-1 justify-center px-8 md:flex">
-              <label className="flex w-full max-w-xl items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-                <Search size={18} className="text-blue-600" />
+              <label className="admin-material-search flex w-full max-w-xl items-center gap-3 rounded-[7px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                <Search size={18} className="text-[#3367F6]" />
                 <input className="w-full bg-transparent outline-none" onChange={(event) => updateSearch(event.target.value)} placeholder="Search jobs, recruiters, candidates..." value={searchValue} />
               </label>
             </div>
@@ -258,7 +354,7 @@ export function AdminLayout() {
             <div className="flex items-center gap-2">
               {isEmployer && (
                 <Link
-                  className="hidden h-11 items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 text-sm font-bold text-blue-700 transition hover:bg-blue-100 sm:inline-flex"
+                  className="hidden h-11 items-center gap-2 rounded-[7px] bg-[#0057B8] px-4 text-sm font-bold text-white shadow-lg shadow-[#0057B8]/20 transition hover:-translate-y-0.5 hover:bg-[#004694] sm:inline-flex"
                   to="/recruiter"
                 >
                   <ExternalLink size={17} />
@@ -267,24 +363,39 @@ export function AdminLayout() {
               )}
               {isEmployer ? (
                 <Link
-                  className="hidden h-11 items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-4 text-sm font-bold text-teal-700 transition hover:bg-teal-100 sm:inline-flex"
+                  className="hidden h-11 items-center gap-2 rounded-[7px] border border-[#3E9B28]/20 bg-[#3E9B28]/10 px-4 text-sm font-bold text-[#2f7d1f] transition hover:bg-[#3E9B28]/15 sm:inline-flex"
                   to="/recruiter-pricing"
                 >
                   <Wallet size={17} />
                   Wallet: {wallet?.coinBalance || 0} coins
                 </Link>
-              ) : (
-                <button
-                  className={`hidden h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold sm:inline-flex ${lightActive ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600'}`}
-                  onClick={() => setLightActive((value) => !value)}
-                  type="button"
-                >
-                  {lightActive ? <Sun size={17} /> : <Moon size={17} />} {lightActive ? 'Light On' : 'Light'}
-                </button>
-              )}
+              ) : user?.role === 'Admin' ? (
+                <>
+                  <button
+                    aria-label={locationPanelVisible ? 'Hide Map' : 'Show Map'}
+                    className="admin-topbar-button hidden h-11 w-11 items-center justify-center rounded-[7px] border text-sm font-bold shadow-sm transition sm:inline-flex"
+                    onClick={() => setLocationPanelVisible((value) => !value)}
+                    title={locationPanelVisible ? 'Hide Map' : 'Show Map'}
+                    type="button"
+                  >
+                    <MapPin size={17} />
+                  </button>
+                </>
+              ) : null}
               <div className="relative">
                 <button
-                  className="relative grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-600"
+                  aria-label={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                  className="admin-topbar-icon relative grid h-11 w-11 place-items-center rounded-[7px] border"
+                  onClick={() => setThemeMode((current) => (current === 'dark' ? 'light' : 'dark'))}
+                  title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
+                  type="button"
+                >
+                  {themeMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                </button>
+              </div>
+              <div className="relative">
+                <button
+                  className="admin-topbar-icon relative grid h-11 w-11 place-items-center rounded-[7px] border"
                   onClick={() => {
                     setNotificationsOpen((value) => !value)
                     setProfileOpen(false)
@@ -293,7 +404,7 @@ export function AdminLayout() {
                 >
                   <Bell size={19} />
                   {notifications.length > 0 && (
-                    <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-teal-500 px-1 text-[10px] font-black text-white ring-2 ring-white">
+                    <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-[7px] bg-teal-500 px-1 text-[10px] font-black text-white ring-2 ring-white">
                       {notifications.length}
                     </span>
                   )}
@@ -302,14 +413,14 @@ export function AdminLayout() {
               </div>
               <div className="relative">
                 <button
-                  className="flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3"
+                  className="admin-topbar-profile flex items-center gap-3 rounded-[7px] border py-1 pl-1 pr-3"
                   onClick={() => {
                     setProfileOpen((value) => !value)
                     setNotificationsOpen(false)
                   }}
                   type="button"
                 >
-                  <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-600 text-sm font-black text-white">{getInitials(user?.name || user?.role || 'AD')}</span>
+                  <span className="admin-material-avatar grid h-9 w-9 place-items-center rounded-[7px] text-sm font-black">{getInitials(user?.name || user?.role || 'AD')}</span>
                   <span className="hidden text-left sm:block">
                     <span className="block text-sm font-bold text-slate-900">{user?.name || 'Admin User'}</span>
                     <span className="block text-xs text-slate-500">{user?.role || 'Admin'} - Online</span>
@@ -322,7 +433,8 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <main className="max-w-full overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
+        <main className="max-w-full overflow-x-hidden bg-[#EEF2F8] px-4 py-6 sm:px-6 lg:px-8">
+          <LiveLocationTracker user={user} visible={locationPanelVisible} />
           <Outlet />
         </main>
       </div>
@@ -339,7 +451,7 @@ function buildRecruiterNotifications({ dashboard = {}, wallet = null }) {
     items.push({
       id: 'active-applications',
       title: `${metrics.activeApplications} active applications`,
-      description: 'New, reviewed, aur interview stage candidates pending hain.',
+      description: 'New, reviewed, and interview-stage candidates are pending.',
       to: '/recruiter-applications?status=active',
       icon: ClipboardList,
       tone: 'blue',
@@ -351,7 +463,7 @@ function buildRecruiterNotifications({ dashboard = {}, wallet = null }) {
     items.push({
       id: 'shortlisted',
       title: `${metrics.shortlistedCandidates} shortlisted candidates`,
-      description: 'Shortlisted candidates ko next hiring step par move karein.',
+      description: 'Move shortlisted candidates to the next hiring step.',
       to: '/recruiter-applications?status=shortlisted',
       icon: UsersRound,
       tone: 'teal',
@@ -363,7 +475,7 @@ function buildRecruiterNotifications({ dashboard = {}, wallet = null }) {
     items.push({
       id: 'interviews',
       title: `${metrics.interviewSchedule} interview invites`,
-      description: 'Interview stage candidates ko track karein.',
+      description: 'Track candidates in the interview stage.',
       to: '/recruiter-applications?status=interview',
       icon: CalendarDays,
       tone: 'violet',
@@ -377,7 +489,7 @@ function buildRecruiterNotifications({ dashboard = {}, wallet = null }) {
     items.push({
       id: 'wallet',
       title: `${coinBalance} wallet coins available`,
-      description: coinBalance < coinPerJob ? `One job ke liye ${coinPerJob} coins required hain. Coins buy karein.` : 'Wallet ready hai, job post kar sakte hain.',
+      description: coinBalance < coinPerJob ? `${coinPerJob} coins are required for one job. Buy coins to continue.` : 'Your wallet is ready. You can post a job.',
       to: '/recruiter-pricing',
       icon: Wallet,
       tone: coinBalance < coinPerJob ? 'rose' : 'emerald',
@@ -387,7 +499,7 @@ function buildRecruiterNotifications({ dashboard = {}, wallet = null }) {
     items.push({
       id: 'package-required',
       title: 'Package not active',
-      description: 'Job post aur wallet coins ke liye recruiter package activate karein.',
+      description: 'Activate a recruiter package to post jobs and use wallet coins.',
       to: '/recruiter-pricing',
       icon: CreditCard,
       tone: 'rose',
@@ -422,7 +534,7 @@ function buildAdminNotifications(dashboard = {}) {
     items.push({
       id: 'admin-pending-jobs',
       title: `${metrics.pendingJobs} jobs awaiting approval`,
-      description: 'Account department ko pending job posts review karna hai.',
+      description: 'The account department needs to review pending job posts.',
       to: '/admin/jobs',
       icon: BriefcaseBusiness,
       tone: 'blue',
@@ -434,7 +546,7 @@ function buildAdminNotifications(dashboard = {}) {
     items.push({
       id: 'admin-rejected-jobs',
       title: `${metrics.rejectedJobs} rejected jobs`,
-      description: 'Rejected job posts aur remarks audit karein.',
+      description: 'Audit rejected job posts and remarks.',
       to: '/admin/jobs?status=Rejected',
       icon: FileCheck2,
       tone: 'rose',
@@ -446,7 +558,7 @@ function buildAdminNotifications(dashboard = {}) {
     items.push({
       id: 'admin-pending-documents',
       title: `${metrics.pendingDocuments} recruiter documents pending`,
-      description: 'PAN, GST, offer letter, aur company document verification pending hai.',
+      description: 'PAN, GST, offer letter, and company document verification is pending.',
       to: '/admin/recruiter-documents',
       icon: ClipboardList,
       tone: 'violet',
@@ -470,7 +582,7 @@ function buildAdminNotifications(dashboard = {}) {
     items.push({
       id: 'admin-active-packages',
       title: `${metrics.activeSubscriptions} active recruiter packages`,
-      description: 'Recruiter package and wallet activity live hai.',
+      description: 'Recruiter package and wallet activity is live.',
       to: '/admin/package/pricing',
       icon: CreditCard,
       tone: 'emerald',
@@ -552,34 +664,34 @@ function NotificationMenu({ isEmployer, loading, notifications, onClear }) {
   const items = notifications
 
   return (
-    <div className="absolute right-0 top-14 z-50 w-[24rem] max-w-[calc(100vw-2rem)] rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-2xl shadow-blue-100">
+    <div className="absolute right-0 top-14 z-50 w-[24rem] max-w-[calc(100vw-2rem)] rounded-[7px] border border-slate-200 bg-white p-4 shadow-2xl shadow-blue-100">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-black text-slate-950">Notifications</h3>
         <div className="flex items-center gap-2">
           {items.length > 0 && (
-            <button className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 transition hover:bg-rose-50 hover:text-rose-700" onClick={onClear} type="button">
+            <button className="rounded-[7px] bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 transition hover:bg-rose-50 hover:text-rose-700" onClick={onClear} type="button">
               Clear
             </button>
           )}
-          <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-700">{isEmployer ? 'Recruiter live' : 'Admin live'}</span>
+                  <span className="rounded-[7px] bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-700">{isEmployer ? 'Recruiter live' : 'Admin live'}</span>
         </div>
       </div>
       {loading ? (
-        <div className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-500">Loading recruiter notifications...</div>
+        <div className="rounded-[7px] bg-slate-50 p-4 text-sm font-bold text-slate-500">Loading recruiter notifications...</div>
       ) : items.length ? (
         <div className="grid max-h-[26rem] gap-2 overflow-y-auto pr-1">
           {items.map((item) => {
             const Icon = item.icon
             return (
-              <Link className="group rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-blue-100 hover:bg-blue-50/50" key={item.id} to={item.to}>
+              <Link className="group rounded-[7px] border border-slate-100 bg-white p-3 transition hover:border-blue-100 hover:bg-blue-50/50" key={item.id} to={item.to}>
                 <div className="flex gap-3">
-                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ring-1 ${getNotificationTone(item.tone)}`}>
+                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-[7px] ring-1 ${getNotificationTone(item.tone)}`}>
                     <Icon size={18} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-start justify-between gap-3">
                       <span className="font-black text-slate-950">{item.title}</span>
-                      <span className="shrink-0 rounded-full bg-slate-50 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-400 group-hover:bg-white">{item.meta}</span>
+                      <span className="shrink-0 rounded-[7px] bg-slate-50 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-400 group-hover:bg-white">{item.meta}</span>
                     </span>
                     <span className="mt-1 block text-sm font-semibold leading-5 text-slate-500">{item.description}</span>
                   </span>
@@ -589,9 +701,9 @@ function NotificationMenu({ isEmployer, loading, notifications, onClear }) {
           })}
         </div>
       ) : (
-        <div className="rounded-2xl bg-slate-50 p-4">
+        <div className="rounded-[7px] bg-slate-50 p-4">
           <p className="font-black text-slate-950">All clear</p>
-          <p className="mt-1 text-sm font-semibold text-slate-500">Abhi recruiter workspace mein koi new notification nahi hai.</p>
+          <p className="mt-1 text-sm font-semibold text-slate-500">There are no new notifications in this workspace.</p>
         </div>
       )}
     </div>
@@ -599,21 +711,22 @@ function NotificationMenu({ isEmployer, loading, notifications, onClear }) {
 }
 
 function ProfileMenu({ isEmployer, logout, user }) {
-  const profilePath = isEmployer ? '/recruiter-profile' : '/admin'
+  const profilePath = isEmployer ? '/recruiter-profile' : '/admin/profile'
+  const settingsPath = isEmployer ? '/recruiter-profile' : '/admin/profile'
 
   return (
-    <div className="absolute right-0 top-14 z-50 w-72 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-2xl shadow-blue-100">
-      <div className="flex items-center gap-3 rounded-2xl bg-blue-50 p-3">
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-blue-600 text-sm font-black text-white">{getInitials(user?.name || user?.role || 'AD')}</span>
+    <div className="absolute right-0 top-14 z-50 w-72 rounded-[7px] border border-slate-200 bg-white p-4 shadow-2xl shadow-blue-100">
+      <div className="flex items-center gap-3 rounded-[7px] bg-blue-50 p-3">
+        <span className="admin-profile-chip grid h-11 w-11 place-items-center rounded-[7px] text-sm font-black">{getInitials(user?.name || user?.role || 'AD')}</span>
         <div>
           <p className="font-black text-slate-950">{user?.name || 'Admin User'}</p>
           <p className="text-sm font-semibold text-blue-700">{user?.role || 'Admin'}</p>
         </div>
       </div>
       <div className="mt-3 grid gap-2">
-        <Link className="rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-50" to={profilePath}>Profile</Link>
-        <Link className="rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-50" to={profilePath}>Account Settings</Link>
-        <button className="rounded-2xl px-4 py-3 text-left text-sm font-bold text-rose-600 hover:bg-rose-50" onClick={logout} type="button">
+        <Link className="rounded-[7px] px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-50" to={profilePath}>Profile</Link>
+        <Link className="rounded-[7px] px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-50" to={settingsPath}>Account Settings</Link>
+        <button className="rounded-[7px] px-4 py-3 text-left text-sm font-bold text-rose-600 hover:bg-rose-50" onClick={logout} type="button">
           Logout
         </button>
       </div>
@@ -621,20 +734,168 @@ function ProfileMenu({ isEmployer, logout, user }) {
   )
 }
 
-function AdminSidebar({ isEmployer, mobileOpen, onClose, role }) {
+function LiveLocationTracker({ user, visible = false }) {
+  const [locationData, setLocationData] = useState(null)
+  const [previousLocation, setPreviousLocation] = useState(null)
+  const [message, setMessage] = useState('Fetching live location...')
+  const [permissionDenied, setPermissionDenied] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const latestLocationRef = useRef(null)
+
+  const shouldTrack = user?.role && liveLocationRoles.includes(user.role)
+  const canViewLocationPanel = ['Admin', 'Super Admin'].includes(user?.role)
+
+  const captureLocation = () => {
+    if (!shouldTrack) return
+
+    const basePayload = {
+      loginTime: new Date().toISOString(),
+      deviceInfo: navigator.userAgent || '',
+    }
+
+    if (!navigator.geolocation) {
+      setMessage('Location permission required')
+      setPermissionDenied(true)
+      api.trackUserLocation({ ...basePayload, locationStatus: 'unavailable' }).catch(() => {})
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const nextLocation = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          heading: position.coords.heading,
+          speed: position.coords.speed,
+          ...basePayload,
+          locationStatus: 'allowed',
+        }
+
+        if (latestLocationRef.current) setPreviousLocation(latestLocationRef.current)
+        latestLocationRef.current = nextLocation
+        setLocationData(nextLocation)
+        setPermissionDenied(false)
+        setMessage('Live location active')
+        setLastUpdated(new Date())
+
+        try {
+          await api.trackUserLocation(nextLocation)
+        } catch (error) {
+          setMessage(error.message || 'Live location saved locally, backend sync failed.')
+        }
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setMessage('Location permission required')
+          setPermissionDenied(true)
+          api.trackUserLocation({ ...basePayload, locationStatus: 'denied' }).catch(() => {})
+          return
+        }
+        setMessage('Live location could not be fetched.')
+        api.trackUserLocation({ ...basePayload, locationStatus: 'unavailable' }).catch(() => {})
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 15000,
+        timeout: 12000,
+      },
+    )
+  }
+
+  useEffect(() => {
+    if (!shouldTrack) return undefined
+
+    captureLocation()
+    const interval = window.setInterval(captureLocation, 30000)
+
+    return () => window.clearInterval(interval)
+  }, [shouldTrack, user?.email])
+
+  if (!shouldTrack || !canViewLocationPanel || !visible) return null
+
+  const mapUrl = locationData
+    ? `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}&z=16&output=embed`
+    : ''
+  const directionsUrl = locationData
+    ? previousLocation
+      ? `https://www.google.com/maps/dir/?api=1&origin=${previousLocation.latitude},${previousLocation.longitude}&destination=${locationData.latitude},${locationData.longitude}&travelmode=driving`
+      : `https://www.google.com/maps/dir/?api=1&destination=${locationData.latitude},${locationData.longitude}&travelmode=driving`
+    : ''
+
+  return (
+    <section className="mb-5 overflow-hidden rounded-[7px] border border-blue-100 bg-white shadow-sm">
+      <div className="grid gap-4 p-4 lg:grid-cols-[1fr_23rem] lg:items-stretch">
+        <div>
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-blue-600">Google Map & Live Location Tracking</p>
+              <h2 className="mt-1 text-xl font-black text-slate-950">{user?.name || user?.role} live location</h2>
+              <p className={`mt-2 text-sm font-bold ${permissionDenied ? 'text-rose-600' : 'text-slate-500'}`}>{message}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-2 rounded-[7px] bg-teal-50 px-3 py-2 text-xs font-black text-teal-700">
+                <RefreshCw size={14} /> Auto-refresh 30s
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-[7px] bg-blue-50 px-3 py-2 text-xs font-black text-blue-700">
+                <MapPin size={14} /> {user?.role}
+              </span>
+            </div>
+          </div>
+
+          {locationData ? (
+            <div className="mt-4 grid gap-3 text-sm font-bold text-slate-700 sm:grid-cols-4">
+              <div className="rounded-[7px] bg-slate-50 p-3"><span className="block text-xs uppercase text-slate-400">Latitude</span>{locationData.latitude.toFixed(6)}</div>
+              <div className="rounded-[7px] bg-slate-50 p-3"><span className="block text-xs uppercase text-slate-400">Longitude</span>{locationData.longitude.toFixed(6)}</div>
+              <div className="rounded-[7px] bg-slate-50 p-3"><span className="block text-xs uppercase text-slate-400">Accuracy</span>{Math.round(locationData.accuracy || 0)} m</div>
+              <div className="rounded-[7px] bg-slate-50 p-3"><span className="block text-xs uppercase text-slate-400">Updated</span>{lastUpdated ? lastUpdated.toLocaleTimeString() : 'Now'}</div>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-[7px] bg-rose-50 p-4 text-sm font-black text-rose-700">
+              {permissionDenied ? 'Location permission required' : 'Waiting for browser location permission...'}
+            </div>
+          )}
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button className="inline-flex items-center gap-2 rounded-[7px] bg-blue-600 px-4 py-2 text-sm font-black text-white shadow-lg shadow-blue-100" onClick={captureLocation} type="button">
+              <RefreshCw size={16} /> Refresh Location
+            </button>
+            {directionsUrl && (
+              <a className="inline-flex items-center gap-2 rounded-[7px] bg-slate-100 px-4 py-2 text-sm font-black text-slate-700" href={directionsUrl} rel="noreferrer" target="_blank">
+                <Route size={16} /> Google Maps Direction Line
+              </a>
+            )}
+          </div>
+        </div>
+
+        <div className="min-h-56 overflow-hidden rounded-[7px] border border-slate-200 bg-slate-100">
+          {mapUrl ? (
+            <iframe className="h-full min-h-56 w-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" src={mapUrl} title="Live location Google map" />
+          ) : (
+            <div className="grid h-full min-h-56 place-items-center p-5 text-center text-sm font-black text-slate-500">
+              Location permission required
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AdminSidebar({ branding, desktopOpen, isEmployer, mobileOpen, onClose, role }) {
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-50 hidden w-72 border-r border-slate-200 bg-white lg:block">
-        <SidebarContent isEmployer={isEmployer} role={role} />
+      <aside className={`admin-material-sidebar fixed inset-y-0 left-0 z-50 hidden w-72 border-r border-slate-200 bg-white transition-transform duration-200 lg:block ${desktopOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <SidebarContent branding={branding} isEmployer={isEmployer} role={role} />
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-[80] lg:hidden">
           <button aria-label="Close sidebar overlay" className="absolute inset-0 bg-slate-900/30" onClick={onClose} type="button" />
-          <aside className="relative h-full w-80 max-w-[86vw] border-r border-slate-200 bg-white shadow-2xl">
-            <button className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-slate-100" onClick={onClose} type="button">
+          <aside className="admin-material-sidebar relative h-full w-80 max-w-[86vw] border-r border-slate-200 bg-white shadow-2xl">
+            <button className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-[7px] bg-slate-100" onClick={onClose} type="button">
               <X size={18} />
             </button>
-            <SidebarContent isEmployer={isEmployer} role={role} />
+            <SidebarContent branding={branding} isEmployer={isEmployer} role={role} />
           </aside>
         </div>
       )}
@@ -642,11 +903,21 @@ function AdminSidebar({ isEmployer, mobileOpen, onClose, role }) {
   )
 }
 
-function SidebarContent({ isEmployer, role }) {
+function SidebarContent({ branding, isEmployer, role }) {
   const [openGroups, setOpenGroups] = useState({})
   const navigate = useNavigate()
   const location = useLocation()
-  const items = isEmployer ? employerSidebarItems : role === 'Admin' ? sidebarItems : []
+  const items = isEmployer
+    ? employerSidebarItems
+    : role === 'Admin'
+      ? sidebarItems
+      : role === 'hiring'
+        ? sidebarItems.filter((item) => item.to === '/admin/hiring-team')
+        : role === 'account team'
+          ? sidebarItems.filter((item) => ['/admin/jobs', '/admin/employers'].includes(item.to))
+          : role === 'freelancer'
+            ? freelancerSidebarItems
+            : []
 
   const logout = () => {
     localStorage.removeItem('authToken')
@@ -656,40 +927,34 @@ function SidebarContent({ isEmployer, role }) {
 
   return (
     <div className="flex h-full flex-col">
-      <Link className="flex items-center gap-3 px-6 py-5" to={isEmployer ? '/recruiter-dashboard' : '/admin'}>
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-teal-400 text-white shadow-lg shadow-blue-100">
-          <BriefcaseBusiness size={23} />
-        </span>
-        <span>
-          <span className="block text-lg font-black text-slate-950">{isEmployer ? 'Rozgar Recruiter' : 'Rozgar Admin'}</span>
-          <span className="block text-xs font-semibold text-slate-500">{isEmployer ? 'Hiring panel' : 'Enterprise panel'}</span>
-        </span>
+      <Link className="flex min-w-0 items-center px-6 py-5" to={isEmployer ? '/recruiter-dashboard' : role === 'freelancer' ? '/admin/projects' : role === 'hiring' ? '/admin/hiring-team' : role === 'account team' ? '/admin/employers' : '/admin'}>
+        {branding?.logoUrl ? (
+          <img className="h-16 w-auto max-w-[220px] object-contain" src={branding.logoUrl} alt={isEmployer ? (branding?.recruiterName || 'Rozgar Recruiter') : (branding?.adminName || 'Rozgar Admin')} />
+        ) : (
+          <>
+            <span className="grid h-12 w-12 place-items-center"><BriefcaseBusiness size={23} /></span>
+            <span>
+              <span className="block text-lg font-black text-slate-950">{isEmployer ? (branding?.recruiterName || 'Rozgar Recruiter') : (branding?.adminName || 'Rozgar Admin')}</span>
+              <span className="block text-xs font-black text-slate-500">{isEmployer ? 'Hiring panel' : 'Enterprise panel'}</span>
+            </span>
+          </>
+        )}
       </Link>
-      {!isEmployer && (
-        <div className="px-4">
-          <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-teal-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Role access</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {adminRoles.map((role) => <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 shadow-sm" key={role}>{role}</span>)}
-            </div>
-          </div>
-        </div>
-      )}
-      <nav className="mt-4 flex-1 space-y-1 overflow-y-auto px-4 pb-4">
+      <nav className="admin-material-nav mt-4 flex-1 space-y-1 overflow-y-auto px-4 pb-4">
         {items.length ? (
           items.map((item) => {
             const Icon = item.icon
 
             if (item.children?.length) {
-              const isExpanded = openGroups[item.label]
               const currentPath = `${location.pathname}${location.search}`
               const isGroupActive = item.children.some((child) => location.pathname === child.to.split('?')[0])
+              const isExpanded = openGroups[item.label] ?? isGroupActive
 
               return (
                 <div key={item.label}>
                   <button
-                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                      isGroupActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                    className={`admin-material-nav-item flex w-full items-center gap-3 rounded-[7px] px-4 py-3 text-sm font-black tracking-[0.01em] transition ${
+                      isGroupActive ? 'admin-material-nav-active' : 'text-slate-700 hover:bg-[#E9F0FF] hover:text-[#3367F6]'
                     }`}
                     onClick={() => setOpenGroups((current) => ({ ...current, [item.label]: !isExpanded }))}
                     type="button"
@@ -706,8 +971,8 @@ function SidebarContent({ isEmployer, role }) {
                         return (
                           <NavLink
                             className={({ isActive }) =>
-                              `flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
-                                isActive && currentPath === child.to ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-950'
+                              `admin-material-dropdown-item flex items-center gap-3 rounded-[7px] px-4 py-2.5 text-sm font-semibold transition ${
+                                isActive && currentPath === child.to ? 'bg-[#DCE8FF] text-[#3367F6]' : 'text-slate-700 hover:bg-[#F3F6FC] hover:text-[#3367F6]'
                               }`
                             }
                             key={child.label}
@@ -726,8 +991,8 @@ function SidebarContent({ isEmployer, role }) {
             return (
               <NavLink
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                    isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                  `admin-material-nav-item flex items-center gap-3 rounded-[7px] px-4 py-3 text-sm font-black tracking-[0.01em] transition ${
+                isActive ? 'admin-material-nav-active' : 'text-slate-700 hover:bg-[#E9F0FF] hover:text-[#3367F6]'
                   }`
                 }
                 end={item.to === '/admin'}
@@ -739,13 +1004,13 @@ function SidebarContent({ isEmployer, role }) {
             )
           })
         ) : (
-          <div className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold leading-6 text-slate-500">
+          <div className="rounded-[7px] bg-slate-50 p-4 text-sm font-black leading-6 text-slate-500">
             {isEmployer ? 'Recruiter workspace' : `${role || 'User'} dashboard access only`}
           </div>
         )}
       </nav>
       <div className="border-t border-slate-100 p-4">
-        <button className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50" onClick={logout} type="button">
+        <button className="admin-sidebar-logout flex w-full items-center gap-3 rounded-[7px] px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50" onClick={logout} type="button">
           <LogOut size={19} /> Logout
         </button>
       </div>

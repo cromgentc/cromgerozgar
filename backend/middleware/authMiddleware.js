@@ -5,8 +5,16 @@ const User = require('../models/User')
 function normalizeRole(role) {
   const roleMap = {
     'Super Admin': 'Admin',
+    User: 'users',
+    Candidate: 'users',
     'HR Manager': 'staff',
     Support: 'users',
+    Hiring: 'hiring',
+    'Hiring Team': 'hiring',
+    Account: 'account team',
+    'Account Team': 'account team',
+    'account-team': 'account team',
+    account_team: 'account team',
   }
 
   return roleMap[role] || role
@@ -33,6 +41,25 @@ const protect = asyncHandler(async (req, res, next) => {
   next()
 })
 
+const optionalProtect = asyncHandler(async (req, res, next) => {
+  const header = req.headers.authorization
+
+  if (!header?.startsWith('Bearer ')) {
+    next()
+    return
+  }
+
+  const token = header.split(' ')[1]
+  const decoded = jwt.verify(token, process.env.JWT_SECRET)
+  req.user = await User.findById(decoded.id).select('-password')
+
+  if (req.user) {
+    req.user.role = normalizeRole(req.user.role)
+  }
+
+  next()
+})
+
 function authorize(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
@@ -43,4 +70,4 @@ function authorize(...roles) {
   }
 }
 
-module.exports = { authorize, protect }
+module.exports = { authorize, optionalProtect, protect }

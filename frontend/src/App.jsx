@@ -1,10 +1,20 @@
 import { useState } from 'react'
 import { Navigate, createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { CookieConsent } from './components/CookieConsent'
 import { ApplyModal, Toast } from './components/PortalUI'
 import { AdminLayout } from './admin/components/AdminLayout'
 import { AdminBulkHiringPage, AdminHiringPage, AdminSingleHiringPage } from './admin/pages/AdminHiringPages'
-import { AdminDiscountCouponPage, AdminGoogleAuthPage, AdminManagementPage, AdminPricingPage, AdminSettingsPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
+import { AdminHiringTeamPage } from './admin/pages/AdminHiringTeamPage'
+import { AdminProfilePage } from './admin/pages/AdminProfilePage'
+import { AdminDiscountCouponPage, AdminGoogleAuthPage, AdminManagementPage, AdminMongoDbPage, AdminPricingPage, AdminSEOBrandingPage, AdminSettingsPage, AdminSupaCloudPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
+import { AdminWhatsAppApiPage } from './admin/pages/AdminWhatsAppApiPage'
+import { AdminEmailApiPage } from './admin/pages/AdminEmailApiPage'
+import { AdminAddPluginsPage, AdminInstalledPluginsPage } from './admin/pages/AdminPluginsPage'
+import { AdminRazorpayPage } from './admin/pages/AdminRazorpayPage'
+import { AdminSocialMediaPage } from './admin/pages/AdminSocialMediaPage'
 import { AdminRoleDashboard } from './admin/pages/AdminRoleDashboard'
+import { AdminRolePermissionPage } from './admin/pages/AdminRolePermissionPage'
+import { FreelancerLayout } from './components/FreelancerLayout'
 import { Layout } from './components/Layout'
 import { EmployerLayout } from './employer/components/EmployerLayout'
 import { EmployerLoginPage, EmployerRegisterPage } from './employer/pages/EmployerAuthPages'
@@ -18,6 +28,8 @@ import { CompaniesPage, CompanyDetailsPage } from './pages/CompaniesPage'
 import { ContactPage } from './pages/ContactPage'
 import { ContentPage } from './pages/ContentPage'
 import { EmployerDashboard } from './pages/EmployerDashboard'
+import { FreelancerPage } from './pages/FreelancerPage'
+import { FreelancerProjectDetailsPage, FreelancerProjectsPage } from './pages/FreelancerProjectsPage'
 import { HomePage } from './pages/HomePage'
 import { JobDetailsPage } from './pages/JobDetailsPage'
 import { JobsPage } from './pages/JobsPage'
@@ -105,12 +117,13 @@ function App() {
     {
       path: '/admin',
       element: (
-        <ProtectedRoute allowedRoles={['Admin', 'staff', 'recruiter', 'users']}>
+        <ProtectedRoute allowedRoles={['Admin', 'staff', 'recruiter', 'users', 'hiring', 'account team', 'freelancer']}>
           <AdminLayout />
         </ProtectedRoute>
       ),
       children: [
         { index: true, element: <RoleRedirect /> },
+        { path: 'profile', element: <AdminProfilePage /> },
         { path: 'users', element: <AdminManagementPage type="users" /> },
         { path: 'jobs', element: <AdminManagementPage type="jobs" /> },
         { path: 'companies', element: <AdminManagementPage type="companies" /> },
@@ -119,7 +132,9 @@ function App() {
         { path: 'recruiter-documents', element: <AdminManagementPage type="recruiterDocuments" /> },
         { path: 'recruiter-documents/:documentId', element: <RecruiterDocumentDetailPage /> },
         { path: 'candidates', element: <AdminManagementPage type="candidates" /> },
+        { path: 'hiring-team', element: <AdminHiringTeamPage /> },
         { path: 'applications', element: <AdminManagementPage type="applications" /> },
+        { path: 'projects', element: <FreelancerProjectsPage /> },
         { path: 'crm/hiring', element: <AdminHiringPage /> },
         { path: 'crm/hiring/bulk', element: <AdminBulkHiringPage /> },
         { path: 'crm/hiring/single', element: <AdminSingleHiringPage /> },
@@ -134,7 +149,12 @@ function App() {
         { path: 'policy', element: <AdminManagementPage type="contentPages" /> },
         { path: 'policy/users', element: <AdminManagementPage fixedFilters={{ frontendPlacement: 'Users Frontend' }} type="contentPages" /> },
         { path: 'policy/recruiter', element: <AdminManagementPage fixedFilters={{ frontendPlacement: 'Recruiter Frontend' }} type="contentPages" /> },
-        { path: 'payments', element: <Navigate replace to="/admin/package/pricing" /> },
+        { path: 'seo-branding', element: <AdminSEOBrandingPage /> },
+        { path: 'social-media', element: <AdminSocialMediaPage /> },
+        { path: 'payments', element: <Navigate replace to="/admin/payments/transactions" /> },
+        { path: 'payments/transactions', element: <AdminManagementPage type="payments" /> },
+        { path: 'payments/logs', element: <AdminManagementPage type="paymentLogs" /> },
+        { path: 'payments/methods', element: <AdminRazorpayPage /> },
         { path: 'discount-coupons', element: <Navigate replace to="/admin/package/discount-coupons" /> },
         { path: 'package/pricing', element: <AdminPricingPage /> },
         { path: 'package/discount-coupons', element: <AdminDiscountCouponPage /> },
@@ -142,6 +162,14 @@ function App() {
         { path: 'reports', element: <AdminManagementPage type="reports" /> },
         { path: 'settings', element: <AdminSettingsPage /> },
         { path: 'settings/google-auth', element: <AdminGoogleAuthPage /> },
+        { path: 'settings/whatsapp-api', element: <AdminWhatsAppApiPage /> },
+        { path: 'settings/email-api', element: <AdminEmailApiPage /> },
+        { path: 'settings/razorpay', element: <AdminRazorpayPage /> },
+        { path: 'settings/supa-cloud', element: <AdminSupaCloudPage /> },
+        { path: 'settings/mongodb', element: <AdminMongoDbPage /> },
+        { path: 'settings/role-permission', element: <AdminRolePermissionPage /> },
+        { path: 'plugins/add-new', element: <AdminAddPluginsPage /> },
+        { path: 'plugins/installed', element: <AdminInstalledPluginsPage /> },
       ],
     },
     {
@@ -299,6 +327,22 @@ function App() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: '/hiring-dashboard',
+          element: (
+            <ProtectedRoute allowedRoles={['hiring']}>
+              <Navigate replace to="/admin/hiring-team" />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/account-team-dashboard',
+          element: (
+            <ProtectedRoute allowedRoles={['account team']}>
+              <Navigate replace to="/admin/employers" />
+            </ProtectedRoute>
+          ),
+        },
         { path: '/admin-dashoard', element: <RoleRedirect /> },
         { path: '/employers-dashoard', element: <RoleRedirect /> },
         { path: '/recruiter-dashoard', element: <RoleRedirect /> },
@@ -309,10 +353,21 @@ function App() {
       ],
     },
     {
+      element: <FreelancerLayout />,
+      children: [
+        { path: '/freelancer', element: <FreelancerPage /> },
+        { path: '/freelancer/projects', element: <FreelancerProjectsPage /> },
+        { path: '/freelancer/projects/:projectSlug', element: <FreelancerProjectDetailsPage /> },
+        { path: '/freelancer-login', element: <AuthPage defaultRole="freelancer" lockRole /> },
+        { path: '/freelancer-register', element: <AuthPage defaultMode="register" defaultRole="freelancer" lockRole /> },
+      ],
+    },
+    {
       element: <EmployerLayout />,
       children: [
         { path: '/recruiter', element: <EmployerLandingPage /> },
         { path: '/employers', element: <EmployerLandingPage /> },
+        { path: '/recruiter-solutions', element: <EmployerLandingPage /> },
         { path: '/recruiter/privacy', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-privacy" /> },
         { path: '/recruiter/terms', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-terms" /> },
         { path: '/recruiter/support', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-support" /> },
@@ -332,6 +387,7 @@ function App() {
       <RouterProvider router={router} />
       <ApplyModal job={selectedJob} onClose={() => setSelectedJob(null)} />
       <Toast />
+      <CookieConsent />
     </>
   )
 }

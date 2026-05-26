@@ -74,7 +74,7 @@ export function RecruiterFindResumePage() {
 
       <div className="mt-6 grid gap-6">
         <Panel title="Resume Results">
-          <label className="mb-5 flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+          <label className="mb-5 flex items-center gap-3 rounded-[7px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
             <Search className="text-blue-600" size={18} />
               <input
                 className="w-full bg-transparent outline-none"
@@ -88,18 +88,18 @@ export function RecruiterFindResumePage() {
             </label>
           <div className="grid gap-3">
             {visibleResumes.length ? visibleResumes.map((resume) => (
-              <div className="grid gap-4 rounded-2xl bg-slate-50 p-4 xl:grid-cols-[1fr_auto] xl:items-center" key={`${resume.email}-${resume.name}`}>
+              <div className="grid gap-4 rounded-[7px] bg-slate-50 p-4 xl:grid-cols-[1fr_auto] xl:items-center" key={`${resume.email}-${resume.name}`}>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-black text-slate-950">{resume.name}</p>
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-black text-blue-700">{resume.matchLabel}</span>
-                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">{resume.source || 'Resume'}</span>
+                    <span className="rounded-[7px] bg-blue-50 px-2.5 py-1 text-xs font-black text-blue-700">{resume.matchLabel}</span>
+                    <span className="rounded-[7px] bg-white px-2.5 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">{resume.source || 'Resume'}</span>
                   </div>
                   <p className="mt-1 text-sm font-semibold text-slate-600">{resume.role || 'Candidate'} - {resume.experience || 'Experience not added'}</p>
                   <p className="mt-2 flex items-center gap-2 text-sm text-slate-500"><Mail size={15} /> {resume.email || 'Email not added'}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {normalizeSkills(resume.skills).map((skill) => (
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200" key={skill}>{skill}</span>
+                      <span className="rounded-[7px] bg-white px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200" key={skill}>{skill}</span>
                     ))}
                   </div>
                 </div>
@@ -112,7 +112,7 @@ export function RecruiterFindResumePage() {
                 </div>
               </div>
             )) : (
-              <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">No resumes found for this search.</p>
+              <p className="rounded-[7px] bg-slate-50 p-5 text-sm font-semibold text-slate-500">No resumes found for this search.</p>
             )}
           </div>
         </Panel>
@@ -124,7 +124,7 @@ export function RecruiterFindResumePage() {
 function FilterMetric({ active, icon: Icon, label, onClick, value }) {
   return (
     <button
-      className={`rounded-[1.5rem] border p-5 text-left shadow-sm transition hover:-translate-y-0.5 ${
+      className={`rounded-[7px] border p-5 text-left shadow-sm transition hover:-translate-y-0.5 ${
         active ? 'border-blue-200 bg-blue-50 shadow-blue-100' : 'border-slate-200 bg-white hover:bg-slate-50'
       }`}
       onClick={onClick}

@@ -11,13 +11,17 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  Phone,
   Send,
+  Share2,
   ShieldCheck,
   UserPlus,
   UsersRound,
 } from 'lucide-react'
 import { api } from '../../services/api'
 import { getStoredUser } from '../../routes/authRouting'
+import { useSiteBranding } from '../../utils/siteBranding'
+import { useSocialMediaLinks } from '../../utils/socialMediaLinks'
 
 const loggedOutGroups = [
   {
@@ -92,6 +96,8 @@ const trustItems = [
 ]
 
 export function EmployerFooter() {
+  const branding = useSiteBranding()
+  const socialLinks = useSocialMediaLinks()
   const user = getStoredUser()
   const isRecruiterLoggedIn = user?.role === 'recruiter'
   const [policyLinks, setPolicyLinks] = useState(fallbackPolicyLinks)
@@ -157,11 +163,15 @@ export function EmployerFooter() {
 
         <div className="grid gap-8 py-10 lg:grid-cols-[1.05fr_1.95fr]">
           <div className="min-w-0">
-            <Link className="flex items-center gap-3 font-black text-slate-950" to="/recruiter">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-teal-400 text-white shadow-lg shadow-blue-100">
-                <BriefcaseBusiness size={23} />
-              </span>
-              <span className="text-xl">Rozgar Recruiter</span>
+            <Link className="flex min-w-0 items-center font-black text-slate-950" to="/recruiter">
+              {branding.logoUrl ? (
+                <img className="h-16 w-auto max-w-[240px] object-contain" src={branding.logoUrl} alt={branding.recruiterName || 'Rozgar Recruiter'} />
+              ) : (
+                <>
+                  <span className="grid h-12 w-12 place-items-center"><BriefcaseBusiness size={23} /></span>
+                  <span className="text-xl">{branding.recruiterName || 'Rozgar Recruiter'}</span>
+                </>
+              )}
             </Link>
 
             <p className="mt-4 max-w-md text-sm font-semibold leading-7 text-slate-500">
@@ -186,15 +196,17 @@ export function EmployerFooter() {
 
             <div className="mt-6 grid gap-3 text-sm font-semibold text-slate-500">
               <p className="flex items-center gap-3"><Mail className="text-blue-600" size={18} /> recruiter@cromgenrozgar.com</p>
+              <p className="flex items-center gap-3"><Phone className="text-blue-600" size={18} /> {branding.tollFreeNumber || '+91 98765 43210'}</p>
               <p className="flex items-center gap-3"><MessageCircle className="text-blue-600" size={18} /> Hiring support and account desk</p>
               <p className="flex items-center gap-3"><MapPin className="text-blue-600" size={18} /> New Delhi, India</p>
             </div>
+            <SocialLinks links={socialLinks} />
           </div>
 
           <div className="grid gap-6">
             <div className="grid gap-3 md:grid-cols-3">
               {trustItems.map(([Icon, label]) => (
-                <div className="rounded-[1.5rem] border border-slate-200 bg-gradient-to-br from-blue-50 via-white to-teal-50 p-4 shadow-sm" key={label}>
+                <div className="rounded-[7px] border border-slate-200 bg-gradient-to-br from-blue-50 via-white to-teal-50 p-4 shadow-sm" key={label}>
                   <Icon className="text-blue-600" size={20} />
                   <p className="mt-3 text-xs font-black uppercase leading-5 tracking-wide text-slate-600">{label}</p>
                 </div>
@@ -218,7 +230,7 @@ export function EmployerFooter() {
           </div>
         </div>
 
-        <div className="rounded-[2rem] bg-gradient-to-br from-blue-50 via-white to-teal-50 p-4 sm:flex sm:items-center sm:justify-between">
+        <div className="rounded-[7px] bg-gradient-to-br from-blue-50 via-white to-teal-50 p-4 sm:flex sm:items-center sm:justify-between">
           <div>
             <p className="font-black text-slate-950">
               {isRecruiterLoggedIn ? 'Recruiter operations digest' : 'Get recruiter hiring insights'}
@@ -232,7 +244,7 @@ export function EmployerFooter() {
           </div>
           <div className="mt-4 flex min-w-0 gap-2 sm:mt-0">
             <input
-              className="min-h-10 min-w-0 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500"
+              className="min-h-10 min-w-0 rounded-[7px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500"
               onChange={(event) => setEmail(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') subscribe()
@@ -242,7 +254,7 @@ export function EmployerFooter() {
               value={email}
             />
             <button
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-600 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-[7px] bg-blue-600 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={submitting}
               onClick={subscribe}
               type="button"
@@ -266,7 +278,7 @@ export function EmployerFooter() {
 function FooterButton({ icon: Icon, label, secondary = false, to }) {
   return (
     <Link
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-black shadow-sm transition ${
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] px-5 text-sm font-black shadow-sm transition ${
         secondary
           ? 'border border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
           : 'bg-blue-600 text-white shadow-blue-100 hover:bg-blue-700'
@@ -276,4 +288,52 @@ function FooterButton({ icon: Icon, label, secondary = false, to }) {
       <Icon size={17} /> {label}
     </Link>
   )
+}
+
+function SocialLinks({ links }) {
+  const visibleLinks = links.filter((item) => item.url)
+  if (!visibleLinks.length) return null
+
+  return (
+    <div className="mt-6 flex flex-wrap gap-2">
+      {visibleLinks.map((item) => {
+        const tone = getSocialTone(item.platform)
+        return (
+          <a
+            aria-label={item.label || item.platform}
+            className={`grid h-10 w-10 place-items-center rounded-[7px] transition ${tone}`}
+            href={item.url}
+            key={`${item.platform}-${item.url}`}
+            rel="noreferrer"
+            target="_blank"
+            title={item.label || item.platform}
+          >
+            <SocialGlyph platform={item.platform} />
+          </a>
+        )
+      })}
+    </div>
+  )
+}
+
+function SocialGlyph({ platform = '' }) {
+  const key = platform.toLowerCase()
+  if (key.includes('facebook')) return <span className="text-sm font-black">f</span>
+  if (key.includes('instagram')) return <span className="text-sm font-black">◎</span>
+  if (key.includes('linkedin')) return <span className="text-sm font-black">in</span>
+  if (key.includes('youtube')) return <span className="text-sm font-black">▶</span>
+  if (key.includes('twitter') || key === 'x') return <span className="text-sm font-black">X</span>
+  if (key.includes('whatsapp')) return <MessageCircle size={18} />
+  return <Share2 size={18} />
+}
+
+function getSocialTone(platform = '') {
+  const key = platform.toLowerCase()
+  if (key.includes('facebook')) return 'bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2] hover:text-white'
+  if (key.includes('instagram')) return 'bg-[#E4405F]/10 text-[#E4405F] hover:bg-[#E4405F] hover:text-white'
+  if (key.includes('linkedin')) return 'bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white'
+  if (key.includes('youtube')) return 'bg-[#FF0000]/10 text-[#FF0000] hover:bg-[#FF0000] hover:text-white'
+  if (key.includes('twitter') || key === 'x') return 'bg-slate-900/10 text-slate-900 hover:bg-slate-900 hover:text-white'
+  if (key.includes('whatsapp')) return 'bg-[#25D366]/10 text-[#1FA855] hover:bg-[#25D366] hover:text-white'
+  return 'bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white'
 }

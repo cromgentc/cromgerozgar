@@ -48,6 +48,10 @@ function crudController(Model, options = {}) {
         res.status(404)
         throw new Error(`${Model.modelName} not found`)
       }
+      if (options.canAccess && !options.canAccess(item, req)) {
+        res.status(403)
+        throw new Error('Forbidden: insufficient record access')
+      }
       res.json({ success: true, data: item })
     }),
 
@@ -61,6 +65,17 @@ function crudController(Model, options = {}) {
     }),
 
     update: asyncHandler(async (req, res) => {
+      if (options.canAccess) {
+        const existing = await Model.findById(req.params.id)
+        if (!existing) {
+          res.status(404)
+          throw new Error(`${Model.modelName} not found`)
+        }
+        if (!options.canAccess(existing, req)) {
+          res.status(403)
+          throw new Error('Forbidden: insufficient record access')
+        }
+      }
       if (options.beforeUpdate) await options.beforeUpdate(req.body, req)
       const item = await Model.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
       if (!item) {
@@ -71,6 +86,13 @@ function crudController(Model, options = {}) {
     }),
 
     remove: asyncHandler(async (req, res) => {
+      const existing = await Model.findById(req.params.id)
+      if (!existing) {
+        res.status(404)
+        throw new Error(`${Model.modelName} not found`)
+      }
+      if (options.beforeRemove) await options.beforeRemove(existing, req)
+
       const item = await Model.findByIdAndDelete(req.params.id)
       if (!item) {
         res.status(404)

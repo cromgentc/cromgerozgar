@@ -170,8 +170,8 @@ export function EmployerLoginPage() {
           <label className="flex items-center gap-2 text-slate-500"><input type="checkbox" /> Remember me</label>
           <a className="font-bold text-blue-600" href="#forgot">Forgot password?</a>
         </div>
-        {message && <p className="rounded-2xl bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
-        <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700" disabled={loading} type="submit">
+        {message && <p className="rounded-[7px] bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
+        <button className="inline-flex min-h-11 items-center justify-center rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700" disabled={loading} type="submit">
           {loading ? 'Logging in...' : 'Login to Recruiter Portal'}
         </button>
         <GoogleAuthButton disabled={loading} onCredential={googleSubmit} />
@@ -310,7 +310,7 @@ export function EmployerRegisterPage() {
     <EmployerAuthShell title="Register Recruiter" subtitle="Create your recruiter account and start building a premium hiring pipeline.">
       <div className="mb-6">
         <div className="flex justify-between text-sm font-black text-slate-600"><span>Step {step} of 2</span><span>{step === 1 ? 'Recruiter info' : 'Hiring setup'}</span></div>
-        <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full bg-gradient-to-r from-blue-600 to-teal-400 ${step === 1 ? 'w-1/2' : 'w-full'}`} /></div>
+        <div className="mt-3 h-3 overflow-hidden rounded-[7px] bg-slate-100"><div className={`h-full rounded-[7px] bg-gradient-to-r from-blue-600 to-teal-400 ${step === 1 ? 'w-1/2' : 'w-full'}`} /></div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {step === 1 ? (
@@ -354,11 +354,11 @@ export function EmployerRegisterPage() {
         )}
       </div>
       <label className="mt-4 flex items-center gap-2 text-sm text-slate-500"><input type="checkbox" /> I agree to recruiter terms and hiring policies.</label>
-      {message && <p className="mt-4 rounded-2xl bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
+      {message && <p className="mt-4 rounded-[7px] bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         {step > 1 && <Button className="flex-1" onClick={() => setStep(1)} variant="secondary">Back</Button>}
         <button
-          className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700"
+          className="inline-flex min-h-11 flex-1 items-center justify-center rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700"
           disabled={loading}
           onClick={() => (step === 1 ? continueToSetup() : submit())}
           type="button"
@@ -376,20 +376,20 @@ export function EmployerRegisterPage() {
 
 function EmployerAuthShell({ title, subtitle, children }) {
   return (
-    <section className="grid min-h-[calc(100vh-76px)] place-items-center bg-gradient-to-br from-blue-50 via-white to-teal-50 px-4 py-12">
-      <div className="grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white bg-white/85 shadow-2xl shadow-blue-100 backdrop-blur-xl lg:grid-cols-[0.92fr_1.08fr]">
-        <div className="relative bg-gradient-to-br from-blue-600 via-sky-500 to-violet-500 p-8 text-white sm:p-10">
+    <section className="grid min-h-[calc(100vh-76px)] place-items-center bg-[linear-gradient(135deg,#FFFFFF_0%,#F8FBFF_55%,#FFF7ED_100%)] px-4 py-5 sm:py-7">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-[7px] border border-[#0057B8]/10 bg-white/95 shadow-2xl shadow-[#0057B8]/15 backdrop-blur-xl lg:grid-cols-[0.86fr_1.14fr]">
+        <div className="relative bg-gradient-to-br from-[#0057B8] via-[#0057B8] to-[#FF8A00] p-6 text-white sm:p-7">
           <div className="relative z-10">
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/15"><Building2 size={28} /></div>
-            <h1 className="mt-5 text-4xl font-black">{title}</h1>
-            <p className="mt-4 leading-7 text-blue-50">{subtitle}</p>
-            <div className="mt-8 grid gap-3">
-              {['Verified recruiter profile', 'Collaborative recruiter workspace', 'Application and shortlist management'].map((item) => <p className="flex items-center gap-3 rounded-2xl bg-white/15 p-4 font-semibold" key={item}><CheckCircle2 size={18} />{item}</p>)}
+            <div className="grid h-12 w-12 place-items-center rounded-[7px] bg-white/15"><Building2 size={24} /></div>
+            <h1 className="mt-4 text-3xl font-black sm:text-4xl">{title}</h1>
+            <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-blue-50">{subtitle}</p>
+            <div className="mt-6 grid gap-2.5">
+              {['Verified recruiter profile', 'Collaborative recruiter workspace', 'Application and shortlist management'].map((item) => <p className="flex items-center gap-3 rounded-[7px] bg-white/15 px-4 py-3 text-sm font-semibold" key={item}><CheckCircle2 className="text-[#A7F3A0]" size={17} />{item}</p>)}
             </div>
           </div>
-          <img className="relative z-10 mt-8 w-full rounded-[1.75rem] bg-white/10 object-contain p-2" src={employerImage} alt="Recruiter portal illustration" />
+          <img className="relative z-10 mt-6 max-h-56 w-full rounded-[7px] bg-white/10 object-contain p-2 lg:max-h-60" src={employerImage} alt="Recruiter portal illustration" />
         </div>
-        <div className="p-6 sm:p-10">{children}</div>
+        <div className="p-6 sm:p-8">{children}</div>
       </div>
     </section>
   )
@@ -403,13 +403,13 @@ function Field({ icon: Icon, label, ...props }) {
   return (
     <label>
       <span className="text-sm font-bold text-slate-700">{label}</span>
-      <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
-        <Icon size={18} className="text-blue-600" />
+      <div className="mt-2 flex items-center gap-3 rounded-[7px] border border-slate-200 px-4 py-3 focus-within:border-[#0057B8] focus-within:ring-4 focus-within:ring-[#0057B8]/10">
+        <Icon size={18} className="text-[#0057B8]" />
         <input className="w-full outline-none" {...props} type={isPassword && showPassword ? 'text' : props.type} />
         {isPassword && (
           <button
             aria-label={showPassword ? 'Hide password' : 'Show password'}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-blue-600"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-[7px] text-slate-500 transition hover:bg-slate-100 hover:text-blue-600"
             onClick={() => setShowPassword((value) => !value)}
             type="button"
           >
@@ -426,11 +426,11 @@ function PasswordInput({ className = '', ...props }) {
   const InputIcon = showPassword ? EyeOff : Eye
 
   return (
-    <div className={`flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 ${className}`}>
+    <div className={`flex items-center gap-3 rounded-[7px] border border-slate-200 bg-white px-4 py-3 ${className}`}>
       <input className="w-full bg-transparent text-sm font-semibold outline-none" {...props} type={showPassword ? 'text' : 'password'} />
       <button
         aria-label={showPassword ? 'Hide password' : 'Show password'}
-        className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-blue-600"
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-[7px] text-slate-500 transition hover:bg-slate-100 hover:text-blue-600"
         onClick={() => setShowPassword((value) => !value)}
         type="button"
       >

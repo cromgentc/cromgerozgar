@@ -39,7 +39,7 @@ export function RecruiterJobsPage() {
   const rejectedJobs = jobs.filter((job) => job.accountDepartmentStatus === 'Rejected' || job.approval === 'Rejected').length
 
   return (
-    <DashboardShell title="My Posted Jobs" subtitle="Aapke recruiter account se post kiye gaye jobs yahan ek-ek karke show honge.">
+    <DashboardShell title="My Posted Jobs" subtitle="Jobs posted from your recruiter account will appear here one by one.">
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard icon={BriefcaseBusiness} label="Total Jobs" value={String(jobs.length)} />
         <MetricCard icon={CheckCircle2} label="Active Jobs" value={String(activeJobs)} />
@@ -52,11 +52,11 @@ export function RecruiterJobsPage() {
           <Button to="/post-job"><Plus size={18} /> Post New Job</Button>
         </div>
 
-        {message && <p className="mb-4 rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-700">{message}</p>}
+        {message && <p className="mb-4 rounded-[7px] bg-rose-50 p-4 text-sm font-bold text-rose-700">{message}</p>}
         {loading ? (
-          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-bold text-slate-500">Loading your posted jobs...</p>
+          <p className="rounded-[7px] bg-slate-50 p-5 text-sm font-bold text-slate-500">Loading your posted jobs...</p>
         ) : jobs.length ? (
-          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="overflow-x-auto rounded-[7px] border border-slate-200">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
@@ -87,10 +87,10 @@ export function RecruiterJobsPage() {
             </table>
           </div>
         ) : (
-          <div className="rounded-2xl bg-slate-50 p-8 text-center">
+          <div className="rounded-[7px] bg-slate-50 p-8 text-center">
             <BriefcaseBusiness className="mx-auto text-blue-600" size={34} />
             <h2 className="mt-4 text-xl font-black text-slate-950">No jobs posted yet</h2>
-            <p className="mt-2 text-sm font-semibold text-slate-500">Aap jab job post karenge, woh yahan show hoga.</p>
+            <p className="mt-2 text-sm font-semibold text-slate-500">When you post a job, it will appear here.</p>
             <Button className="mt-5" to="/post-job"><Plus size={18} /> Post First Job</Button>
           </div>
         )}
@@ -106,7 +106,7 @@ function getShortId(value) {
 
 function Info({ label, value }) {
   return (
-    <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+    <div className="rounded-[7px] bg-white p-4 ring-1 ring-slate-200">
       <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
       <p className="mt-1 text-slate-800">{value}</p>
     </div>
@@ -134,20 +134,20 @@ function JobDetailsModal({ job, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl">
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[7px] bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-black uppercase tracking-wide text-blue-600">Job Details</p>
             <h2 className="mt-2 text-3xl font-black text-slate-950">{job.title}</h2>
             <p className="mt-2 text-sm font-bold text-slate-500">{job.company} / {job.location}</p>
           </div>
-          <button className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-slate-600" onClick={onClose} type="button">
+          <button className="grid h-10 w-10 place-items-center rounded-[7px] bg-slate-100 text-slate-600" onClick={onClose} type="button">
             <X size={18} />
           </button>
         </div>
 
         {job.accountDepartmentRemark && (
-          <div className="mt-5 rounded-2xl bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-800">
+          <div className="mt-5 rounded-[7px] bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-800">
             <span className="font-black">Admin remark:</span> {job.accountDepartmentRemark}
           </div>
         )}
@@ -170,7 +170,7 @@ function JobDetailsModal({ job, onClose }) {
 
 function LongInfo({ label, value }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4">
+    <div className="rounded-[7px] bg-slate-50 p-4">
       <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
       <p className="mt-2 whitespace-pre-line text-sm font-semibold leading-6 text-slate-700">{value || 'Not added'}</p>
     </div>
@@ -185,5 +185,5 @@ function StatusBadge({ label, tone = 'blue' }) {
     teal: 'bg-teal-50 text-teal-700',
   }
 
-  return <span className={`rounded-full px-3 py-1 text-xs font-black ${tones[tone] || tones.blue}`}>{label}</span>
+  return <span className={`rounded-[7px] px-3 py-1 text-xs font-black ${tones[tone] || tones.blue}`}>{label}</span>
 }

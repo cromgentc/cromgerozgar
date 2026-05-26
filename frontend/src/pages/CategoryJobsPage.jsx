@@ -61,7 +61,7 @@ export function CategoryJobsPage({ onApply }) {
     return (
       <section className="py-12">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <div className="rounded-[7px] border border-slate-200 bg-white p-8 text-center shadow-sm">
             <h1 className="text-3xl font-black text-slate-950">Category not found</h1>
             <p className="mx-auto mt-3 max-w-xl text-sm font-semibold text-slate-500">The job category you opened is not available. Please go back and choose another category.</p>
             <Button className="mt-6" to="/">Back to Categories</Button>
@@ -76,14 +76,14 @@ export function CategoryJobsPage({ onApply }) {
   return (
     <section className="py-10 sm:py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Link className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-black text-slate-600 ring-1 ring-slate-200 hover:text-blue-700" to="/">
+        <Link className="inline-flex items-center gap-2 rounded-[7px] bg-white px-4 py-2 text-sm font-black text-slate-600 ring-1 ring-slate-200 hover:text-blue-700" to="/">
           <ArrowLeft size={17} /> Back to categories
         </Link>
 
-        <div className="mt-5 overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-teal-50 shadow-xl shadow-blue-100/50">
+        <div className="mt-5 overflow-hidden rounded-[7px] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-teal-50 shadow-xl shadow-blue-100/50">
           <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
-              <div className={`grid h-14 w-14 place-items-center rounded-2xl ${category.color}`}>
+              <div className={`grid h-14 w-14 place-items-center rounded-[7px] ${category.color}`}>
                 <CategoryIcon size={25} />
               </div>
               <p className="mt-5 text-sm font-black uppercase tracking-[0.18em] text-blue-600">Category openings</p>
@@ -101,7 +101,7 @@ export function CategoryJobsPage({ onApply }) {
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[300px_1fr]">
-          <aside className="h-max rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+          <aside className="h-max rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-3">
               <h2 className="text-lg font-black text-slate-950">Filters</h2>
               <SlidersHorizontal className="text-blue-600" size={19} />
@@ -109,7 +109,7 @@ export function CategoryJobsPage({ onApply }) {
             <div className="grid gap-4">
               <label>
                 <span className="text-xs font-black uppercase tracking-wide text-slate-400">Work mode</span>
-                <select className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" onChange={(event) => setWorkMode(event.target.value)} value={workMode}>
+                <select className="mt-2 w-full rounded-[7px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" onChange={(event) => setWorkMode(event.target.value)} value={workMode}>
                   <option value="">All work modes</option>
                   <option value="Remote">Remote</option>
                   <option value="Hybrid">Hybrid</option>
@@ -118,7 +118,7 @@ export function CategoryJobsPage({ onApply }) {
               </label>
               <label>
                 <span className="text-xs font-black uppercase tracking-wide text-slate-400">Job type</span>
-                <select className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" onChange={(event) => setJobType(event.target.value)} value={jobType}>
+                <select className="mt-2 w-full rounded-[7px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" onChange={(event) => setJobType(event.target.value)} value={jobType}>
                   <option value="">All job types</option>
                   <option value="Full Time">Full Time</option>
                   <option value="Part Time">Part Time</option>
@@ -127,11 +127,11 @@ export function CategoryJobsPage({ onApply }) {
                 </select>
               </label>
 
-              <div className="rounded-2xl bg-slate-50 p-4">
+              <div className="rounded-[7px] bg-slate-50 p-4">
                 <p className="text-sm font-black text-slate-950">Top companies</p>
                 <div className="mt-3 grid gap-2">
                   {topCompanies.length ? topCompanies.map(([company, count]) => (
-                    <p className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm font-bold text-slate-600" key={company}>
+                    <p className="flex items-center justify-between rounded-[7px] bg-white px-3 py-2 text-sm font-bold text-slate-600" key={company}>
                       <span>{company}</span>
                       <span className="text-blue-700">{count}</span>
                     </p>
@@ -144,30 +144,30 @@ export function CategoryJobsPage({ onApply }) {
           </aside>
 
           <div>
-            <div className="mb-5 flex flex-col justify-between gap-3 rounded-3xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
+            <div className="mb-5 flex flex-col justify-between gap-3 rounded-[7px] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
               <p className="text-sm font-black text-slate-700">
                 {loading ? 'Loading openings...' : `${matchedJobs.length} ${category.name} openings found`}
               </p>
               <div className="flex flex-wrap gap-2 text-xs font-black text-slate-500">
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">Active jobs only</span>
-                <span className="rounded-full bg-teal-50 px-3 py-1 text-teal-700">Dynamic API</span>
+                <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-blue-700">Active jobs only</span>
+                <span className="rounded-[7px] bg-teal-50 px-3 py-1 text-teal-700">Dynamic API</span>
               </div>
             </div>
 
             {loading ? (
               <div className="grid gap-4 md:grid-cols-2">
-                {[1, 2, 3, 4].map((item) => <div className="h-72 animate-pulse rounded-[1.75rem] bg-white ring-1 ring-slate-200" key={item} />)}
+                {[1, 2, 3, 4].map((item) => <div className="h-72 animate-pulse rounded-[7px] bg-white ring-1 ring-slate-200" key={item} />)}
               </div>
             ) : matchedJobs.length ? (
               <div className="grid gap-5 xl:grid-cols-2">
                 {matchedJobs.map((job) => <JobCard job={job} key={job._id || job.id} onApply={onApply} />)}
               </div>
             ) : (
-              <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center">
+              <div className="rounded-[7px] border border-dashed border-slate-300 bg-white p-10 text-center">
                 <Clock3 className="mx-auto text-blue-500" size={34} />
                 <h2 className="mt-4 text-2xl font-black text-slate-950">No openings in this category yet</h2>
                 <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-500">
-                  Admin/recruiter jab is category se related active jobs add karega, yaha automatically show hoga.
+                  When admin or recruiter adds active jobs related to this category, they will appear here automatically.
                 </p>
                 <Button className="mt-6" to="/jobs">Browse All Jobs</Button>
               </div>
@@ -181,7 +181,7 @@ export function CategoryJobsPage({ onApply }) {
 
 function Metric({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-2xl border border-white bg-white/80 p-4 shadow-sm">
+    <div className="rounded-[7px] border border-white bg-white/80 p-4 shadow-sm">
       <Icon className="text-blue-600" size={20} />
       <p className="mt-3 text-2xl font-black text-slate-950">{value}</p>
       <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>

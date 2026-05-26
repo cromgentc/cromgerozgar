@@ -9,6 +9,11 @@ exports.submit = asyncHandler(async (req, res) => {
     throw new Error('Recruiter email is required')
   }
 
+  if (req.user?.role === 'recruiter' && String(req.user.email || '').toLowerCase() !== recruiterEmail) {
+    res.status(403)
+    throw new Error('Forbidden: recruiter account mismatch')
+  }
+
   const subscription = await RecruiterPackageSubscription.findOne({ recruiterEmail, status: 'Active' }).sort('-activatedAt')
   if (!subscription || subscription.paymentStatus !== 'Paid') {
     res.status(402)

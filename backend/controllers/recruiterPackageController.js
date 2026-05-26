@@ -1,6 +1,12 @@
 const asyncHandler = require('../middleware/asyncHandler')
+const crypto = require('crypto')
+const Razorpay = require('razorpay')
+const Payment = require('../models/Payment')
 const PricingPackage = require('../models/PricingPackage')
 const RecruiterPackageSubscription = require('../models/RecruiterPackageSubscription')
+const Setting = require('../models/Setting')
+
+const RAZORPAY_SETTING_KEY = 'razorpayPaymentGateway'
 
 function getPackageAmount(price) {
   const amount = Number(String(price || '').replace(/[^\d.]/g, ''))
@@ -17,6 +23,65 @@ function getCoinCredit(selectedPackage) {
   const minimumPackageCoins = Math.max(coinPerJob, jobLimit * coinPerJob)
 
   return Math.max(amountCoins, minimumPackageCoins)
+}
+
+function formatInr(amount) {
+  return `INR ${Number(amount || 0).toLocaleString('en-IN')}`
+}
+
+function getPackagePayableAmount(selectedPackage) {
+  const amount = getPackageAmount(selectedPackage.price)
+  const discountPercent = Number(selectedPackage.discountPercent || 0)
+  return Math.max(0, Math.round(amount - (amount * discountPercent) / 100))
+}
+
+function buildInvoiceNo() {
+  return `CR-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`
+}
+
+async function getRazorpayConfig() {
+  const setting = await Setting.findOne({ key: RAZORPAY_SETTING_KEY }).lean().catch(() => null)
+  const value = setting?.value || {}
+
+  return {
+    enabled: value.enabled !== false,
+    keyId: value.keyId || process.env.RAZORPAY_KEY_ID || '',
+    keySecret: value.keySecret || process.env.RAZORPAY_KEY_SECRET || '',
+    companyName: value.companyName || process.env.RAZORPAY_COMPANY_NAME || 'Cromgen Rozgar',
+    themeColor: value.themeColor || '#2563eb',
+  }
+}
+
+async function getRazorpayClient() {
+  const config = await getRazorpayConfig()
+
+  if (!config.enabled) {
+    const error = new Error('Razorpay payment gateway is disabled.')
+    error.statusCode = 400
+    throw error
+  }
+
+  if (!config.keyId || !config.keySecret) {
+    const error = new Error('Razorpay keys are missing. Save Razorpay settings from Admin > Settings.')
+    error.statusCode = 400
+    throw error
+  }
+
+  return {
+    config,
+    client: new Razorpay({
+      key_id: config.keyId,
+      key_secret: config.keySecret,
+    }),
+  }
+}
+
+function assertRecruiterOwner(req, res, recruiterEmail) {
+  if (req.user?.role !== 'recruiter') return
+  if (String(req.user.email || '').toLowerCase() === recruiterEmail) return
+
+  res.status(403)
+  throw new Error('Forbidden: recruiter account mismatch')
 }
 
 async function repairSubscriptionCoins(subscription) {
@@ -45,35 +110,7 @@ async function repairSubscriptionCoins(subscription) {
   return subscription
 }
 
-exports.current = asyncHandler(async (req, res) => {
-  const recruiterEmail = String(req.query.recruiterEmail || '').toLowerCase()
-  if (!recruiterEmail) {
-    res.status(400)
-    throw new Error('Recruiter email is required')
-  }
-
-  const subscription = await RecruiterPackageSubscription.findOne({ recruiterEmail, status: 'Active' }).sort('-activatedAt')
-  await repairSubscriptionCoins(subscription)
-
-  res.json({ success: true, data: subscription })
-})
-
-exports.activate = asyncHandler(async (req, res) => {
-  const recruiterEmail = String(req.body.recruiterEmail || '').toLowerCase()
-  const recruiterName = req.body.recruiterName || ''
-  const packageId = req.body.packageId
-
-  if (!recruiterEmail || !packageId) {
-    res.status(400)
-    throw new Error('Recruiter email and package id are required')
-  }
-
-  const selectedPackage = await PricingPackage.findById(packageId)
-  if (!selectedPackage || selectedPackage.status === 'Inactive') {
-    res.status(404)
-    throw new Error('Package is not available')
-  }
-
+async function activatePaidPackage({ recruiterEmail, recruiterName, selectedPackage }) {
   await RecruiterPackageSubscription.updateMany(
     { recruiterEmail, status: 'Active' },
     { status: 'Cancelled', cancelledAt: new Date() },
@@ -85,7 +122,7 @@ exports.activate = asyncHandler(async (req, res) => {
   const coinCredit = getCoinCredit(selectedPackage)
   const coinPerJob = Number(selectedPackage.coinPerJob || 10)
 
-  const subscription = await RecruiterPackageSubscription.create({
+  return RecruiterPackageSubscription.create({
     recruiterEmail,
     recruiterName,
     packageId: selectedPackage._id,
@@ -108,8 +145,259 @@ exports.activate = asyncHandler(async (req, res) => {
     activatedAt,
     expiresAt,
   })
+}
+
+async function creditPaidCoins({ recruiterEmail, recruiterName, coins, amount }) {
+  const subscription = await RecruiterPackageSubscription.findOne({ recruiterEmail, status: 'Active' }).sort('-activatedAt')
+  if (!subscription) {
+    const error = new Error('Please activate a recruiter package before buying coins.')
+    error.statusCode = 404
+    throw error
+  }
+
+  subscription.recruiterName = recruiterName || subscription.recruiterName
+  subscription.coinBalance = Number(subscription.coinBalance || 0) + coins
+  subscription.packageSnapshot = {
+    ...(subscription.packageSnapshot?.toObject ? subscription.packageSnapshot.toObject() : subscription.packageSnapshot),
+    coinCredit: Number(subscription.packageSnapshot?.coinCredit || 0) + coins,
+    lastCoinPurchase: {
+      coins,
+      amount,
+      paidAt: new Date(),
+    },
+  }
+  subscription.paymentStatus = 'Paid'
+  await subscription.save()
+
+  return subscription
+}
+
+exports.razorpayConfig = asyncHandler(async (req, res) => {
+  const config = await getRazorpayConfig()
+
+  res.json({
+    success: true,
+    data: {
+      enabled: config.enabled,
+      keyId: config.keyId,
+      companyName: config.companyName,
+      themeColor: config.themeColor,
+    },
+  })
+})
+
+exports.current = asyncHandler(async (req, res) => {
+  const recruiterEmail = String(req.query.recruiterEmail || '').toLowerCase()
+  if (!recruiterEmail) {
+    res.status(400)
+    throw new Error('Recruiter email is required')
+  }
+  assertRecruiterOwner(req, res, recruiterEmail)
+
+  const subscription = await RecruiterPackageSubscription.findOne({ recruiterEmail, status: 'Active' }).sort('-activatedAt')
+  await repairSubscriptionCoins(subscription)
+
+  res.json({ success: true, data: subscription })
+})
+
+exports.activate = asyncHandler(async (req, res) => {
+  const recruiterEmail = String(req.body.recruiterEmail || '').toLowerCase()
+  const recruiterName = req.body.recruiterName || ''
+  const packageId = req.body.packageId
+
+  if (!recruiterEmail || !packageId) {
+    res.status(400)
+    throw new Error('Recruiter email and package id are required')
+  }
+  assertRecruiterOwner(req, res, recruiterEmail)
+
+  const selectedPackage = await PricingPackage.findById(packageId)
+  if (!selectedPackage || selectedPackage.status === 'Inactive') {
+    res.status(404)
+    throw new Error('Package is not available')
+  }
+
+  if (getPackagePayableAmount(selectedPackage) > 0 && !req.body.allowManualActivation) {
+    res.status(400)
+    throw new Error('Paid package requires Razorpay payment verification.')
+  }
+
+  const subscription = await activatePaidPackage({ recruiterEmail, recruiterName, selectedPackage })
 
   res.status(201).json({ success: true, data: subscription })
+})
+
+exports.createRazorpayOrder = asyncHandler(async (req, res) => {
+  const recruiterEmail = String(req.body.recruiterEmail || '').toLowerCase()
+  const recruiterName = req.body.recruiterName || ''
+  const purpose = req.body.purpose
+
+  if (!recruiterEmail) {
+    res.status(400)
+    throw new Error('Recruiter email is required')
+  }
+  assertRecruiterOwner(req, res, recruiterEmail)
+
+  let amount = 0
+  let plan = ''
+  let packageId = null
+  let coins = 0
+
+  if (purpose === 'package') {
+    const selectedPackage = await PricingPackage.findById(req.body.packageId)
+    if (!selectedPackage || selectedPackage.status === 'Inactive') {
+      res.status(404)
+      throw new Error('Package is not available')
+    }
+
+    amount = getPackagePayableAmount(selectedPackage)
+    plan = selectedPackage.name
+    packageId = selectedPackage._id
+  } else if (purpose === 'coins') {
+    coins = Math.max(Number(req.body.coins || 0), 0)
+    if (!coins || coins % 10 !== 0) {
+      res.status(400)
+      throw new Error('Please choose coins in multiples of 10.')
+    }
+
+    const subscription = await RecruiterPackageSubscription.findOne({ recruiterEmail, status: 'Active' }).sort('-activatedAt')
+    if (!subscription) {
+      res.status(404)
+      throw new Error('Please activate a recruiter package before buying coins.')
+    }
+
+    amount = coins * 10
+    plan = `${coins} wallet coins`
+    packageId = subscription.packageId
+  } else {
+    res.status(400)
+    throw new Error('Payment purpose is required.')
+  }
+
+  if (amount <= 0) {
+    res.status(400)
+    throw new Error('This item does not require online payment.')
+  }
+
+  const { client, config } = await getRazorpayClient()
+  const invoiceNo = buildInvoiceNo()
+  const order = await client.orders.create({
+    amount: amount * 100,
+    currency: 'INR',
+    receipt: invoiceNo,
+    notes: {
+      recruiterEmail,
+      recruiterName,
+      purpose,
+      plan,
+    },
+  })
+
+  const payment = await Payment.create({
+    employer: recruiterName || recruiterEmail,
+    recruiterEmail,
+    plan,
+    amount: formatInr(amount),
+    status: 'Pending',
+    invoiceNo,
+    gateway: 'Razorpay',
+    purpose,
+    packageId,
+    coins,
+    currency: 'INR',
+    razorpayOrderId: order.id,
+  })
+
+  res.status(201).json({
+    success: true,
+    data: {
+      orderId: order.id,
+      amount,
+      currency: 'INR',
+      keyId: config.keyId,
+      companyName: config.companyName,
+      themeColor: config.themeColor,
+      payment,
+    },
+  })
+})
+
+exports.verifyRazorpayPayment = asyncHandler(async (req, res) => {
+  const recruiterEmail = String(req.body.recruiterEmail || '').toLowerCase()
+  const razorpayOrderId = req.body.razorpay_order_id
+  const razorpayPaymentId = req.body.razorpay_payment_id
+  const razorpaySignature = req.body.razorpay_signature
+
+  if (!recruiterEmail || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+    res.status(400)
+    throw new Error('Razorpay payment verification details are required.')
+  }
+  assertRecruiterOwner(req, res, recruiterEmail)
+
+  const { config } = await getRazorpayClient()
+  const expectedSignature = crypto
+    .createHmac('sha256', config.keySecret)
+    .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+    .digest('hex')
+
+  const payment = await Payment.findOne({ razorpayOrderId, recruiterEmail })
+  if (!payment) {
+    res.status(404)
+    throw new Error('Payment order was not found.')
+  }
+
+  if (payment.status === 'Paid') {
+    const subscription = await RecruiterPackageSubscription.findOne({ recruiterEmail, status: 'Active' }).sort('-activatedAt')
+    res.json({
+      success: true,
+      data: { subscription, payment },
+      message: 'Payment is already verified.',
+    })
+    return
+  }
+
+  if (expectedSignature !== razorpaySignature) {
+    payment.status = 'Failed'
+    payment.failureReason = 'Razorpay signature verification failed.'
+    await payment.save()
+
+    res.status(400)
+    throw new Error('Payment verification failed.')
+  }
+
+  payment.status = 'Paid'
+  payment.razorpayPaymentId = razorpayPaymentId
+  payment.razorpaySignature = razorpaySignature
+  payment.paymentMethod = 'Razorpay Checkout'
+  payment.paidAt = new Date()
+  await payment.save()
+
+  let subscription = null
+  if (payment.purpose === 'package') {
+    const selectedPackage = await PricingPackage.findById(payment.packageId)
+    if (!selectedPackage) {
+      res.status(404)
+      throw new Error('Paid package was not found.')
+    }
+    subscription = await activatePaidPackage({ recruiterEmail, recruiterName: payment.employer, selectedPackage })
+  } else if (payment.purpose === 'coins') {
+    const amount = getPackageAmount(payment.amount)
+    subscription = await creditPaidCoins({
+      recruiterEmail,
+      recruiterName: payment.employer,
+      coins: Number(payment.coins || 0),
+      amount,
+    })
+  }
+
+  res.json({
+    success: true,
+    data: {
+      subscription,
+      payment,
+    },
+    message: payment.purpose === 'coins' ? `${payment.coins} coins added to recruiter wallet.` : `${payment.plan} package activated successfully.`,
+  })
 })
 
 exports.purchaseCoins = asyncHandler(async (req, res) => {
@@ -123,6 +411,7 @@ exports.purchaseCoins = asyncHandler(async (req, res) => {
     res.status(400)
     throw new Error('Recruiter email is required')
   }
+  assertRecruiterOwner(req, res, recruiterEmail)
 
   if (!coins || coins % 10 !== 0) {
     res.status(400)

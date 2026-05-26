@@ -12,8 +12,15 @@ export function normalizeRole(role) {
     'Super Admin': 'Admin',
     'HR Manager': 'staff',
     Support: 'users',
+    Hiring: 'hiring',
+    'Hiring Team': 'hiring',
+    Account: 'account team',
+    'Account Team': 'account team',
+    'account-team': 'account team',
+    account_team: 'account team',
     company: 'recruiter',
     Employer: 'recruiter',
+    Freelancer: 'freelancer',
   }
 
   return roleMap[role] || role
@@ -26,7 +33,10 @@ export function getDashboardPath(role) {
     staff: '/staff-dashboard',
     recruiter: '/recruiter-dashboard',
     users: '/users-dashboard',
+    hiring: '/admin/hiring-team',
+    'account team': '/admin/employers',
     Candidate: '/candidate-dashboard',
+    freelancer: '/admin/projects',
   }
 
   return paths[normalizedRole] || '/auth'

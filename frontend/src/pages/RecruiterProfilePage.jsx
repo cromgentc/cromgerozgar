@@ -129,20 +129,20 @@ export function RecruiterProfilePage() {
           <div className="mb-5 flex justify-end">
             {editing ? (
               <div className="flex gap-2">
-                <button className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-200" onClick={() => setEditing(false)} type="button">Cancel</button>
-                <button className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300" disabled={saving} onClick={save} type="button">{saving ? 'Saving...' : 'Save'}</button>
+                <button className="rounded-[7px] bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-200" onClick={() => setEditing(false)} type="button">Cancel</button>
+                <button className="rounded-[7px] bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300" disabled={saving} onClick={save} type="button">{saving ? 'Saving...' : 'Save'}</button>
               </div>
             ) : (
-              <button className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700" onClick={() => setEditing(true)} type="button">Edit Profile</button>
+              <button className="rounded-[7px] bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700" onClick={() => setEditing(true)} type="button">Edit Profile</button>
             )}
           </div>
           <div className="flex items-center gap-4">
             <div className="relative">
-              <span className="grid h-24 w-24 place-items-center overflow-hidden rounded-3xl bg-blue-600 text-2xl font-black text-white shadow-lg shadow-blue-100">
+              <span className="grid h-24 w-24 place-items-center overflow-hidden rounded-[7px] bg-blue-600 text-2xl font-black text-white shadow-lg shadow-blue-100">
                 {profile.logo ? <img alt={`${profile.name} logo`} className="h-full w-full object-cover" src={profile.logo} /> : initials}
               </span>
               {editing && (
-                <label className="absolute -bottom-2 -right-2 grid h-10 w-10 cursor-pointer place-items-center rounded-full bg-slate-950 text-white shadow-lg transition hover:bg-blue-600">
+                <label className="absolute -bottom-2 -right-2 grid h-10 w-10 cursor-pointer place-items-center rounded-[7px] bg-slate-950 text-white shadow-lg transition hover:bg-blue-600">
                   <Camera size={17} />
                   <input accept="image/*" className="hidden" onChange={updateLogo} type="file" />
                 </label>
@@ -154,17 +154,17 @@ export function RecruiterProfilePage() {
               {editing && <p className="mt-2 text-xs font-bold text-slate-400">Click camera icon to update company logo</p>}
             </div>
           </div>
-          {message && <p className="mt-5 rounded-2xl bg-teal-50 p-3 text-sm font-bold text-teal-700">{message}</p>}
+          {message && <p className="mt-5 rounded-[7px] bg-teal-50 p-3 text-sm font-bold text-teal-700">{message}</p>}
           <div className="mt-6 grid gap-3 text-sm font-semibold text-slate-600">
-            <p className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
+            <p className="flex items-center gap-3 rounded-[7px] bg-slate-50 p-4">
               <Mail className="text-blue-600" size={18} />
               {profile.email}
             </p>
-            <p className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
+            <p className="flex items-center gap-3 rounded-[7px] bg-slate-50 p-4">
               <Phone className="text-blue-600" size={18} />
               {profile.phone || 'Not added'}
             </p>
-            <p className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
+            <p className="flex items-center gap-3 rounded-[7px] bg-slate-50 p-4">
               <MapPin className="text-blue-600" size={18} />
               {profile.location}
             </p>
@@ -205,14 +205,14 @@ function ProfileField({ className = '', label, onChange, type = 'text', value })
   return (
     <label className={className}>
       <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
-      <input className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => onChange(event.target.value)} type={type} value={value} />
+      <input className="mt-2 w-full rounded-[7px] border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => onChange(event.target.value)} type={type} value={value} />
     </label>
   )
 }
 
 function InfoItem({ label, value }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4">
+    <div className="rounded-[7px] bg-slate-50 p-4">
       <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
       <p className="mt-2 text-sm font-bold text-slate-800">{value}</p>
     </div>

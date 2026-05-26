@@ -22,6 +22,24 @@ function normalizeEmail(value = '') {
   return String(value).trim().toLowerCase()
 }
 
+function normalizeRole(role) {
+  const roleMap = {
+    'Super Admin': 'Admin',
+    'HR Manager': 'staff',
+    Support: 'users',
+    Hiring: 'hiring',
+    'Hiring Team': 'hiring',
+    Account: 'account team',
+    'Account Team': 'account team',
+    'account-team': 'account team',
+    account_team: 'account team',
+    company: 'recruiter',
+    Employer: 'recruiter',
+  }
+
+  return roleMap[role] || role
+}
+
 function normalizePhone(value = '') {
   return String(value).replace(/\D/g, '')
 }
@@ -146,11 +164,11 @@ async function attachRecruiterToApplication(body, req) {
 
   let job = null
 
-  if (body.jobId) {
+  if (body.applicationType !== 'Freelancer Project' && body.jobId) {
     job = await Job.findById(body.jobId)
   }
 
-  if (!job && body.jobTitle && body.company) {
+  if (body.applicationType !== 'Freelancer Project' && !job && body.jobTitle && body.company) {
     job = await Job.findOne({
       title: body.jobTitle,
       company: body.company,
@@ -165,12 +183,20 @@ async function attachRecruiterToApplication(body, req) {
 
   const duplicateFilters = []
   if (body.jobId) duplicateFilters.push({ candidateEmail: body.candidateEmail, jobId: body.jobId })
+  if (body.applicationType === 'Freelancer Project' && body.projectSlug) duplicateFilters.push({ candidateEmail: body.candidateEmail, applicationType: 'Freelancer Project', projectSlug: body.projectSlug })
   if (body.jobTitle && body.company) duplicateFilters.push({ candidateEmail: body.candidateEmail, jobTitle: body.jobTitle, company: body.company })
 
   if (!duplicateFilters.length) return
 
   const existingApplication = await Application.findOne({ $or: duplicateFilters })
-  if (existingApplication) duplicateError(req.res, 'You have already applied for this job.')
+  if (existingApplication) {
+    duplicateError(
+      req.res,
+      body.applicationType === 'Freelancer Project'
+        ? 'You have already applied for this project.'
+        : 'You have already applied for this job.',
+    )
+  }
 }
 
 async function hydrateApplicationContacts(items) {
@@ -203,15 +229,91 @@ async function hydrateApplicationContacts(items) {
 }
 
 function scopeJobsForRequester(filter, req) {
-  if (req.query.recruiterEmail) return
-  if (req.query.includeAll === 'true') {
+  const role = normalizeRole(req.user?.role)
+  if (role === 'recruiter') {
+    filter.recruiterEmail = normalizeEmail(req.user.email)
     delete filter.includeAll
     return
+  }
+
+  if (['Admin', 'staff', 'hiring', 'account team'].includes(role) && req.query.includeAll === 'true') {
+    delete filter.includeAll
+    return
+  }
+
+  if (req.query.recruiterEmail && ['Admin', 'staff', 'hiring', 'account team'].includes(role)) return
+  if (req.query.includeAll === 'true') {
+    delete filter.includeAll
   }
 
   filter.accountDepartmentStatus = 'Active'
   filter.approval = 'Approved'
   filter.status = 'Active'
+}
+
+function scopeApplicationsForRequester(filter, req) {
+  const role = normalizeRole(req.user?.role)
+  const email = normalizeEmail(req.user?.email)
+
+  if (['Admin', 'staff', 'hiring', 'account team'].includes(role)) return
+  if (role === 'recruiter') {
+    filter.recruiterEmail = email
+    return
+  }
+  if (role === 'users') {
+    filter.candidateEmail = email
+  }
+  if (role === 'freelancer') {
+    filter.candidateEmail = email
+  }
+}
+
+function scopeSupportMessagesForRequester(filter, req) {
+  const role = normalizeRole(req.user?.role)
+  const email = normalizeEmail(req.user?.email)
+
+  if (['Admin', 'staff', 'hiring', 'account team'].includes(role)) return
+  if (email) filter.email = email
+}
+
+function scopeRecruiterDocumentsForRequester(filter, req) {
+  const role = normalizeRole(req.user?.role)
+  if (role === 'recruiter') filter.recruiterEmail = normalizeEmail(req.user.email)
+}
+
+function scopeEmployersForRequester(filter, req) {
+  const role = normalizeRole(req.user?.role)
+  if (role === 'recruiter') filter.businessEmail = normalizeEmail(req.user.email)
+}
+
+function isPrivilegedRole(role) {
+  return ['Admin', 'staff', 'hiring', 'account team'].includes(normalizeRole(role))
+}
+
+function canAccessApplication(item, req) {
+  const role = normalizeRole(req.user?.role)
+  const email = normalizeEmail(req.user?.email)
+  if (isPrivilegedRole(role)) return true
+  if (role === 'recruiter') return normalizeEmail(item.recruiterEmail) === email
+  if (role === 'users') return normalizeEmail(item.candidateEmail) === email
+  if (role === 'freelancer') return normalizeEmail(item.candidateEmail) === email
+  return false
+}
+
+function canAccessRecruiterDocument(item, req) {
+  const role = normalizeRole(req.user?.role)
+  if (['Admin', 'account team'].includes(role)) return true
+  return role === 'recruiter' && normalizeEmail(item.recruiterEmail) === normalizeEmail(req.user?.email)
+}
+
+function canAccessSupportMessage(item, req) {
+  if (isPrivilegedRole(req.user?.role)) return true
+  return normalizeEmail(item.email) === normalizeEmail(req.user?.email)
+}
+
+function canAccessEmployer(item, req) {
+  if (isPrivilegedRole(req.user?.role)) return true
+  return normalizeRole(req.user?.role) === 'recruiter' && normalizeEmail(item.businessEmail) === normalizeEmail(req.user?.email)
 }
 
 function normalizeJobReview(body) {
@@ -225,14 +327,63 @@ function normalizeJobReview(body) {
   if (body.accountDepartmentStatus === 'Rejected') {
     body.status = 'Closed'
     body.approval = 'Rejected'
+    return
+  }
+
+  if (body.accountDepartmentStatus === 'Hold') {
+    body.status = 'Closed'
+    body.approval = 'Hold'
+    return
+  }
+
+  if (body.accountDepartmentStatus === 'Removed') {
+    body.status = 'Closed'
+    body.approval = 'Removed'
+  }
+}
+
+async function getSupaCloudStorageConfig() {
+  const setting = await Setting.findOne({ key: 'supaCloudStorage' })
+  const value = setting?.value || {}
+
+  return {
+    supabaseUrl: String(value.supabaseUrl || '').replace(/\/+$/, ''),
+    serviceRoleKey: value.serviceRoleKey || value.serviceKey || '',
+  }
+}
+
+async function removeResumeFromSupaCloud(resume) {
+  if (resume.storageProvider !== 'supa-cloud' || !resume.storageBucket || !resume.storagePath) return
+
+  const config = await getSupaCloudStorageConfig()
+  if (!config.supabaseUrl || !config.serviceRoleKey) {
+    throw new Error('Supa Cloud storage is not configured. Resume file was not deleted.')
+  }
+
+  const response = await fetch(`${config.supabaseUrl}/storage/v1/object/${encodeURIComponent(resume.storageBucket)}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ prefixes: [resume.storagePath] }),
+  })
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    if (response.status === 404 || text.toLowerCase().includes('not found')) return
+    throw new Error(text || 'Supa Cloud resume file could not be deleted.')
   }
 }
 
 module.exports = {
   applications: crudController(Application, {
-    searchFields: ['candidateName', 'candidateEmail', 'candidatePhone', 'jobTitle', 'company', 'status', 'recruiterEmail'],
+    searchFields: ['candidateName', 'candidateEmail', 'candidatePhone', 'jobTitle', 'company', 'status', 'recruiterEmail', 'applicationType', 'projectCategory'],
     beforeCreate: attachRecruiterToApplication,
+    beforeGetAll: scopeApplicationsForRequester,
     afterGetAll: hydrateApplicationContacts,
+    canAccess: canAccessApplication,
   }),
   candidates: crudController(Candidate, { searchFields: ['name', 'email', 'role', 'location'] }),
   categories: crudController(Category, { searchFields: ['name', 'status'] }),
@@ -241,6 +392,8 @@ module.exports = {
   employers: crudController(Employer, {
     searchFields: ['companyName', 'businessEmail', 'industry', 'location'],
     beforeCreate: ensureUniqueEmployerIdentity,
+    beforeGetAll: scopeEmployersForRequester,
+    canAccess: canAccessEmployer,
     afterRemove: async (employer) => {
       const email = String(employer.businessEmail || '').toLowerCase()
       if (!email) return
@@ -268,9 +421,18 @@ module.exports = {
   recruiterDocuments: crudController(RecruiterDocument, {
     searchFields: ['recruiterName', 'recruiterEmail', 'documentType', 'panNumber', 'gstNumber', 'status'],
     beforeCreate: ensureUniqueRecruiterDocumentIdentity,
+    beforeGetAll: scopeRecruiterDocumentsForRequester,
+    canAccess: canAccessRecruiterDocument,
   }),
-  resumes: crudController(Resume, { searchFields: ['name', 'email', 'role', 'skills', 'experience', 'source'] }),
+  resumes: crudController(Resume, {
+    searchFields: ['name', 'email', 'role', 'skills', 'experience', 'source', 'resumeUrl', 'storagePath'],
+    beforeRemove: removeResumeFromSupaCloud,
+  }),
   settings: crudController(Setting, { searchFields: ['key', 'group'] }),
-  supportMessages: crudController(SupportMessage, { searchFields: ['name', 'email', 'role', 'subject', 'message', 'status'] }),
+  supportMessages: crudController(SupportMessage, {
+    searchFields: ['name', 'email', 'role', 'subject', 'message', 'status'],
+    beforeGetAll: scopeSupportMessagesForRequester,
+    canAccess: canAccessSupportMessage,
+  }),
   testimonials: crudController(Testimonial, { searchFields: ['name', 'role', 'company', 'type', 'frontendPlacement', 'text', 'status'] }),
 }

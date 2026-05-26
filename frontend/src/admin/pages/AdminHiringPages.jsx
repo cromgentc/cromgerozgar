@@ -27,17 +27,17 @@ export function AdminHiringPage() {
 
   return (
     <div className="grid gap-6">
-      <section className="flex flex-col justify-between gap-4 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:flex-row lg:items-center">
+      <section className="flex flex-col justify-between gap-4 rounded-[7px] border border-slate-200 bg-white p-6 shadow-sm lg:flex-row lg:items-center">
         <div>
           <p className="text-sm font-black uppercase tracking-wide text-blue-600">CRM / Hiring</p>
           <h2 className="mt-2 text-3xl font-black text-slate-950">Hiring CRM</h2>
           <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
-            Bulk hiring drives aur single candidate hiring entries ko ek CRM workspace se manage karein.
+            Manage bulk hiring drives and single candidate hiring entries from one CRM workspace.
           </p>
         </div>
         <div className="relative">
           <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700"
             onClick={() => setEntryOpen((value) => !value)}
             type="button"
           >
@@ -46,11 +46,11 @@ export function AdminHiringPage() {
             <ChevronDown className={`transition ${entryOpen ? 'rotate-180' : ''}`} size={16} />
           </button>
           {entryOpen && (
-            <div className="absolute right-0 top-14 z-20 grid w-56 gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-blue-100">
-              <Link className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-700" to="/admin/crm/hiring/bulk">
+            <div className="absolute right-0 top-14 z-20 grid w-56 gap-1 rounded-[7px] border border-slate-200 bg-white p-2 shadow-xl shadow-blue-100">
+              <Link className="flex items-center gap-3 rounded-[7px] px-3 py-2 text-sm font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-700" to="/admin/crm/hiring/bulk">
                 <FileSpreadsheet size={16} /> Bulk Hiring
               </Link>
-              <Link className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-bold text-slate-600 hover:bg-teal-50 hover:text-teal-700" to="/admin/crm/hiring/single">
+              <Link className="flex items-center gap-3 rounded-[7px] px-3 py-2 text-sm font-bold text-slate-600 hover:bg-teal-50 hover:text-teal-700" to="/admin/crm/hiring/single">
                 <UserPlus size={16} /> Single Hiring
               </Link>
             </div>
@@ -63,7 +63,7 @@ export function AdminHiringPage() {
           const Icon = metric.icon
           return (
             <AdminCard key={metric.label}>
-              <span className={`grid h-12 w-12 place-items-center rounded-2xl ${metric.tone}`}>
+              <span className={`grid h-12 w-12 place-items-center rounded-[7px] ${metric.tone}`}>
                 <Icon size={22} />
               </span>
               <p className="mt-5 text-3xl font-black text-slate-950">{metric.value}</p>
@@ -91,27 +91,27 @@ export function AdminBulkHiringPage() {
       eyebrow="CRM / Hiring / Bulk Hiring Company"
       icon={FileSpreadsheet}
       title="Bulk Hiring Company"
-      subtitle="Company select karke available locations, positions, aur deadline ke saath bulk hiring entry create karein."
+      subtitle="Select a company and create a bulk hiring entry with available locations, positions, and deadline."
     >
       <div className="grid gap-4 lg:grid-cols-2">
         <label className="grid gap-2 text-sm font-bold text-slate-600">
           Company
-          <select className="min-h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none" disabled={loadingCompanies} onChange={(event) => setSelectedCompanyId(event.target.value)} value={selectedCompanyId}>
+          <select className="min-h-11 rounded-[7px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none" disabled={loadingCompanies} onChange={(event) => setSelectedCompanyId(event.target.value)} value={selectedCompanyId}>
             <option value="">{loadingCompanies ? 'Loading companies...' : 'Select company'}</option>
             {companies.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
           </select>
         </label>
-        <TextField label="Company location" placeholder="Company select karne par location yahan dikhegi" value={selectedCompany?.location || ''} readOnly />
+        <TextField label="Company location" placeholder="The location will appear here after you select a company" value={selectedCompany?.location || ''} readOnly />
         <CompanyHiringSelectors hiringData={hiringData} schedule={schedule} />
         {selectedCompany && <CompanyFieldPanel company={selectedCompany} />}
-        {companyError && <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 lg:col-span-2">{companyError}</p>}
+        {companyError && <p className="rounded-[7px] bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 lg:col-span-2">{companyError}</p>}
         <TextField label="Number of openings" placeholder="Example: 50" type="number" />
         <TextField label="Experience" placeholder="Example: 0-2 years" />
         <TextField label="Salary range" placeholder="Example: INR 18,000 - 25,000" />
       </div>
       <label className="mt-4 grid gap-2 text-sm font-bold text-slate-600">
         Bulk hiring note
-        <textarea className="min-h-32 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none" placeholder={`Hiring requirements${selectedCompany?.name ? ` for ${selectedCompany.name}` : ''}`} />
+        <textarea className="min-h-32 rounded-[7px] border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none" placeholder={`Hiring requirements${selectedCompany?.name ? ` for ${selectedCompany.name}` : ''}`} />
       </label>
     </HiringFormShell>
   )
@@ -127,7 +127,7 @@ export function AdminSingleHiringPage() {
       eyebrow="CRM / Hiring / Single Hiring Company"
       icon={UserPlus}
       title="Single Hiring Company"
-      subtitle="Company ke available location aur position ke hisaab se single hiring entry create karein."
+      subtitle="Create a single hiring entry based on the company's available location and position."
     >
       <div className="grid gap-4 lg:grid-cols-2">
         <TextField label="Candidate name" placeholder="Example: Aman Gupta" />
@@ -135,7 +135,7 @@ export function AdminSingleHiringPage() {
         <TextField label="Candidate email" placeholder="Example: aman@email.com" type="email" />
         <label className="grid gap-2 text-sm font-bold text-slate-600">
           Company
-          <select className="min-h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none" disabled={loadingCompanies} onChange={(event) => setSelectedCompanyId(event.target.value)} value={selectedCompanyId}>
+          <select className="min-h-11 rounded-[7px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none" disabled={loadingCompanies} onChange={(event) => setSelectedCompanyId(event.target.value)} value={selectedCompanyId}>
             <option value="">{loadingCompanies ? 'Loading companies...' : 'Select company'}</option>
             {companies.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
           </select>
@@ -143,11 +143,11 @@ export function AdminSingleHiringPage() {
         <TextField label="Current status" placeholder="Example: Pending" />
         <CompanyHiringSelectors hiringData={hiringData} schedule={schedule} />
         {selectedCompany && <CompanyFieldPanel company={selectedCompany} />}
-        {companyError && <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 lg:col-span-2">{companyError}</p>}
+        {companyError && <p className="rounded-[7px] bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 lg:col-span-2">{companyError}</p>}
       </div>
       <label className="mt-4 grid gap-2 text-sm font-bold text-slate-600">
         Recruiter note
-        <textarea className="min-h-32 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none" placeholder="Interview, skill, salary, ya joining note add karein" />
+        <textarea className="min-h-32 rounded-[7px] border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none" placeholder="Add an interview, skill, salary, or joining note" />
       </label>
     </HiringFormShell>
   )
@@ -174,7 +174,7 @@ function useHiringCompanies() {
       } catch (error) {
         if (!mounted) return
         setCompanies([])
-        setCompanyError(error.message || 'Company data MongoDB se load nahi ho paya.')
+        setCompanyError(error.message || 'Company data could not be loaded from MongoDB.')
       } finally {
         if (mounted) setLoadingCompanies(false)
       }
@@ -226,7 +226,7 @@ function useCompanyHiringData(selectedCompany) {
       } catch (error) {
         if (!mounted) return
         setJobs([])
-        setJobsError(error.message || 'Company ke jobs load nahi ho paye.')
+        setJobsError(error.message || 'Company jobs could not be loaded.')
       } finally {
         if (mounted) setLoadingJobs(false)
       }
@@ -302,7 +302,7 @@ function CompanyHiringSelectors({ hiringData, schedule }) {
   const hasCompanyData = options.countries.length || options.states.length || options.cities.length || options.positions.length
 
   return (
-    <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:col-span-2 lg:grid-cols-3">
+    <div className="grid gap-4 rounded-[7px] border border-slate-200 bg-slate-50 p-4 lg:col-span-2 lg:grid-cols-3">
       <SelectField disabled={loadingJobs || !options.positions.length} label="Available position" onChange={(value) => updateForm('position', value)} options={options.positions} placeholder={loadingJobs ? 'Loading positions...' : 'No position found'} value={form.position} />
       <SelectField disabled={loadingJobs || !options.countries.length} label="Available country" onChange={(value) => updateForm('country', value)} options={options.countries} placeholder={loadingJobs ? 'Loading countries...' : 'No country found'} value={form.country} />
       <SelectField disabled={loadingJobs || !options.states.length} label="Available state" onChange={(value) => updateForm('state', value)} options={options.states} placeholder={loadingJobs ? 'Loading states...' : 'No state found'} value={form.state} />
@@ -312,14 +312,14 @@ function CompanyHiringSelectors({ hiringData, schedule }) {
       {options.deadlines.length > 0 && (
         <label className="grid gap-2 text-sm font-bold text-slate-600 lg:col-span-3">
           Existing job deadlines
-          <select className="min-h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none" onChange={(event) => schedule.setDeadline(event.target.value)} value="">
+          <select className="min-h-11 rounded-[7px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none" onChange={(event) => schedule.setDeadline(event.target.value)} value="">
             <option value="">Select existing deadline</option>
             {options.deadlines.map((item) => <option key={item} value={formatDeadlineForInput(item)}>{item}</option>)}
           </select>
         </label>
       )}
-      {!loadingJobs && !hasCompanyData && <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700 lg:col-span-3">Is company ke liye abhi location ya position jobs me available nahi hai.</p>}
-      {jobsError && <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 lg:col-span-3">{jobsError}</p>}
+      {!loadingJobs && !hasCompanyData && <p className="rounded-[7px] bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700 lg:col-span-3">No location or position jobs are available for this company yet.</p>}
+      {jobsError && <p className="rounded-[7px] bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 lg:col-span-3">{jobsError}</p>}
     </div>
   )
 }
@@ -328,7 +328,7 @@ function SelectField({ disabled = false, label, onChange, options, placeholder, 
   return (
     <label className="grid gap-2 text-sm font-bold text-slate-600">
       {label}
-      <select className="min-h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none disabled:bg-slate-100 disabled:text-slate-400" disabled={disabled} onChange={(event) => onChange(event.target.value)} value={value}>
+      <select className="min-h-11 rounded-[7px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none disabled:bg-slate-100 disabled:text-slate-400" disabled={disabled} onChange={(event) => onChange(event.target.value)} value={value}>
         <option value="">{placeholder}</option>
         {options.map((option) => <option key={option} value={option}>{option}</option>)}
       </select>
@@ -338,7 +338,7 @@ function SelectField({ disabled = false, label, onChange, options, placeholder, 
 
 function CompanyFieldPanel({ company }) {
   return (
-    <div className="grid gap-4 rounded-2xl border border-blue-100 bg-blue-50/50 p-4 lg:col-span-2 lg:grid-cols-3">
+    <div className="grid gap-4 rounded-[7px] border border-blue-100 bg-blue-50/50 p-4 lg:col-span-2 lg:grid-cols-3">
       <ReadOnlyField label="Industry" value={company.industry} />
       <ReadOnlyField label="Status" value={company.status} />
       <ReadOnlyField label="Plan" value={company.plan} />
@@ -355,7 +355,7 @@ function ReadOnlyField({ label, value, wide = false }) {
   return (
     <label className={`grid gap-2 text-sm font-bold text-slate-600 ${wide ? 'lg:col-span-3' : ''}`}>
       {label}
-      <input className="min-h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none" readOnly value={value || '-'} />
+      <input className="min-h-11 rounded-[7px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none" readOnly value={value || '-'} />
     </label>
   )
 }
@@ -363,10 +363,10 @@ function ReadOnlyField({ label, value, wide = false }) {
 function HiringFormShell({ children, eyebrow, icon: Icon, subtitle, title }) {
   return (
     <div className="grid gap-6">
-      <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-[7px] border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div className="flex items-center gap-4">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-blue-50 text-blue-700">
+            <span className="grid h-14 w-14 place-items-center rounded-[7px] bg-blue-50 text-blue-700">
               <Icon size={24} />
             </span>
             <div>
@@ -375,7 +375,7 @@ function HiringFormShell({ children, eyebrow, icon: Icon, subtitle, title }) {
               <p className="mt-1 text-sm font-semibold text-slate-500">{subtitle}</p>
             </div>
           </div>
-          <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-slate-100 px-4 text-sm font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700" to="/admin/crm/hiring">
+          <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] bg-slate-100 px-4 text-sm font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700" to="/admin/crm/hiring">
             <ClipboardList size={16} /> Hiring List
           </Link>
         </div>
@@ -383,8 +383,8 @@ function HiringFormShell({ children, eyebrow, icon: Icon, subtitle, title }) {
       <AdminCard>
         {children}
         <div className="mt-6 flex justify-end gap-2">
-          <Link className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-100 px-5 text-sm font-bold text-slate-700" to="/admin/crm/hiring">Cancel</Link>
-          <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-blue-100" type="button">Save Entry</button>
+          <Link className="inline-flex min-h-11 items-center justify-center rounded-[7px] bg-slate-100 px-5 text-sm font-bold text-slate-700" to="/admin/crm/hiring">Cancel</Link>
+          <button className="inline-flex min-h-11 items-center justify-center rounded-[7px] bg-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-blue-100" type="button">Save Entry</button>
         </div>
       </AdminCard>
     </div>
@@ -395,7 +395,7 @@ function TextField({ label, onChange, placeholder, readOnly = false, type = 'tex
   return (
     <label className="grid gap-2 text-sm font-bold text-slate-600">
       {label}
-      <input className="min-h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none" onChange={(event) => onChange?.(event.target.value)} placeholder={placeholder} readOnly={readOnly} type={type} value={value} />
+      <input className="min-h-11 rounded-[7px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none" onChange={(event) => onChange?.(event.target.value)} placeholder={placeholder} readOnly={readOnly} type={type} value={value} />
     </label>
   )
 }
@@ -419,7 +419,7 @@ function HiringTable({ columns, rows, title, type }) {
           <p className="text-sm font-black uppercase tracking-wide text-blue-600">{title}</p>
           <h3 className="mt-1 text-xl font-black text-slate-950">Recent entries</h3>
         </div>
-        <Link className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700" to={`/admin/crm/hiring/${type}`}>Add</Link>
+        <Link className="rounded-[7px] bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700" to={`/admin/crm/hiring/${type}`}>Add</Link>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">

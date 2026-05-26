@@ -9,6 +9,21 @@ const RecruiterDocument = require('../models/RecruiterDocument')
 const RecruiterPackageSubscription = require('../models/RecruiterPackageSubscription')
 const SupportMessage = require('../models/SupportMessage')
 
+const freelancerProjectTitles = [
+  'React Website Revamp',
+  'SEO Content Writing',
+  'Sales Lead Generation',
+  'Product Landing Page Design',
+]
+
+const freelancerProjectFilter = {
+  $or: [
+    { applicationType: 'Freelancer Project' },
+    { projectSlug: { $nin: ['', null] } },
+    { jobTitle: { $in: freelancerProjectTitles } },
+  ],
+}
+
 function getAmountValue(value = '') {
   return Number(String(value).replace(/[^\d.]/g, '')) || 0
 }
@@ -35,6 +50,11 @@ function addToMonthlySeries(series, rows, field, valueGetter = () => 1) {
 
 const getEmployerDashboard = asyncHandler(async (req, res) => {
   const recruiterEmail = String(req.query.recruiterEmail || '').trim().toLowerCase()
+  if (req.user?.role === 'recruiter' && String(req.user.email || '').toLowerCase() !== recruiterEmail) {
+    res.status(403)
+    throw new Error('Forbidden: recruiter account mismatch')
+  }
+
   const jobFilter = recruiterEmail ? { recruiterEmail } : { _id: null }
   const applicationFilter = recruiterEmail ? { recruiterEmail } : { _id: null }
   const [totalJobs, activeApplications, shortlisted, employers, candidateEmails, jobs, recentApplications, shortlistedApplications] = await Promise.all([
@@ -94,8 +114,13 @@ const getAdminDashboard = asyncHandler(async (req, res) => {
     candidates,
     recentJobs,
     recentApplications,
+    recentFreelancerApplications,
     recentDocuments,
     recentSupportMessages,
+    totalFreelancerApplications,
+    pendingFreelancerApplications,
+    approvedFreelancerApplications,
+    rejectedFreelancerApplications,
   ] = await Promise.all([
     Job.countDocuments(),
     Job.countDocuments({ status: { $in: ['Open', 'Active'] } }),
@@ -117,8 +142,13 @@ const getAdminDashboard = asyncHandler(async (req, res) => {
     Candidate.find().sort('-createdAt').limit(500),
     Job.find().sort('-createdAt').limit(6),
     Application.find().sort('-createdAt').limit(6),
+    Application.find(freelancerProjectFilter).sort('-createdAt').limit(8),
     RecruiterDocument.find({ status: { $nin: ['Approved'] } }).sort('-updatedAt').limit(6),
     SupportMessage.find({ status: { $in: ['Open', 'In Progress'] } }).sort('-createdAt').limit(6),
+    Application.countDocuments(freelancerProjectFilter),
+    Application.countDocuments({ ...freelancerProjectFilter, status: { $in: ['New', 'Reviewed', 'Interview'] } }),
+    Application.countDocuments({ ...freelancerProjectFilter, status: { $in: ['Selected', 'Shortlisted'] } }),
+    Application.countDocuments({ ...freelancerProjectFilter, status: 'Rejected' }),
   ])
 
   const paidPayments = payments.filter((payment) => payment.status === 'Paid')
@@ -181,6 +211,10 @@ const getAdminDashboard = asyncHandler(async (req, res) => {
         activeSubscriptions,
         paidPayments: paidPayments.length,
         revenueAmount,
+        totalFreelancerApplications,
+        pendingFreelancerApplications,
+        approvedFreelancerApplications,
+        rejectedFreelancerApplications,
       },
       charts: {
         monthly: Object.values(monthlyIndex),
@@ -194,6 +228,7 @@ const getAdminDashboard = asyncHandler(async (req, res) => {
       },
       recentJobs,
       recentApplications,
+      recentFreelancerApplications,
       pendingReviews: recentDocuments,
       supportMessages: recentSupportMessages,
       recentActivity,

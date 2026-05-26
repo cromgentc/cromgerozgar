@@ -114,7 +114,17 @@ export function JobDetailsPage({ onApply }) {
 
   const saveJob = () => {
     if (!canSaveJobs()) {
-      window.alert('Please login as a candidate to save jobs.')
+      window.dispatchEvent(new CustomEvent('portalToast', {
+        detail: {
+          title: 'Login required',
+          message: 'Please login as a candidate to save jobs.',
+          type: 'info',
+          actionLabel: 'Login',
+          actionHref: '/auth',
+          duration: 2500,
+        },
+      }))
+      window.setTimeout(() => window.location.assign('/auth'), 900)
       return
     }
 
@@ -123,16 +133,16 @@ export function JobDetailsPage({ onApply }) {
   }
 
   return (
-    <section className="py-10 sm:py-14">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-          <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-teal-400 text-xl font-black text-white shadow-lg shadow-blue-100">{job.companyLogo}</div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-blue-600">{job.company}</p>
-                <h1 className="mt-2 text-3xl font-black text-slate-950 sm:text-5xl">{job.title}</h1>
-                <div className="mt-4 flex flex-wrap gap-2">
+    <section className="overflow-x-hidden pb-24 pt-3 sm:py-14">
+      <div className="mx-auto w-full max-w-7xl px-0 sm:px-6 lg:px-8">
+        <div className="grid gap-5 lg:grid-cols-[1fr_360px] lg:gap-6">
+          <article className="overflow-hidden rounded-none border-y border-slate-200 bg-white p-4 shadow-sm sm:rounded-[7px] sm:border sm:p-8">
+            <div className="flex items-start gap-3 sm:gap-5">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[7px] bg-gradient-to-br from-blue-600 to-teal-400 text-lg font-black text-white shadow-lg shadow-blue-100 sm:h-16 sm:w-16 sm:text-xl">{job.companyLogo}</div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-bold text-blue-600 sm:text-sm">{job.company}</p>
+                <h1 className="mt-1 text-2xl font-black leading-tight text-slate-950 sm:mt-2 sm:text-5xl">{job.title}</h1>
+                <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
                   {job.featured && <span className="badge-blue">Featured</span>}
                   {job.urgent && <span className="badge-rose">Urgent hiring</span>}
                   <span className="badge-teal">{job.workMode}</span>
@@ -140,7 +150,7 @@ export function JobDetailsPage({ onApply }) {
               </div>
             </div>
 
-            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:gap-3 lg:grid-cols-4">
               {[
                 [MapPin, job.location],
                 [Wallet, job.salary],
@@ -149,13 +159,14 @@ export function JobDetailsPage({ onApply }) {
                 [CalendarDays, `Posted ${job.posted}`],
                 [CalendarDays, `Deadline ${job.deadline}`],
               ].map(([Icon, text], index) => (
-                <div className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-600" key={`job-meta-${index}-${text || 'empty'}`}>
-                  <Icon className="mb-2 text-blue-600" size={20} /> {text || 'Not specified'}
+                <div className="min-w-0 rounded-[7px] bg-slate-50 p-3 text-xs font-semibold text-slate-600 sm:p-4 sm:text-sm" key={`job-meta-${index}-${text || 'empty'}`}>
+                  <Icon className="mb-2 text-blue-600" size={18} />
+                  <span className="block truncate">{text || 'Not specified'}</span>
                 </div>
               ))}
             </div>
-            <div className="mt-7 flex flex-wrap gap-2">
-              {(job.skills || []).filter(Boolean).map((item, index) => <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700" key={`skill-${index}-${item}`}>{item}</span>)}
+            <div className="mt-5 flex flex-wrap gap-2 sm:mt-7">
+              {(job.skills || []).filter(Boolean).map((item, index) => <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700" key={`skill-${index}-${item}`}>{item}</span>)}
             </div>
             {[
               ['Job Description', [job.description]],
@@ -164,20 +175,20 @@ export function JobDetailsPage({ onApply }) {
               ['Benefits', job.benefits],
               ['About Company', [job.aboutCompany]],
             ].map(([title, items]) => (
-              <section className="mt-9" key={title}>
-                <h2 className="text-2xl font-black text-slate-950">{title}</h2>
-                <div className="mt-4 grid gap-3 text-slate-600">
-                  {(items || []).filter(Boolean).map((item, index) => <p className="rounded-2xl bg-slate-50 p-4 leading-7" key={`${title}-${index}`}>{item}</p>)}
-                  {!(items || []).filter(Boolean).length && <p className="rounded-2xl bg-slate-50 p-4 leading-7">Not added</p>}
+              <section className="mt-7 sm:mt-9" key={title}>
+                <h2 className="text-xl font-black text-slate-950 sm:text-2xl">{title}</h2>
+                <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:mt-4 sm:gap-3 sm:text-base">
+                  {(items || []).filter(Boolean).map((item, index) => <p className="rounded-[7px] bg-slate-50 p-3 leading-6 sm:p-4 sm:leading-7" key={`${title}-${index}`}>{item}</p>)}
+                  {!(items || []).filter(Boolean).length && <p className="rounded-[7px] bg-slate-50 p-3 leading-6 sm:p-4 sm:leading-7">Not added</p>}
                 </div>
               </section>
             ))}
           </article>
-          <aside className="h-max lg:sticky lg:top-24">
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl shadow-blue-100/50">
+          <aside className="hidden h-max lg:sticky lg:top-24 lg:block">
+            <div className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-xl shadow-blue-100/50">
               <h2 className="text-xl font-black text-slate-950">Apply for this role</h2>
               <p className="mt-2 text-sm text-slate-500">Submit your profile before {job.deadline}.</p>
-              <Button className="mt-5 w-full" onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply(job))}>
+              <Button className="mt-5 w-full" onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}>
                 {alreadyApplied ? 'Already Applied' : 'Apply Now'}
               </Button>
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -185,19 +196,42 @@ export function JobDetailsPage({ onApply }) {
                 <Button onClick={() => setShareOpen(true)} variant="secondary"><Share2 size={17} /> Share</Button>
               </div>
             </div>
-            <div className="mt-5 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mt-5 rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="text-xl font-black text-slate-950">Similar Jobs</h2>
               {similarLoading ? (
-                <p className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Finding related jobs...</p>
+                <p className="mt-5 rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500">Finding related jobs...</p>
               ) : similarJobs.length ? (
                 <div className="mt-5 grid gap-4">
-                  {similarJobs.map((item) => <JobCard job={item} key={item._id || item.id} onApply={onApply} />)}
+                  {similarJobs.map((item) => <JobCard denseMobile job={item} key={item._id || item.id} onApply={onApply} />)}
                 </div>
               ) : (
-                <p className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">No similar jobs available right now.</p>
+                <p className="mt-5 rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500">No similar jobs available right now.</p>
               )}
             </div>
           </aside>
+        </div>
+      </div>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 shadow-2xl shadow-slate-300/50 backdrop-blur lg:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-[1fr_auto_auto] gap-2">
+          <Button className="min-h-11 px-4" onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}>
+            {alreadyApplied ? 'Already Applied' : 'Apply Now'}
+          </Button>
+          <button
+            aria-label={saved ? 'Remove saved job' : 'Save job'}
+            className={`grid h-11 w-11 place-items-center rounded-[7px] border text-sm font-black transition ${saved ? 'border-blue-200 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-600'}`}
+            onClick={saveJob}
+            type="button"
+          >
+            <Bookmark fill={saved ? 'currentColor' : 'none'} size={18} />
+          </button>
+          <button
+            aria-label="Share job"
+            className="grid h-11 w-11 place-items-center rounded-[7px] border border-slate-200 bg-white text-slate-600"
+            onClick={() => setShareOpen(true)}
+            type="button"
+          >
+            <Share2 size={18} />
+          </button>
         </div>
       </div>
       {shareOpen && <ShareModal job={job} onClose={() => setShareOpen(false)} />}
@@ -288,21 +322,21 @@ function ShareModal({ job, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-lg rounded-[7px] bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-blue-600">Share job</p>
             <h3 className="mt-1 text-2xl font-black text-slate-950">{job.title}</h3>
             <p className="mt-1 text-sm font-semibold text-slate-500">{job.company}</p>
           </div>
-          <button className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-slate-500" onClick={onClose} type="button" aria-label="Close share modal">
+          <button className="grid h-10 w-10 place-items-center rounded-[7px] bg-slate-100 text-slate-500" onClick={onClose} type="button" aria-label="Close share modal">
             <X size={18} />
           </button>
         </div>
 
-        <div className="mt-5 flex gap-2 rounded-2xl bg-slate-50 p-2">
+        <div className="mt-5 flex gap-2 rounded-[7px] bg-slate-50 p-2">
           <input className="min-w-0 flex-1 bg-transparent px-3 text-sm font-semibold text-slate-600 outline-none" readOnly value={url} />
-          <button className="inline-flex min-h-10 items-center gap-2 rounded-full bg-blue-600 px-4 text-sm font-bold text-white" onClick={copyLink} type="button">
+          <button className="inline-flex min-h-10 items-center gap-2 rounded-[7px] bg-blue-600 px-4 text-sm font-bold text-white" onClick={copyLink} type="button">
             <Copy size={16} />
             {copied ? 'Copied' : 'Copy'}
           </button>
@@ -310,7 +344,7 @@ function ShareModal({ job, onClose }) {
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {shareLinks.map(([label, href, Icon]) => (
-            <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-black text-slate-700 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-blue-50 hover:text-blue-700" href={href} key={label} rel="noreferrer" target="_blank">
+            <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-white px-4 py-2 text-sm font-black text-slate-700 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-blue-50 hover:text-blue-700" href={href} key={label} rel="noreferrer" target="_blank">
               <Icon size={17} />
               {label}
             </a>

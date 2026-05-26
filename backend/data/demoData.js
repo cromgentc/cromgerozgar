@@ -129,6 +129,8 @@ const users = [
   { name: 'Staff Demo', email: 'staff@cromgen.test', password: 'password123', role: 'staff', status: 'Active' },
   { name: 'Recruiter Demo', email: 'recruiter@cromgen.test', password: 'password123', role: 'recruiter', status: 'Active' },
   { name: 'Users Demo', email: 'users@cromgen.test', password: 'password123', role: 'users', status: 'Active' },
+  { name: 'Hiring Team Demo', email: 'hiring@cromgen.test', password: 'password123', role: 'hiring', status: 'Active' },
+  { name: 'Account Team Demo', email: 'account@cromgen.test', password: 'password123', role: 'account team', status: 'Active' },
   { name: 'Recruiter Admin Demo', email: 'employer@cromgen.test', password: 'password123', role: 'recruiter', status: 'Active' },
   { name: 'Candidate Demo', email: 'candidate@cromgen.test', password: 'password123', role: 'Candidate', status: 'Active' },
 ]

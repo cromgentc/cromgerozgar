@@ -44,11 +44,11 @@ export function RecruiterVerificationPage() {
   const remark = getRecruiterVerificationRemark(user?.email) || user?.recruiterVerificationRemark || ''
   const blocked = ['rejected', 'hold', 'suspended'].includes(status)
   const statusCopy = {
-    rejected: ['Account rejected', 'Aapka recruiter account reject kiya gaya hai. Neeche account manager ka remark diya gaya hai.'],
-    hold: ['Account on hold', 'Aapka recruiter account abhi hold par hai. Account manager ke next steps neeche diye gaye hain.'],
-    suspended: ['Account suspended', 'Aapka recruiter account suspended hai. Remark check karein aur support/account manager se contact karein.'],
+    rejected: ['Account rejected', 'Your recruiter account has been rejected. The account manager remark is shown below.'],
+    hold: ['Account on hold', 'Your recruiter account is currently on hold. The account manager next steps are shown below.'],
+    suspended: ['Account suspended', 'Your recruiter account is suspended. Check the remark and contact support or your account manager.'],
   }
-  const [title, subtitle] = statusCopy[status] || ['Please wait for account manager verification', 'Aapka recruiter account receive ho gaya hai. Hamara account manager company details verify karega, uske baad document submission step open hoga.']
+  const [title, subtitle] = statusCopy[status] || ['Please wait for account manager verification', 'Your recruiter account has been received. Our account manager will verify the company details, then the document submission step will open.']
 
   if (!user) return <Navigate replace to="/recruiter-login" />
   if (status === 'documents_required') return <Navigate replace to="/recruiter-documents" />
@@ -70,15 +70,15 @@ export function RecruiterVerificationPage() {
     >
       <StatusSteps active="account" />
       {remark && (
-        <div className="mt-6 rounded-2xl bg-amber-50 p-5 text-sm font-semibold leading-7 text-amber-800">
+        <div className="mt-6 rounded-[7px] bg-amber-50 p-5 text-sm font-semibold leading-7 text-amber-800">
           <span className="font-black">Account manager remark:</span> {remark}
         </div>
       )}
-      <div className="mt-6 rounded-2xl bg-blue-50 p-5 text-sm font-semibold leading-7 text-blue-800">
-        {blocked ? 'Please fill company documents again and submit updated details for admin review.' : 'Admin review ke baad next step unlock hoga. Aapka dashboard access approval ke baad hi active hoga.'}
+      <div className="mt-6 rounded-[7px] bg-blue-50 p-5 text-sm font-semibold leading-7 text-blue-800">
+        {blocked ? 'Please fill company documents again and submit updated details for admin review.' : 'The next step unlocks after admin review. Your dashboard access becomes active only after approval.'}
       </div>
       {blocked && (
-        <button className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white" onClick={fillAgain} type="button">
+        <button className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white" onClick={fillAgain} type="button">
           Again
         </button>
       )}
@@ -206,7 +206,7 @@ export function RecruiterDocumentsPage() {
     <VerificationShell
       icon={FileCheck2}
       title="Submit company verification documents"
-      subtitle="Recruiter document type choose karein, phir required details aur uploads submit karein. Submission ke baad account manager approval review karega."
+      subtitle="Choose the recruiter document type, then submit the required details and uploads. After submission, the account manager will review it for approval."
     >
       <StatusSteps active="documents" />
       <form className="mt-6 grid gap-4" onSubmit={submit}>
@@ -225,7 +225,7 @@ export function RecruiterDocumentsPage() {
             <input className="input" onChange={(event) => update('panNumber', event.target.value)} placeholder="Company PAN number" required value={form.panNumber} />
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
               <input className="input" maxLength={15} onChange={(event) => update('gstNumber', event.target.value)} placeholder="GST number" required value={form.gstNumber} />
-              <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" disabled={gstLoading} onClick={validateGst} type="button">
+              <button className="inline-flex min-h-11 items-center justify-center rounded-[7px] bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" disabled={gstLoading} onClick={validateGst} type="button">
                 {gstLoading ? 'Validating...' : 'Validate GST'}
               </button>
             </div>
@@ -252,8 +252,8 @@ export function RecruiterDocumentsPage() {
           </>
         )}
 
-        {message && <p className="rounded-2xl bg-rose-50 p-3 text-sm font-bold text-rose-700">{message}</p>}
-        <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" disabled={submitting} type="submit">
+        {message && <p className="rounded-[7px] bg-rose-50 p-3 text-sm font-bold text-rose-700">{message}</p>}
+        <button className="inline-flex min-h-11 items-center justify-center rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" disabled={submitting} type="submit">
           {submitting ? 'Submitting...' : 'Submit Documents'}
         </button>
       </form>
@@ -273,8 +273,8 @@ export function RecruiterDocumentReviewPage() {
     ? documentStatus === 'rejected' ? 'Documents rejected' : 'Documents suspended'
     : 'Documents submitted. Please wait 24 hours'
   const reviewSubtitle = reviewBlocked
-    ? 'Admin ne aapke submitted documents par remark diya hai. Details dobara fill karke documents resubmit karein.'
-    : 'Aapke company documents submit ho gaye hain. Account manager 24 hours ke andar review karke approve karega.'
+    ? 'Admin has added a remark to your submitted documents. Fill the details again and resubmit the documents.'
+    : 'Your company documents have been submitted. The account manager will review and approve them within 24 hours.'
 
   useEffect(() => {
     if (!user?.email) return
@@ -305,23 +305,23 @@ export function RecruiterDocumentReviewPage() {
     >
       <StatusSteps active="approval" />
       {reviewBlocked && adminRemark && (
-        <div className="mt-6 rounded-2xl bg-rose-50 p-5 text-sm font-semibold leading-7 text-rose-800">
+        <div className="mt-6 rounded-[7px] bg-rose-50 p-5 text-sm font-semibold leading-7 text-rose-800">
           <span className="font-black">Admin remark:</span> {adminRemark}
         </div>
       )}
       <div className="mt-6 grid gap-3">
         {getSubmittedDocumentLabels(submittedDocument).map((item) => (
-          <p className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-700" key={item}>
+          <p className="flex items-center gap-3 rounded-[7px] bg-slate-50 p-4 text-sm font-bold text-slate-700" key={item}>
             <CheckCircle2 className="text-teal-500" size={18} />
             {item}
           </p>
         ))}
       </div>
-      <div className="mt-6 rounded-2xl bg-blue-50 p-5 text-sm font-semibold leading-7 text-blue-800">
+      <div className="mt-6 rounded-[7px] bg-blue-50 p-5 text-sm font-semibold leading-7 text-blue-800">
         {reviewBlocked ? 'Please fill company documents again and submit updated details for admin review.' : 'Admin verification complete hone ke baad login se recruiter dashboard access milega.'}
       </div>
       {reviewBlocked && (
-        <button className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white" onClick={refillDocuments} type="button">
+        <button className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white" onClick={refillDocuments} type="button">
           Fill Company Documents Again
         </button>
       )}
@@ -369,7 +369,7 @@ function validatePanNumber(panNumber) {
 function GstDetailsPanel({ details }) {
   if (!details.valid) {
     return (
-      <div className="rounded-2xl bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-700">
+      <div className="rounded-[7px] bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-700">
         <p className="font-black">GST live details not fetched</p>
         <p className="mt-1">{details.error || 'GST verification service is not configured. Please contact admin.'}</p>
       </div>
@@ -383,11 +383,11 @@ function GstDetailsPanel({ details }) {
   ]
 
   return (
-    <div className="rounded-2xl bg-teal-50 p-4 text-sm text-teal-900 ring-1 ring-teal-100">
+    <div className="rounded-[7px] bg-teal-50 p-4 text-sm text-teal-900 ring-1 ring-teal-100">
       <p className="font-black">GST number validated</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         {rows.map(([label, value]) => (
-          <div className="rounded-xl bg-white/80 p-3" key={label}>
+          <div className="rounded-[7px] bg-white/80 p-3" key={label}>
             <p className="text-xs font-black uppercase tracking-wide text-teal-600">{label}</p>
             <p className="mt-1 font-bold text-slate-800">{value}</p>
           </div>
@@ -421,8 +421,8 @@ function getSubmittedDocumentLabels(savedDocuments = {}) {
 function VerificationShell({ children, icon: Icon, subtitle, title }) {
   return (
     <section className="grid min-h-[calc(100vh-76px)] place-items-center bg-gradient-to-br from-blue-50 via-white to-teal-50 px-4 py-12">
-      <div className="w-full max-w-3xl rounded-[2rem] border border-white bg-white/90 p-6 shadow-2xl shadow-blue-100 backdrop-blur sm:p-8">
-        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-100">
+      <div className="w-full max-w-3xl rounded-[7px] border border-white bg-white/90 p-6 shadow-2xl shadow-blue-100 backdrop-blur sm:p-8">
+        <div className="grid h-16 w-16 place-items-center rounded-[7px] bg-blue-600 text-white shadow-lg shadow-blue-100">
           <Icon size={30} />
         </div>
         <h1 className="mt-6 text-3xl font-black text-slate-950 sm:text-4xl">{title}</h1>
@@ -443,7 +443,7 @@ function StatusSteps({ active }) {
   return (
     <div className="mt-6 grid gap-3 sm:grid-cols-3">
       {steps.map(([key, label]) => (
-        <div className={`rounded-2xl p-4 text-sm font-black ${key === active ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500'}`} key={key}>
+        <div className={`rounded-[7px] p-4 text-sm font-black ${key === active ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500'}`} key={key}>
           {label}
         </div>
       ))}
@@ -453,9 +453,9 @@ function StatusSteps({ active }) {
 
 function DocumentField({ label, onChange, required = false, value }) {
   return (
-    <label className="rounded-2xl border border-dashed border-blue-200 bg-blue-50 p-4">
+    <label className="rounded-[7px] border border-dashed border-blue-200 bg-blue-50 p-4">
       <span className="flex items-center gap-2 text-sm font-black text-blue-700"><Upload size={17} /> {label}</span>
-      <input className="mt-3 w-full rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm font-semibold outline-none" onChange={(event) => onChange(event.target.files?.[0]?.name || '')} required={required} type="file" />
+      <input className="mt-3 w-full rounded-[7px] border border-blue-100 bg-white px-4 py-3 text-sm font-semibold outline-none" onChange={(event) => onChange(event.target.files?.[0]?.name || '')} required={required} type="file" />
       <span className="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-500"><FileText size={14} /> {value || 'Choose file to upload'}</span>
     </label>
   )

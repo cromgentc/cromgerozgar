@@ -1,8 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { City, Country, State } from 'country-state-city'
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Download, Eye, EyeOff, FileText, ShieldCheck } from 'lucide-react'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Ban, BriefcaseBusiness, CheckCircle2, Clock, Download, Eye, EyeOff, FileText, ImagePlus, MapPin, Navigation, PauseCircle, Pencil, Phone, RefreshCw, Route, ShieldCheck, Trash2, XCircle } from 'lucide-react'
 import {
   ActionButtons,
   AdminCard,
@@ -18,15 +18,16 @@ import { reportRows } from '../data/adminData'
 import { api } from '../../services/api'
 import { updateRecruiterVerificationRemark } from '../../routes/authRouting'
 import { fetchPricingPackages, getPricingPackages, seedDefaultPricingPackages } from '../../utils/pricingPackages'
+import { applySiteBrandingMeta, defaultSiteBranding, publishSiteBranding } from '../../utils/siteBranding'
 
 const configs = {
   users: {
     resource: 'users',
     title: 'User Management',
-    subtitle: 'Account Management dashboard for user, admin, staff, and recruiter accounts.',
+  subtitle: 'Account Management dashboard for user, admin, staff, recruiter, hiring team, and account team accounts.',
     actionLabel: 'Add User',
     modalTitle: 'Add / Edit User',
-    extra: 'Profile',
+    extra: '',
     columns: [
       { key: '_id', label: 'User ID' },
       { key: 'name', label: 'Name' },
@@ -129,6 +130,7 @@ const configs = {
     actionLabel: 'Add Recruiter',
     modalTitle: 'Add / Edit Recruiter',
     extra: '',
+    statusOptions: ['Pending', 'Approved', 'Rejected', 'Suspended', 'Blocked'],
     columns: [
       { key: '_id', label: 'Recruiter ID' },
       { key: 'companyName', label: 'Recruiter' },
@@ -136,6 +138,7 @@ const configs = {
       { key: 'industry', label: 'Industry' },
       { key: 'location', label: 'Location' },
       { key: 'status', label: 'Status', badge: true },
+      { key: 'accountAuthorizedByName', label: 'Authorised By', render: renderRecruiterAccountAuthorisedBy },
     ],
     fields: [['companyName', 'Recruiter name'], ['businessEmail', 'Business email'], ['phone', 'Phone'], ['industry', 'Industry'], ['companySize', 'Company size'], ['website', 'Website'], ['location', 'Location'], ['status', 'Status']],
   },
@@ -216,14 +219,46 @@ const configs = {
   },
   payments: {
     resource: 'payments',
-    title: 'Payment Management',
+    title: 'Transactions',
     subtitle: 'Manage subscriptions, payment history, invoices, revenue, and failed payments.',
     actionLabel: 'Add Payment',
     modalTitle: 'Payment / Plan Details',
     extra: 'Invoice',
     export: true,
+    disableCreate: true,
     columns: [{ key: 'invoiceNo', label: 'Invoice' }, { key: 'employer', label: 'Recruiter' }, { key: 'plan', label: 'Plan' }, { key: 'amount', label: 'Amount' }, { key: 'status', label: 'Status', badge: true }],
     fields: [['invoiceNo', 'Invoice number'], ['employer', 'Recruiter'], ['plan', 'Plan'], ['amount', 'Amount'], ['status', 'Payment status']],
+  },
+  paymentLogs: {
+    resource: 'payments',
+    title: 'Payment Logs',
+    subtitle: 'Review Razorpay order logs, payment IDs, gateway status, purpose, and timestamps.',
+    actionLabel: 'Add Payment Log',
+    modalTitle: 'Payment Log Details',
+    extra: '',
+    export: true,
+    readonly: true,
+    statusOptions: ['Paid', 'Pending', 'Failed'],
+    columns: [
+      { key: 'createdAt', label: 'Logged At' },
+      { key: 'invoiceNo', label: 'Invoice' },
+      { key: 'gateway', label: 'Gateway' },
+      { key: 'purpose', label: 'Purpose', badge: true },
+      { key: 'razorpayOrderId', label: 'Order ID' },
+      { key: 'razorpayPaymentId', label: 'Payment ID' },
+      { key: 'amount', label: 'Amount' },
+      { key: 'status', label: 'Status', badge: true },
+    ],
+    fields: [
+      ['invoiceNo', 'Invoice number'],
+      ['gateway', 'Gateway'],
+      ['purpose', 'Purpose'],
+      ['razorpayOrderId', 'Razorpay order ID'],
+      ['razorpayPaymentId', 'Razorpay payment ID'],
+      ['amount', 'Amount'],
+      ['status', 'Payment status'],
+      ['failureReason', 'Failure reason', 'textarea'],
+    ],
   },
   recruiterDocuments: {
     resource: 'recruiter-documents',
@@ -243,6 +278,7 @@ const configs = {
       { key: 'gstDocument', label: 'GST Certificate' },
       { key: 'submissionsCount', label: 'Requests' },
       { key: 'status', label: 'Status', badge: true },
+      { key: 'reviewedByName', label: 'Authorised By', render: renderDocumentAuthorisedBy },
       { key: 'createdAt', label: 'Created' },
     ],
     fields: [
@@ -460,15 +496,17 @@ const configs = {
 }
 
 const accessByRole = {
-  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'categories', 'locations', 'payments', 'contentPages', 'testimonials', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
+  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'categories', 'locations', 'payments', 'paymentLogs', 'contentPages', 'testimonials', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
   staff: [],
   recruiter: [],
   users: [],
+  hiring: [],
+  'account team': ['jobs', 'employers', 'recruiterDocuments'],
 }
 
 const fieldOptions = {
-  role: ['users', 'Admin', 'staff', 'recruiter'],
-  status: ['Active', 'Inactive', 'Pending', 'Approved', 'Blocked', 'Open', 'Closed', 'New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected', 'Rejected'],
+  role: ['users', 'Admin', 'staff', 'recruiter', 'freelancer', 'hiring', 'account team'],
+  status: ['Active', 'Inactive', 'Pending', 'Approved', 'Rejected', 'Suspended', 'Blocked', 'Open', 'Closed', 'New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected'],
   userStatus: ['Active', 'Inactive', 'Suspend'],
   documentType: ['GST', 'Offer Letter', 'Aadhar Card'],
   testimonialType: ['Candidate', 'Recruiter', 'Company', 'Admin'],
@@ -481,7 +519,7 @@ const fieldOptions = {
   subscriberStatus: ['Subscribed', 'Unsubscribed'],
   featuredToggle: ['false', 'true'],
   supportStatus: ['Open', 'In Progress', 'Resolved', 'Closed'],
-  accountDepartmentStatus: ['Pending', 'Active', 'Rejected'],
+  accountDepartmentStatus: ['Pending', 'Active', 'Rejected', 'Hold', 'Removed'],
   company: ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'Cromgen Solutions'],
   department: ['Engineering', 'Product', 'Design', 'Growth', 'Marketing', 'Sales', 'Customer Success', 'Support', 'HR & Recruitment', 'Finance', 'Operations', 'Research Operations', 'AI Operations'],
   experience: ['Fresher', '0-1 years', '1-3 years', '3-6 years', '6-10 years', '10+ years'],
@@ -502,6 +540,13 @@ const recruiterReviewActions = [
   { label: 'Rejected', value: 'rejected', status: 'rejected' },
   { label: 'Hold', value: 'hold', status: 'hold' },
   { label: 'Suspended', value: 'suspended', status: 'suspended' },
+]
+
+const recruiterAccountActions = [
+  { label: 'Approve', value: 'approve' },
+  { label: 'Reject', value: 'reject' },
+  { label: 'Suspend', value: 'suspend' },
+  { label: 'Delete', value: 'delete' },
 ]
 
 function normalizeName(value) {
@@ -551,6 +596,9 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   const [reviewAction, setReviewAction] = useState(null)
   const [reviewRemark, setReviewRemark] = useState('')
   const [documentViewer, setDocumentViewer] = useState(null)
+  const [accountActionViewer, setAccountActionViewer] = useState(null)
+  const [userViewer, setUserViewer] = useState(null)
+  const [applicationViewer, setApplicationViewer] = useState(null)
   const [selectedRow, setSelectedRow] = useState(null)
   const [form, setForm] = useState({})
   const [message, setMessage] = useState('')
@@ -793,6 +841,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     }
     const next = statusMap[action]
     const email = row.recruiterEmail
+    const reviewer = getStoredAdminUser() || {}
 
     if (!next || !email) {
       setMessage('Recruiter email is missing on this document.')
@@ -800,7 +849,15 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     }
 
     try {
-      await api.update('recruiter-documents', row._id, { status: next.documentStatus, remark })
+      const reviewPayload = {
+        status: next.documentStatus,
+        remark,
+        reviewedByName: reviewer.name || 'Account Team',
+        reviewedByEmail: reviewer.email || '',
+        reviewedAction: next.documentStatus,
+        reviewedAt: new Date().toISOString(),
+      }
+      await api.update('recruiter-documents', row._id, reviewPayload)
       const usersPayload = await api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`)
       const recruiter = (usersPayload.data || []).find((item) => item.email?.toLowerCase() === email.toLowerCase())
 
@@ -808,12 +865,68 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         await api.update('users', recruiter._id, { status: next.userStatus, recruiterVerificationStatus: next.recruiterStatus, recruiterVerificationRemark: remark })
       }
 
-      setRows((current) => current.map((item) => (item._id === row._id ? { ...item, status: next.documentStatus, remark } : item)))
-      setMessage(next.message)
+      setRows((current) => current.map((item) => (item._id === row._id ? { ...item, ...reviewPayload } : item)))
+      setMessage(`${next.message} Authorised by ${reviewPayload.reviewedByName}.`)
       loadRows()
     } catch (error) {
       setMessage(error.message)
     }
+  }
+
+  const applyEmployerAccountAction = async (row, action, remark = '') => {
+    if (action === 'delete') {
+      requestDelete(row)
+      return
+    }
+
+    const reviewer = getStoredAdminUser() || {}
+    const statusMap = {
+      approve: { employerStatus: 'Approved', userStatus: 'Active', recruiterStatus: 'approved', verified: true, message: 'Recruiter account approved.' },
+      reject: { employerStatus: 'Rejected', userStatus: 'Inactive', recruiterStatus: 'rejected', verified: false, message: 'Recruiter account rejected.' },
+      suspend: { employerStatus: 'Suspended', userStatus: 'Suspend', recruiterStatus: 'suspended', verified: false, message: 'Recruiter account suspended.' },
+    }
+    const next = statusMap[action]
+    if (!next) return
+
+    const authPayload = {
+      status: next.employerStatus,
+      verified: next.verified,
+      accountAuthorizedByName: reviewer.name || 'Account Team',
+      accountAuthorizedByEmail: reviewer.email || '',
+      accountAuthorizedAction: next.employerStatus,
+      accountAuthorizedRemark: remark,
+      accountAuthorizedAt: new Date().toISOString(),
+    }
+
+    try {
+      const response = await api.update('employers', row._id, authPayload)
+      const email = row.businessEmail
+      if (email) {
+        const usersPayload = await api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`)
+        const recruiter = (usersPayload.data || []).find((item) => item.email?.toLowerCase() === email.toLowerCase())
+        if (recruiter?._id) {
+          await api.update('users', recruiter._id, {
+            status: next.userStatus,
+            recruiterVerificationStatus: next.recruiterStatus,
+            recruiterVerificationRemark: remark,
+          })
+        }
+      }
+      setRows((current) => current.map((item) => (item._id === row._id ? response.data : item)))
+      setMessage(`${next.message} Authorised by ${authPayload.accountAuthorizedByName}.`)
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  const selectEmployerAccountAction = (row, action) => {
+    if (['reject', 'suspend'].includes(action)) {
+      setReviewAction({ row, action, type: 'employerAccount' })
+      setReviewRemark('')
+      return
+    }
+
+    applyEmployerAccountAction(row, action)
   }
 
   const selectRecruiterDocumentAction = (row, action) => {
@@ -834,7 +947,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     try {
       const response = await api.update('jobs', row._id, payload)
       setRows((current) => current.map((item) => (item._id === row._id ? response.data : item)))
-      setMessage(action === 'active' ? 'Job active ho gaya. Ab users ko dikhega.' : 'Job rejected. Remark recruiter ko show hoga.')
+      setMessage(action === 'active' ? 'Job activated. It is now visible to users.' : 'Job rejected. The remark will be shown to the recruiter.')
     } catch (error) {
       setMessage(error.message)
     }
@@ -860,6 +973,10 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     }
   }
 
+  const openLocationsPage = () => {
+    window.open('/admin/locations', '_blank', 'noopener,noreferrer')
+  }
+
   const submitReviewRemark = () => {
     if (!reviewAction) return
 
@@ -872,6 +989,8 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       applyJobReviewAction(reviewAction.row, reviewAction.action, reviewRemark.trim())
     } else if (reviewAction.type === 'recruiterDocument') {
       applyRecruiterDocumentAction(reviewAction.row, reviewAction.action, reviewRemark.trim())
+    } else if (reviewAction.type === 'employerAccount') {
+      applyEmployerAccountAction(reviewAction.row, reviewAction.action, reviewRemark.trim())
     } else {
       applyRecruiterReviewAction(reviewAction.row, reviewAction.action, reviewRemark.trim())
     }
@@ -881,16 +1000,28 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
 
   const actions = useMemo(
     () => (row) => {
-      if (type === 'users' && row.role === 'recruiter') {
-        return <RecruiterReviewActions onAction={(action) => selectRecruiterReviewAction(row, action)} onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} />
+      if (type === 'users') {
+        return <UserManagementActions onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} onView={() => setUserViewer(row)} />
       }
 
       if (type === 'recruiterDocuments') {
-        return <RecruiterDocumentActions onAction={(action) => selectRecruiterDocumentAction(row, action)} onView={() => setDocumentViewer(row)} />
+        return <RecruiterDocumentActions canDelete={user?.role !== 'account team'} onAction={(action) => selectRecruiterDocumentAction(row, action)} onView={() => setDocumentViewer(row)} row={row} />
       }
 
-      if (type === 'jobs') {
-        return <JobGroupActions onView={() => openRecruiterJobs(row)} />
+      if (type === 'employers') {
+        return <RecruiterAccountActions canDelete={user?.role !== 'account team'} onAction={(action) => selectEmployerAccountAction(row, action)} onEdit={() => openEdit(row)} onView={() => setAccountActionViewer(row)} row={row} />
+      }
+
+      if (type === 'applications') {
+        return <ApplicationManagementActions onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} onView={() => setApplicationViewer(row)} />
+      }
+
+      if (type === 'testimonials') {
+        return <TestimonialManagementActions onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} />
+      }
+
+      if (type === 'faqs') {
+        return <FaqManagementActions onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} />
       }
 
       return (
@@ -901,7 +1032,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         />
       )
     },
-    [config.extra, resumeMode, type],
+    [config.extra, resumeMode, type, user?.role],
   )
   const displayRows = type === 'jobs'
     ? (rows.some((row) => !row.jobPostCount) ? groupJobsByRecruiter(rows) : rows)
@@ -912,12 +1043,28 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   const toolbarSubtitle = type === 'contentPages' && frontendPlacement
     ? `Manage ${frontendPlacement.toLowerCase()} privacy, terms, support, and general policy pages separately.`
     : config.subtitle
+  const canCreate = !config.readonly && !config.disableCreate && !(user?.role === 'account team' && ['jobs', 'employers'].includes(type))
+  const rowClickHandler = type === 'jobs'
+    ? openRecruiterJobs
+    : type === 'recruiterDocuments'
+      ? (row) => navigate(`/admin/recruiter-documents/${row._id}`)
+      : type === 'employers'
+        ? (row) => window.open(`/admin/recruiters/${row._id}`, '_blank', 'noopener,noreferrer')
+        : type === 'supportMessages'
+          ? (row) => window.open(`/admin/support-messages/${row.latestMessageId || row._id}`, '_blank', 'noopener,noreferrer')
+          : type === 'users'
+            ? openLocationsPage
+            : undefined
+
+  if (type === 'locations') {
+    return <LiveLocationDashboard />
+  }
 
   return (
     <div className="grid gap-5">
       <Toolbar
         actionLabel={config.actionLabel}
-        onAction={openCreate}
+        onAction={canCreate ? openCreate : undefined}
         onSearchChange={(value) => updateQuery('search', value)}
         onStatusChange={(value) => updateQuery('status', value)}
         searchValue={search}
@@ -926,41 +1073,31 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         subtitle={toolbarSubtitle}
         title={toolbarTitle}
       />
-      <div className="flex flex-col justify-between gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
+      <div className="flex flex-col justify-between gap-3 rounded-[7px] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
         <div className="flex flex-wrap gap-2">
           {(type === 'users' ? fieldOptions.role : config.statusOptions || ['Admin', 'staff', 'recruiter', 'users']).map((item) => <StatusBadge key={item} status={item} />)}
         </div>
         {type === 'resumes' && (
-          <select className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 outline-none" onChange={(event) => updateQuery('resumeMode', event.target.value)} value={resumeMode}>
+          <select className="rounded-[7px] border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 outline-none" onChange={(event) => updateQuery('resumeMode', event.target.value)} value={resumeMode}>
             <option value="lead">Lead Resume</option>
             <option value="upload">Upload Resume</option>
           </select>
         )}
         {type === 'contentPages' && !fixedFilters.frontendPlacement && (
-          <select className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 outline-none" onChange={(event) => updateQuery('frontendPlacement', event.target.value)} value={frontendPlacement}>
+          <select className="rounded-[7px] border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 outline-none" onChange={(event) => updateQuery('frontendPlacement', event.target.value)} value={frontendPlacement}>
             <option value="">All Frontends</option>
             {fieldOptions.policyPlacement.map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
         )}
         {config.export && <ExportButtons />}
       </div>
-      {message && <p className="rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
+      {message && <p className="rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
       {type === 'applications' && <ApplicationStatusPanel />}
-      {type === 'payments' && <RevenueSummary />}
+      {['payments', 'paymentLogs'].includes(type) && <RevenueSummary />}
       <DataTable
-        actions={actions}
+        actions={type === 'jobs' || config.readonly ? undefined : actions}
         columns={config.columns}
-        onRowClick={
-          type === 'recruiterDocuments'
-            ? (row) => navigate(`/admin/recruiter-documents/${row._id}`)
-            : type === 'jobs'
-              ? openRecruiterJobs
-            : type === 'employers'
-              ? (row) => window.open(`/admin/recruiters/${row._id}`, '_blank', 'noopener,noreferrer')
-              : type === 'supportMessages'
-                ? (row) => window.open(`/admin/support-messages/${row.latestMessageId || row._id}`, '_blank', 'noopener,noreferrer')
-              : undefined
-        }
+        onRowClick={rowClickHandler}
         rows={type === 'recruiterDocuments' ? displayRows : formatRows(displayRows)}
       />
       {!displayRows.length && <EmptyAdminState title={`${config.title} empty state`} />}
@@ -969,11 +1106,14 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         <p className="text-sm leading-6 text-slate-500">{reviewAction?.type === 'jobReview' ? 'This remark will be shown to the recruiter on their posted jobs page.' : 'This remark will be shown to the recruiter on their verification screen.'}</p>
         <textarea className="input mt-4 min-h-32" onChange={(event) => setReviewRemark(event.target.value)} placeholder="Write reason or next steps for recruiter" value={reviewRemark} />
         <div className="mt-5 flex justify-end gap-2">
-          <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setReviewAction(null)} type="button">Cancel</button>
-          <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={submitReviewRemark} type="button">Save Remark</button>
+          <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setReviewAction(null)} type="button">Cancel</button>
+          <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={submitReviewRemark} type="button">Save Remark</button>
         </div>
       </AdminModal>
       <DocumentViewerModal onClose={() => setDocumentViewer(null)} row={documentViewer} />
+      <AccountActionViewerModal onClose={() => setAccountActionViewer(null)} row={accountActionViewer} />
+      <UserViewerModal onClose={() => setUserViewer(null)} row={userViewer} />
+      <ApplicationViewerModal onClose={() => setApplicationViewer(null)} row={applicationViewer} />
       <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={remove} />
     </div>
   )
@@ -1053,7 +1193,16 @@ export function RecruiterDocumentDetailPage() {
     }
 
     try {
-      await api.update('recruiter-documents', document._id, { status: next.documentStatus, remark: action === 'approve' ? '' : remark })
+      const reviewer = getStoredAdminUser() || {}
+      const reviewPayload = {
+        status: next.documentStatus,
+        remark: action === 'approve' ? '' : remark,
+        reviewedByName: reviewer.name || 'Account Team',
+        reviewedByEmail: reviewer.email || '',
+        reviewedAction: next.documentStatus,
+        reviewedAt: new Date().toISOString(),
+      }
+      await api.update('recruiter-documents', document._id, reviewPayload)
       const usersPayload = await api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`)
       const recruiter = (usersPayload.data || []).find((item) => item.email?.toLowerCase() === email.toLowerCase())
 
@@ -1065,7 +1214,7 @@ export function RecruiterDocumentDetailPage() {
         })
       }
 
-      setMessage(next.message)
+      setMessage(`${next.message} Authorised by ${reviewPayload.reviewedByName}.`)
       loadDocuments()
     } catch (error) {
       setMessage(error.message)
@@ -1122,10 +1271,10 @@ export function RecruiterDocumentDetailPage() {
       <Toolbar
         actionLabel="Back"
         onAction={() => navigate('/admin/recruiter-documents')}
-        subtitle="Recruiter ke sabhi document requests yahan full page par show honge."
+        subtitle="All recruiter document requests are shown here in a full-page view."
         title="Recruiter document request history"
       />
-      {message && <p className="rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
+      {message && <p className="rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
       <AdminCard>
         <p className="text-lg font-black text-slate-950">{primaryDocument.recruiterName || 'Recruiter'}</p>
         <p className="mt-1 text-sm font-semibold text-slate-500">{primaryDocument.recruiterEmail || 'Email not available'}</p>
@@ -1155,7 +1304,7 @@ export function RecruiterDocumentDetailPage() {
                   <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.gstDocument || 'Not uploaded'}</td>
                   <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">
                     {document.remark && ['rejected', 'suspend', 'suspended'].includes(String(document.status || '').toLowerCase()) ? (
-                      <button className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-700" onClick={() => setRemarkViewer({ status: document.status, remark: document.remark })} type="button">
+                      <button className="rounded-[7px] bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-700" onClick={() => setRemarkViewer({ status: document.status, remark: document.remark })} type="button">
                         {document.status}
                       </button>
                     ) : (
@@ -1165,19 +1314,11 @@ export function RecruiterDocumentDetailPage() {
                   <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.createdAt ? new Date(document.createdAt).toLocaleString() : 'Not available'}</td>
                   <td className="whitespace-nowrap px-5 py-4">
                     <div className="flex items-center gap-2">
-                      <button aria-label="View documents" className="grid h-8 w-8 place-items-center rounded-full bg-blue-50 text-blue-700 transition hover:bg-blue-100" onClick={() => setDocumentViewer(document)} type="button">
-                        <Eye size={16} />
-                      </button>
-                      <select className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 outline-none" onChange={(event) => {
-                        if (event.target.value) selectDocumentAction(document, event.target.value)
-                        event.target.value = ''
-                      }} defaultValue="">
-                        <option value="">Actions</option>
-                        <option value="approve">Approve</option>
-                        <option value="reject">Reject</option>
-                        <option value="suspend">Suspend</option>
-                        <option value="delete">Delete</option>
-                      </select>
+                      <IconAction kind="view" label="View documents" onClick={() => setDocumentViewer(document)} />
+                      <IconAction action="approve" label="Approve" onClick={() => selectDocumentAction(document, 'approve')} />
+                      <IconAction action="reject" label="Reject" onClick={() => selectDocumentAction(document, 'reject')} />
+                      <IconAction action="suspend" label="Suspend" onClick={() => selectDocumentAction(document, 'suspend')} />
+                      <IconAction kind="delete" label="Delete" onClick={() => selectDocumentAction(document, 'delete')} />
                     </div>
                   </td>
                 </tr>
@@ -1191,8 +1332,8 @@ export function RecruiterDocumentDetailPage() {
         <p className="text-sm leading-6 text-slate-500">This remark will be shown to the recruiter on their verification screen.</p>
         <textarea className="input mt-4 min-h-32" onChange={(event) => setReviewRemark(event.target.value)} placeholder="Write reason or next steps for recruiter" value={reviewRemark} />
         <div className="mt-5 flex justify-end gap-2">
-          <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setReviewAction(null)} type="button">Cancel</button>
-          <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={submitReviewRemark} type="button">Save Remark</button>
+          <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setReviewAction(null)} type="button">Cancel</button>
+          <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={submitReviewRemark} type="button">Save Remark</button>
         </div>
       </AdminModal>
       <DocumentViewerModal onClose={() => setDocumentViewer(null)} row={documentViewer} />
@@ -1257,6 +1398,26 @@ function getInitialForm(type, companyOptions = fieldOptions.company) {
     }
   }
 
+  if (type === 'faqs') {
+    return {
+      category: fieldOptions.faqCategory[0],
+      question: 'How do I apply for jobs on CromGen Rozgar?',
+      answer: 'Create or login to your candidate account, complete your profile, open a job, and click Apply. You can track submitted applications from your dashboard.',
+      featured: 'false',
+      sortOrder: 0,
+      status: fieldOptions.faqStatus[0],
+    }
+  }
+
+  if (type === 'newsletterSubscribers') {
+    return {
+      email: '',
+      source: 'admin',
+      topics: 'Hiring insights, Latest jobs, Recruiter updates',
+      status: fieldOptions.subscriberStatus[0],
+    }
+  }
+
   if (type === 'contentPages') {
     return {
       title: '',
@@ -1280,59 +1441,456 @@ function getFieldLabel(fields, key) {
 function RecruiterReviewActions({ onAction, onDelete, onEdit }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <button className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700" onClick={onEdit} type="button">Edit</button>
-      <select className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 outline-none" onChange={(event) => {
-        if (event.target.value) onAction(event.target.value)
-        event.target.value = ''
-      }} defaultValue="">
-        <option value="">Actions</option>
-        {recruiterReviewActions.map((action) => <option key={action.value} value={action.value}>{action.label}</option>)}
-      </select>
-      {onDelete && <button className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700" onClick={onDelete} type="button">Delete</button>}
+      <IconAction kind="edit" label="Edit" onClick={onEdit} />
+      {recruiterReviewActions.map((action) => <IconAction action={action.value} key={action.value} label={action.label} onClick={() => onAction(action.value)} />)}
+      {onDelete && <IconAction kind="delete" label="Delete" onClick={onDelete} />}
     </div>
   )
 }
 
-function RecruiterDocumentActions({ onAction, onView }) {
+function UserManagementActions({ onDelete, onEdit, onView }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <button aria-label="View documents" className="grid h-8 w-8 place-items-center rounded-full bg-blue-50 text-blue-700" onClick={onView} type="button">
-        <Eye size={16} />
-      </button>
-      <select className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 outline-none" onChange={(event) => {
-        if (event.target.value) onAction(event.target.value)
-        event.target.value = ''
-      }} defaultValue="">
-        <option value="">Actions</option>
-        <option value="approve">Approve</option>
-        <option value="reject">Reject</option>
-        <option value="suspend">Suspend</option>
-        <option value="delete">Delete</option>
-      </select>
+      <IconAction kind="view" label="View user" onClick={onView} />
+      <IconAction kind="edit" label="Edit user" onClick={onEdit} />
+      <IconAction kind="delete" label="Delete user" onClick={onDelete} />
     </div>
+  )
+}
+
+function ApplicationManagementActions({ onDelete, onEdit, onView }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <IconAction kind="view" label="View application" onClick={onView} />
+      <IconAction kind="edit" label="Edit application" onClick={onEdit} />
+      <IconAction kind="delete" label="Delete application" onClick={onDelete} />
+    </div>
+  )
+}
+
+function TestimonialManagementActions({ onDelete, onEdit }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <IconAction kind="edit" label="Edit testimonial" onClick={onEdit} />
+      <IconAction kind="delete" label="Delete testimonial" onClick={onDelete} />
+    </div>
+  )
+}
+
+function FaqManagementActions({ onDelete, onEdit }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <IconAction kind="edit" label="Edit FAQ" onClick={onEdit} />
+      <IconAction kind="delete" label="Delete FAQ" onClick={onDelete} />
+    </div>
+  )
+}
+
+function IconAction({ action, kind, label, onClick }) {
+  const normalized = action || kind
+  const config = getIconActionConfig(normalized)
+  const Icon = config.icon
+
+  return (
+    <button aria-label={label} className={`grid h-8 w-8 place-items-center rounded-[7px] transition ${config.className}`} onClick={onClick} title={label} type="button">
+      <Icon size={16} />
+    </button>
+  )
+}
+
+function getIconActionConfig(action = '') {
+  const key = String(action).toLowerCase()
+  if (['view', 'details', 'preview'].includes(key)) return { icon: Eye, className: 'bg-blue-50 text-blue-700 hover:bg-blue-100' }
+  if (['edit'].includes(key)) return { icon: Pencil, className: 'bg-slate-100 text-slate-700 hover:bg-slate-200' }
+  if (['delete'].includes(key)) return { icon: Trash2, className: 'bg-rose-50 text-rose-700 hover:bg-rose-100' }
+  if (['approve', 'approved', 'active', 'account_verify'].includes(key)) return { icon: CheckCircle2, className: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' }
+  if (['reject', 'rejected'].includes(key)) return { icon: XCircle, className: 'bg-red-50 text-red-700 hover:bg-red-100' }
+  if (['hold', 'suspend', 'suspended'].includes(key)) return { icon: PauseCircle, className: 'bg-amber-50 text-amber-700 hover:bg-amber-100' }
+  if (['blocked', 'block'].includes(key)) return { icon: Ban, className: 'bg-orange-50 text-orange-700 hover:bg-orange-100' }
+  return { icon: ShieldCheck, className: 'bg-teal-50 text-teal-700 hover:bg-teal-100' }
+}
+
+function RecruiterAccountActions({ canDelete = true, onAction, onEdit, onView, row }) {
+  const authorisedBy = row.accountAuthorizedByName || row.accountAuthorizedByEmail
+  const actions = canDelete ? recruiterAccountActions : recruiterAccountActions.filter((action) => action.value !== 'delete')
+
+  return (
+    <div className="grid gap-2">
+      <div className="flex flex-wrap gap-2">
+        <IconAction kind="view" label="View recruiter account remark" onClick={onView} />
+        <IconAction kind="edit" label="Edit recruiter" onClick={onEdit} />
+        {actions.map((action) => <IconAction action={action.value} key={action.value} label={action.label} onClick={() => onAction(action.value)} />)}
+      </div>
+      {authorisedBy && (
+        <div className="rounded-[7px] bg-teal-50 px-3 py-2 text-xs font-bold leading-5 text-teal-700">
+          Authorised by {row.accountAuthorizedByName || 'Account Team'}
+          {row.accountAuthorizedByEmail ? <span className="block text-[11px] text-teal-600">{row.accountAuthorizedByEmail}</span> : null}
+          {row.accountAuthorizedAt ? <span className="block text-[11px] text-teal-600">{formatDateTime(row.accountAuthorizedAt)}</span> : null}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RecruiterDocumentActions({ canDelete = true, onAction, onView, row = {} }) {
+  const authorisedBy = row.reviewedByName || row.reviewedByEmail
+
+  return (
+    <div className="grid gap-2">
+      <div className="flex flex-wrap gap-2">
+        <IconAction kind="view" label="View documents" onClick={onView} />
+        <IconAction action="approve" label="Approve" onClick={() => onAction('approve')} />
+        <IconAction action="reject" label="Reject" onClick={() => onAction('reject')} />
+        <IconAction action="suspend" label="Suspend" onClick={() => onAction('suspend')} />
+        {canDelete ? <IconAction kind="delete" label="Delete" onClick={() => onAction('delete')} /> : null}
+      </div>
+      {authorisedBy && (
+        <div className="rounded-[7px] bg-teal-50 px-3 py-2 text-xs font-bold leading-5 text-teal-700">
+          Authorised by {row.reviewedByName || 'Account Team'}
+          {row.reviewedByEmail ? <span className="block text-[11px] text-teal-600">{row.reviewedByEmail}</span> : null}
+          {row.reviewedAt ? <span className="block text-[11px] text-teal-600">{formatDateTime(row.reviewedAt)}</span> : null}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const locationRoles = ['users', 'staff', 'recruiter', 'hiring', 'account team']
+
+function LiveLocationDashboard() {
+  const [roleFilter, setRoleFilter] = useState('')
+  const [activeLocations, setActiveLocations] = useState([])
+  const [history, setHistory] = useState([])
+  const [selectedLocation, setSelectedLocation] = useState(null)
+  const [historyViewer, setHistoryViewer] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [adminLocation, setAdminLocation] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState('')
+
+  const loadLocations = () => {
+    const params = new URLSearchParams()
+    if (roleFilter) params.set('role', roleFilter)
+
+    setLoading(true)
+    Promise.all([
+      api.activeUserLocations(params.toString() ? `?${params.toString()}` : ''),
+      api.userLocationHistory(`?limit=80${roleFilter ? `&role=${encodeURIComponent(roleFilter)}` : ''}`),
+    ])
+      .then(([activePayload, historyPayload]) => {
+        const activeRows = activePayload.data || []
+        setActiveLocations(activeRows)
+        setHistory(historyPayload.data || [])
+        setSelectedLocation((current) => {
+          if (current && activeRows.some((row) => row._id === current._id)) return current
+          return activeRows.find(hasCoordinates) || activeRows[0] || null
+        })
+        setMessage(activeRows.length || (historyPayload.data || []).length ? '' : 'No active location records yet.')
+      })
+      .catch((error) => {
+        const detail = error.message || 'Live locations could not be loaded.'
+        setMessage(detail.includes('Forbidden') ? 'Admin access allowed. Please refresh after backend restart.' : detail)
+      })
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadLocations()
+    const interval = window.setInterval(loadLocations, 30000)
+    return () => window.clearInterval(interval)
+  }, [roleFilter])
+
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (position) => setAdminLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 },
+    )
+  }, [])
+
+  const selectedMapUrl = hasCoordinates(selectedLocation)
+    ? `https://www.google.com/maps?q=${selectedLocation.latitude},${selectedLocation.longitude}&z=15&output=embed`
+    : ''
+  const directionsUrl = hasCoordinates(selectedLocation)
+    ? adminLocation
+      ? `https://www.google.com/maps/dir/?api=1&origin=${adminLocation.latitude},${adminLocation.longitude}&destination=${selectedLocation.latitude},${selectedLocation.longitude}&travelmode=driving`
+      : `https://www.google.com/maps/dir/?api=1&destination=${selectedLocation.latitude},${selectedLocation.longitude}&travelmode=driving`
+    : ''
+
+  const deleteHistoryRecord = async () => {
+    if (!deleteTarget?._id) return
+
+    try {
+      await api.removeUserLocation(deleteTarget._id)
+      setDeleteTarget(null)
+      loadLocations()
+    } catch (error) {
+      setMessage(error.message || 'Location history record could not be deleted.')
+    }
+  }
+
+  return (
+    <div className="grid gap-5">
+      <Toolbar
+        actionLabel="Refresh"
+        onAction={loadLocations}
+        onStatusChange={setRoleFilter}
+        statusOptions={locationRoles}
+        statusValue={roleFilter}
+        subtitle="Track user, staff, recruiter, hiring, and account team live locations with 30 second refresh, marker details, directions, and history."
+        title="Live Location Tracking"
+      />
+
+      {message && <p className={`rounded-[7px] p-4 text-sm font-bold ${message.includes('Forbidden') || message.includes('backend') || message.includes('could not') ? 'bg-rose-50 text-rose-700' : 'bg-blue-50 text-blue-700'}`}>{message}</p>}
+
+      <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+        <AdminCard className="min-h-[32rem] overflow-hidden p-0">
+          <div className="flex flex-col justify-between gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-blue-600">Google Map View / Active Users</p>
+              <h3 className="mt-1 text-xl font-black text-slate-950">{activeLocations.length} active users online</h3>
+            </div>
+            <span className="inline-flex items-center gap-2 rounded-[7px] bg-teal-50 px-3 py-2 text-xs font-black text-teal-700">
+              <RefreshCw size={14} /> Auto-refresh 30s
+            </span>
+          </div>
+
+          <div className="relative min-h-[28rem] overflow-hidden bg-slate-950">
+            {selectedMapUrl ? (
+              <iframe className="absolute inset-0 h-full w-full opacity-60" loading="lazy" referrerPolicy="no-referrer-when-downgrade" src={selectedMapUrl} title="Selected user Google map" />
+            ) : (
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:48px_48px]" />
+            )}
+            <div className="absolute inset-0 bg-slate-950/35" />
+            {activeLocations.filter(hasCoordinates).map((location, index, list) => {
+              const point = getMarkerPosition(location, list)
+              const selected = selectedLocation?._id === location._id
+              return (
+                <button
+                  className={`absolute grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full shadow-xl ring-4 transition ${selected ? 'bg-blue-600 text-white ring-blue-200' : 'bg-white text-blue-700 ring-white/40 hover:bg-blue-50'}`}
+                  key={location._id}
+                  onClick={() => setSelectedLocation(location)}
+                  style={{ left: `${point.x}%`, top: `${point.y}%` }}
+                  title={`${location.name || location.email} - ${location.role}`}
+                  type="button"
+                >
+                  <MapPin size={20} />
+                </button>
+              )
+            })}
+            {!activeLocations.some(hasCoordinates) && (
+              <div className="absolute inset-0 grid place-items-center p-6 text-center text-sm font-black text-white">
+                {loading ? 'Loading live locations...' : 'Location permission required'}
+              </div>
+            )}
+          </div>
+        </AdminCard>
+
+        <AdminCard>
+          <p className="text-xs font-black uppercase tracking-wide text-blue-600">Marker Details</p>
+          {selectedLocation ? (
+            <div className="mt-4 grid gap-3">
+              <div className="rounded-[7px] bg-blue-50 p-4">
+                <h3 className="text-xl font-black text-slate-950">{selectedLocation.name || 'User'}</h3>
+                <p className="mt-1 text-sm font-bold text-blue-700">{selectedLocation.role || 'Role'} / {selectedLocation.locationStatus || 'allowed'}</p>
+              </div>
+              <LocationInfo icon={Phone} label="Mobile" value={selectedLocation.phone || 'Not added'} />
+              <LocationInfo icon={Navigation} label="IP Address" value={selectedLocation.ipAddress || 'Not captured'} />
+              <LocationInfo icon={Clock} label="Login Time" value={selectedLocation.loginTime ? formatDateTime(selectedLocation.loginTime) : 'Not added'} />
+              <LocationInfo icon={MapPin} label="Current Location" value={hasCoordinates(selectedLocation) ? `${Number(selectedLocation.latitude).toFixed(6)}, ${Number(selectedLocation.longitude).toFixed(6)}` : 'Location permission required'} />
+              <LocationInfo icon={Navigation} label="Device" value={selectedLocation.deviceInfo || 'Not captured'} />
+              {directionsUrl && (
+                <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-blue-600 px-4 text-sm font-black text-white shadow-lg shadow-blue-100" href={directionsUrl} rel="noreferrer" target="_blank">
+                  <Route size={17} /> Direction from admin location
+                </a>
+              )}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-[7px] bg-rose-50 p-4 text-sm font-black text-rose-700">Location permission required</p>
+          )}
+        </AdminCard>
+      </div>
+
+      <AdminCard className="overflow-hidden p-0">
+        <div className="flex flex-col justify-between gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wide text-blue-600">Location History Report</p>
+            <h3 className="mt-1 text-xl font-black text-slate-950">Recent location pings</h3>
+          </div>
+          <StatusBadge status={roleFilter || 'All Roles'} />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                {['Name', 'Role', 'Mobile', 'IP Address', 'Login Time', 'Latitude', 'Longitude', 'Status', 'Tracked', 'Actions'].map((label) => <th className="whitespace-nowrap px-5 py-4 font-bold" key={label}>{label}</th>)}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {history.map((row) => (
+                <tr className="hover:bg-blue-50/40" key={row._id}>
+                  <td className="whitespace-nowrap px-5 py-4 font-bold text-slate-800">{row.name || row.email || '-'}</td>
+                  <td className="whitespace-nowrap px-5 py-4"><StatusBadge status={row.role || '-'} /></td>
+                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">{row.phone || '-'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">{row.ipAddress || '-'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">{row.loginTime ? formatDateTime(row.loginTime) : '-'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">{Number.isFinite(Number(row.latitude)) ? Number(row.latitude).toFixed(6) : '-'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">{Number.isFinite(Number(row.longitude)) ? Number(row.longitude).toFixed(6) : '-'}</td>
+                  <td className="whitespace-nowrap px-5 py-4"><StatusBadge status={row.locationStatus || 'allowed'} /></td>
+                  <td className="whitespace-nowrap px-5 py-4 text-slate-600">{row.trackedAt ? formatDateTime(row.trackedAt) : '-'}</td>
+                  <td className="whitespace-nowrap px-5 py-4">
+                    <div className="flex flex-wrap gap-2">
+                      <button aria-label="View location history" className="grid h-8 w-8 place-items-center rounded-[7px] bg-blue-50 text-blue-700 transition hover:bg-blue-100" onClick={() => setHistoryViewer(row)} title="View" type="button">
+                        <Eye size={16} />
+                      </button>
+                      <button aria-label="Delete location history" className="grid h-8 w-8 place-items-center rounded-[7px] bg-rose-50 text-rose-700 transition hover:bg-rose-100" onClick={() => setDeleteTarget(row)} title="Delete" type="button">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </AdminCard>
+
+      <LocationHistoryViewerModal onClose={() => setHistoryViewer(null)} row={historyViewer} />
+      <ConfirmDialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} onConfirm={deleteHistoryRecord} />
+    </div>
+  )
+}
+
+function LocationInfo({ icon: Icon, label, value }) {
+  return (
+    <div className="rounded-[7px] bg-slate-50 p-3">
+      <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-400"><Icon size={14} /> {label}</p>
+      <p className="mt-1 break-words text-sm font-black text-slate-800">{value}</p>
+    </div>
+  )
+}
+
+function LocationHistoryViewerModal({ onClose, row }) {
+  return (
+    <AdminModal open={Boolean(row)} title="Location details" onClose={onClose}>
+      {row && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ProfileLine label="Name" value={row.name || '-'} />
+          <ProfileLine label="Email" value={row.email || '-'} />
+          <ProfileLine label="Role" value={row.role || '-'} />
+          <ProfileLine label="Mobile" value={row.phone || '-'} />
+          <ProfileLine label="IP Address" value={row.ipAddress || '-'} />
+          <ProfileLine label="Login Time" value={row.loginTime ? formatDateTime(row.loginTime) : '-'} />
+          <ProfileLine label="Location Status" value={row.locationStatus || '-'} />
+          <ProfileLine label="Latitude" value={Number.isFinite(Number(row.latitude)) ? Number(row.latitude).toFixed(6) : '-'} />
+          <ProfileLine label="Longitude" value={Number.isFinite(Number(row.longitude)) ? Number(row.longitude).toFixed(6) : '-'} />
+          <ProfileLine label="Accuracy" value={Number.isFinite(Number(row.accuracy)) ? `${Math.round(Number(row.accuracy))} m` : '-'} />
+          <ProfileLine label="Tracked" value={row.trackedAt ? formatDateTime(row.trackedAt) : '-'} />
+          <ProfileLine label="Device" value={row.deviceInfo || '-'} />
+          <ProfileLine label="Map" value={row.mapsUrl || '-'} />
+        </div>
+      )}
+    </AdminModal>
+  )
+}
+
+function hasCoordinates(location) {
+  return Number.isFinite(Number(location?.latitude)) && Number.isFinite(Number(location?.longitude))
+}
+
+function getMarkerPosition(location, locations) {
+  const latitudes = locations.map((item) => Number(item.latitude)).filter(Number.isFinite)
+  const longitudes = locations.map((item) => Number(item.longitude)).filter(Number.isFinite)
+  const minLat = Math.min(...latitudes)
+  const maxLat = Math.max(...latitudes)
+  const minLon = Math.min(...longitudes)
+  const maxLon = Math.max(...longitudes)
+  const latRange = maxLat - minLat || 1
+  const lonRange = maxLon - minLon || 1
+
+  return {
+    x: 12 + ((Number(location.longitude) - minLon) / lonRange) * 76,
+    y: 88 - ((Number(location.latitude) - minLat) / latRange) * 76,
+  }
+}
+
+function UserViewerModal({ onClose, row }) {
+  return (
+    <AdminModal open={Boolean(row)} title="User details" onClose={onClose}>
+      {row && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ProfileLine label="Name" value={row.name || '-'} />
+          <ProfileLine label="Email" value={row.email || '-'} />
+          <ProfileLine label="Role" value={row.role || '-'} />
+          <ProfileLine label="Status" value={row.status || '-'} />
+          <ProfileLine label="User ID" value={row._id || row.id || '-'} />
+          <ProfileLine label="Created" value={row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'} />
+        </div>
+      )}
+    </AdminModal>
+  )
+}
+
+function ApplicationViewerModal({ onClose, row }) {
+  return (
+    <AdminModal open={Boolean(row)} title="Application details" onClose={onClose}>
+      {row && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ProfileLine label="Candidate" value={row.candidateName || '-'} />
+          <ProfileLine label="Candidate email" value={row.candidateEmail || '-'} />
+          <ProfileLine label="Job" value={row.jobTitle || '-'} />
+          <ProfileLine label="Company" value={row.company || '-'} />
+          <ProfileLine label="Status" value={row.status || '-'} />
+          <ProfileLine label="Application ID" value={row._id || row.id || '-'} />
+          <ProfileLine label="Created" value={row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'} />
+          <ProfileLine label="Recruiter note" value={row.coverNote || '-'} />
+        </div>
+      )}
+    </AdminModal>
   )
 }
 
 function JobReviewActions({ onAction }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <select className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 outline-none" onChange={(event) => {
-        if (event.target.value) onAction(event.target.value)
-        event.target.value = ''
-      }} defaultValue="">
-        <option value="">Actions</option>
-        <option value="active">Active</option>
-        <option value="reject">Reject</option>
-      </select>
+      <IconAction action="active" label="Active" onClick={() => onAction('active')} />
+      <IconAction action="reject" label="Reject" onClick={() => onAction('reject')} />
     </div>
   )
 }
 
 function JobGroupActions({ onView }) {
   return (
-    <button className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700" onClick={onView} type="button">
-      View Details
-    </button>
+    <IconAction kind="view" label="View details" onClick={onView} />
+  )
+}
+
+function PostedJobApprovalActions({ onAction }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {postedJobReviewActions.map((action) => <IconAction action={action.value} key={action.value} label={action.label} onClick={() => onAction(action.value)} />)}
+    </div>
+  )
+}
+
+function AccountActionViewerModal({ onClose, row }) {
+  if (!row) return null
+
+  return (
+    <AdminModal open={Boolean(row)} title="Recruiter account action" onClose={onClose}>
+      <div className="grid gap-3">
+        <ProfileLine label="Recruiter" value={row.companyName || 'Recruiter'} />
+        <ProfileLine label="Business email" value={row.businessEmail || 'Not added'} />
+        <ProfileLine label="Action" value={row.accountAuthorizedAction || row.status || 'No action recorded'} />
+        <ProfileLine label="Authorised by" value={row.accountAuthorizedByName || 'Not added'} />
+        <ProfileLine label="Authoriser email" value={row.accountAuthorizedByEmail || 'Not added'} />
+        <ProfileLine label="Action time" value={row.accountAuthorizedAt ? formatDateTime(row.accountAuthorizedAt) : 'Not added'} />
+        <div className="rounded-[7px] bg-rose-50 p-5 text-sm font-semibold leading-7 text-rose-800">
+          <span className="font-black">Remark:</span> {row.accountAuthorizedRemark || 'No remark added for this action.'}
+        </div>
+      </div>
+    </AdminModal>
   )
 }
 
@@ -1350,25 +1908,37 @@ function DocumentViewerModal({ onClose, row }) {
   return (
     <AdminModal open={Boolean(row)} title="Uploaded recruiter documents" onClose={onClose}>
       <div className="grid gap-3 text-sm">
-        <div className="rounded-2xl bg-slate-50 p-4">
+        <div className="rounded-[7px] bg-slate-50 p-4">
           <p className="font-black text-slate-950">{row.recruiterName || 'Recruiter'}</p>
           <p className="mt-1 font-semibold text-slate-500">{row.recruiterEmail}</p>
         </div>
+        {(row.reviewedByName || row.reviewedByEmail || row.reviewedAt || row.remark) && (
+          <div className="grid gap-3 rounded-[7px] bg-teal-50 p-4">
+            <p className="text-xs font-black uppercase tracking-wide text-teal-700">Authorised action</p>
+            <ProfileLine label="Action" value={row.reviewedAction || row.status || 'No action recorded'} />
+            <ProfileLine label="Authorised by" value={row.reviewedByName || 'Not added'} />
+            <ProfileLine label="Authoriser email" value={row.reviewedByEmail || 'Not added'} />
+            <ProfileLine label="Action time" value={row.reviewedAt ? formatDateTime(row.reviewedAt) : 'Not added'} />
+            <div className="rounded-[7px] bg-white p-4 text-sm font-semibold leading-6 text-slate-700">
+              <span className="font-black">Remark:</span> {row.remark || 'No remark added for this action.'}
+            </div>
+          </div>
+        )}
         {documents.map(([label, value]) => (
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3" key={label}>
+          <div className="flex items-center justify-between gap-3 rounded-[7px] border border-slate-200 bg-white p-3" key={label}>
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
               <p className="mt-1 font-bold text-slate-700">{value}</p>
             </div>
             {isDocumentUrl(value) && (
-              <a className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700" href={value} rel="noreferrer" target="_blank">Open PDF</a>
+              <a className="rounded-[7px] bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700" href={value} rel="noreferrer" target="_blank">Open PDF</a>
             )}
           </div>
         ))}
         {primaryDocument && isDocumentUrl(primaryDocument) ? (
-          <iframe className="h-[520px] w-full rounded-2xl border border-slate-200" src={primaryDocument} title="Recruiter document preview" />
+          <iframe className="h-[520px] w-full rounded-[7px] border border-slate-200" src={primaryDocument} title="Recruiter document preview" />
         ) : (
-          <div className="rounded-2xl bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-800">
+          <div className="rounded-[7px] bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-800">
             PDF preview requires a document URL. Current upload stores file reference/name only.
           </div>
         )}
@@ -1382,12 +1952,19 @@ function RemarkViewerModal({ onClose, remark }) {
 
   return (
     <AdminModal open={Boolean(remark)} title={`${remark.status || 'Document'} remark`} onClose={onClose}>
-      <div className="rounded-2xl bg-rose-50 p-5 text-sm font-semibold leading-7 text-rose-800">
+      <div className="rounded-[7px] bg-rose-50 p-5 text-sm font-semibold leading-7 text-rose-800">
         {remark.remark}
       </div>
     </AdminModal>
   )
 }
+
+const postedJobReviewActions = [
+  { label: 'Approve', value: 'approve' },
+  { label: 'Reject', value: 'reject' },
+  { label: 'Hold', value: 'hold' },
+  { label: 'Remove', value: 'remove' },
+]
 
 export function RecruiterDetailPage() {
   const user = getStoredAdminUser()
@@ -1399,6 +1976,8 @@ export function RecruiterDetailPage() {
   const [documents, setDocuments] = useState([])
   const [subscription, setSubscription] = useState(null)
   const [selectedJob, setSelectedJob] = useState(null)
+  const [jobReviewAction, setJobReviewAction] = useState(null)
+  const [jobReviewRemark, setJobReviewRemark] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -1451,16 +2030,72 @@ export function RecruiterDetailPage() {
   const totalViews = jobs.reduce((sum, job) => sum + Number(job.views || 0), 0)
   const uniqueCandidates = new Set(applications.map((item) => item.candidateEmail).filter(Boolean).map((email) => email.toLowerCase())).size
   const latestDocument = documents[0]
+  const canReviewJobs = ['Admin', 'account team'].includes(user?.role)
+
+  const applyPostedJobAction = async (job, action, remark = '') => {
+    const reviewer = getStoredAdminUser() || {}
+    const statusMap = {
+      approve: { accountDepartmentStatus: 'Active', approval: 'Approved', status: 'Active', message: 'Job approved successfully.' },
+      reject: { accountDepartmentStatus: 'Rejected', approval: 'Rejected', status: 'Closed', message: 'Job rejected successfully.' },
+      hold: { accountDepartmentStatus: 'Hold', approval: 'Hold', status: 'Closed', message: 'Job moved to hold.' },
+      remove: { accountDepartmentStatus: 'Removed', approval: 'Removed', status: 'Closed', message: 'Job removed from approval.' },
+    }
+    const next = statusMap[action]
+    if (!job?._id || !next) return
+
+    const payload = {
+      ...next,
+      accountDepartmentRemark: action === 'approve' ? '' : remark,
+      jobAuthorizedByName: reviewer.name || 'Account Team',
+      jobAuthorizedByEmail: reviewer.email || '',
+      jobAuthorizedAction: next.approval,
+      jobAuthorizedRemark: action === 'approve' ? '' : remark,
+      jobAuthorizedAt: new Date().toISOString(),
+    }
+
+    try {
+      const response = await api.update('jobs', job._id, payload)
+      const updatedJob = response.data || { ...job, ...payload }
+      setJobs((current) => current.map((item) => (item._id === job._id ? updatedJob : item)))
+      setSelectedJob((current) => (current?._id === job._id ? updatedJob : current))
+      setMessage(`${next.message} Authorised by ${payload.jobAuthorizedByName}.`)
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  const selectPostedJobAction = (job, action) => {
+    if (['reject', 'hold', 'remove'].includes(action)) {
+      setJobReviewAction({ job, action })
+      setJobReviewRemark('')
+      return
+    }
+
+    applyPostedJobAction(job, action)
+  }
+
+  const submitPostedJobRemark = () => {
+    if (!jobReviewAction) return
+
+    if (!jobReviewRemark.trim()) {
+      setMessage('Remark is required for reject, hold, and remove actions.')
+      return
+    }
+
+    applyPostedJobAction(jobReviewAction.job, jobReviewAction.action, jobReviewRemark.trim())
+    setJobReviewAction(null)
+    setJobReviewRemark('')
+  }
 
   return (
     <div className="grid max-w-full gap-5 overflow-x-hidden">
-      <div className="min-w-0 rounded-[1.75rem] bg-gradient-to-br from-blue-600 to-teal-500 p-6 text-white shadow-xl shadow-blue-100">
+      <div className="min-w-0 rounded-[7px] bg-gradient-to-br from-blue-600 to-teal-500 p-6 text-white shadow-xl shadow-blue-100">
         <p className="text-sm font-black uppercase tracking-wide text-blue-100">Recruiter profile</p>
         <h1 className="mt-2 break-words text-3xl font-black">{recruiter?.companyName || 'Recruiter'}</h1>
         <p className="mt-2 break-words font-semibold text-blue-50">{getShortId(recruiter?._id)} / {recruiter?.businessEmail || 'Email not available'} / {recruiter?.location || 'Location not added'}</p>
       </div>
 
-      {message && <p className="rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-700">{message}</p>}
+      {message && <p className="rounded-[7px] bg-rose-50 p-4 text-sm font-bold text-rose-700">{message}</p>}
       {loading ? (
         <AdminCard><p className="text-sm font-bold text-slate-500">Loading recruiter full details...</p></AdminCard>
       ) : (
@@ -1484,11 +2119,11 @@ export function RecruiterDetailPage() {
               <AdminCard className="min-w-0 overflow-hidden">
                 <h2 className="text-xl font-black text-slate-950">Posted Jobs</h2>
                 {jobs.length ? (
-                  <div className="mt-4 max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+                  <div className="mt-4 max-w-full overflow-x-auto rounded-[7px] border border-slate-200">
                     <table className="min-w-full text-left text-sm">
                       <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                         <tr>
-                          {['Sr No', 'Job ID', 'Job Title', 'Company', 'Department', 'Location', 'Type', 'Work Mode', 'Account Status', 'Approval', 'Remark', 'Created'].map((label) => (
+                          {['Sr No', 'Job ID', 'Job Title', 'Company', 'Department', 'Location', 'Type', 'Work Mode', 'Account Status', 'Approval', 'Actions', 'Authorised By', 'Remark', 'Created'].map((label) => (
                             <th className="whitespace-nowrap px-4 py-3 font-black" key={label}>{label}</th>
                           ))}
                         </tr>
@@ -1506,6 +2141,10 @@ export function RecruiterDetailPage() {
                             <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">{job.workMode || 'Not added'}</td>
                             <td className="whitespace-nowrap px-4 py-3"><StatusBadge status={job.accountDepartmentStatus || 'Pending'} /></td>
                             <td className="whitespace-nowrap px-4 py-3"><StatusBadge status={job.approval || 'Pending'} /></td>
+                            <td className="whitespace-nowrap px-4 py-3" onClick={(event) => event.stopPropagation()}>
+                              {canReviewJobs ? <PostedJobApprovalActions onAction={(action) => selectPostedJobAction(job, action)} /> : '-'}
+                            </td>
+                            <td className="px-4 py-3">{renderJobAuthorisedBy(job)}</td>
                             <td className="max-w-[240px] truncate px-4 py-3 font-semibold text-rose-700">{job.accountDepartmentRemark || '-'}</td>
                             <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">{job.createdAt ? new Date(job.createdAt).toLocaleDateString() : 'Not added'}</td>
                           </tr>
@@ -1513,21 +2152,21 @@ export function RecruiterDetailPage() {
                       </tbody>
                     </table>
                   </div>
-                ) : <p className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-500">No jobs posted yet.</p>}
+                ) : <p className="mt-4 rounded-[7px] bg-slate-50 p-4 text-sm font-bold text-slate-500">No jobs posted yet.</p>}
               </AdminCard>
 
               <AdminCard className="min-w-0">
                 <h2 className="text-xl font-black text-slate-950">Candidate Activity</h2>
                 <div className="mt-4 grid gap-3">
                   {applications.length ? applications.map((application) => (
-                    <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[1fr_auto] md:items-center" key={application._id}>
+                    <div className="grid gap-3 rounded-[7px] bg-slate-50 p-4 md:grid-cols-[1fr_auto] md:items-center" key={application._id}>
                       <div>
                         <p className="font-black text-slate-950">{application.candidateName}</p>
                         <p className="mt-1 text-sm font-semibold text-slate-500">{application.jobTitle} / {application.candidateEmail}</p>
                       </div>
                       <StatusBadge status={application.status || 'New'} />
                     </div>
-                  )) : <p className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-500">No candidate activity yet.</p>}
+                  )) : <p className="rounded-[7px] bg-slate-50 p-4 text-sm font-bold text-slate-500">No candidate activity yet.</p>}
                 </div>
               </AdminCard>
             </div>
@@ -1570,6 +2209,14 @@ export function RecruiterDetailPage() {
               </AdminCard>
             </div>
           </div>
+          <AdminModal open={Boolean(jobReviewAction)} title="Add job approval remark" onClose={() => setJobReviewAction(null)}>
+            <p className="text-sm leading-6 text-slate-500">This remark will be saved with the job approval action and shown in job view details.</p>
+            <textarea className="input mt-4 min-h-32" onChange={(event) => setJobReviewRemark(event.target.value)} placeholder="Write reason or next steps for recruiter" value={jobReviewRemark} />
+            <div className="mt-5 flex justify-end gap-2">
+              <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setJobReviewAction(null)} type="button">Cancel</button>
+              <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={submitPostedJobRemark} type="button">Save Remark</button>
+            </div>
+          </AdminModal>
           <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
         </>
       )}
@@ -1680,7 +2327,7 @@ export function SupportMessageDetailPage() {
 
   return (
     <div className="mx-auto grid max-w-6xl gap-5">
-      <section className="rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-teal-50 p-5 shadow-xl shadow-blue-100/50 sm:p-7">
+      <section className="rounded-[7px] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-teal-50 p-5 shadow-xl shadow-blue-100/50 sm:p-7">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">Customer Care Session</p>
@@ -1692,7 +2339,7 @@ export function SupportMessageDetailPage() {
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={ticket.status || 'Open'} />
             {!isSessionClosed && (
-              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700">
+              <span className="rounded-[7px] bg-amber-50 px-3 py-1 text-xs font-black text-amber-700">
                 Session ends in {formatCountdown(remainingSeconds)}
               </span>
             )}
@@ -1700,27 +2347,27 @@ export function SupportMessageDetailPage() {
         </div>
       </section>
 
-      {message && <p className="rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
+      {message && <p className="rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <AdminCard className="min-h-[560px] min-w-0">
           <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <h2 className="text-xl font-black text-slate-950">Live Chat Box</h2>
-              <p className="mt-1 text-sm font-semibold text-slate-500">Admin aur user conversation history</p>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Admin and user conversation history</p>
             </div>
-            <button className="rounded-full bg-slate-100 px-4 py-2 text-xs font-black text-slate-600" onClick={loadTicket} type="button">Refresh</button>
+            <button className="rounded-[7px] bg-slate-100 px-4 py-2 text-xs font-black text-slate-600" onClick={loadTicket} type="button">Refresh</button>
           </div>
 
-          <div className="mt-5 grid max-h-[420px] gap-3 overflow-y-auto rounded-[1.5rem] bg-slate-50 p-4">
+          <div className="mt-5 grid max-h-[420px] gap-3 overflow-y-auto rounded-[7px] bg-slate-50 p-4">
             {getSupportChatMessages(ticket).map((item, index) => (
               <div
-                className={`max-w-[82%] rounded-2xl p-4 text-sm font-semibold leading-6 shadow-sm ${
+                className={`max-w-[82%] rounded-[7px] p-4 text-sm font-semibold leading-6 shadow-sm ${
                   item.sender === 'admin'
-                    ? 'ml-auto rounded-tr-md bg-blue-600 text-white'
+                    ? 'ml-auto rounded-t-[7px]r-md bg-blue-600 text-white'
                     : item.sender === 'system'
                       ? 'mx-auto bg-amber-50 text-amber-700'
-                      : 'rounded-tl-md bg-white text-slate-700'
+                      : 'rounded-t-[7px]l-md bg-white text-slate-700'
                 }`}
                 key={`${item.sender}-${item.sentAt}-${index}`}
               >
@@ -1739,8 +2386,8 @@ export function SupportMessageDetailPage() {
               value={reply}
             />
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-              <p className="text-xs font-semibold text-slate-500">Reply save karne par ticket In Progress ho jayega. User response nahi aaya to 10 minutes ke baad session auto close.</p>
-              <button className="rounded-full bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:cursor-not-allowed disabled:opacity-50" disabled={!reply.trim() || isSessionClosed} onClick={sendReply} type="button">
+              <p className="text-xs font-semibold text-slate-500">Saving a reply moves the ticket to In Progress. If the user does not respond, the session closes automatically after 10 minutes.</p>
+              <button className="rounded-[7px] bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:cursor-not-allowed disabled:opacity-50" disabled={!reply.trim() || isSessionClosed} onClick={sendReply} type="button">
                 Send Reply
               </button>
             </div>
@@ -1754,9 +2401,9 @@ export function SupportMessageDetailPage() {
               <select className="input" onChange={(event) => setStatus(event.target.value)} value={status}>
                 {fieldOptions.supportStatus.map((option) => <option key={option}>{option}</option>)}
               </select>
-              <button className="rounded-full bg-slate-900 px-5 py-3 text-sm font-black text-white" onClick={() => updateTicketStatus(status)} type="button">Update Status</button>
-              <button className="rounded-full bg-teal-50 px-5 py-3 text-sm font-black text-teal-700" onClick={() => updateTicketStatus('Resolved')} type="button">Mark Resolved</button>
-              <button className="rounded-full bg-rose-50 px-5 py-3 text-sm font-black text-rose-700" onClick={() => updateTicketStatus('Closed')} type="button">End Session</button>
+              <button className="rounded-[7px] bg-slate-900 px-5 py-3 text-sm font-black text-white" onClick={() => updateTicketStatus(status)} type="button">Update Status</button>
+              <button className="rounded-[7px] bg-teal-50 px-5 py-3 text-sm font-black text-teal-700" onClick={() => updateTicketStatus('Resolved')} type="button">Mark Resolved</button>
+              <button className="rounded-[7px] bg-rose-50 px-5 py-3 text-sm font-black text-rose-700" onClick={() => updateTicketStatus('Closed')} type="button">End Session</button>
             </div>
           </AdminCard>
           <AdminCard>
@@ -1802,6 +2449,10 @@ function JobDetailModal({ job, onClose }) {
     ['Account status', job.accountDepartmentStatus || 'Pending'],
     ['Approval', job.approval || 'Pending'],
     ['Public status', job.status || 'Open'],
+    ['Authorised by', job.jobAuthorizedByName || 'Not added'],
+    ['Authoriser email', job.jobAuthorizedByEmail || 'Not added'],
+    ['Authorised action', job.jobAuthorizedAction || 'Not added'],
+    ['Authorised time', job.jobAuthorizedAt ? formatDateTime(job.jobAuthorizedAt) : 'Not added'],
     ['Applications', job.applicationsCount || 0],
     ['Candidate clicks', job.views || 0],
     ['Created', job.createdAt ? new Date(job.createdAt).toLocaleString() : 'Not added'],
@@ -1809,7 +2460,7 @@ function JobDetailModal({ job, onClose }) {
 
   return (
     <AdminModal open={Boolean(job)} title="Job full details" onClose={onClose}>
-      <div className="rounded-2xl bg-blue-50 p-4">
+      <div className="rounded-[7px] bg-blue-50 p-4">
         <p className="text-xs font-black uppercase tracking-wide text-blue-700">Selected job</p>
         <h2 className="mt-2 text-2xl font-black text-slate-950">{job.title}</h2>
         <p className="mt-1 text-sm font-semibold text-slate-600">{job.company} / {job.location}</p>
@@ -1821,9 +2472,9 @@ function JobDetailModal({ job, onClose }) {
         ))}
       </div>
 
-      {job.accountDepartmentRemark && (
-        <div className="mt-5 rounded-2xl bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-800">
-          <span className="font-black">Reject remark:</span> {job.accountDepartmentRemark}
+      {(job.accountDepartmentRemark || job.jobAuthorizedRemark) && (
+        <div className="mt-5 rounded-[7px] bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-800">
+          <span className="font-black">Approval remark:</span> {job.jobAuthorizedRemark || job.accountDepartmentRemark}
         </div>
       )}
 
@@ -1841,7 +2492,7 @@ function JobDetailModal({ job, onClose }) {
 
 function JobLongField({ label, value }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4">
+    <div className="rounded-[7px] bg-slate-50 p-4">
       <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
       <p className="mt-2 whitespace-pre-line text-sm font-semibold leading-6 text-slate-700">{value || 'Not added'}</p>
     </div>
@@ -1859,7 +2510,7 @@ function RecruiterMetric({ label, value }) {
 
 function ProfileLine({ label, value }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4">
+    <div className="rounded-[7px] bg-slate-50 p-4">
       <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
       <p className="mt-1 break-words text-slate-800">{value}</p>
     </div>
@@ -1902,6 +2553,46 @@ function getSupportChatMessages(ticket = {}) {
 function formatDateTime(value) {
   if (!value) return '-'
   return new Date(value).toLocaleString()
+}
+
+function renderAuthorisedBy({ action, email, name, time }) {
+  if (!name && !email && !time) return <span className="text-slate-400">Not authorised</span>
+
+  return (
+    <div className="min-w-48 whitespace-normal rounded-[7px] bg-teal-50 px-3 py-2 text-xs font-bold leading-5 text-teal-700">
+      <span className="block">{name || 'Account Team'}</span>
+      {email ? <span className="block break-all text-[11px] text-teal-600">{email}</span> : null}
+      {time ? <span className="block text-[11px] text-teal-600">{formatDateTime(time)}</span> : null}
+      {action ? <span className="mt-1 inline-flex rounded-[7px] bg-white px-2 py-0.5 text-[10px] uppercase tracking-wide text-teal-700">{action}</span> : null}
+    </div>
+  )
+}
+
+function renderRecruiterAccountAuthorisedBy(row) {
+  return renderAuthorisedBy({
+    action: row.accountAuthorizedAction,
+    email: row.accountAuthorizedByEmail,
+    name: row.accountAuthorizedByName,
+    time: row.accountAuthorizedAt,
+  })
+}
+
+function renderDocumentAuthorisedBy(row) {
+  return renderAuthorisedBy({
+    action: row.reviewedAction || row.status,
+    email: row.reviewedByEmail,
+    name: row.reviewedByName,
+    time: row.reviewedAt,
+  })
+}
+
+function renderJobAuthorisedBy(row) {
+  return renderAuthorisedBy({
+    action: row.jobAuthorizedAction,
+    email: row.jobAuthorizedByEmail,
+    name: row.jobAuthorizedByName,
+    time: row.jobAuthorizedAt,
+  })
 }
 
 function formatCountdown(totalSeconds) {
@@ -2202,7 +2893,7 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
               {fieldOptions.userStatus.map((option) => <option key={option}>{option}</option>)}
             </select>
           ) : type === 'users' && key === 'password' ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3" key={key}>
+            <div className="flex items-center gap-3 rounded-[7px] border border-slate-200 bg-white px-4 py-3" key={key}>
               <input
                 className="w-full bg-transparent text-sm font-semibold outline-none"
                 onChange={(event) => onChange(key, event.target.value)}
@@ -2212,7 +2903,7 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
               />
               <button
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-blue-600"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-[7px] text-slate-500 transition hover:bg-slate-100 hover:text-blue-600"
                 onClick={() => setShowPassword((value) => !value)}
                 type="button"
               >
@@ -2251,14 +2942,14 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
         </select>
       )}
       {type === 'resumes' && (
-        <div className="mt-4 grid gap-3 rounded-2xl bg-blue-50 p-4 text-sm text-blue-800">
+        <div className="mt-4 grid gap-3 rounded-[7px] bg-blue-50 p-4 text-sm text-blue-800">
           <p className="flex items-center gap-2 font-bold"><Eye size={17} /> Resume preview panel</p>
           <p>Skills, experience, application history, and download controls appear here.</p>
         </div>
       )}
       <div className="mt-5 flex flex-col justify-end gap-2 sm:flex-row">
-        <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={onClose} type="button">Cancel</button>
-        <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={onSave} type="button">Save Changes</button>
+        <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={onClose} type="button">Cancel</button>
+        <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={onSave} type="button">Save Changes</button>
       </div>
     </AdminModal>
   )
@@ -2278,17 +2969,17 @@ function SkillSelect({ onChange, value }) {
     <div className="sm:col-span-2">
       <p className="text-xs font-black uppercase tracking-wide text-slate-400">Skills</p>
       <input
-        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500"
+        className="mt-2 w-full rounded-[7px] border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500"
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Search skills"
         value={query}
       />
-      <div className="mt-3 flex max-h-44 flex-wrap gap-2 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-3">
+      <div className="mt-3 flex max-h-44 flex-wrap gap-2 overflow-y-auto rounded-[7px] border border-slate-200 bg-slate-50 p-3">
         {filteredSkills.map((skill) => {
           const active = selected.includes(skill)
           return (
             <button
-              className={`rounded-full px-3 py-2 text-xs font-black transition ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-blue-50 hover:text-blue-700'}`}
+              className={`rounded-[7px] px-3 py-2 text-xs font-black transition ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-blue-50 hover:text-blue-700'}`}
               key={skill}
               onClick={() => toggle(skill)}
               type="button"
@@ -2334,7 +3025,7 @@ function TestimonialPlacementSelect({ label, onChange, value }) {
       <div className="grid gap-3 md:grid-cols-2">
         {options.map((option) => (
           <button
-            className={`rounded-2xl border p-4 text-left transition ${
+            className={`rounded-[7px] border p-4 text-left transition ${
               value === option.value
                 ? 'border-blue-200 bg-blue-50 text-blue-800 shadow-sm'
                 : 'border-slate-200 bg-white text-slate-600 hover:border-blue-100 hover:bg-slate-50'
@@ -2357,12 +3048,12 @@ function PolicyPlacementSelect({ label, onChange, value }) {
     {
       value: 'Users Frontend',
       title: 'Users Frontend',
-      text: 'Candidate/user website ke privacy, terms, support aur platform policy pages.',
+      text: 'Privacy, terms, support, and platform policy pages for the candidate/user website.',
     },
     {
       value: 'Recruiter Frontend',
       title: 'Recruiter Frontend',
-      text: 'Recruiter/employer website ke hiring, account, package aur compliance policy pages.',
+      text: 'Hiring, account, package, and compliance policy pages for the recruiter/employer website.',
     },
   ]
 
@@ -2372,7 +3063,7 @@ function PolicyPlacementSelect({ label, onChange, value }) {
       <div className="grid gap-3 md:grid-cols-2">
         {options.map((option) => (
           <button
-            className={`rounded-2xl border p-4 text-left transition ${
+            className={`rounded-[7px] border p-4 text-left transition ${
               value === option.value
                 ? 'border-blue-200 bg-blue-50 text-blue-800 shadow-sm'
                 : 'border-slate-200 bg-white text-slate-600 hover:border-blue-100 hover:bg-slate-50'
@@ -2450,23 +3141,23 @@ function JobLocationSelect({ form, updateMany }) {
   return (
     <div className="sm:col-span-2">
       <p className="text-xs font-black uppercase tracking-wide text-slate-400">Job Location</p>
-      <div className="mt-2 grid gap-3 rounded-2xl bg-slate-50 p-3 sm:grid-cols-2">
+      <div className="mt-2 grid gap-3 rounded-[7px] bg-slate-50 p-3 sm:grid-cols-2">
         <SelectField label="Region" onChange={setScope} options={['India', 'International']} value={location.locationScope} />
         <SelectField label="Country" onChange={setCountry} options={countryOptions.map((country) => ({ label: country.name, value: country.isoCode }))} value={location.countryCode} />
         <SelectField label={location.locationScope === 'India' ? 'State / UT' : 'State / Province'} onChange={setState} options={stateOptions.map((state) => ({ label: state.name, value: state.isoCode }))} value={location.stateCode} />
         <SelectField label="City" onChange={setCity} options={cityOptions.map((city) => ({ label: city.name, value: city.name }))} value={location.city} />
         <label className="sm:col-span-2">
           <span className="text-xs font-black uppercase tracking-wide text-slate-400">Office Address</span>
-          <textarea className="mt-1 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => updateMany({ officeAddress: event.target.value, ...(location.interviewSameAsOffice !== false ? { interviewAddress: event.target.value } : {}) })} placeholder="Office address, landmark, floor, PIN/ZIP" value={form.officeAddress || ''} />
+          <textarea className="mt-1 min-h-24 w-full rounded-[7px] border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => updateMany({ officeAddress: event.target.value, ...(location.interviewSameAsOffice !== false ? { interviewAddress: event.target.value } : {}) })} placeholder="Office address, landmark, floor, PIN/ZIP" value={form.officeAddress || ''} />
         </label>
-        <label className="flex items-center justify-between rounded-xl bg-white p-3 text-sm font-bold text-slate-600 ring-1 ring-slate-200 sm:col-span-2">
+        <label className="flex items-center justify-between rounded-[7px] bg-white p-3 text-sm font-bold text-slate-600 ring-1 ring-slate-200 sm:col-span-2">
           Interview address same as office
           <input checked={form.interviewSameAsOffice !== false} className="h-5 w-5 accent-blue-600" onChange={(event) => updateMany({ interviewSameAsOffice: event.target.checked, interviewAddress: event.target.checked ? form.officeAddress || '' : form.interviewAddress || '' })} type="checkbox" />
         </label>
         {form.interviewSameAsOffice === false && (
           <label className="sm:col-span-2">
             <span className="text-xs font-black uppercase tracking-wide text-slate-400">Interview Address</span>
-            <textarea className="mt-1 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => updateMany({ interviewAddress: event.target.value })} placeholder="Interview venue address if different from office" value={form.interviewAddress || ''} />
+            <textarea className="mt-1 min-h-24 w-full rounded-[7px] border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => updateMany({ interviewAddress: event.target.value })} placeholder="Interview venue address if different from office" value={form.interviewAddress || ''} />
           </label>
         )}
       </div>
@@ -2478,7 +3169,7 @@ function SelectField({ label, onChange, options, value }) {
   return (
     <label>
       <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
-      <select className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => onChange(event.target.value)} value={value || ''}>
+      <select className="mt-1 w-full rounded-[7px] border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => onChange(event.target.value)} value={value || ''}>
         {options.map((option) => {
           const normalized = typeof option === 'string' ? { label: option, value: option } : option
           return <option key={normalized.value} value={normalized.value}>{normalized.label}</option>
@@ -2548,14 +3239,14 @@ function CompanyLocationSelect({ form, updateMany }) {
   return (
     <div className="sm:col-span-2">
       <p className="text-xs font-black uppercase tracking-wide text-slate-400">Company Location</p>
-      <div className="mt-2 grid gap-3 rounded-2xl bg-slate-50 p-3 sm:grid-cols-2">
+      <div className="mt-2 grid gap-3 rounded-[7px] bg-slate-50 p-3 sm:grid-cols-2">
         <SelectField label="Region" onChange={setScope} options={['India', 'International']} value={location.locationScope} />
         <SelectField label="Country" onChange={setCountry} options={countryOptions.map((country) => ({ label: country.name, value: country.isoCode }))} value={location.countryCode} />
         <SelectField label={location.locationScope === 'India' ? 'State / UT' : 'State / Province'} onChange={setState} options={stateOptions.map((state) => ({ label: state.name, value: state.isoCode }))} value={location.stateCode} />
         <SelectField label="City" onChange={setCity} options={cityOptions.map((city) => ({ label: city.name, value: city.name }))} value={location.city} />
         <label className="sm:col-span-2">
           <span className="text-xs font-black uppercase tracking-wide text-slate-400">Address</span>
-          <textarea className="mt-1 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => updateMany({ address: event.target.value })} placeholder="Company office address, landmark, floor, PIN/ZIP" value={form.address || ''} />
+          <textarea className="mt-1 min-h-24 w-full rounded-[7px] border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" onChange={(event) => updateMany({ address: event.target.value })} placeholder="Company office address, landmark, floor, PIN/ZIP" value={form.address || ''} />
         </label>
       </div>
     </div>
@@ -2580,7 +3271,7 @@ This role offers growth opportunities, exposure to real projects, and a professi
     <div className="sm:col-span-2">
       <div className="mb-2 flex items-center justify-between gap-3">
         <p className="text-xs font-black uppercase tracking-wide text-slate-400">Description</p>
-        <button className="rounded-full bg-blue-600 px-4 py-2 text-xs font-black text-white shadow-lg shadow-blue-100 hover:bg-blue-700" onClick={generate} type="button">
+        <button className="rounded-[7px] bg-blue-600 px-4 py-2 text-xs font-black text-white shadow-lg shadow-blue-100 hover:bg-blue-700" onClick={generate} type="button">
           AI Generate
         </button>
       </div>
@@ -2743,12 +3434,12 @@ export function AdminPricingPage() {
         subtitle="Choose a hiring plan for posting jobs, reviewing candidates, and scaling your recruitment workflow."
         title="Recruiter Pricing"
       />
-      {pricingMessage && <p className="rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-700">{pricingMessage}</p>}
+      {pricingMessage && <p className="rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{pricingMessage}</p>}
       <div className="grid gap-5 lg:grid-cols-3">
         {plans.map((plan, index) => (
           <AdminCard className={`relative flex min-h-[420px] flex-col ${plan.badge ? 'border-blue-200 shadow-xl shadow-blue-100' : ''}`} key={plan.name}>
             {plan.badge && (
-              <span className="absolute right-5 top-5 rounded-full bg-blue-600 px-3 py-1 text-xs font-black text-white">
+              <span className="absolute right-5 top-5 rounded-[7px] bg-blue-600 px-3 py-1 text-xs font-black text-white">
                 {plan.badge}
               </span>
             )}
@@ -2763,27 +3454,27 @@ export function AdminPricingPage() {
             </div>
             <div className="mt-7 grid gap-3">
               {plan.features.map((feature) => (
-                <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700" key={feature}>
-                  <span className="grid h-6 w-6 place-items-center rounded-full bg-teal-50 text-teal-700">
+                <div className="flex items-center gap-3 rounded-[7px] bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700" key={feature}>
+                  <span className="grid h-6 w-6 place-items-center rounded-[7px] bg-teal-50 text-teal-700">
                     <ShieldCheck size={15} />
                   </span>
                   {feature}
                 </div>
               ))}
             </div>
-            <button className="mt-auto rounded-full bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700" type="button">
+            <button className="mt-auto rounded-[7px] bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700" type="button">
               {plan.buttonLabel || 'Start Hiring'}
             </button>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <button className="rounded-full bg-slate-100 px-4 py-2 text-xs font-black text-slate-700" onClick={() => openPackageModal(plan, index)} type="button">Edit</button>
-              <button className="rounded-full bg-rose-50 px-4 py-2 text-xs font-black text-rose-700" onClick={() => deletePackage(index)} type="button">Delete</button>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <IconAction kind="edit" label="Edit package" onClick={() => openPackageModal(plan, index)} />
+              <IconAction kind="delete" label="Delete package" onClick={() => deletePackage(index)} />
             </div>
           </AdminCard>
         ))}
       </div>
       <AdminModal open={packageModalOpen} title={editingPackageIndex === null ? 'Add Package' : 'Edit Package'} onClose={() => setPackageModalOpen(false)}>
         <div className="grid gap-5">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-[7px] border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-black uppercase tracking-wide text-slate-400">Package Identity</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <LabeledInput label="Package name" onChange={(value) => setPackageForm((current) => ({ ...current, name: value }))} placeholder="Starter, Growth, Enterprise" value={packageForm.name} />
@@ -2792,7 +3483,7 @@ export function AdminPricingPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="rounded-[7px] border border-slate-200 bg-white p-4">
             <p className="text-xs font-black uppercase tracking-wide text-slate-400">Commercial Rules</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <LabeledInput label="Package price" onChange={(value) => setPackageForm((current) => ({ ...current, price: value }))} placeholder="INR 4,999" value={packageForm.price} />
@@ -2811,7 +3502,7 @@ export function AdminPricingPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="rounded-[7px] border border-slate-200 bg-white p-4">
             <p className="text-xs font-black uppercase tracking-wide text-slate-400">Recruiter Experience</p>
             <div className="mt-3 grid gap-3">
               <LabeledInput label="CTA button label" onChange={(value) => setPackageForm((current) => ({ ...current, buttonLabel: value }))} placeholder="Start Hiring" value={packageForm.buttonLabel} />
@@ -2824,8 +3515,8 @@ export function AdminPricingPage() {
           </div>
         </div>
         <div className="mt-5 flex justify-end gap-2">
-          <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setPackageModalOpen(false)} type="button">Cancel</button>
-          <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={savePackage} type="button">Save Package</button>
+          <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setPackageModalOpen(false)} type="button">Cancel</button>
+          <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={savePackage} type="button">Save Package</button>
         </div>
       </AdminModal>
     </div>
@@ -2897,8 +3588,8 @@ export function AdminDiscountCouponPage() {
           <input className="input sm:col-span-2" onChange={(event) => setCouponForm((current) => ({ ...current, validTill: event.target.value }))} placeholder="Valid till" value={couponForm.validTill} />
         </div>
         <div className="mt-5 flex justify-end gap-2">
-          <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setCouponModalOpen(false)} type="button">Cancel</button>
-          <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={saveCoupon} type="button">Save Coupon</button>
+          <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={() => setCouponModalOpen(false)} type="button">Cancel</button>
+          <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-bold text-white" onClick={saveCoupon} type="button">Save Coupon</button>
         </div>
       </AdminModal>
     </div>
@@ -2911,6 +3602,196 @@ const defaultGoogleAuthConfig = {
   projectId: '',
   authorizedDomains: '',
   notes: '',
+}
+
+const defaultSupaCloudConfig = {
+  enabled: true,
+  supabaseUrl: '',
+  serviceRoleKey: '',
+  bucket: 'resumes',
+  folder: 'hiring-team',
+  publicBucket: true,
+  notes: '',
+}
+
+const defaultWhatsAppApiConfig = {
+  enabled: true,
+  provider: 'Meta WhatsApp Cloud API',
+  phoneNumberId: '',
+  businessAccountId: '',
+  accessToken: '',
+  otpTemplateName: '',
+  defaultCountryCode: '+91',
+  notes: '',
+}
+
+const defaultMongoDbConfig = {
+  enabled: true,
+  connectionName: 'Primary MongoDB',
+  mongoUri: '',
+  databaseName: 'cromgenrozgar',
+  host: '',
+  username: '',
+  port: '5050',
+  clientUrl: '',
+  notes: '',
+}
+
+export function AdminWhatsAppApiPage() {
+  const [settingId, setSettingId] = useState('')
+  const [form, setForm] = useState(defaultWhatsAppApiConfig)
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const loadConfig = () => {
+    setLoading(true)
+    setMessage('')
+    api
+      .list('settings', '?search=whatsappLoginApi&limit=10')
+      .then((payload) => {
+        const setting = (payload.data || []).find((item) => item.key === 'whatsappLoginApi')
+        const value = setting?.value || {}
+        setSettingId(setting?._id || '')
+        setForm({
+          ...defaultWhatsAppApiConfig,
+          enabled: value.enabled !== false,
+          provider: value.provider || defaultWhatsAppApiConfig.provider,
+          phoneNumberId: value.phoneNumberId || '',
+          businessAccountId: value.businessAccountId || '',
+          accessToken: value.accessToken || '',
+          otpTemplateName: value.otpTemplateName || '',
+          defaultCountryCode: value.defaultCountryCode || '+91',
+          notes: value.notes || '',
+        })
+      })
+      .catch((error) => setMessage(error.message || 'WhatsApp API config could not be loaded.'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadConfig()
+  }, [])
+
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+
+  const save = async () => {
+    setSaving(true)
+    setMessage('')
+
+    const payload = {
+      key: 'whatsappLoginApi',
+      group: 'auth',
+      value: {
+        enabled: Boolean(form.enabled),
+        provider: form.provider.trim() || defaultWhatsAppApiConfig.provider,
+        phoneNumberId: form.phoneNumberId.trim(),
+        businessAccountId: form.businessAccountId.trim(),
+        accessToken: form.accessToken.trim(),
+        otpTemplateName: form.otpTemplateName.trim(),
+        defaultCountryCode: form.defaultCountryCode.trim() || '+91',
+        notes: form.notes.trim(),
+      },
+    }
+
+    if (payload.value.enabled && (!payload.value.phoneNumberId || !payload.value.accessToken)) {
+      setSaving(false)
+      setMessage('Phone Number ID and Access Token are required when WhatsApp API is enabled.')
+      return
+    }
+
+    try {
+      if (settingId) {
+        await api.update('settings', settingId, payload)
+      } else {
+        const created = await api.create('settings', payload)
+        setSettingId(created.data?._id || '')
+      }
+      setMessage('WhatsApp API settings saved successfully.')
+    } catch (error) {
+      setMessage(error.message || 'WhatsApp API config could not be saved.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-6">
+      <section className="overflow-hidden rounded-[7px] border border-blue-100 bg-white shadow-xl shadow-blue-100/50">
+        <div className="grid gap-5 bg-gradient-to-br from-blue-600 via-sky-500 to-teal-400 p-6 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-50">Settings / Auth API</p>
+            <h2 className="mt-3 text-3xl font-black sm:text-4xl">WhatsApp API</h2>
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-50">
+              Configure WhatsApp OTP login provider details for mobile number login and forgot access flows.
+            </p>
+          </div>
+          <StatusBadge status={form.enabled ? 'Active' : 'Inactive'} />
+        </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_0.75fr]">
+        <AdminCard>
+          <div className="flex flex-col justify-between gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-sm font-black uppercase tracking-wide text-blue-600">WhatsApp Provider</p>
+              <h3 className="mt-1 text-2xl font-black text-slate-950">OTP login configuration</h3>
+            </div>
+            <label className="flex items-center gap-3 rounded-[7px] bg-slate-50 px-4 py-2 text-sm font-black text-slate-600">
+              <input checked={form.enabled} onChange={(event) => update('enabled', event.target.checked)} type="checkbox" />
+              Enable WhatsApp Login
+            </label>
+          </div>
+
+          {loading ? (
+            <div className="mt-5 h-56 animate-pulse rounded-[7px] bg-slate-100" />
+          ) : (
+            <div className="mt-5 grid gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <LabeledInput label="Provider" onChange={(value) => update('provider', value)} placeholder="Meta WhatsApp Cloud API" value={form.provider} />
+                <LabeledInput label="Default Country Code" onChange={(value) => update('defaultCountryCode', value)} placeholder="+91" value={form.defaultCountryCode} />
+                <LabeledInput label="Phone Number ID" onChange={(value) => update('phoneNumberId', value)} placeholder="Meta phone number ID" value={form.phoneNumberId} />
+                <LabeledInput label="Business Account ID" onChange={(value) => update('businessAccountId', value)} placeholder="WhatsApp business account ID" value={form.businessAccountId} />
+                <LabeledInput className="sm:col-span-2" label="OTP Template Name" onChange={(value) => update('otpTemplateName', value)} placeholder="login_otp" value={form.otpTemplateName} />
+              </div>
+              <label className="grid gap-1">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">Access Token</span>
+                <textarea className="input min-h-24" onChange={(event) => update('accessToken', event.target.value)} placeholder="Paste WhatsApp Cloud API access token" value={form.accessToken} />
+              </label>
+              <label className="grid gap-1">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">Internal Notes</span>
+                <textarea className="input min-h-24" onChange={(event) => update('notes', event.target.value)} placeholder="Template status, provider notes, token rotation..." value={form.notes} />
+              </label>
+              {message && <p className="rounded-[7px] bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-700" onClick={loadConfig} type="button">Refresh</button>
+                <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:opacity-60" disabled={saving} onClick={save} type="button">
+                  {saving ? 'Saving...' : 'Save WhatsApp API'}
+                </button>
+              </div>
+            </div>
+          )}
+        </AdminCard>
+
+        <div className="grid gap-5">
+          <AdminCard>
+            <p className="text-sm font-black uppercase tracking-wide text-teal-600">Login Flow</p>
+            <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-600">
+              <p>1. User clicks WhatsApp login on the login page.</p>
+              <p>2. Registered mobile number receives OTP.</p>
+              <p>3. After OTP verification, the user is logged in directly.</p>
+            </div>
+          </AdminCard>
+          <AdminCard>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-600">Integration Note</p>
+            <p className="mt-3 text-sm font-semibold leading-6 text-slate-500">
+              Settings are saved here. For actual WhatsApp message delivery, connect the backend sender service to the Meta or Twilio API.
+            </p>
+          </AdminCard>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function AdminGoogleAuthPage() {
@@ -2986,7 +3867,7 @@ export function AdminGoogleAuthPage() {
 
   return (
     <div className="grid gap-6">
-      <section className="overflow-hidden rounded-[2rem] border border-blue-100 bg-white shadow-xl shadow-blue-100/50">
+      <section className="overflow-hidden rounded-[7px] border border-blue-100 bg-white shadow-xl shadow-blue-100/50">
         <div className="grid gap-5 bg-gradient-to-br from-blue-600 via-sky-500 to-teal-400 p-6 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <p className="text-sm font-black uppercase tracking-wide text-blue-50">Settings / API Configuration</p>
@@ -3006,14 +3887,14 @@ export function AdminGoogleAuthPage() {
               <p className="text-sm font-black uppercase tracking-wide text-blue-600">OAuth Client</p>
               <h3 className="mt-1 text-2xl font-black text-slate-950">Google login configuration</h3>
             </div>
-            <label className="flex items-center gap-3 rounded-full bg-slate-50 px-4 py-2 text-sm font-black text-slate-600">
+            <label className="flex items-center gap-3 rounded-[7px] bg-slate-50 px-4 py-2 text-sm font-black text-slate-600">
               <input checked={form.enabled} onChange={(event) => update('enabled', event.target.checked)} type="checkbox" />
               Enable Google Auth
             </label>
           </div>
 
           {loading ? (
-            <div className="mt-5 h-48 animate-pulse rounded-2xl bg-slate-100" />
+            <div className="mt-5 h-48 animate-pulse rounded-[7px] bg-slate-100" />
           ) : (
             <div className="mt-5 grid gap-4">
               <LabeledInput label="Google OAuth Client ID" onChange={(value) => update('clientId', value)} placeholder="xxxx.apps.googleusercontent.com" value={form.clientId} />
@@ -3036,10 +3917,10 @@ export function AdminGoogleAuthPage() {
                   value={form.notes}
                 />
               </label>
-              {message && <p className="rounded-2xl bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
+              {message && <p className="rounded-[7px] bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                <button className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-700" onClick={loadConfig} type="button">Refresh</button>
-                <button className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:opacity-60" disabled={saving} onClick={save} type="button">
+                <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-700" onClick={loadConfig} type="button">Refresh</button>
+                <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:opacity-60" disabled={saving} onClick={save} type="button">
                   {saving ? 'Saving...' : 'Save Google Auth API'}
                 </button>
               </div>
@@ -3057,7 +3938,7 @@ export function AdminGoogleAuthPage() {
                 ['Recruiter frontend', 'Recruiter login/register Google buttons use the same verified config.'],
                 ['Backend verify', 'Server verifies Google ID tokens against this dynamic client ID.'],
               ].map(([title, text]) => (
-                <div className="rounded-2xl bg-slate-50 p-4" key={title}>
+                <div className="rounded-[7px] bg-slate-50 p-4" key={title}>
                   <p className="font-black text-slate-950">{title}</p>
                   <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">{text}</p>
                 </div>
@@ -3080,11 +3961,558 @@ export function AdminGoogleAuthPage() {
   )
 }
 
+export function AdminSupaCloudPage() {
+  const [settingId, setSettingId] = useState('')
+  const [form, setForm] = useState(defaultSupaCloudConfig)
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const loadConfig = () => {
+    setLoading(true)
+    setMessage('')
+    api
+      .list('settings', '?search=supaCloudStorage&limit=10')
+      .then((payload) => {
+        const setting = (payload.data || []).find((item) => item.key === 'supaCloudStorage')
+        const value = setting?.value || {}
+        setSettingId(setting?._id || '')
+        setForm({
+          enabled: value.enabled !== false,
+          supabaseUrl: value.supabaseUrl || '',
+          serviceRoleKey: value.serviceRoleKey || '',
+          bucket: value.bucket || 'resumes',
+          folder: value.folder || 'hiring-team',
+          publicBucket: value.publicBucket !== false,
+          notes: value.notes || '',
+        })
+      })
+      .catch((error) => setMessage(error.message || 'Supa Cloud config could not be loaded.'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadConfig()
+  }, [])
+
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+
+  const save = async () => {
+    setSaving(true)
+    setMessage('')
+
+    const payload = {
+      key: 'supaCloudStorage',
+      group: 'storage',
+      value: {
+        enabled: Boolean(form.enabled),
+        supabaseUrl: form.supabaseUrl.trim().replace(/\/+$/, ''),
+        serviceRoleKey: form.serviceRoleKey.trim(),
+        bucket: form.bucket.trim() || 'resumes',
+        folder: form.folder.trim() || 'hiring-team',
+        publicBucket: Boolean(form.publicBucket),
+        notes: form.notes.trim(),
+      },
+    }
+
+    if (!payload.value.supabaseUrl || !payload.value.serviceRoleKey || !payload.value.bucket) {
+      setSaving(false)
+      setMessage('Supa Cloud URL, service role key, and bucket are required.')
+      return
+    }
+
+    try {
+      if (settingId) {
+        await api.update('settings', settingId, payload)
+      } else {
+        const created = await api.create('settings', payload)
+        setSettingId(created.data?._id || '')
+      }
+      setMessage('Supa Cloud storage saved successfully. Resume uploads will use this config.')
+    } catch (error) {
+      setMessage(error.message || 'Supa Cloud config could not be saved.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-6">
+      <section className="overflow-hidden rounded-[7px] border border-blue-100 bg-white shadow-xl shadow-blue-100/50">
+        <div className="grid gap-5 bg-gradient-to-br from-blue-600 via-sky-500 to-teal-400 p-6 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-50">Settings / Storage Configuration</p>
+            <h2 className="mt-3 text-3xl font-black sm:text-4xl">Supa Cloud Storage</h2>
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-50">
+              Configure Supabase/Supa Cloud storage for PDF resumes. Uploads go to storage, while MongoDB stores resume JSON metadata.
+            </p>
+          </div>
+          <StatusBadge status={form.enabled ? 'Active' : 'Inactive'} />
+        </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_0.75fr]">
+        <AdminCard>
+          <div className="flex flex-col justify-between gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-sm font-black uppercase tracking-wide text-blue-600">Storage API</p>
+              <h3 className="mt-1 text-2xl font-black text-slate-950">Supa Cloud resume upload</h3>
+            </div>
+            <label className="flex items-center gap-3 rounded-[7px] bg-slate-50 px-4 py-2 text-sm font-black text-slate-600">
+              <input checked={form.enabled} onChange={(event) => update('enabled', event.target.checked)} type="checkbox" />
+              Enable Supa Cloud
+            </label>
+          </div>
+
+          {loading ? (
+            <div className="mt-5 h-48 animate-pulse rounded-[7px] bg-slate-100" />
+          ) : (
+            <div className="mt-5 grid gap-4">
+              <LabeledInput label="Supa Cloud / Supabase URL" onChange={(value) => update('supabaseUrl', value)} placeholder="https://xxxx.supabase.co" value={form.supabaseUrl} />
+              <LabeledInput label="Service Role Key" onChange={(value) => update('serviceRoleKey', value)} placeholder="Paste service_role key" value={form.serviceRoleKey} />
+              <LabeledInput label="Storage Bucket" onChange={(value) => update('bucket', value)} placeholder="resumes" value={form.bucket} />
+              <LabeledInput label="Folder Path" onChange={(value) => update('folder', value)} placeholder="hiring-team" value={form.folder} />
+              <label className="flex items-center gap-3 rounded-[7px] bg-slate-50 px-4 py-3 text-sm font-black text-slate-600">
+                <input checked={form.publicBucket} onChange={(event) => update('publicBucket', event.target.checked)} type="checkbox" />
+                Bucket is public, save public resume URL
+              </label>
+              <label className="grid gap-1">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">Internal notes</span>
+                <textarea className="input min-h-24" onChange={(event) => update('notes', event.target.value)} placeholder="Bucket policy, owner, setup notes..." value={form.notes} />
+              </label>
+              {message && <p className="rounded-[7px] bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-700" onClick={loadConfig} type="button">Refresh</button>
+                <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:opacity-60" disabled={saving} onClick={save} type="button">
+                  {saving ? 'Saving...' : 'Save Supa Cloud'}
+                </button>
+              </div>
+            </div>
+          )}
+        </AdminCard>
+
+        <div className="grid gap-5">
+          <AdminCard>
+            <p className="text-sm font-black uppercase tracking-wide text-teal-600">Upload Flow</p>
+            <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-600">
+              <p>1. Admin uploads PDF resume from Hiring Team Add Candidate modal.</p>
+              <p>2. Backend uploads file to Supa Cloud Storage bucket.</p>
+              <p>3. MongoDB stores resume JSON metadata, storage path, public URL, and candidate details.</p>
+              <p>4. Resume table can download/view using saved metadata.</p>
+            </div>
+          </AdminCard>
+          <AdminCard>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-600">Security Note</p>
+            <p className="mt-3 text-sm font-semibold leading-6 text-slate-500">
+              Use the service role key only on the backend. This settings page saves it in MongoDB for server-side upload use.
+            </p>
+          </AdminCard>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function AdminMongoDbPage() {
+  const [form, setForm] = useState(defaultMongoDbConfig)
+  const [source, setSource] = useState('env')
+  const [envPreview, setEnvPreview] = useState({})
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const loadConfig = () => {
+    setLoading(true)
+    setMessage('')
+    api
+      .mongodbConfig()
+      .then((payload) => {
+        const data = payload.data || {}
+        const value = data.value || {}
+        setSource(data.source || 'env')
+        setEnvPreview(data.envPreview || {})
+        setForm({
+          ...defaultMongoDbConfig,
+          enabled: value.enabled !== false,
+          connectionName: value.connectionName || defaultMongoDbConfig.connectionName,
+          mongoUri: value.mongoUri || '',
+          databaseName: value.databaseName || defaultMongoDbConfig.databaseName,
+          host: value.host || '',
+          username: value.username || '',
+          port: value.port || '5050',
+          clientUrl: value.clientUrl || '',
+          notes: value.notes || '',
+        })
+      })
+      .catch((error) => setMessage(error.message || 'MongoDB details could not be loaded.'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadConfig()
+  }, [])
+
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+
+  const save = async () => {
+    setSaving(true)
+    setMessage('')
+
+    if (!form.mongoUri.trim()) {
+      setSaving(false)
+      setMessage('MongoDB URI is required.')
+      return
+    }
+
+    try {
+      await api.updateMongodbConfig({
+        enabled: Boolean(form.enabled),
+        connectionName: form.connectionName.trim() || defaultMongoDbConfig.connectionName,
+        mongoUri: form.mongoUri.trim(),
+        databaseName: form.databaseName.trim(),
+        host: form.host.trim(),
+        username: form.username.trim(),
+        port: form.port.trim(),
+        clientUrl: form.clientUrl.trim(),
+        notes: form.notes.trim(),
+      })
+      setSource('settings')
+      setMessage('MongoDB details saved successfully.')
+    } catch (error) {
+      setMessage(error.message || 'MongoDB details could not be saved.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-6">
+      <section className="overflow-hidden rounded-[7px] border border-blue-100 bg-white shadow-xl shadow-blue-100/50">
+        <div className="grid gap-5 bg-gradient-to-br from-blue-600 via-sky-500 to-teal-400 p-6 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-50">Settings / Database</p>
+            <h2 className="mt-3 text-3xl font-black sm:text-4xl">MongoDB Details</h2>
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-50">
+              View current MongoDB connection details, edit them, and save the updated configuration in MongoDB settings.
+            </p>
+          </div>
+          <StatusBadge status={source === 'settings' ? 'Saved Config' : 'ENV Config'} />
+        </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_0.75fr]">
+        <AdminCard>
+          <div className="flex flex-col justify-between gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-sm font-black uppercase tracking-wide text-blue-600">Connection</p>
+              <h3 className="mt-1 text-2xl font-black text-slate-950">MongoDB connection config</h3>
+            </div>
+            <label className="flex items-center gap-3 rounded-[7px] bg-slate-50 px-4 py-2 text-sm font-black text-slate-600">
+              <input checked={form.enabled} onChange={(event) => update('enabled', event.target.checked)} type="checkbox" />
+              Enable MongoDB
+            </label>
+          </div>
+
+          {loading ? (
+            <div className="mt-5 h-56 animate-pulse rounded-[7px] bg-slate-100" />
+          ) : (
+            <div className="mt-5 grid gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <LabeledInput label="Connection Name" onChange={(value) => update('connectionName', value)} placeholder="Primary MongoDB" value={form.connectionName} />
+                <LabeledInput label="Database Name" onChange={(value) => update('databaseName', value)} placeholder="cromgenrozgar" value={form.databaseName} />
+              </div>
+              <label className="grid gap-1">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">MongoDB URI</span>
+                <textarea className="input min-h-24" onChange={(event) => update('mongoUri', event.target.value)} placeholder="mongodb+srv://user:password@cluster.mongodb.net/database" value={form.mongoUri} />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <LabeledInput label="Host / Cluster" onChange={(value) => update('host', value)} placeholder="cluster.mongodb.net" value={form.host} />
+                <LabeledInput label="Username" onChange={(value) => update('username', value)} placeholder="database user" value={form.username} />
+                <LabeledInput label="Backend Port" onChange={(value) => update('port', value)} placeholder="5050" value={form.port} />
+                <LabeledInput label="Client URL" onChange={(value) => update('clientUrl', value)} placeholder="http://127.0.0.1:5173" value={form.clientUrl} />
+              </div>
+              <label className="grid gap-1">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">Internal Notes</span>
+                <textarea className="input min-h-24" onChange={(event) => update('notes', event.target.value)} placeholder="Cluster owner, environment, rotation notes..." value={form.notes} />
+              </label>
+              {message && <p className="rounded-[7px] bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-700" onClick={loadConfig} type="button">Refresh</button>
+                <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:opacity-60" disabled={saving} onClick={save} type="button">
+                  {saving ? 'Saving...' : 'Save MongoDB Details'}
+                </button>
+              </div>
+            </div>
+          )}
+        </AdminCard>
+
+        <div className="grid gap-5">
+          <AdminCard>
+            <p className="text-sm font-black uppercase tracking-wide text-teal-600">Current Source</p>
+            <h3 className="mt-1 text-xl font-black text-slate-950">{source === 'settings' ? 'Saved settings collection' : 'Backend .env fallback'}</h3>
+            <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-600">
+              <InfoLine label="Database" value={envPreview.databaseName || form.databaseName || 'Not detected'} />
+              <InfoLine label="Host" value={envPreview.host || form.host || 'Not detected'} />
+              <InfoLine label="Username" value={envPreview.username || form.username || 'Not detected'} />
+              <InfoLine label="Port" value={envPreview.port || form.port || 'Not added'} />
+              <InfoLine label="Client URL" value={envPreview.clientUrl || form.clientUrl || 'Not added'} />
+            </div>
+          </AdminCard>
+          <AdminCard>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-600">Runtime Note</p>
+            <p className="mt-3 text-sm font-semibold leading-6 text-slate-500">
+              This page saves editable MongoDB details in the settings collection. The running backend still uses MONGO_URI from backend .env until the server is restarted or reconnect logic is added.
+            </p>
+          </AdminCard>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function AdminSEOBrandingPage() {
+  const [settingId, setSettingId] = useState('')
+  const [form, setForm] = useState(defaultSiteBranding)
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const loadConfig = () => {
+    setLoading(true)
+    setMessage('')
+    api
+      .list('settings', '?search=siteSeoBranding&limit=10')
+      .then((payload) => {
+        const setting = (payload.data || []).find((item) => item.key === 'siteSeoBranding')
+        const value = setting?.value || {}
+        const next = { ...defaultSiteBranding, ...value }
+        setSettingId(setting?._id || '')
+        setForm(next)
+        applySiteBrandingMeta(next)
+      })
+      .catch((error) => setMessage(error.message || 'SEO branding config could not be loaded.'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadConfig()
+  }, [])
+
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+
+  const uploadBrandAsset = (key, file) => {
+    if (!file) return
+
+    const isIconFile = key === 'faviconUrl' && file.name.toLowerCase().endsWith('.ico')
+    if (!file.type.startsWith('image/') && !isIconFile) {
+      setMessage('Please upload only image file for logo or favicon.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      update(key, reader.result || '')
+      setMessage(`${key === 'logoUrl' ? 'Logo' : 'Favicon'} uploaded. Save SEO & Branding to publish.`)
+    }
+    reader.onerror = () => setMessage('Image upload failed. Please try again.')
+    reader.readAsDataURL(file)
+  }
+
+  const save = async () => {
+    setSaving(true)
+    setMessage('')
+
+    const payload = {
+      key: 'siteSeoBranding',
+      group: 'website',
+      value: {
+        siteName: form.siteName.trim() || defaultSiteBranding.siteName,
+        adminName: form.adminName.trim() || defaultSiteBranding.adminName,
+        recruiterName: form.recruiterName.trim() || defaultSiteBranding.recruiterName,
+        logoUrl: form.logoUrl.trim(),
+        faviconUrl: form.faviconUrl.trim(),
+        tollFreeNumber: form.tollFreeNumber.trim(),
+        seoTitle: form.seoTitle.trim() || form.siteName.trim() || defaultSiteBranding.seoTitle,
+        seoDescription: form.seoDescription.trim(),
+        seoKeywords: form.seoKeywords.trim(),
+      },
+    }
+
+    try {
+      if (settingId) {
+        await api.update('settings', settingId, payload)
+      } else {
+        const created = await api.create('settings', payload)
+        setSettingId(created.data?._id || '')
+      }
+      const nextBranding = publishSiteBranding(payload.value)
+      setForm(nextBranding)
+      setMessage('SEO, logo, and favicon saved successfully.')
+    } catch (error) {
+      setMessage(error.message || 'SEO branding config could not be saved.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-6">
+      <section className="overflow-hidden rounded-[7px] border border-blue-100 bg-white shadow-xl shadow-blue-100/50">
+        <div className="grid gap-5 bg-gradient-to-br from-blue-600 via-sky-500 to-teal-400 p-6 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-50">Website Content / SEO</p>
+            <h2 className="mt-3 text-3xl font-black sm:text-4xl">SEO & Branding</h2>
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-50">
+              Manage website logo, favicon, browser title, and SEO meta content from one place.
+            </p>
+          </div>
+          <StatusBadge status="Website" />
+        </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_0.7fr]">
+        <AdminCard>
+          <div className="grid gap-4">
+            {loading ? (
+              <div className="h-56 animate-pulse rounded-[7px] bg-slate-100" />
+            ) : (
+              <>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <LabeledInput label="Frontend Site Name" onChange={(value) => update('siteName', value)} placeholder="Cromgen Rozgar" value={form.siteName} />
+                  <LabeledInput label="Admin Name" onChange={(value) => update('adminName', value)} placeholder="Rozgar Admin" value={form.adminName} />
+                  <LabeledInput label="Recruiter Name" onChange={(value) => update('recruiterName', value)} placeholder="Rozgar Recruiter" value={form.recruiterName} />
+                </div>
+                <LabeledInput label="Toll-Free Number" onChange={(value) => update('tollFreeNumber', value)} placeholder="1800 000 0000" type="tel" value={form.tollFreeNumber} />
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <BrandAssetUpload
+                    accept="image/*"
+                    label="Logo"
+                    onChange={(value) => update('logoUrl', value)}
+                    onUpload={(file) => uploadBrandAsset('logoUrl', file)}
+                    placeholder="https://example.com/logo.png"
+                    value={form.logoUrl}
+                  />
+                  <BrandAssetUpload
+                    accept="image/*,.ico"
+                    label="Favicon"
+                    onChange={(value) => update('faviconUrl', value)}
+                    onUpload={(file) => uploadBrandAsset('faviconUrl', file)}
+                    placeholder="https://example.com/favicon.ico"
+                    value={form.faviconUrl}
+                  />
+                </div>
+                <LabeledInput label="SEO Title" onChange={(value) => update('seoTitle', value)} placeholder="Cromgen Rozgar - Jobs and Hiring" value={form.seoTitle} />
+                <label className="grid gap-1">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-400">SEO Description</span>
+                  <textarea className="input min-h-24" onChange={(event) => update('seoDescription', event.target.value)} placeholder="Search engine description..." value={form.seoDescription} />
+                </label>
+                <label className="grid gap-1">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-400">SEO Keywords</span>
+                  <textarea className="input min-h-20" onChange={(event) => update('seoKeywords', event.target.value)} placeholder="jobs, hiring, recruiters..." value={form.seoKeywords} />
+                </label>
+                {message && <p className="rounded-[7px] bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                  <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-700" onClick={loadConfig} type="button">Refresh</button>
+                  <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:opacity-60" disabled={saving} onClick={save} type="button">
+                    {saving ? 'Saving...' : 'Save SEO & Branding'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </AdminCard>
+
+        <AdminCard>
+          <p className="text-sm font-black uppercase tracking-wide text-blue-600">Live Preview</p>
+          <div className="mt-4 rounded-[7px] border border-slate-200 bg-slate-50 p-4">
+            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <PreviewBox label="Logo" value={form.logoUrl} />
+              <PreviewBox label="Favicon" value={form.faviconUrl} />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="grid h-14 w-14 place-items-center">
+                {form.logoUrl ? <img className="h-10 w-10 rounded-[7px] object-contain" src={form.logoUrl} alt="" /> : <BriefcaseBusiness size={24} />}
+              </span>
+              <div>
+                <p className="text-lg font-black text-slate-950">{form.siteName || defaultSiteBranding.siteName}</p>
+                <p className="text-sm font-semibold text-slate-500">{form.seoTitle || defaultSiteBranding.seoTitle}</p>
+              </div>
+            </div>
+            <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">{form.seoDescription || defaultSiteBranding.seoDescription}</p>
+            <p className="mt-3 text-sm font-black text-slate-800">Toll-Free: {form.tollFreeNumber || defaultSiteBranding.tollFreeNumber}</p>
+            <p className="mt-3 break-words text-xs font-bold text-blue-600">{form.seoKeywords || defaultSiteBranding.seoKeywords}</p>
+          </div>
+        </AdminCard>
+      </div>
+    </div>
+  )
+}
+
+function BrandAssetUpload({ accept, label, onChange, onUpload, placeholder, value }) {
+  return (
+    <div className="grid gap-2">
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <div className="grid gap-3 rounded-[7px] border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[5.5rem_1fr]">
+        <PreviewBox compact label={label} value={value} />
+        <div className="grid min-w-0 content-start gap-2">
+          <input className="input min-w-0" onChange={(event) => onChange(event.target.value)} placeholder={placeholder} value={value} />
+          <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[7px] bg-blue-600 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700">
+            <ImagePlus size={17} />
+            Upload {label}
+            <input accept={accept} className="hidden" onChange={(event) => onUpload(event.target.files?.[0])} type="file" />
+          </label>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PreviewBox({ compact = false, label, value }) {
+  const sizeClass = compact ? 'h-20 w-20' : 'h-24 w-full'
+
+  return (
+    <div className={`grid ${sizeClass} place-items-center overflow-hidden rounded-[7px] border border-dashed border-slate-300 bg-white p-2`}>
+      {value ? (
+        <img className="max-h-full max-w-full rounded-[7px] object-contain" src={value} alt={`${label} preview`} />
+      ) : (
+        <span className="text-center text-[11px] font-black uppercase tracking-wide text-slate-400">{label}</span>
+      )}
+    </div>
+  )
+}
+
+function InfoLine({ label, value }) {
+  return (
+    <div className="rounded-[7px] bg-slate-50 p-3">
+      <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-1 break-words font-black text-slate-800">{value}</p>
+    </div>
+  )
+}
+
 export function AdminSettingsPage() {
+  const items = [
+    ['Google Auth API', '/admin/settings/google-auth', 'Google OAuth login client ID and authorized domains.'],
+    ['WhatsApp API', '/admin/settings/whatsapp-api', 'WhatsApp OTP login provider, token, template, and sender IDs.'],
+    ['Email API', '/admin/settings/email-api', 'Password reset email provider, sender, API key, and SMTP details.'],
+    ['Razorpay Gateway', '/admin/settings/razorpay', 'Razorpay package payments, wallet coin checkout, and payment keys.'],
+    ['Supa Cloud Storage', '/admin/settings/supa-cloud', 'Resume upload bucket, folder, and storage credentials.'],
+    ['MongoDB Details', '/admin/settings/mongodb', 'MongoDB URI, database, host, backend port, and client URL.'],
+    ['Role & Permission', '/admin/settings/role-permission', 'Control dashboard module permissions for every role.'],
+  ]
+
   return (
     <div className="grid gap-5">
-      <Toolbar actionLabel="Settings Disabled" subtitle="Settings controls are currently hidden from this panel." title="Settings" />
-      <EmptyAdminState title="No settings controls available" />
+      <Toolbar actionLabel="Configuration" subtitle="Manage API, storage, database, and platform configuration pages." title="Settings" />
+      <div className="grid gap-4 md:grid-cols-3">
+        {items.map(([title, to, text]) => (
+          <Link className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100" key={title} to={to}>
+            <p className="text-lg font-black text-slate-950">{title}</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{text}</p>
+            <span className="mt-4 inline-flex rounded-[7px] bg-blue-50 px-3 py-2 text-xs font-black text-blue-700">Open Settings</span>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }

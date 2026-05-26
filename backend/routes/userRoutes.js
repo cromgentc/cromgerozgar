@@ -4,7 +4,7 @@ const { createUser, deleteUser, getUser, getUsers, updateUser } = require('../co
 
 const router = express.Router()
 
-router.use(protect, authorize('Admin'))
+router.use(protect, authorize('Admin', 'account team'))
 
 router.route('/').get(getUsers).post(createUser)
 router.route('/:id').get(getUser).put(updateUser).delete(deleteUser)

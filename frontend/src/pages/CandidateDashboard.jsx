@@ -102,23 +102,23 @@ const user = getStoredUser()
 
   return (
     <DashboardShell title="Candidate Dashboard" subtitle="Manage your profile, applications, saved jobs, and recommendations.">
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
         {dashboardItems.map((item) => {
           const Icon = item.icon
           return <MetricCard icon={Icon} key={item.label} label={item.label} onClick={item.to ? () => navigate(item.to) : item.label === 'Applied jobs' ? () => navigate('/candidate-applied-jobs') : undefined} value={item.value} />
         })}
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="grid gap-6">
+      <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="grid gap-4 sm:gap-6">
           <Panel title="Profile Overview">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="grid h-20 w-20 place-items-center rounded-3xl bg-blue-600 text-2xl font-black text-white">AR</div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-950">Aarav Recruiter-ready</h3>
-                <p className="mt-1 text-slate-500">React Developer - Bengaluru - Open to hybrid roles</p>
-                <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full bg-teal-500" style={{ width: `${profileStrength}%` }} />
+            <div className="flex gap-3 sm:gap-5 sm:items-center">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[7px] bg-blue-600 text-lg font-black text-white sm:h-20 sm:w-20 sm:text-2xl">AR</div>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-base font-bold text-slate-950 sm:text-xl">Aarav Recruiter-ready</h3>
+                <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-base">React Developer - Bengaluru - Open to hybrid roles</p>
+                <div className="mt-4 h-3 overflow-hidden rounded-[7px] bg-slate-100">
+                  <div className="h-full rounded-[7px] bg-teal-500" style={{ width: `${profileStrength}%` }} />
                 </div>
               </div>
             </div>
@@ -134,26 +134,26 @@ const user = getStoredUser()
 
           <Panel title="Recommended Jobs">
             {recommendationsLoading ? (
-              <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Finding jobs related to your profile...</p>
+              <p className="rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500">Finding jobs related to your profile...</p>
             ) : recommendedJobs.length ? (
-              <div className="grid gap-4 xl:grid-cols-2">
-                {recommendedJobs.map((job) => <JobCard job={job} key={job._id || job.id} onApply={onApply} />)}
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-2">
+                {recommendedJobs.map((job) => <JobCard denseMobile job={job} key={job._id || job.id} onApply={onApply} />)}
               </div>
             ) : (
-              <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">
+              <p className="rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500">
                 No related jobs found yet. Update your profile skills or search jobs to find matching openings.
               </p>
             )}
           </Panel>
         </div>
 
-        <div className="grid h-max gap-6">
+        <div className="grid h-max gap-4 sm:gap-6">
           <Panel title="Resume Upload">
-            <div className="rounded-[1.5rem] border border-dashed border-blue-200 bg-blue-50 p-6 text-center">
-              <CloudUpload className="mx-auto text-blue-600" size={34} />
-              <p className="mt-3 font-bold text-slate-950">Upload latest resume</p>
-              <p className="mt-2 text-sm text-slate-500">PDF or DOCX up to 5MB</p>
-              <Button className="mt-5" to="/candidate-profile?missing=Resume">Choose File</Button>
+            <div className="rounded-[7px] border border-dashed border-blue-200 bg-blue-50 p-4 text-center sm:p-6">
+              <CloudUpload className="mx-auto text-blue-600" size={28} />
+              <p className="mt-3 text-sm font-bold text-slate-950 sm:text-base">Upload latest resume</p>
+              <p className="mt-1 text-xs text-slate-500 sm:mt-2 sm:text-sm">PDF or DOCX up to 5MB</p>
+              <Button className="mt-4 w-full sm:mt-5 sm:w-auto" to="/candidate-profile?missing=Resume">Choose File</Button>
             </div>
           </Panel>
 
@@ -161,13 +161,13 @@ const user = getStoredUser()
             <div className="grid gap-3">
               {savedJobs.length ? (
                 savedJobs.slice(0, 4).map((job) => (
-                  <div className="rounded-2xl bg-slate-50 p-4" key={job._id || job.id}>
+                  <div className="rounded-[7px] bg-slate-50 p-4" key={job._id || job.id}>
                     <p className="text-sm font-black text-slate-950">{job.title}</p>
                     <p className="mt-1 text-xs font-semibold text-slate-500">{job.company} - {job.location}</p>
                   </div>
                 ))
               ) : (
-                <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">No saved jobs yet.</p>
+                <p className="rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500">No saved jobs yet.</p>
               )}
             </div>
           </Panel>
@@ -186,7 +186,7 @@ const user = getStoredUser()
           </Panel>
 
           <Panel title="Job Alerts">
-            <label className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-600">
+            <label className="flex items-center justify-between rounded-[7px] bg-slate-50 p-4 text-sm font-bold text-slate-600">
               Remote React jobs
               <input
                 className="h-5 w-5 accent-blue-600"
@@ -227,9 +227,9 @@ export function CandidateAppliedJobsPage() {
     <DashboardShell title="Applied Jobs" subtitle="Track every job you applied for, company details, application status, and submitted resume.">
       <Panel title="Your Applications">
         {loading ? (
-          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">Loading applied jobs...</p>
+          <p className="rounded-[7px] bg-slate-50 p-5 text-sm font-semibold text-slate-500">Loading applied jobs...</p>
         ) : applications.length ? (
-          <div className="max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="max-w-full overflow-x-auto rounded-[7px] border border-slate-200">
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
                 <tr>
@@ -247,7 +247,7 @@ export function CandidateAppliedJobsPage() {
                       <p className="mt-1 text-xs font-semibold text-slate-500">Application ID: {String(application._id || '').slice(-8)}</p>
                     </td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{application.company}</td>
-                    <td className="px-4 py-3"><span className={`rounded-full px-3 py-1 text-xs font-black ${getStatusTone(application.status)}`}>{normalizeStatus(application.status)}</span></td>
+                    <td className="px-4 py-3"><span className={`rounded-[7px] px-3 py-1 text-xs font-black ${getStatusTone(application.status)}`}>{normalizeStatus(application.status)}</span></td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{application.resumeUrl ? 'Submitted' : 'Not attached'}</td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{application.createdAt ? new Date(application.createdAt).toLocaleString() : 'Recently'}</td>
                     <td className="px-4 py-3">
@@ -259,7 +259,7 @@ export function CandidateAppliedJobsPage() {
             </table>
           </div>
         ) : (
-          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">No applied jobs yet.</p>
+          <p className="rounded-[7px] bg-slate-50 p-5 text-sm font-semibold text-slate-500">No applied jobs yet.</p>
         )}
       </Panel>
     </DashboardShell>
@@ -283,10 +283,10 @@ export function CandidateSavedJobsPage() {
   }, [user?.email, user?.id])
 
   return (
-    <DashboardShell title="Saved Jobs" subtitle="Aapke saved jobs table view mein, company, location, salary, aur action ke saath.">
+    <DashboardShell title="Saved Jobs" subtitle="Your saved jobs in a table view with company, location, salary, and actions.">
       <Panel title="Saved Jobs Table">
         {savedJobs.length ? (
-          <div className="max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="max-w-full overflow-x-auto rounded-[7px] border border-slate-200">
             <table className="w-full min-w-[920px] text-left text-sm">
               <thead className="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
                 <tr>
@@ -314,7 +314,7 @@ export function CandidateSavedJobsPage() {
             </table>
           </div>
         ) : (
-          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">No saved jobs yet.</p>
+          <p className="rounded-[7px] bg-slate-50 p-5 text-sm font-semibold text-slate-500">No saved jobs yet.</p>
         )}
       </Panel>
     </DashboardShell>
@@ -345,12 +345,12 @@ export function CandidateInterviewInvitesPage() {
   }, [user?.email, user?.id])
 
   return (
-    <DashboardShell title="Interview Invites" subtitle="Recruiter interview invites aur selected-stage applications ek table mein.">
+    <DashboardShell title="Interview Invites" subtitle="Recruiter interview invites and selected-stage applications in one table.">
       <Panel title="Interview Invites Table">
         {loading ? (
-          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">Loading interview invites...</p>
+          <p className="rounded-[7px] bg-slate-50 p-5 text-sm font-semibold text-slate-500">Loading interview invites...</p>
         ) : invites.length ? (
-          <div className="max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="max-w-full overflow-x-auto rounded-[7px] border border-slate-200">
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
                 <tr>
@@ -365,7 +365,7 @@ export function CandidateInterviewInvitesPage() {
                     <td className="px-4 py-3 font-black text-slate-500">#{index + 1}</td>
                     <td className="px-4 py-3 font-black text-slate-950">{invite.jobTitle || invite.title || '-'}</td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{invite.company || '-'}</td>
-                    <td className="px-4 py-3"><span className={`rounded-full px-3 py-1 text-xs font-black ${getStatusTone(invite.status)}`}>{normalizeStatus(invite.status || 'Interview')}</span></td>
+                    <td className="px-4 py-3"><span className={`rounded-[7px] px-3 py-1 text-xs font-black ${getStatusTone(invite.status)}`}>{normalizeStatus(invite.status || 'Interview')}</span></td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{invite.recruiterEmail || invite.email || '-'}</td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{invite.createdAt || invite.invitedAt ? new Date(invite.createdAt || invite.invitedAt).toLocaleString() : '-'}</td>
                     <td className="px-4 py-3">
@@ -377,7 +377,7 @@ export function CandidateInterviewInvitesPage() {
             </table>
           </div>
         ) : (
-          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">No interview invites yet.</p>
+          <p className="rounded-[7px] bg-slate-50 p-5 text-sm font-semibold text-slate-500">No interview invites yet.</p>
         )}
       </Panel>
     </DashboardShell>
@@ -401,10 +401,10 @@ export function CandidateJobAlertsPage() {
   }, [user?.email, user?.id])
 
   return (
-    <DashboardShell title="Job Alerts" subtitle="Aapke saved alert preferences aur matching job alert rules table mein.">
+    <DashboardShell title="Job Alerts" subtitle="Your saved alert preferences and matching job alert rules in a table.">
       <Panel title="Job Alerts Table">
         {jobAlerts.length ? (
-          <div className="max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="max-w-full overflow-x-auto rounded-[7px] border border-slate-200">
             <table className="w-full min-w-[820px] text-left text-sm">
               <thead className="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
                 <tr>
@@ -421,7 +421,7 @@ export function CandidateJobAlertsPage() {
                     <td className="px-4 py-3 font-semibold text-slate-600">{alert.keyword || alert.role || '-'}</td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{alert.location || '-'}</td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{alert.frequency || 'Instant'}</td>
-                    <td className="px-4 py-3"><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">{alert.status || 'Active'}</span></td>
+                    <td className="px-4 py-3"><span className="rounded-[7px] bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">{alert.status || 'Active'}</span></td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{alert.createdAt ? new Date(alert.createdAt).toLocaleString() : '-'}</td>
                     <td className="px-4 py-3">
                       <Button to="/jobs" variant="secondary">Find Jobs</Button>
@@ -432,7 +432,7 @@ export function CandidateJobAlertsPage() {
             </table>
           </div>
         ) : (
-          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">No job alerts yet.</p>
+          <p className="rounded-[7px] bg-slate-50 p-5 text-sm font-semibold text-slate-500">No job alerts yet.</p>
         )}
       </Panel>
     </DashboardShell>
@@ -522,20 +522,20 @@ function rankRecommendedJobs(list, profile, applications = []) {
 
 function StatusRows({ applications }) {
   if (!applications.length) {
-    return <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">No applied jobs yet.</p>
+    return <p className="rounded-[7px] bg-slate-50 p-3 text-xs font-semibold text-slate-500 sm:p-4 sm:text-sm">No applied jobs yet.</p>
   }
 
   return applications.map((application) => (
-    <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4" key={application.id}>
-      <div className="flex items-center gap-3"><FileCheck2 className="text-blue-600" size={20} /><span className="font-semibold text-slate-700">{application.title}</span></div>
-      <span className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusTone(application.status)}`}>{normalizeStatus(application.status)}</span>
+    <div className="flex items-center justify-between gap-2 rounded-[7px] bg-slate-50 p-3 sm:p-4" key={application.id}>
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3"><FileCheck2 className="shrink-0 text-blue-600" size={18} /><span className="truncate text-xs font-semibold text-slate-700 sm:text-base">{application.title}</span></div>
+      <span className={`rounded-[7px] px-3 py-1 text-xs font-bold ${getStatusTone(application.status)}`}>{normalizeStatus(application.status)}</span>
     </div>
   ))
 }
 
 function ApplicationTimeline({ applications }) {
   if (!applications.length) {
-    return <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">No application tracking yet.</p>
+    return <p className="rounded-[7px] bg-slate-50 p-3 text-xs font-semibold text-slate-500 sm:p-4 sm:text-sm">No application tracking yet.</p>
   }
 
   return (
@@ -544,13 +544,13 @@ function ApplicationTimeline({ applications }) {
         const currentIndex = getStatusIndex(application.status)
 
         return (
-          <div className="rounded-2xl bg-slate-50 p-4" key={application.id}>
+          <div className="rounded-[7px] bg-slate-50 p-4" key={application.id}>
             <div className="mb-4 flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
               <div>
                 <p className="font-black text-slate-950">{application.title}</p>
                 <p className="text-sm font-semibold text-slate-500">{application.company}</p>
               </div>
-              <span className={`w-max rounded-full px-3 py-1 text-xs font-black ${getStatusTone(application.status)}`}>{normalizeStatus(application.status)}</span>
+              <span className={`w-max rounded-[7px] px-3 py-1 text-xs font-black ${getStatusTone(application.status)}`}>{normalizeStatus(application.status)}</span>
             </div>
 
             <div className="grid gap-3">
@@ -560,10 +560,10 @@ function ApplicationTimeline({ applications }) {
 
                 return (
                   <div className="flex items-center gap-3" key={step}>
-                    <span className={`grid h-9 w-9 place-items-center rounded-full text-sm font-black ${complete ? (rejected ? 'bg-rose-600 text-white' : 'bg-blue-600 text-white') : 'bg-white text-slate-400 ring-1 ring-slate-200'}`}>
+                    <span className={`grid h-9 w-9 place-items-center rounded-[7px] text-sm font-black ${complete ? (rejected ? 'bg-rose-600 text-white' : 'bg-blue-600 text-white') : 'bg-white text-slate-400 ring-1 ring-slate-200'}`}>
                       {index + 1}
                     </span>
-                    <div className="flex-1 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+                    <div className="flex-1 rounded-[7px] bg-white p-4 ring-1 ring-slate-200">
                       <p className="font-bold text-slate-800">{step}</p>
                       <p className="text-sm text-slate-500">{application.title} - {application.company}</p>
                     </div>
@@ -607,11 +607,12 @@ function getStatusTone(status) {
 
 export function DashboardShell({ title, subtitle, children }) {
   return (
-    <section className="py-10 sm:py-14">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h1 className="text-3xl font-black text-slate-950 sm:text-5xl">{title}</h1>
-          <p className="mt-3 text-slate-500">{subtitle}</p>
+    <section className="py-4 sm:py-10">
+      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+        <div className="mb-4 overflow-hidden rounded-[7px] border border-[#0057B8]/10 bg-white p-4 shadow-lg shadow-[#0057B8]/10 sm:mb-8 sm:p-6">
+          <div className="h-1.5 w-24 rounded-[7px] bg-gradient-to-r from-[#0057B8] via-[#FF8A00] to-[#3E9B28] sm:w-32" />
+          <h1 className="mt-4 text-2xl font-black text-slate-950 sm:mt-5 sm:text-5xl">{title}</h1>
+          <p className="mt-2 max-w-3xl text-xs font-semibold leading-5 text-slate-500 sm:mt-3 sm:text-base sm:font-normal sm:leading-6">{subtitle}</p>
         </div>
         {children}
       </div>
@@ -622,19 +623,19 @@ export function DashboardShell({ title, subtitle, children }) {
 export function MetricCard({ icon: Icon, label, onClick, value }) {
   const Component = onClick ? 'button' : 'div'
   return (
-    <Component className={`rounded-[1.5rem] border border-slate-200 bg-white p-5 text-left shadow-sm ${onClick ? 'transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100' : ''}`} onClick={onClick} type={onClick ? 'button' : undefined}>
-      <Icon className="text-blue-600" size={24} />
-      <p className="mt-5 text-3xl font-black text-slate-950">{value}</p>
-      <p className="mt-1 text-sm font-medium text-slate-500">{label}</p>
+    <Component className={`rounded-[7px] border border-[#0057B8]/10 bg-white p-3 text-left shadow-sm shadow-[#0057B8]/5 sm:p-5 ${onClick ? 'transition hover:-translate-y-0.5 hover:border-[#FF8A00]/30 hover:shadow-lg hover:shadow-[#0057B8]/10' : ''}`} onClick={onClick} type={onClick ? 'button' : undefined}>
+      <span className="grid h-9 w-9 place-items-center rounded-[7px] bg-[#0057B8]/10 text-[#0057B8] sm:h-11 sm:w-11"><Icon size={18} /></span>
+      <p className="mt-3 text-2xl font-black text-slate-950 sm:mt-5 sm:text-3xl">{value}</p>
+      <p className="mt-1 text-xs font-medium text-slate-500 sm:text-sm">{label}</p>
     </Component>
   )
 }
 
 export function Panel({ action, title, children }) {
   return (
-    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold text-slate-950">{title}</h2>
+    <section className="rounded-[7px] border border-[#0057B8]/10 bg-white p-3 shadow-sm shadow-[#0057B8]/5 sm:p-5">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 sm:mb-5 sm:gap-3">
+        <h2 className="text-base font-bold text-slate-950 sm:text-xl">{title}</h2>
         {action}
       </div>
       {children}

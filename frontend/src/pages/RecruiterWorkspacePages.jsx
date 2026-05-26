@@ -53,7 +53,7 @@ function PhoneReveal({ application }) {
       <span>Mobile: {visible ? phone : `******${phone.slice(-4)}`}</span>
       <button
         aria-label="View mobile number"
-        className="grid h-7 w-7 place-items-center rounded-full bg-blue-50 text-blue-600 transition hover:bg-blue-100"
+        className="grid h-7 w-7 place-items-center rounded-[7px] bg-blue-50 text-blue-600 transition hover:bg-blue-100"
         onClick={(event) => {
           event.stopPropagation()
           setVisible((value) => !value)
@@ -107,7 +107,7 @@ function getApplicationStatusTone(status) {
 
 function ApplicationStatusBadge({ status }) {
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${getApplicationStatusTone(status)}`}>
+    <span className={`inline-flex rounded-[7px] px-3 py-1 text-xs font-black ring-1 ${getApplicationStatusTone(status)}`}>
       {status || 'New'}
     </span>
   )
@@ -124,8 +124,8 @@ function CompactMetric({ icon: Icon, label, value, tone = 'blue' }) {
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className={`grid h-10 w-10 place-items-center rounded-2xl ring-1 ${tones[tone] || tones.blue}`}>
+    <div className="rounded-[7px] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className={`grid h-10 w-10 place-items-center rounded-[7px] ring-1 ${tones[tone] || tones.blue}`}>
         <Icon size={18} />
       </div>
       <p className="mt-4 text-2xl font-black text-slate-950">{value}</p>
@@ -154,7 +154,7 @@ function RecruiterStageSummary({ applications }) {
 
   return (
     <Panel title="Stage Summary">
-      <div className="rounded-2xl bg-slate-950 p-5 text-white">
+      <div className="rounded-[7px] bg-slate-950 p-5 text-white">
         <p className="text-xs font-black uppercase tracking-wide text-blue-200">Recruiter pipeline health</p>
         <div className="mt-4 grid grid-cols-3 gap-3">
           <div>
@@ -175,7 +175,7 @@ function RecruiterStageSummary({ applications }) {
       <div className="mt-4 grid gap-3">
         {stages.map((stage) => (
           <Link
-            className={`block rounded-2xl p-4 ring-1 transition hover:-translate-y-0.5 hover:shadow-lg ${getStageTone(stage.label)}`}
+            className={`block rounded-[7px] p-4 ring-1 transition hover:-translate-y-0.5 hover:shadow-lg ${getStageTone(stage.label)}`}
             key={stage.label}
             to={`/recruiter-applications?status=${stage.query}`}
           >
@@ -189,8 +189,8 @@ function RecruiterStageSummary({ applications }) {
                 <p className="text-xs font-black">{stage.percent}%</p>
               </div>
             </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/70">
-              <div className={`h-full rounded-full ${getStageBar(stage.label)}`} style={{ width: `${stage.percent}%` }} />
+            <div className="mt-4 h-2 overflow-hidden rounded-[7px] bg-white/70">
+              <div className={`h-full rounded-[7px] ${getStageBar(stage.label)}`} style={{ width: `${stage.percent}%` }} />
             </div>
           </Link>
         ))}
@@ -244,7 +244,7 @@ export function RecruiterApplicationsPage() {
   const rejected = countByStatus(localApplications, ['Rejected'])
   const pageTitle = statusFilter === 'active' ? 'Active Applications' : 'Applications'
   const pageSubtitle = statusFilter === 'active'
-    ? 'Active candidate applications jo review, interview, ya new stage mein hain.'
+    ? 'Active candidate applications that are in review, interview, or new stages.'
     : 'Track candidate movement across review, shortlist, interview, and offer stages.'
 
   const updateApplicationStatus = async (application, status) => {
@@ -264,28 +264,28 @@ export function RecruiterApplicationsPage() {
   return (
     <DashboardShell title={pageTitle} subtitle={pageSubtitle}>
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <Link className="block rounded-[1.5rem] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications">
+        <Link className="block rounded-[7px] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications">
           <MetricCard icon={ClipboardList} label="Total Applications" value={String(total)} />
         </Link>
-        <Link className="block rounded-[1.5rem] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=active">
+        <Link className="block rounded-[7px] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=active">
           <MetricCard icon={UsersRound} label="Active Applications" value={String(active)} />
         </Link>
-        <Link className="block rounded-[1.5rem] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=new">
+        <Link className="block rounded-[7px] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=new">
           <MetricCard icon={Clock3} label="New / Pending" value={String(pending)} />
         </Link>
-        <Link className="block rounded-[1.5rem] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=reviewed">
+        <Link className="block rounded-[7px] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=reviewed">
           <MetricCard icon={CheckCircle2} label="Reviewed" value={String(reviewed)} />
         </Link>
-        <Link className="block rounded-[1.5rem] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=shortlisted">
+        <Link className="block rounded-[7px] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=shortlisted">
           <MetricCard icon={UsersRound} label="Shortlisted" value={String(shortlisted)} />
         </Link>
-        <Link className="block rounded-[1.5rem] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=interview">
+        <Link className="block rounded-[7px] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=interview">
           <MetricCard icon={CalendarDays} label="Interviews" value={String(interviews)} />
         </Link>
-        <Link className="block rounded-[1.5rem] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=selected">
+        <Link className="block rounded-[7px] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=selected">
           <MetricCard icon={ShieldCheck} label="Selected" value={String(selected)} />
         </Link>
-        <Link className="block rounded-[1.5rem] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=rejected">
+        <Link className="block rounded-[7px] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" to="/recruiter-applications?status=rejected">
           <MetricCard icon={MessageSquare} label="Rejected" value={String(rejected)} />
         </Link>
       </div>
@@ -293,7 +293,7 @@ export function RecruiterApplicationsPage() {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
         <Panel title={statusFilter === 'active' ? 'Active Applications Table' : 'Application Pipeline'}>
           {visibleApplications.length ? (
-            <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200">
+            <div className="overflow-hidden rounded-[7px] ring-1 ring-slate-200">
               <div className="overflow-x-auto">
                 <table className="min-w-[900px] w-full border-collapse text-left text-sm">
                   <thead className="bg-slate-50 text-xs uppercase text-slate-500">
@@ -327,12 +327,12 @@ export function RecruiterApplicationsPage() {
                           <p className="mt-1 text-xs font-semibold text-slate-500">{item.companyName || item.company || '-'}</p>
                         </td>
                         <td className="px-4 py-4">
-                          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100">{item.status || 'New'}</span>
+                          <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100">{item.status || 'New'}</span>
                         </td>
                         <td className="px-4 py-4 font-semibold text-slate-600">{formatDate(item.createdAt || item.appliedAt)}</td>
                         <td className="px-4 py-4" onClick={(event) => event.stopPropagation()}>
                           <select
-                            className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                            className="rounded-[7px] border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                             onChange={(event) => updateApplicationStatus(item, event.target.value)}
                             value={recruiterActionStatuses.includes(item.status) ? item.status : ''}
                           >
@@ -347,8 +347,8 @@ export function RecruiterApplicationsPage() {
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl bg-slate-50 p-6 text-sm font-bold text-slate-500">
-              {statusFilter === 'active' ? 'Abhi koi active application nahi hai.' : 'Aapke posted jobs par abhi koi application nahi aayi hai.'}
+            <div className="rounded-[7px] bg-slate-50 p-6 text-sm font-bold text-slate-500">
+              {statusFilter === 'active' ? 'There are no active applications yet.' : 'No applications have been received for your posted jobs yet.'}
             </div>
           )}
         </Panel>
@@ -400,11 +400,11 @@ export function RecruiterCandidateApplicationsPage() {
   }
 
   return (
-    <DashboardShell title="Candidate Applications" subtitle={`${candidateName} ne kitne jobs apply kiye hain, status aur actions ke saath.`}>
-      <div className="mb-6 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+    <DashboardShell title="Candidate Applications" subtitle={`${candidateName} applied to these jobs, with status and actions.`}>
+      <div className="mb-6 rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <div className="grid h-16 w-16 place-items-center rounded-3xl bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-100">
+            <div className="grid h-16 w-16 place-items-center rounded-[7px] bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-100">
               {candidateName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
             </div>
             <div>
@@ -412,7 +412,7 @@ export function RecruiterCandidateApplicationsPage() {
               <p className="mt-1 text-sm font-semibold text-slate-500">{decodedEmail}</p>
             </div>
           </div>
-          <div className="grid gap-2 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-600 sm:min-w-64">
+          <div className="grid gap-2 rounded-[7px] bg-slate-50 p-4 text-sm font-bold text-slate-600 sm:min-w-64">
             <p className="flex justify-between gap-3"><span>Mobile</span><span>{candidatePhone || '-'}</span></p>
             <p className="flex justify-between gap-3"><span>Total applied</span><span>{applications.length}</span></p>
           </div>
@@ -430,20 +430,20 @@ export function RecruiterCandidateApplicationsPage() {
         <CompactMetric icon={MessageSquare} label="Rejected" tone="rose" value={String(countByStatus(applications, ['Rejected']))} />
       </div>
 
-      <div className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mt-6 rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-5 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
           <div>
             <h2 className="text-xl font-black text-slate-950">Candidate Job Applications</h2>
-            <p className="mt-1 text-sm font-semibold text-slate-500">Row click karke full application view open karein.</p>
+            <p className="mt-1 text-sm font-semibold text-slate-500">Click a row to open the full application view.</p>
           </div>
-          <span className="w-max rounded-full bg-blue-50 px-4 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100">
+          <span className="w-max rounded-[7px] bg-blue-50 px-4 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100">
             {applications.length} records
           </span>
         </div>
         {loading ? (
-          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">Loading candidate applications...</p>
+          <p className="rounded-[7px] bg-slate-50 p-5 text-sm font-semibold text-slate-500">Loading candidate applications...</p>
         ) : applications.length ? (
-          <div className="overflow-hidden rounded-2xl border border-slate-200">
+          <div className="overflow-hidden rounded-[7px] border border-slate-200">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[980px] border-collapse text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase text-slate-500">
@@ -480,7 +480,7 @@ export function RecruiterCandidateApplicationsPage() {
                       <td className="px-5 py-4 font-semibold text-slate-600">{formatDate(application.createdAt || application.appliedAt)}</td>
                       <td className="px-5 py-4" onClick={(event) => event.stopPropagation()}>
                         <select
-                          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                          className="rounded-[7px] border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                           onChange={(event) => updateApplicationStatus(application, event.target.value)}
                           value={recruiterActionStatuses.includes(application.status) ? application.status : ''}
                         >
@@ -495,7 +495,7 @@ export function RecruiterCandidateApplicationsPage() {
             </div>
           </div>
         ) : (
-          <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">Is candidate ke applications nahi mile.</p>
+          <p className="rounded-[7px] bg-slate-50 p-5 text-sm font-semibold text-slate-500">Is candidate ke applications nahi mile.</p>
         )}
       </div>
       {selectedApplication && (
@@ -512,20 +512,20 @@ export function RecruiterCandidateApplicationsPage() {
 function ApplicationViewModal({ application, onClose, onStatusChange }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm">
-      <div className="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white shadow-2xl">
-        <div className="rounded-t-[2rem] bg-slate-950 p-6 text-white">
+      <div className="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[7px] bg-white shadow-2xl">
+        <div className="rounded-t-[7px] bg-slate-950 p-6 text-white">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-blue-200">Application View</p>
               <h2 className="mt-2 text-3xl font-black">{application.jobTitle || 'Job Application'}</h2>
               <p className="mt-1 text-sm font-bold text-slate-300">{application.company || 'Company not available'}</p>
             </div>
-            <button className="grid h-11 w-11 place-items-center rounded-full bg-white/10 text-xl font-black text-white hover:bg-white/20" onClick={onClose} type="button">x</button>
+            <button className="grid h-11 w-11 place-items-center rounded-[7px] bg-white/10 text-xl font-black text-white hover:bg-white/20" onClick={onClose} type="button">x</button>
           </div>
         </div>
 
         <div className="p-6">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-blue-50 p-4">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[7px] bg-blue-50 p-4">
             <div>
               <p className="text-lg font-black text-slate-950">{application.candidateName || '-'}</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">{application.candidateEmail || '-'}</p>
@@ -543,19 +543,19 @@ function ApplicationViewModal({ application, onClose, onStatusChange }) {
           </div>
 
           {application.coverNote && (
-            <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+            <div className="mt-5 rounded-[7px] bg-slate-50 p-4">
               <p className="text-xs font-black uppercase tracking-wide text-slate-400">Cover Note</p>
               <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{application.coverNote}</p>
             </div>
           )}
 
-          <div className="mt-6 flex flex-col justify-between gap-3 rounded-2xl bg-blue-50 p-4 sm:flex-row sm:items-center">
+          <div className="mt-6 flex flex-col justify-between gap-3 rounded-[7px] bg-blue-50 p-4 sm:flex-row sm:items-center">
             <div>
               <p className="font-black text-slate-950">Update application stage</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">Recruiter action yahin se update hoga.</p>
             </div>
             <select
-              className="rounded-full border border-blue-100 bg-white px-4 py-3 text-sm font-black text-slate-700 outline-none focus:border-blue-500"
+              className="rounded-[7px] border border-blue-100 bg-white px-4 py-3 text-sm font-black text-slate-700 outline-none focus:border-blue-500"
               onChange={(event) => onStatusChange(event.target.value)}
               value={recruiterActionStatuses.includes(application.status) ? application.status : ''}
             >
@@ -571,7 +571,7 @@ function ApplicationViewModal({ application, onClose, onStatusChange }) {
 
 function InfoTile({ label, value }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4">
+    <div className="rounded-[7px] bg-slate-50 p-4">
       <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
       <p className="mt-2 break-words text-sm font-bold text-slate-800">{value}</p>
     </div>
@@ -595,7 +595,7 @@ export function RecruiterInterviewsPage() {
         {interviews.length ? (
           <div className="grid gap-3">
             {interviews.map((item) => (
-              <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[1fr_auto] md:items-center" key={item._id}>
+              <div className="grid gap-3 rounded-[7px] bg-slate-50 p-4 md:grid-cols-[1fr_auto] md:items-center" key={item._id}>
                 <div>
                   <p className="font-black text-slate-950">{item.candidateName}</p>
                   <p className="mt-1 text-sm font-semibold text-slate-500">{item.jobTitle} / {item.candidateEmail}</p>
@@ -605,7 +605,7 @@ export function RecruiterInterviewsPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl bg-slate-50 p-6 text-sm font-bold text-slate-500">Aapke account me abhi koi interview scheduled nahi hai.</div>
+          <div className="rounded-[7px] bg-slate-50 p-6 text-sm font-bold text-slate-500">No interviews are scheduled for your account yet.</div>
         )}
       </Panel>
     </DashboardShell>
@@ -635,7 +635,7 @@ export function RecruiterAnalyticsPage() {
         ].map(([title, rows]) => (
           <Panel key={title} title={title}>
             <div className="grid gap-3">
-              {(rows.length ? rows : ['No data yet']).map((row) => <p className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-700" key={row}>{row}</p>)}
+              {(rows.length ? rows : ['No data yet']).map((row) => <p className="rounded-[7px] bg-slate-50 p-4 text-sm font-bold text-slate-700" key={row}>{row}</p>)}
             </div>
           </Panel>
         ))}
@@ -658,12 +658,12 @@ export function RecruiterTeamPage() {
 
       <Panel title="Team Access">
         <div className="grid gap-3">
-          <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="grid gap-3 rounded-[7px] bg-slate-50 p-4 md:grid-cols-[1fr_auto] md:items-center">
             <div>
               <p className="font-black text-slate-950">{user?.name || 'Recruiter'}</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">{user?.email || 'Email not available'} / Owner access</p>
             </div>
-            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">Active</span>
+            <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">Active</span>
           </div>
         </div>
       </Panel>

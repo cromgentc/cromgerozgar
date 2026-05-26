@@ -79,8 +79,8 @@ export function AnalyticsGrid({ monthlyData = monthlyJobsData, categoryData = ca
             <XAxis dataKey="company" stroke="#64748B" />
             <YAxis stroke="#64748B" />
             <Tooltip />
-            <Bar dataKey="hires" fill="#8B5CF6" radius={[10, 10, 0, 0]} />
-            <Bar dataKey="views" fill="#38BDF8" radius={[10, 10, 0, 0]} />
+            <Bar dataKey="hires" fill="#8B5CF6" radius={[7, 7, 0, 0]} />
+            <Bar dataKey="views" fill="#38BDF8" radius={[7, 7, 0, 0]} />
           </BarChart>
         </ChartContainer>
       </ChartCard>
@@ -102,7 +102,7 @@ export function AnalyticsGrid({ monthlyData = monthlyJobsData, categoryData = ca
             <XAxis dataKey="month" stroke="#64748B" />
             <YAxis stroke="#64748B" />
             <Tooltip />
-            <Bar dataKey="candidates" fill="#2563EB" radius={[10, 10, 0, 0]} />
+            <Bar dataKey="candidates" fill="#2563EB" radius={[7, 7, 0, 0]} />
           </BarChart>
         </ChartContainer>
       </ChartCard>
