@@ -23,6 +23,8 @@ const app = express()
 const port = process.env.PORT || 5000
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  'https://www.cromgenrozgar.in',
+  'https://cromgenrozgar.in',
   'https://cromgerozgar.vercel.app',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
@@ -77,11 +79,16 @@ app.use('/api', apiRoutes)
 app.use(notFound)
 app.use(errorHandler)
 
-connectDB()
-  .then(() => {
-    app.listen(port, () => console.log(`API running on http://localhost:${port}`))
-  })
-  .catch((error) => {
+async function startServer() {
+  await connectDB()
+  app.listen(port, () => console.log(`API running on http://localhost:${port}`))
+}
+
+if (require.main === module) {
+  startServer().catch((error) => {
     console.error(error.message)
     process.exit(1)
   })
+}
+
+module.exports = app
