@@ -31,7 +31,7 @@ function requireJwtSecret() {
   const secret = process.env.JWT_SECRET
   const unsafeSecrets = new Set(['', 'change-me', 'changeme', 'secret', 'password'])
 
-  if (process.env.NODE_ENV === 'production' && unsafeSecrets.has(String(secret || '').trim().toLowerCase())) {
+  if (process.env.NODE_ENV === 'production' && secret && unsafeSecrets.has(String(secret).trim().toLowerCase())) {
     throw new Error('Set a strong JWT_SECRET before starting the API in production.')
   }
 }
