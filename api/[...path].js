@@ -50,6 +50,13 @@ function getFallbackPayload(req) {
   return null
 }
 
+function normalizeApiUrl(req) {
+  const currentUrl = req.url || '/'
+  const parsed = new URL(currentUrl, 'https://local.test')
+  if (parsed.pathname === '/api' || parsed.pathname.startsWith('/api/')) return currentUrl
+  return `/api${parsed.pathname}${parsed.search}`
+}
+
 module.exports = async function handler(req, res) {
   try {
     if (!process.env.MONGO_URI) {
@@ -67,6 +74,7 @@ module.exports = async function handler(req, res) {
     }
 
     await dbPromise
+    req.url = normalizeApiUrl(req)
     return app(req, res)
   } catch (error) {
     console.error(error)
