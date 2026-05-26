@@ -1,3 +1,5 @@
+const LIVE_API_BASE_URL = 'https://www.cromgenrozgar.in/api'
+
 function getApiBaseUrl() {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
 
@@ -5,8 +7,8 @@ function getApiBaseUrl() {
     typeof window !== 'undefined' &&
     (window.Capacitor?.isNativePlatform?.() || window.location.protocol === 'capacitor:')
 
-  if (isNative) return 'http://10.0.2.2:5050/api'
-  return import.meta.env.DEV ? 'http://localhost:5050/api' : '/api'
+  if (isNative) return LIVE_API_BASE_URL
+  return import.meta.env.DEV ? 'http://localhost:5050/api' : LIVE_API_BASE_URL
 }
 
 const API_BASE_URL = getApiBaseUrl()
