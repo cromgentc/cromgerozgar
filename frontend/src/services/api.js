@@ -6,8 +6,10 @@ const API_BASE_URL =
 
 function apiUrl(path) {
   const baseUrl = API_BASE_URL.replace(/\/$/, '')
-  const apiPath = path.startsWith('/api/') ? path : `/api${path.startsWith('/') ? path : `/${path}`}`
-  return `${baseUrl}${apiPath}`
+  const apiRoot = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const endpointPath = normalizedPath.startsWith('/api/') ? normalizedPath.slice(4) : normalizedPath
+  return `${apiRoot}${endpointPath}`
 }
 
 export async function apiRequest(path, options = {}) {
