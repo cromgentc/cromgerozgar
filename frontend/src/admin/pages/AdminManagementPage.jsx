@@ -566,6 +566,14 @@ const recruiterAccountActions = [
   { label: 'Delete', value: 'delete' },
 ]
 
+const defaultNewsletterUpdateForm = {
+  subject: '',
+  previewText: '',
+  message: '',
+  ctaLabel: '',
+  ctaUrl: '',
+}
+
 function normalizeName(value) {
   return String(value || '').trim().toLowerCase()
 }
@@ -623,6 +631,9 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   const [message, setMessage] = useState('')
   const [companyOptions, setCompanyOptions] = useState(fieldOptions.company)
   const [companyRows, setCompanyRows] = useState([])
+  const [newsletterForm, setNewsletterForm] = useState(defaultNewsletterUpdateForm)
+  const [newsletterUpdates, setNewsletterUpdates] = useState([])
+  const [newsletterSending, setNewsletterSending] = useState(false)
 
   const loadRows = () => {
     if (!config.resource) {
@@ -687,6 +698,19 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     setForm({})
     loadRows()
   }, [type, search, status, role, resumeMode, frontendPlacement])
+
+  const loadNewsletterUpdates = () => {
+    if (type !== 'newsletterSubscribers') return
+
+    api
+      .newsletterUpdates('?limit=10')
+      .then((payload) => setNewsletterUpdates(payload.data || []))
+      .catch(() => setNewsletterUpdates([]))
+  }
+
+  useEffect(() => {
+    loadNewsletterUpdates()
+  }, [type])
 
   useEffect(() => {
     api
@@ -760,13 +784,13 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
 
       if (selectedRow?._id && !(type === 'resumes' && resumeMode === 'lead')) {
         const payload = await api.update(resource, selectedRow._id, resumePayload)
-        if (['faqs', 'contentPages'].includes(type) && payload.data) {
+        if (['faqs', 'contentPages', 'newsletterSubscribers'].includes(type) && payload.data) {
           setRows((current) => current.map((row) => (row._id === payload.data._id ? { ...payload.data, source: row.source || 'Admin Upload' } : row)))
         }
         setMessage('Record updated successfully.')
       } else {
         const payload = await api.create(resource, resumePayload)
-        if (['faqs', 'contentPages'].includes(type) && payload.data) {
+        if (['faqs', 'contentPages', 'newsletterSubscribers'].includes(type) && payload.data) {
           setRows((current) => [{ ...payload.data, source: 'Admin Upload' }, ...current])
         }
         setMessage('Record created successfully.')
@@ -775,6 +799,37 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       loadRows()
     } catch (error) {
       setMessage(error.message)
+    }
+  }
+
+  const sendNewsletterUpdate = async () => {
+    const subject = newsletterForm.subject.trim()
+    const updateMessage = newsletterForm.message.trim()
+
+    if (!subject || !updateMessage) {
+      setMessage('Subject and update message are required.')
+      return
+    }
+
+    setNewsletterSending(true)
+    setMessage('')
+
+    try {
+      const payload = await api.sendNewsletterUpdate({
+        subject,
+        previewText: newsletterForm.previewText.trim(),
+        message: updateMessage,
+        ctaLabel: newsletterForm.ctaLabel.trim(),
+        ctaUrl: newsletterForm.ctaUrl.trim(),
+      })
+      setNewsletterForm(defaultNewsletterUpdateForm)
+      setNewsletterUpdates((current) => [payload.data, ...current].filter(Boolean).slice(0, 10))
+      setMessage(payload.message || 'Hiring insight update sent successfully.')
+    } catch (error) {
+      setMessage(error.message || 'Hiring insight update could not be sent.')
+      loadNewsletterUpdates()
+    } finally {
+      setNewsletterSending(false)
     }
   }
 
@@ -1118,6 +1173,15 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         {config.export && <ExportButtons />}
       </div>
       {message && <p className="rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
+      {type === 'newsletterSubscribers' && (
+        <NewsletterUpdatePanel
+          form={newsletterForm}
+          onChange={(key, value) => setNewsletterForm((current) => ({ ...current, [key]: value }))}
+          onSend={sendNewsletterUpdate}
+          sending={newsletterSending}
+          updates={newsletterUpdates}
+        />
+      )}
       {type === 'applications' && <ApplicationStatusPanel />}
       {['payments', 'paymentLogs'].includes(type) && <RevenueSummary />}
       <DataTable
@@ -3314,6 +3378,46 @@ function ApplicationStatusPanel() {
         {['New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected', 'Rejected'].map((status) => <StatusBadge key={status} status={status} />)}
       </div>
     </AdminCard>
+  )
+}
+
+function NewsletterUpdatePanel({ form, onChange, onSend, sending, updates }) {
+  return (
+    <section className="grid gap-4 rounded-[7px] border border-blue-100 bg-white p-4 shadow-sm lg:grid-cols-[1fr_420px]">
+      <div>
+        <p className="text-sm font-black uppercase tracking-wide text-blue-600">Send Hiring Insight Update</p>
+        <h3 className="mt-1 text-2xl font-black text-slate-950">Notify all subscribed emails</h3>
+        <div className="mt-4 grid gap-3">
+          <input className="input" onChange={(event) => onChange('subject', event.target.value)} placeholder="Subject, e.g. Fresh hiring trends for this week" value={form.subject} />
+          <input className="input" onChange={(event) => onChange('previewText', event.target.value)} placeholder="Short preview text" value={form.previewText} />
+          <textarea className="input min-h-32" onChange={(event) => onChange('message', event.target.value)} placeholder="Write the update that subscribers will receive by email" value={form.message} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input className="input" onChange={(event) => onChange('ctaLabel', event.target.value)} placeholder="Button label, optional" value={form.ctaLabel} />
+            <input className="input" onChange={(event) => onChange('ctaUrl', event.target.value)} placeholder="Button URL, optional" value={form.ctaUrl} />
+          </div>
+          <button className="w-max rounded-[7px] bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 disabled:cursor-not-allowed disabled:bg-slate-300" disabled={sending} onClick={onSend} type="button">
+            {sending ? 'Sending Update...' : 'Send Update To Subscribers'}
+          </button>
+        </div>
+      </div>
+      <div className="rounded-[7px] border border-slate-200 bg-slate-50 p-4">
+        <p className="text-sm font-black uppercase tracking-wide text-slate-500">Recent Updates</p>
+        <div className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
+          {updates.length ? updates.map((item) => (
+            <div className="rounded-[7px] bg-white p-3 shadow-sm" key={item._id || item.subject}>
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-black text-slate-900">{item.subject}</p>
+                <StatusBadge status={item.status || 'Sent'} />
+              </div>
+              <p className="mt-2 text-xs font-bold text-slate-500">Sent {item.sentCount || 0}/{item.recipientCount || 0} subscribers</p>
+              <p className="mt-1 text-xs font-bold text-slate-400">{formatDateTime(item.sentAt || item.createdAt)}</p>
+            </div>
+          )) : (
+            <p className="rounded-[7px] bg-white p-4 text-sm font-bold text-slate-500">No hiring insight updates sent yet.</p>
+          )}
+        </div>
+      </div>
+    </section>
   )
 }
 

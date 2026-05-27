@@ -64,6 +64,7 @@ function duplicateError(res, message) {
 
 async function upsertNewsletterSubscriber(body, req) {
   const email = normalizeEmail(body.email)
+  const isAdminWrite = Boolean(req.user)
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     duplicateError(req.res, 'Please enter a valid email address.')
   }
@@ -71,17 +72,17 @@ async function upsertNewsletterSubscriber(body, req) {
   const existing = await NewsletterSubscriber.findOne({ email })
   if (!existing) {
     body.email = email
-    body.status = 'Subscribed'
-    body.source = body.source || 'footer'
+    body.status = isAdminWrite ? body.status || 'Subscribed' : 'Subscribed'
+    body.source = body.source || (isAdminWrite ? 'admin' : 'footer')
     body.topics = Array.isArray(body.topics) && body.topics.length ? body.topics : ['Hiring insights', 'Latest jobs', 'Recruiter updates']
-    body.lastSubscribedAt = new Date()
+    body.lastSubscribedAt = body.status === 'Subscribed' ? new Date() : body.lastSubscribedAt
     return
   }
 
-  existing.status = 'Subscribed'
+  existing.status = isAdminWrite ? body.status || existing.status || 'Subscribed' : 'Subscribed'
   existing.source = body.source || existing.source || 'footer'
   existing.topics = Array.isArray(body.topics) && body.topics.length ? body.topics : existing.topics
-  existing.lastSubscribedAt = new Date()
+  if (existing.status === 'Subscribed') existing.lastSubscribedAt = new Date()
   await existing.save()
 
   req.res.status(200).json({ success: true, data: existing, message: 'You are already subscribed. We refreshed your subscription.' })
