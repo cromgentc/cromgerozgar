@@ -119,6 +119,7 @@ function App() {
         { path: '/privacy', element: <ContentPage slug="privacy" /> },
         { path: '/terms', element: <ContentPage slug="terms" /> },
         { path: '/support', element: <ContentPage slug="support" /> },
+        { path: '/policies/:pageSlug', element: <ContentPage /> },
       ],
     },
     {
@@ -379,6 +380,7 @@ function App() {
         { path: '/recruiter/privacy', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-privacy" /> },
         { path: '/recruiter/terms', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-terms" /> },
         { path: '/recruiter/support', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-support" /> },
+        { path: '/recruiter/policies/:pageSlug', element: <ContentPage placement="Recruiter Frontend" /> },
         { path: '/recruiter-login', element: <EmployerLoginPage /> },
         { path: '/employer-login', element: <EmployerLoginPage /> },
         { path: '/recruiter-register', element: <EmployerRegisterPage /> },

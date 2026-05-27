@@ -91,11 +91,11 @@ export function ContentPage({ placement = 'Users Frontend', slug }) {
     const params = new URLSearchParams({ slug: resolvedSlug, status: 'Published', limit: '1' })
     if (placement) params.set('frontendPlacement', placement)
 
-    api.list('content-pages', `?${params.toString()}`)
+    api.contentPages(`?${params.toString()}`)
       .then((payload) => {
         if (!active) return
         const item = Array.isArray(payload.data) ? payload.data[0] : null
-        setPage(item || null)
+        setPage(item?.status === 'Published' ? item : null)
       })
       .catch(() => {
         if (active) setPage(null)
@@ -107,7 +107,7 @@ export function ContentPage({ placement = 'Users Frontend', slug }) {
     return () => {
       active = false
     }
-  }, [resolvedSlug])
+  }, [resolvedSlug, placement])
 
   const content = page || fallback
   const Icon = getPageIcon(content.category)

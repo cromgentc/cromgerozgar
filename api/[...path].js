@@ -20,6 +20,14 @@ const fallbackData = {
     { name: 'Neha Sharma', role: 'React Developer', company: 'Nimbus Tech', type: 'Candidate', text: 'Cromgen Rozgar helped me find relevant roles quickly.', rating: 5, status: 'Active', featured: true },
     { name: 'Amit Verma', role: 'Recruiter', company: 'BluePeak Finance', type: 'Recruiter', text: 'The platform made candidate shortlisting faster for our hiring team.', rating: 5, status: 'Active', featured: true },
   ],
+  'content-pages': [
+    { slug: 'privacy', title: 'Privacy Policy', subtitle: 'How Cromgen Rozgar handles candidate, recruiter, application, and hiring data.', category: 'Privacy', frontendPlacement: 'Users Frontend', status: 'Published', effectiveDate: new Date().toISOString(), sections: [{ heading: 'Data We Collect', body: 'We collect account, profile, resume, application, recruiter, payment, and usage data needed to operate hiring workflows.' }, { heading: 'How We Use Data', body: 'Data is used to verify accounts, match candidates with jobs, process applications, improve security, and support platform operations.' }] },
+    { slug: 'terms', title: 'Terms of Service', subtitle: 'Platform rules for candidates, recruiters, administrators, job posts, applications, and payments.', category: 'Terms', frontendPlacement: 'Users Frontend', status: 'Published', effectiveDate: new Date().toISOString(), sections: [{ heading: 'Account Responsibility', body: 'Users must provide accurate registration, profile, company, and document information.' }, { heading: 'Jobs And Applications', body: 'Recruiter job posts may require approval before becoming visible to candidates.' }] },
+    { slug: 'support', title: 'Support Center', subtitle: 'Get help with accounts, recruiter verification, job applications, packages, wallet, and platform operations.', category: 'Support', frontendPlacement: 'Users Frontend', status: 'Published', effectiveDate: new Date().toISOString(), sections: [{ heading: 'Candidate Support', body: 'Contact support for profile, resume, application, saved job, and status tracking issues.' }, { heading: 'Recruiter Support', body: 'Contact support for verification, job approval, package, wallet, and candidate workflow issues.' }] },
+    { slug: 'recruiter-privacy', title: 'Recruiter Privacy Policy', subtitle: 'How Cromgen Rozgar handles recruiter, company, document, package, and hiring workflow data.', category: 'Privacy', frontendPlacement: 'Recruiter Frontend', status: 'Published', effectiveDate: new Date().toISOString(), sections: [{ heading: 'Recruiter Data We Collect', body: 'We collect company profile details, recruiter contacts, verification documents, job posts, package activity, and hiring workflow data.' }] },
+    { slug: 'recruiter-terms', title: 'Recruiter Terms Of Service', subtitle: 'Hiring platform rules for recruiter accounts, job posts, verification, payments, and candidate handling.', category: 'Terms', frontendPlacement: 'Recruiter Frontend', status: 'Published', effectiveDate: new Date().toISOString(), sections: [{ heading: 'Account And Company Verification', body: 'Recruiters must provide accurate company, GST, PAN, address, contact, and hiring information.' }] },
+    { slug: 'recruiter-support', title: 'Recruiter Support Policy', subtitle: 'Support guidance for recruiter verification, packages, wallet, job approval, and hiring operations.', category: 'Support', frontendPlacement: 'Recruiter Frontend', status: 'Published', effectiveDate: new Date().toISOString(), sections: [{ heading: 'Verification Support', body: 'Recruiters can contact support for GST, PAN, company profile, or document review issues.' }] },
+  ],
 }
 
 function sendJson(res, statusCode, payload) {
@@ -45,8 +53,12 @@ function getFallbackPayload(req) {
   if (pathname === '/settings/public/social-links' || pathname.endsWith('/public/social-links')) return { success: true, data: [], fallback: true }
 
   const resource = pathname.split('/').filter(Boolean)[0]
-  if (['jobs', 'job-listings', 'companies', 'faqs', 'testimonials'].includes(resource)) {
-    const data = fallbackData[resource] || (resource === 'job-listings' ? fallbackData.jobs : [])
+  if (['jobs', 'job-listings', 'companies', 'faqs', 'testimonials', 'content-pages'].includes(resource)) {
+    let data = fallbackData[resource] || (resource === 'job-listings' ? fallbackData.jobs : [])
+    ;['slug', 'status', 'frontendPlacement'].forEach((key) => {
+      const value = url.searchParams.get(key)
+      if (value) data = data.filter((item) => String(item[key] || '') === value)
+    })
     const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || data.length, 1), 100)
     return { success: true, data: data.slice(0, limit), pagination: { page: 1, limit, total: data.length, pages: 1 }, fallback: true }
   }

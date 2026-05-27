@@ -329,14 +329,27 @@ const configs = {
       ['effectiveDate', 'Effective date', 'date'],
     ],
     required: ['title', 'slug', 'frontendPlacement', 'status'],
-    transform: (form) => ({
-      ...form,
-      slug: String(form.slug || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-      category: form.category || 'Policy',
-      frontendPlacement: form.frontendPlacement || fieldOptions.policyPlacement[0],
-      sections: parsePolicySections(form.sectionsText),
-      effectiveDate: form.effectiveDate || new Date().toISOString(),
-    }),
+    transform: (form) => {
+      const sections = parsePolicySections(form.sectionsText)
+      const normalizedTitle = String(form.title || '').trim()
+      const normalizedSlug = String(form.slug || normalizedTitle)
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+
+      return {
+        ...form,
+        title: normalizedTitle,
+        subtitle: String(form.subtitle || '').trim(),
+        slug: normalizedSlug,
+        category: String(form.category || 'Policy').trim(),
+        frontendPlacement: String(form.frontendPlacement || fieldOptions.policyPlacement[0]).trim(),
+        sections,
+        status: form.status || 'Published',
+        effectiveDate: form.effectiveDate || new Date().toISOString(),
+      }
+    },
   },
   testimonials: {
     resource: 'testimonials',
@@ -733,7 +746,8 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
 
     const payload = config.transform ? config.transform(form) : form
     const requiredFields = type === 'users' && !selectedRow ? [...(config.required || []), 'password'] : config.required
-    const missingField = requiredFields?.find((key) => !String(form[key] || '').trim())
+    const validationSource = type === 'contentPages' ? payload : form
+    const missingField = requiredFields?.find((key) => !String(validationSource[key] || '').trim())
 
     if (missingField) {
       setMessage(`${getFieldLabel(config.fields, missingField)} is required.`)
@@ -746,13 +760,13 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
 
       if (selectedRow?._id && !(type === 'resumes' && resumeMode === 'lead')) {
         const payload = await api.update(resource, selectedRow._id, resumePayload)
-        if (type === 'faqs' && payload.data) {
+        if (['faqs', 'contentPages'].includes(type) && payload.data) {
           setRows((current) => current.map((row) => (row._id === payload.data._id ? { ...payload.data, source: row.source || 'Admin Upload' } : row)))
         }
         setMessage('Record updated successfully.')
       } else {
         const payload = await api.create(resource, resumePayload)
-        if (type === 'faqs' && payload.data) {
+        if (['faqs', 'contentPages'].includes(type) && payload.data) {
           setRows((current) => [{ ...payload.data, source: 'Admin Upload' }, ...current])
         }
         setMessage('Record created successfully.')
