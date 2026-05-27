@@ -87,6 +87,28 @@ async function upsertNewsletterSubscriber(body, req) {
   return true
 }
 
+async function upsertSettingByKey(body, req) {
+  const key = String(body.key || '').trim()
+  if (!key) {
+    duplicateError(req.res, 'Setting key is required.')
+  }
+
+  const setting = await Setting.findOneAndUpdate(
+    { key },
+    {
+      $set: {
+        key,
+        group: body.group || 'website',
+        value: body.value ?? null,
+      },
+    },
+    { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+  )
+
+  req.res.status(200).json({ success: true, data: setting })
+  return true
+}
+
 async function ensureUniqueEmployerIdentity(body, req) {
   const businessEmail = normalizeEmail(body.businessEmail)
   const phone = normalizePhone(body.phone)
@@ -428,7 +450,7 @@ module.exports = {
     searchFields: ['name', 'email', 'role', 'skills', 'experience', 'source', 'resumeUrl', 'storagePath'],
     beforeRemove: removeResumeFromSupaCloud,
   }),
-  settings: crudController(Setting, { searchFields: ['key', 'group'] }),
+  settings: crudController(Setting, { searchFields: ['key', 'group'], beforeCreate: upsertSettingByKey }),
   supportMessages: crudController(SupportMessage, {
     searchFields: ['name', 'email', 'role', 'subject', 'message', 'status'],
     beforeGetAll: scopeSupportMessagesForRequester,
