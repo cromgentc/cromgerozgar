@@ -1,8 +1,14 @@
-const LIVE_API_BASE_URL = 'https://www.cromgenrozgar.in/api'
+const LIVE_API_BASE_URL = 'https://www.cromgenrozgar.in'
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   LIVE_API_BASE_URL
+
+function apiUrl(path) {
+  const baseUrl = API_BASE_URL.replace(/\/$/, '')
+  const apiPath = path.startsWith('/api/') ? path : `/api${path.startsWith('/') ? path : `/${path}`}`
+  return `${baseUrl}${apiPath}`
+}
 
 export async function apiRequest(path, options = {}) {
   const token = localStorage.getItem('authToken')
@@ -15,7 +21,7 @@ export async function apiRequest(path, options = {}) {
     ...(fetchOptions.headers || {}),
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(apiUrl(path), {
     ...fetchOptions,
     headers,
   })
@@ -51,7 +57,6 @@ export async function apiRequest(path, options = {}) {
 const protectedResources = new Set([
   'applications',
   'candidates',
-  'content-pages',
   'employers',
   'faqs',
   'newsletter-subscribers',
@@ -69,7 +74,7 @@ function needsAuth(resource) {
 
 async function openAuthorizedFile(path) {
   const token = localStorage.getItem('authToken')
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(apiUrl(path), {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
 
@@ -123,7 +128,7 @@ export const api = {
   purchaseRecruiterCoins: (data) => apiRequest('/recruiter-package-subscriptions/purchase-coins', { method: 'POST', body: JSON.stringify(data), authRequired: true }),
   submitRecruiterJob: (data) => apiRequest('/recruiter-job-posts/submit', { method: 'POST', body: JSON.stringify(data), authRequired: true }),
   uploadResumeToSupaCloud: (data) => apiRequest('/resume-uploads/supa-cloud', { method: 'POST', body: data, authRequired: true }),
-  resumeViewUrl: (id) => `${API_BASE_URL}/resume-uploads/${encodeURIComponent(id)}/view`,
+  resumeViewUrl: (id) => apiUrl(`/resume-uploads/${encodeURIComponent(id)}/view`),
   openResume: (id) => openAuthorizedFile(`/resume-uploads/${encodeURIComponent(id)}/view`),
   list: (resource, params = '') => apiRequest(`/${resource}${params}`, { authRequired: needsAuth(resource) }),
   get: (resource, id) => apiRequest(`/${resource}/${id}`, { authRequired: needsAuth(resource) }),

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Building2, ChevronRight, ClipboardCheck, Download, FileText, SearchCheck, Send, ShieldCheck, Smartphone, Star } from 'lucide-react'
+import { Building2, ClipboardCheck, Download, FileText, SearchCheck, Send, ShieldCheck, Smartphone, Star } from 'lucide-react'
 import { Button } from '../components/Button'
 import { FAQSection } from '../components/FAQSection'
 import { FeatureShowcase } from '../components/FeatureShowcase'
@@ -69,7 +69,9 @@ export function HomePage({ onApply }) {
           <CompanyGrid liveJobs={liveJobs} />
         </Section>
 
-        <SponsoredCompaniesShowcase liveJobs={liveJobs} />
+        <Section className="bg-white" title="Latest Jobs" subtitle="Fresh verified openings from active recruiters, updated as new jobs are approved.">
+          <LatestJobsGrid hasMore jobs={latestJobs} onApply={onApply} />
+        </Section>
 
         <Section className="bg-white" title="How It Works">
           <ProcessGrid isCandidate={isCandidate} isRecruiter={isRecruiter} jobsCount={liveJobs.length} user={user} />
@@ -305,193 +307,6 @@ function CareerFocusBand() {
       </div>
     </section>
   )
-}
-
-function SponsoredCompaniesShowcase({ liveJobs = [] }) {
-  const [liveCompanies, setLiveCompanies] = useState([])
-  const [activeFilter, setActiveFilter] = useState('All')
-  const [showMoreFilters, setShowMoreFilters] = useState(false)
-
-  useEffect(() => {
-    let active = true
-
-    api.companies('?sort=-createdAt&limit=100')
-      .then((payload) => {
-        if (active) setLiveCompanies(Array.isArray(payload.data) ? payload.data : [])
-      })
-      .catch(() => {
-        if (active) setLiveCompanies([])
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
-
-  const companies = useMemo(() => {
-    const profiles = buildCompanyProfiles(liveJobs, liveCompanies)
-    const source = profiles.length ? profiles : sponsoredCompanyFallback
-    return source.slice(0, 8).map((company, index) => ({
-      ...company,
-      rating: company.rating || sponsoredCompanyFallback[index % sponsoredCompanyFallback.length].rating,
-      reviews: company.reviews || sponsoredCompanyFallback[index % sponsoredCompanyFallback.length].reviews,
-      tags: company.tags?.length ? company.tags : getCompanyTags(company, index),
-    }))
-  }, [liveCompanies, liveJobs])
-
-  const visibleFilters = ['All', 'IT Services', 'Technology', 'Healthcare & Life Sciences', 'Manufacturing & Production', 'BFSI', 'BPM']
-  const extraFilters = ['Customer Success', 'Finance']
-  const filters = showMoreFilters ? [...visibleFilters, ...extraFilters] : visibleFilters
-  const filteredCompanies = useMemo(
-    () => companies.filter((company) => companyMatchesSponsoredFilter(company, activeFilter)),
-    [activeFilter, companies],
-  )
-
-  return (
-    <section className="bg-white py-14 sm:py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Sponsored companies</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
-            Fresh opportunities for ambitious professionals with verified recruiters, reviews, and active hiring context.
-          </p>
-        </div>
-
-        <div className="mt-7 flex flex-wrap justify-center gap-3">
-          {filters.map((filter) => (
-            <button
-              className={`sponsored-company-filter rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                activeFilter === filter
-                  ? 'border-slate-950 bg-slate-50 text-slate-950'
-                  : 'border-blue-200 bg-white text-slate-700 hover:border-blue-500 hover:text-blue-700'
-              }`}
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              aria-pressed={activeFilter === filter}
-              type="button"
-            >
-              {filter}
-            </button>
-          ))}
-          <button
-            className="sponsored-company-filter rounded-full px-4 py-2 text-xs font-black text-slate-700 hover:text-blue-700"
-            onClick={() => setShowMoreFilters((value) => !value)}
-            type="button"
-          >
-            {showMoreFilters ? 'Show less' : '+2 more'}
-          </button>
-        </div>
-
-        <div className="relative mt-8">
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {filteredCompanies.map((company, index) => (
-              <Link
-                className="sponsored-company-card group min-h-[213px] rounded-[18px] border border-slate-200 p-5 text-center shadow-sm transition hover:-translate-y-1 hover:border-blue-200"
-                key={`${company.name}-${index}`}
-                to={`/companies/${slugifyCompany(company.name)}`}
-              >
-                <CompanyLogo company={company} index={index} />
-                <h3 className="mt-4 truncate text-base font-black text-slate-950 group-hover:text-blue-700">{company.name}</h3>
-                <div className="mt-3 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500">
-                  <span className="inline-flex items-center gap-1 font-black text-slate-700">
-                    <Star className="text-amber-400" fill="currentColor" size={14} />
-                    {company.rating || '4.0'}
-                  </span>
-                  <span className="h-3 w-px bg-slate-200" />
-                  <span>{company.reviews || `${Math.max(4, Number(company.openJobs || 1) * 26)} reviews`}</span>
-                </div>
-                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  {company.tags.slice(0, 3).map((tag) => (
-                    <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600" key={tag}>{tag}</span>
-                  ))}
-                </div>
-              </Link>
-            ))}
-            {!filteredCompanies.length && (
-              <div className="rounded-[18px] border border-dashed border-slate-300 p-6 text-center text-sm font-semibold text-slate-500 sm:col-span-2 lg:col-span-4">
-                No sponsored companies found for {activeFilter}.
-              </div>
-            )}
-          </div>
-
-          <button
-            aria-label="Next sponsored companies"
-            className="sponsored-company-arrow absolute -right-4 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg shadow-slate-200 transition hover:border-blue-200 hover:text-blue-700 lg:grid"
-            type="button"
-          >
-            <ChevronRight size={21} />
-          </button>
-        </div>
-
-        <div className="mt-9 flex justify-center">
-          <Link className="sponsored-company-link rounded-full border border-blue-600 px-6 py-3 text-sm font-black text-blue-600 transition hover:bg-blue-600 hover:text-white" to="/companies">
-            View all companies
-          </Link>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function CompanyLogo({ company, index }) {
-  const colors = ['bg-red-50 text-red-700', 'bg-amber-50 text-amber-700', 'bg-emerald-50 text-emerald-700', 'bg-blue-50 text-blue-700', 'bg-violet-50 text-violet-700', 'bg-slate-950 text-white']
-  const initials = String(company.badge || company.name || 'CO').slice(0, 3).toUpperCase()
-
-  if (company.logoUrl || company.logo) {
-    return (
-      <span className="mx-auto grid h-12 w-12 place-items-center rounded-[8px] border border-slate-200 bg-white p-2">
-        <img className="h-full w-full object-contain" src={company.logoUrl || company.logo} alt={company.name} />
-      </span>
-    )
-  }
-
-  return (
-    <span className={`mx-auto grid h-12 w-12 place-items-center rounded-[8px] border border-slate-200 text-sm font-black ${colors[index % colors.length]}`}>
-      {initials}
-    </span>
-  )
-}
-
-const sponsoredCompanyFallback = [
-  { name: 'KPI Partners', rating: '3.7', reviews: '181 reviews', tags: ['Product', 'Corporate', 'Emerging Technologies'], badge: 'KPI' },
-  { name: 'ORA Group', rating: '3.9', reviews: '11 reviews', tags: ['Real Estate', 'Engineering & Construction'], badge: 'ORA' },
-  { name: 'AGS Health', rating: '4.0', reviews: '3.4K+ reviews', tags: ['Software Product', 'Analytics / KPO / Research', 'B2B'], badge: 'AGS' },
-  { name: 'Lenovo', rating: '4.0', reviews: '776 reviews', tags: ['Consumer Electronics & Appliances', 'Product', 'Foreign MNC'], badge: 'LEN' },
-  { name: 'Foundever', rating: '3.4', reviews: '2.6K+ reviews', tags: ['BPO/KPO', 'BPO / Call Centre', 'BPM / BPO'], badge: 'FND' },
-  { name: 'Okta', rating: '2.3', reviews: '28 reviews', tags: ['Hardware & Networking', 'Software Product'], badge: 'OKT' },
-  { name: 'NTT DATA, Inc.', rating: '3.9', reviews: '3.5K+ reviews', tags: ['IT Services & Consulting', 'Foreign MNC', 'Private'], badge: 'NTT' },
-  { name: 'Alithya', rating: '4.7', reviews: '4 reviews', tags: ['IT Services & Consulting'], badge: 'ALI' },
-]
-
-function getCompanyTags(company, index) {
-  const industry = company.industry || sponsoredCompanyFallback[index % sponsoredCompanyFallback.length].tags[0]
-  const type = company.openJobs ? `${company.openJobs} open jobs` : 'Verified recruiter'
-  return [industry, type, 'Hiring now']
-}
-
-function companyMatchesSponsoredFilter(company, filter) {
-  if (filter === 'All') return true
-
-  const searchable = [
-    company.name,
-    company.industry,
-    company.location,
-    ...(company.tags || []),
-    ...(company.jobs || []).flatMap((job) => [job.title, job.department, job.category, job.industry, job.description, ...(job.skills || [])]),
-  ].join(' ').toLowerCase()
-
-  const aliases = {
-    'IT Services': ['it services', 'it ', 'software', 'cloud', 'consulting', 'hardware', 'networking', 'saas'],
-    Technology: ['technology', 'software', 'product', 'cloud', 'hardware', 'electronics', 'analytics', 'engineering'],
-    'Healthcare & Life Sciences': ['health', 'healthcare', 'medical', 'life sciences', 'pharma', 'hospital'],
-    'Manufacturing & Production': ['manufacturing', 'production', 'factory', 'engineering', 'construction', 'industrial'],
-    BFSI: ['bfsi', 'bank', 'banking', 'finance', 'financial', 'fintech', 'insurance'],
-    BPM: ['bpm', 'bpo', 'kpo', 'call centre', 'call center', 'customer success', 'support'],
-    'Customer Success': ['customer success', 'support', 'crm', 'retention'],
-    Finance: ['finance', 'financial', 'fintech', 'banking', 'insurance', 'bfsi'],
-  }
-
-  return (aliases[filter] || [filter.toLowerCase()]).some((term) => searchable.includes(term))
 }
 
 function LatestJobsGrid({ hasMore = false, jobs: latestJobs, onApply }) {
