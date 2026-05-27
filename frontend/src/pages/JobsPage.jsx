@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { SlidersHorizontal, X } from 'lucide-react'
+import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { JobCard } from '../components/JobCard'
 import { SearchBar } from '../components/SearchBar'
@@ -9,8 +9,6 @@ import { api } from '../services/api'
 
 const filterConfig = [
   { key: 'location', label: 'Location', field: 'location', mode: 'includes' },
-  { key: 'experience', label: 'Experience', field: 'experience' },
-  { key: 'salary', label: 'Salary', field: 'salary' },
   { key: 'typeFilter', label: 'Job Type', field: 'type' },
   { key: 'workMode', label: 'Work Mode', field: 'workMode' },
   { key: 'skills', label: 'Skills', field: 'skills', array: true },
@@ -18,9 +16,21 @@ const filterConfig = [
   { key: 'department', label: 'Department', field: 'department' },
 ]
 
+const salaryBands = [
+  { label: '0-3 Lakhs', min: 0, max: 3 },
+  { label: '3-6 Lakhs', min: 3, max: 6 },
+  { label: '6-10 Lakhs', min: 6, max: 10 },
+  { label: '10-15 Lakhs', min: 10, max: 15 },
+  { label: '15-25 Lakhs', min: 15, max: 25 },
+  { label: '25+ Lakhs', min: 25, max: Infinity },
+]
+
 export function JobsPage({ onApply }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [companyPage, setCompanyPage] = useState(1)
+  const [departmentModalOpen, setDepartmentModalOpen] = useState(false)
+  const [departmentSearch, setDepartmentSearch] = useState('')
+  const [departmentDraft, setDepartmentDraft] = useState([])
   const { data: apiJobs } = useApiResource(() => api.jobListings('?sort=-createdAt'), { data: [] }, [])
   const rawList = Array.isArray(apiJobs) ? apiJobs : apiJobs?.data || []
   const normalizedJobs = useMemo(() => rawList.map(normalizeJob), [rawList])
@@ -28,6 +38,8 @@ export function JobsPage({ onApply }) {
   const keyword = (searchParams.get('q') || '').trim().toLowerCase()
   const selectedLocation = (searchParams.get('location') || '').trim().toLowerCase()
   const selectedType = (searchParams.get('type') || '').trim().toLowerCase()
+  const selectedExperienceMax = Number(searchParams.get('experienceMax') || 0)
+  const selectedSalaryBands = useMemo(() => getParamList(searchParams, 'salaryBand'), [searchParams])
   const selectedFilters = useMemo(() => getSelectedFilters(searchParams), [searchParams])
 
   const list = normalizedJobs.filter((job) => {
@@ -45,10 +57,12 @@ export function JobsPage({ onApply }) {
     return (!keyword || haystack.includes(keyword))
       && (!selectedLocation || jobLocation.includes(selectedLocation))
       && (!selectedType || jobType === selectedType)
+      && (!selectedExperienceMax || getExperienceMin(job.experience) <= selectedExperienceMax)
+      && (!selectedSalaryBands.length || matchesSalaryBands(job.salary, selectedSalaryBands))
       && matchesAdvancedFilters(job, selectedFilters)
   })
-  const activeFilterCount = Object.values(selectedFilters).reduce((total, values) => total + values.length, 0)
-  const hasSearch = Boolean(keyword || selectedLocation || selectedType || activeFilterCount)
+  const activeFilterCount = Object.values(selectedFilters).reduce((total, values) => total + values.length, 0) + Number(Boolean(selectedExperienceMax)) + selectedSalaryBands.length
+  const hasSearch = Boolean(keyword || selectedLocation || selectedType || selectedExperienceMax || selectedSalaryBands.length || activeFilterCount)
   const companyFilter = dynamicFilters.find((filter) => filter.key === 'company') || { values: [], counts: {} }
   const companyPageSize = 10
   const companyPageCount = Math.max(1, Math.ceil(companyFilter.values.length / companyPageSize))
@@ -70,11 +84,29 @@ export function JobsPage({ onApply }) {
     setSearchParams(params)
   }
 
+  const setMultiFilter = (key, values) => {
+    const params = new URLSearchParams(searchParams)
+    const nextValues = values.map((value) => value.trim()).filter(Boolean)
+    if (nextValues.length) params.set(key, nextValues.join('|'))
+    else params.delete(key)
+    setSearchParams(params)
+  }
+
+  const openDepartmentModal = () => {
+    setDepartmentDraft(selectedFilters.department || [])
+    setDepartmentSearch('')
+    setDepartmentModalOpen(true)
+  }
+
   const clearFilters = () => {
     const params = new URLSearchParams(searchParams)
     filterConfig.forEach((filter) => params.delete(filter.key))
+    params.delete('experienceMax')
+    params.delete('salaryBand')
     setSearchParams(params)
   }
+
+  const salaryBandCounts = useMemo(() => buildSalaryBandCounts(normalizedJobs), [normalizedJobs])
 
   return (
     <section className="w-full max-w-full overflow-x-hidden py-3 sm:py-14">
@@ -89,7 +121,7 @@ export function JobsPage({ onApply }) {
         </div>
 
         <div className="mt-4 grid w-full max-w-full gap-3 sm:mt-8 sm:gap-6 lg:grid-cols-[310px_minmax(0,1fr)]">
-          <aside className="hidden h-max rounded-[7px] border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur lg:sticky lg:top-24 lg:block">
+          <aside className="hidden max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[7px] border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur lg:sticky lg:top-24 lg:block">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <h2 className="font-black text-slate-950">Advanced Filters</h2>
@@ -103,7 +135,26 @@ export function JobsPage({ onApply }) {
               </button>
             )}
             <div className="grid gap-5">
-              {['location', 'experience', 'salary', 'skills', 'department'].map((key) => {
+              <RangeFilter
+                label="Experience"
+                max={30}
+                minLabel="0 Yrs"
+                onChange={(value) => setSingleFilter('experienceMax', value ? String(value) : '')}
+                step={1}
+                suffix="Yrs"
+                value={selectedExperienceMax || 0}
+              />
+              <SalaryFilter
+                counts={salaryBandCounts}
+                onChange={(band) => {
+                  const next = selectedSalaryBands.includes(band)
+                    ? selectedSalaryBands.filter((item) => item !== band)
+                    : [...selectedSalaryBands, band]
+                  setMultiFilter('salaryBand', next)
+                }}
+                selectedValues={selectedSalaryBands}
+              />
+              {['location', 'skills'].map((key) => {
                 const filter = dynamicFilters.find((item) => item.key === key) || { key, label: key, values: [] }
                 return (
                   <FilterSelect
@@ -111,6 +162,23 @@ export function JobsPage({ onApply }) {
                     filter={filter}
                     onChange={(value) => setSingleFilter(key, value)}
                     value={selectedFilters[key]?.[0] || ''}
+                  />
+                )
+              })}
+              <DepartmentFilter
+                filter={dynamicFilters.find((item) => item.key === 'department') || { key: 'department', label: 'Department', values: [], counts: {} }}
+                onChange={(value) => setSingleFilter('department', value)}
+                onViewMore={openDepartmentModal}
+                value={selectedFilters.department?.[0] || ''}
+              />
+              {['workMode', 'typeFilter'].map((key) => {
+                const filter = dynamicFilters.find((item) => item.key === key) || { key, label: key, values: [] }
+                return (
+                  <CheckboxFilter
+                    key={key}
+                    filter={filter}
+                    onChange={(value) => setSingleFilter(key, selectedFilters[key]?.[0] === value ? '' : value)}
+                    selectedValue={selectedFilters[key]?.[0] || ''}
                   />
                 )
               })}
@@ -184,6 +252,26 @@ export function JobsPage({ onApply }) {
           </div>
         </div>
       </div>
+      {departmentModalOpen && (
+        <DepartmentModal
+          draft={departmentDraft}
+          filter={dynamicFilters.find((item) => item.key === 'department') || { key: 'department', label: 'Department', values: [], counts: {} }}
+          onApply={() => {
+            setMultiFilter('department', departmentDraft)
+            setDepartmentModalOpen(false)
+          }}
+          onClose={() => setDepartmentModalOpen(false)}
+          onSearch={setDepartmentSearch}
+          onToggle={(department) => {
+            setDepartmentDraft((current) => (
+              current.includes(department)
+                ? current.filter((item) => item !== department)
+                : [...current, department]
+            ))
+          }}
+          search={departmentSearch}
+        />
+      )}
     </section>
   )
 }
@@ -206,11 +294,179 @@ function FilterSelect({ filter, onChange, value }) {
   )
 }
 
+function CheckboxFilter({ filter, onChange, selectedValue }) {
+  return (
+    <div className="grid gap-2 border-t border-slate-100 pt-4">
+      <span className="text-sm font-black text-slate-800">{filter.label}</span>
+      <div className="grid gap-2">
+        {filter.values.slice(0, 6).map((option) => {
+          const checked = selectedValue === option
+          return (
+            <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-600" key={option}>
+              <input checked={checked} className="h-4 w-4 rounded-[4px] border-slate-300 accent-blue-600" onChange={() => onChange(option)} type="checkbox" />
+              <span className="min-w-0 truncate">{option}</span>
+              <span className="ml-auto text-slate-400">({filter.counts[option] || 0})</span>
+            </label>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function RangeFilter({ label, max, minLabel, onChange, step, suffix, value }) {
+  return (
+    <div className="grid gap-4 border-t border-slate-100 pt-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-black text-slate-800">{label}</span>
+        <span className="rounded-[7px] bg-slate-950 px-2 py-1 text-xs font-black text-white">{value || max}</span>
+      </div>
+      <input
+        className="w-full accent-slate-950"
+        max={max}
+        min="0"
+        onChange={(event) => onChange(Number(event.target.value))}
+        step={step}
+        type="range"
+        value={value || max}
+      />
+      <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+        <span>{minLabel}</span>
+        <span>{value || max} {suffix}</span>
+      </div>
+    </div>
+  )
+}
+
+function SalaryFilter({ counts, onChange, selectedValues }) {
+  return (
+    <div className="grid gap-2 border-t border-slate-100 pt-4">
+      <span className="text-sm font-black text-slate-800">Salary</span>
+      <div className="grid gap-2">
+        {salaryBands.map((band) => {
+          const checked = selectedValues.includes(band.label)
+          return (
+            <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-600" key={band.label}>
+              <input checked={checked} className="h-4 w-4 rounded-[4px] border-slate-300 accent-blue-600" onChange={() => onChange(band.label)} type="checkbox" />
+              <span className="min-w-0 truncate">{band.label}</span>
+              <span className="ml-auto text-slate-400">({counts[band.label] || 0})</span>
+            </label>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function DepartmentFilter({ filter, onChange, onViewMore, value }) {
+  return (
+    <div className="grid gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-black text-slate-800">{filter.label}</span>
+        <button className="text-xs font-black text-blue-600 hover:text-blue-700" onClick={onViewMore} type="button">
+          View More
+        </button>
+      </div>
+      <select
+        className="min-h-11 rounded-[7px] border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 outline-none focus:border-blue-500"
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        <option value="">All departments</option>
+        {filter.values.slice(0, 10).map((option) => (
+          <option key={option} value={option}>{option} ({filter.counts[option]})</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+function DepartmentModal({ draft, filter, onApply, onClose, onSearch, onToggle, search }) {
+  const query = search.trim().toLowerCase()
+  const departments = filter.values.filter((department) => department.toLowerCase().includes(query))
+
+  return (
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/30 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-4xl overflow-hidden rounded-[7px] bg-white shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-5">
+          <div>
+            <h3 className="text-xl font-black text-slate-950">Department</h3>
+            <p className="mt-1 text-sm font-semibold text-slate-500">{draft.length} selected</p>
+          </div>
+          <button className="grid h-9 w-9 place-items-center rounded-[7px] bg-slate-100 text-slate-500 hover:bg-slate-200" onClick={onClose} type="button" aria-label="Close department filter">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="p-5">
+          <label className="mb-5 flex min-h-11 max-w-sm items-center gap-2 rounded-[7px] border border-slate-200 bg-white px-3 text-sm text-slate-500 shadow-sm">
+            <Search size={17} className="text-blue-600" />
+            <input
+              className="w-full bg-transparent font-semibold outline-none placeholder:text-slate-400"
+              onChange={(event) => onSearch(event.target.value)}
+              placeholder="Search Department"
+              value={search}
+            />
+          </label>
+          <div className="grid max-h-[52vh] gap-x-7 gap-y-3 overflow-y-auto pr-2 sm:grid-cols-2 lg:grid-cols-3">
+            {departments.length ? departments.map((department) => {
+              const checked = draft.includes(department)
+              return (
+                <label className="flex min-w-0 cursor-pointer items-center gap-3 text-sm font-semibold text-slate-600" key={department}>
+                  <input checked={checked} className="h-4 w-4 rounded-[4px] border-slate-300 accent-blue-600" onChange={() => onToggle(department)} type="checkbox" />
+                  <span className="min-w-0 truncate">{department}</span>
+                  <span className="shrink-0 text-slate-400">({filter.counts[department] || 0})</span>
+                </label>
+              )
+            }) : (
+              <p className="rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500 sm:col-span-2 lg:col-span-3">No departments found.</p>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-3 border-t border-slate-100 p-5">
+          <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-600" onClick={onClose} type="button">Cancel</button>
+          <button className="rounded-[7px] bg-blue-600 px-6 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-100" onClick={onApply} type="button">Apply</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function normalizeJob(job) {
   return {
     ...job,
     skills: Array.isArray(job.skills) ? job.skills : String(job.skills || '').split(',').map((skill) => skill.trim()).filter(Boolean),
   }
+}
+
+function getExperienceMin(value) {
+  const numbers = String(value || '').match(/\d+/g)?.map(Number) || []
+  return numbers.length ? Math.min(...numbers) : 0
+}
+
+function getSalaryRange(value) {
+  const numbers = String(value || '').match(/\d+(?:\.\d+)?/g)?.map(Number) || []
+  if (!numbers.length) return null
+  return {
+    min: Math.min(...numbers),
+    max: numbers.length > 1 ? Math.max(...numbers) : Math.min(...numbers),
+  }
+}
+
+function matchesSalaryBands(value, selectedBands) {
+  const range = getSalaryRange(value)
+  if (!range) return false
+
+  return selectedBands.some((label) => {
+    const band = salaryBands.find((item) => item.label === label)
+    return band ? range.min <= band.max && range.max >= band.min : false
+  })
+}
+
+function buildSalaryBandCounts(jobs) {
+  return salaryBands.reduce((counts, band) => {
+    counts[band.label] = jobs.filter((job) => matchesSalaryBands(job.salary, [band.label])).length
+    return counts
+  }, {})
 }
 
 function buildDynamicFilters(jobs) {
