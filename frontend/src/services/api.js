@@ -9,7 +9,24 @@ function apiUrl(path) {
   const apiRoot = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   const endpointPath = normalizedPath.startsWith('/api/') ? normalizedPath.slice(4) : normalizedPath
+
+  if (isLiveApiBase(baseUrl)) {
+    const [routePath, queryString = ''] = endpointPath.replace(/^\/+/, '').split('?')
+    const gatewayQuery = new URLSearchParams({ path: routePath })
+    const existingQuery = new URLSearchParams(queryString)
+    existingQuery.forEach((value, key) => gatewayQuery.append(key, value))
+    return `${apiRoot}?${gatewayQuery.toString()}`
+  }
+
   return `${apiRoot}${endpointPath}`
+}
+
+function isLiveApiBase(baseUrl) {
+  try {
+    return new URL(baseUrl).hostname.replace(/^www\./, '') === 'cromgenrozgar.in'
+  } catch {
+    return false
+  }
 }
 
 export async function apiRequest(path, options = {}) {
