@@ -406,7 +406,10 @@ const configs = {
     required: ['question', 'answer', 'status'],
     transform: (form) => ({
       ...form,
-      category: form.category || 'General',
+      category: String(form.category || 'General').trim(),
+      question: String(form.question || '').trim(),
+      answer: String(form.answer || '').trim(),
+      status: form.status || 'Active',
       sortOrder: Number(form.sortOrder || 0),
       featured: ['true', 'Yes', 'Featured', true].includes(form.featured),
     }),
@@ -742,10 +745,16 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       const resumePayload = type === 'resumes' ? { ...payload, source: 'Admin Upload' } : payload
 
       if (selectedRow?._id && !(type === 'resumes' && resumeMode === 'lead')) {
-        await api.update(resource, selectedRow._id, resumePayload)
+        const payload = await api.update(resource, selectedRow._id, resumePayload)
+        if (type === 'faqs' && payload.data) {
+          setRows((current) => current.map((row) => (row._id === payload.data._id ? { ...payload.data, source: row.source || 'Admin Upload' } : row)))
+        }
         setMessage('Record updated successfully.')
       } else {
-        await api.create(resource, resumePayload)
+        const payload = await api.create(resource, resumePayload)
+        if (type === 'faqs' && payload.data) {
+          setRows((current) => [{ ...payload.data, source: 'Admin Upload' }, ...current])
+        }
         setMessage('Record created successfully.')
       }
       setModalOpen(false)

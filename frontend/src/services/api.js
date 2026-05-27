@@ -196,6 +196,7 @@ export const api = {
   jobs: (params = '') => apiRequest(`/jobs${params}`),
   jobListings: (params = '?sort=-createdAt') => listAll('job-listings', params),
   job: (id) => apiRequest(`/jobs/${id}`),
+  faqs: (params = '?status=Active&sort=sortOrder -featured -createdAt') => listAll('faqs', params),
   companies: (params = '') => apiRequest(`/companies${params}`),
   companyProfiles: () => apiRequest('/company-profiles'),
   adminDashboard: () => apiRequest('/dashboard/admin', { authRequired: true }),

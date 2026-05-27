@@ -14,9 +14,11 @@ export function FAQSection() {
   useEffect(() => {
     let active = true
 
-    api.list('faqs', '?status=Active&sort=sortOrder%20-featured%20-createdAt&limit=100')
+    api.faqs()
       .then((payload) => {
-        if (active) setItems(Array.isArray(payload.data) ? payload.data : [])
+        if (!active) return
+        const faqs = Array.isArray(payload.data) ? payload.data : []
+        setItems(faqs.filter((item) => item.question && item.answer && item.status === 'Active'))
       })
       .catch(() => {
         if (active) setItems([])
