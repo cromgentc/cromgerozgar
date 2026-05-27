@@ -34,7 +34,7 @@ export function buildCompanyProfiles(jobs = [], companies = []) {
       ...company,
       badge: company.badge || getCompanyInitials(company.name),
       accent: company.accent || accentClasses[index % accentClasses.length],
-      openJobs: 0,
+      openJobs: Number(company.jobs || 0),
       jobs: [],
     })
   })
@@ -64,10 +64,17 @@ export function buildCompanyProfiles(jobs = [], companies = []) {
   })
 
   return Array.from(companyMap.values())
-    .filter((company) => company.openJobs > 0 || Number(company.jobs || 0) > 0)
     .map((company) => ({
       ...company,
-      openJobs: company.openJobs || Number(company.jobs || 0),
+      industry: company.industry || 'Hiring company',
+      location: company.location || [company.city, company.state, company.country].filter(Boolean).join(', ') || 'India',
+      openJobs: Number(company.openJobs || company.jobs || 0),
+      rating: company.rating || '4.5',
+      status: company.status || 'Active',
     }))
-    .sort((a, b) => b.openJobs - a.openJobs)
+    .sort((a, b) => {
+      const activeDiff = Number(String(b.status).toLowerCase() === 'active') - Number(String(a.status).toLowerCase() === 'active')
+      if (activeDiff) return activeDiff
+      return b.openJobs - a.openJobs
+    })
 }

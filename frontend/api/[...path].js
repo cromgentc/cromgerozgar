@@ -129,8 +129,8 @@ function getFallbackPayload(req) {
   }
 
   const resource = pathname.split('/').filter(Boolean)[0]
-  if (['jobs', 'companies', 'faqs', 'testimonials'].includes(resource)) {
-    const data = fallbackData[resource] || []
+  if (['jobs', 'job-listings', 'companies', 'faqs', 'testimonials'].includes(resource)) {
+    const data = fallbackData[resource] || (resource === 'job-listings' ? fallbackData.jobs : [])
     const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || data.length, 1), 100)
     return {
       success: true,

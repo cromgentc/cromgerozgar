@@ -194,8 +194,10 @@ async function openAuthorizedFile(path) {
 
 export const api = {
   jobs: (params = '') => apiRequest(`/jobs${params}`),
+  jobListings: (params = '?sort=-createdAt') => listAll('job-listings', params),
   job: (id) => apiRequest(`/jobs/${id}`),
   companies: (params = '') => apiRequest(`/companies${params}`),
+  companyProfiles: () => apiRequest('/company-profiles'),
   adminDashboard: () => apiRequest('/dashboard/admin', { authRequired: true }),
   recruiterPage: () => apiRequest('/recruiter-page'),
   employerDashboard: (email = '') => apiRequest(`/dashboard/employer${email ? `?recruiterEmail=${encodeURIComponent(email)}` : ''}`, { authRequired: true }),

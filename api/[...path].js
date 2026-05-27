@@ -45,8 +45,8 @@ function getFallbackPayload(req) {
   if (pathname === '/settings/public/social-links' || pathname.endsWith('/public/social-links')) return { success: true, data: [], fallback: true }
 
   const resource = pathname.split('/').filter(Boolean)[0]
-  if (['jobs', 'companies', 'faqs', 'testimonials'].includes(resource)) {
-    const data = fallbackData[resource] || []
+  if (['jobs', 'job-listings', 'companies', 'faqs', 'testimonials'].includes(resource)) {
+    const data = fallbackData[resource] || (resource === 'job-listings' ? fallbackData.jobs : [])
     const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || data.length, 1), 100)
     return { success: true, data: data.slice(0, limit), pagination: { page: 1, limit, total: data.length, pages: 1 }, fallback: true }
   }

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { ArrowLeft, Building2, Globe2, MapPin, SearchCheck, ShieldCheck } from 'lucide-react'
 import { Button } from '../components/Button'
 import { JobCard } from '../components/JobCard'
 import { api } from '../services/api'
-import { buildCompanyProfiles, getCompanyBySlug, slugifyCompany } from '../utils/companyProfiles'
+import { getCompanyBySlug, slugifyCompany } from '../utils/companyProfiles'
 
 export function CompaniesPage() {
   const { companies, loading } = useCompanyProfiles()
@@ -117,25 +117,20 @@ export function CompanyDetailsPage({ onApply }) {
 }
 
 function useCompanyProfiles() {
-  const [jobs, setJobs] = useState([])
   const [companies, setCompanies] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
 
-    Promise.all([
-      api.jobs('?sort=-createdAt&limit=100'),
-      api.companies('?sort=-createdAt&limit=100'),
-    ])
-      .then(([jobsPayload, companiesPayload]) => {
+    api
+      .companyProfiles()
+      .then((payload) => {
         if (!active) return
-        setJobs(Array.isArray(jobsPayload.data) ? jobsPayload.data : [])
-        setCompanies(Array.isArray(companiesPayload.data) ? companiesPayload.data : [])
+        setCompanies(Array.isArray(payload.data) ? payload.data : [])
       })
       .catch(() => {
         if (!active) return
-        setJobs([])
         setCompanies([])
       })
       .finally(() => {
@@ -147,8 +142,7 @@ function useCompanyProfiles() {
     }
   }, [])
 
-  const profiles = useMemo(() => buildCompanyProfiles(jobs, companies), [companies, jobs])
-  return { companies: profiles, loading }
+  return { companies, loading }
 }
 
 function CompanyCard({ company }) {

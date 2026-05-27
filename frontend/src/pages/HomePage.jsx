@@ -12,7 +12,7 @@ import { categories } from '../data/portalData'
 import { getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
 import { getJobsForCategory, slugifyCategory } from '../utils/categoryMatching'
-import { buildCompanyProfiles, slugifyCompany } from '../utils/companyProfiles'
+import { slugifyCompany } from '../utils/companyProfiles'
 import { getCandidateProfileCompletion } from '../utils/candidateActivity'
 
 export function HomePage({ onApply }) {
@@ -55,7 +55,7 @@ export function HomePage({ onApply }) {
       <MobileHomeJobs jobs={latestJobs} onApply={onApply} />
 
       <Section className="bg-white md:hidden" title="Trusted companies hiring on CromGen Rozgar" subtitle="Verified recruiters with active openings.">
-        <CompanyGrid compactMobile liveJobs={liveJobs} />
+        <CompanyGrid compactMobile />
       </Section>
 
       <div className="md:hidden">
@@ -66,7 +66,7 @@ export function HomePage({ onApply }) {
         <CareerFocusBand />
 
         <Section className="bg-white" title="Trusted companies hiring on CromGen Rozgar" subtitle="Verified recruiter profiles with active openings and transparent role information.">
-          <CompanyGrid liveJobs={liveJobs} />
+          <CompanyGrid />
         </Section>
 
         <Section className="bg-white" title="Latest Jobs" subtitle="Fresh verified openings from active recruiters, updated as new jobs are approved.">
@@ -609,14 +609,14 @@ function getProcessSteps({ isCandidate, isRecruiter, jobsCount, profileCompletio
   ]
 }
 
-export function CompanyGrid({ compactMobile = false, liveJobs = [] }) {
+export function CompanyGrid({ compactMobile = false }) {
   const [liveCompanies, setLiveCompanies] = useState([])
   const [showAllMobileCompanies, setShowAllMobileCompanies] = useState(false)
 
   useEffect(() => {
     let active = true
 
-    api.companies('?sort=-createdAt&limit=100')
+    api.companyProfiles()
       .then((payload) => {
         if (active) setLiveCompanies(Array.isArray(payload.data) ? payload.data : [])
       })
@@ -629,7 +629,7 @@ export function CompanyGrid({ compactMobile = false, liveJobs = [] }) {
     }
   }, [])
 
-  const list = useMemo(() => buildCompanyProfiles(liveJobs, liveCompanies).slice(0, 6), [liveCompanies, liveJobs])
+  const list = useMemo(() => liveCompanies.slice(0, 6), [liveCompanies])
   const visibleList = compactMobile && !showAllMobileCompanies ? list.slice(0, 4) : list
 
   return (
@@ -647,7 +647,7 @@ export function CompanyGrid({ compactMobile = false, liveJobs = [] }) {
         </div>
       )) : (
         <div className="rounded-[7px] border border-dashed border-slate-300 bg-white p-6 text-sm font-semibold text-slate-500 md:col-span-2 lg:col-span-3">
-          No active hiring companies yet. Approved jobs will automatically create company profiles here.
+          No company profiles yet. Add companies from admin to show them here.
         </div>
       )}
       {compactMobile && list.length > 4 && (

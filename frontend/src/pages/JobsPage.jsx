@@ -20,7 +20,7 @@ const filterConfig = [
 
 export function JobsPage({ onApply }) {
   const [searchParams, setSearchParams] = useSearchParams()
-  const { data: apiJobs } = useApiResource(() => api.jobs('?sort=-createdAt&limit=100'), { data: [] }, [])
+  const { data: apiJobs } = useApiResource(() => api.jobListings('?sort=-createdAt'), { data: [] }, [])
   const rawList = Array.isArray(apiJobs) ? apiJobs : apiJobs?.data || []
   const normalizedJobs = useMemo(() => rawList.map(normalizeJob), [rawList])
   const dynamicFilters = useMemo(() => buildDynamicFilters(normalizedJobs), [normalizedJobs])
