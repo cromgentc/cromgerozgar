@@ -309,6 +309,8 @@ function CareerFocusBand() {
 
 function SponsoredCompaniesShowcase({ liveJobs = [] }) {
   const [liveCompanies, setLiveCompanies] = useState([])
+  const [activeFilter, setActiveFilter] = useState('All')
+  const [showMoreFilters, setShowMoreFilters] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -337,7 +339,13 @@ function SponsoredCompaniesShowcase({ liveJobs = [] }) {
     }))
   }, [liveCompanies, liveJobs])
 
-  const filters = ['All', 'IT Services', 'Technology', 'Healthcare & Life Sciences', 'Manufacturing & Production', 'BFSI', 'BPM']
+  const visibleFilters = ['All', 'IT Services', 'Technology', 'Healthcare & Life Sciences', 'Manufacturing & Production', 'BFSI', 'BPM']
+  const extraFilters = ['Customer Success', 'Finance']
+  const filters = showMoreFilters ? [...visibleFilters, ...extraFilters] : visibleFilters
+  const filteredCompanies = useMemo(
+    () => companies.filter((company) => companyMatchesSponsoredFilter(company, activeFilter)),
+    [activeFilter, companies],
+  )
 
   return (
     <section className="bg-white py-14 sm:py-16">
@@ -350,25 +358,33 @@ function SponsoredCompaniesShowcase({ liveJobs = [] }) {
         </div>
 
         <div className="mt-7 flex flex-wrap justify-center gap-3">
-          {filters.map((filter, index) => (
+          {filters.map((filter) => (
             <button
               className={`sponsored-company-filter rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                index === 0
+                activeFilter === filter
                   ? 'border-slate-950 bg-slate-50 text-slate-950'
                   : 'border-blue-200 bg-white text-slate-700 hover:border-blue-500 hover:text-blue-700'
               }`}
               key={filter}
+              onClick={() => setActiveFilter(filter)}
+              aria-pressed={activeFilter === filter}
               type="button"
             >
               {filter}
             </button>
           ))}
-          <button className="sponsored-company-filter rounded-full px-4 py-2 text-xs font-black text-slate-700 hover:text-blue-700" type="button">+2 more</button>
+          <button
+            className="sponsored-company-filter rounded-full px-4 py-2 text-xs font-black text-slate-700 hover:text-blue-700"
+            onClick={() => setShowMoreFilters((value) => !value)}
+            type="button"
+          >
+            {showMoreFilters ? 'Show less' : '+2 more'}
+          </button>
         </div>
 
         <div className="relative mt-8">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {companies.map((company, index) => (
+            {filteredCompanies.map((company, index) => (
               <Link
                 className="sponsored-company-card group min-h-[213px] rounded-[18px] border border-slate-200 p-5 text-center shadow-sm transition hover:-translate-y-1 hover:border-blue-200"
                 key={`${company.name}-${index}`}
@@ -391,6 +407,11 @@ function SponsoredCompaniesShowcase({ liveJobs = [] }) {
                 </div>
               </Link>
             ))}
+            {!filteredCompanies.length && (
+              <div className="rounded-[18px] border border-dashed border-slate-300 p-6 text-center text-sm font-semibold text-slate-500 sm:col-span-2 lg:col-span-4">
+                No sponsored companies found for {activeFilter}.
+              </div>
+            )}
           </div>
 
           <button
@@ -446,6 +467,31 @@ function getCompanyTags(company, index) {
   const industry = company.industry || sponsoredCompanyFallback[index % sponsoredCompanyFallback.length].tags[0]
   const type = company.openJobs ? `${company.openJobs} open jobs` : 'Verified recruiter'
   return [industry, type, 'Hiring now']
+}
+
+function companyMatchesSponsoredFilter(company, filter) {
+  if (filter === 'All') return true
+
+  const searchable = [
+    company.name,
+    company.industry,
+    company.location,
+    ...(company.tags || []),
+    ...(company.jobs || []).flatMap((job) => [job.title, job.department, job.category, job.industry, job.description, ...(job.skills || [])]),
+  ].join(' ').toLowerCase()
+
+  const aliases = {
+    'IT Services': ['it services', 'it ', 'software', 'cloud', 'consulting', 'hardware', 'networking', 'saas'],
+    Technology: ['technology', 'software', 'product', 'cloud', 'hardware', 'electronics', 'analytics', 'engineering'],
+    'Healthcare & Life Sciences': ['health', 'healthcare', 'medical', 'life sciences', 'pharma', 'hospital'],
+    'Manufacturing & Production': ['manufacturing', 'production', 'factory', 'engineering', 'construction', 'industrial'],
+    BFSI: ['bfsi', 'bank', 'banking', 'finance', 'financial', 'fintech', 'insurance'],
+    BPM: ['bpm', 'bpo', 'kpo', 'call centre', 'call center', 'customer success', 'support'],
+    'Customer Success': ['customer success', 'support', 'crm', 'retention'],
+    Finance: ['finance', 'financial', 'fintech', 'banking', 'insurance', 'bfsi'],
+  }
+
+  return (aliases[filter] || [filter.toLowerCase()]).some((term) => searchable.includes(term))
 }
 
 function LatestJobsGrid({ hasMore = false, jobs: latestJobs, onApply }) {
