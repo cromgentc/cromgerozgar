@@ -4280,7 +4280,6 @@ export function AdminMongoDbPage() {
 }
 
 export function AdminSEOBrandingPage() {
-  const [settingId, setSettingId] = useState('')
   const [form, setForm] = useState(defaultSiteBranding)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -4290,12 +4289,10 @@ export function AdminSEOBrandingPage() {
     setLoading(true)
     setMessage('')
     api
-      .list('settings', '?key=siteSeoBranding&limit=1')
+      .siteBranding()
       .then((payload) => {
-        const setting = (payload.data || []).find((item) => item.key === 'siteSeoBranding')
-        const value = setting?.value || {}
+        const value = payload.data?.value || {}
         const next = { ...defaultSiteBranding, ...value }
-        setSettingId(setting?._id || '')
         setForm(next)
         applySiteBrandingMeta(next)
       })
@@ -4332,32 +4329,21 @@ export function AdminSEOBrandingPage() {
     setMessage('')
 
     const payload = {
-      key: 'siteSeoBranding',
-      group: 'website',
-      value: {
-        siteName: form.siteName.trim() || defaultSiteBranding.siteName,
-        adminName: form.adminName.trim() || defaultSiteBranding.adminName,
-        recruiterName: form.recruiterName.trim() || defaultSiteBranding.recruiterName,
-        logoUrl: form.logoUrl.trim(),
-        faviconUrl: form.faviconUrl.trim(),
-        tollFreeNumber: form.tollFreeNumber.trim(),
-        seoTitle: form.seoTitle.trim() || form.siteName.trim() || defaultSiteBranding.seoTitle,
-        seoDescription: form.seoDescription.trim(),
-        seoKeywords: form.seoKeywords.trim(),
-      },
+      siteName: form.siteName.trim() || defaultSiteBranding.siteName,
+      adminName: form.adminName.trim() || defaultSiteBranding.adminName,
+      recruiterName: form.recruiterName.trim() || defaultSiteBranding.recruiterName,
+      logoUrl: form.logoUrl.trim(),
+      faviconUrl: form.faviconUrl.trim(),
+      tollFreeNumber: form.tollFreeNumber.trim(),
+      seoTitle: form.seoTitle.trim() || form.siteName.trim() || defaultSiteBranding.seoTitle,
+      seoDescription: form.seoDescription.trim(),
+      seoKeywords: form.seoKeywords.trim(),
     }
 
     try {
-      let saved
-      if (settingId) {
-        saved = await api.update('settings', settingId, payload)
-      } else {
-        saved = await api.create('settings', payload)
-      }
-
+      const saved = await api.updateSiteBranding(payload)
       const savedSetting = saved.data || {}
-      const nextBranding = publishSiteBranding(savedSetting.value || payload.value)
-      setSettingId(savedSetting._id || settingId)
+      const nextBranding = publishSiteBranding(savedSetting.value || payload)
       setForm(nextBranding)
       setMessage('SEO, logo, and favicon saved successfully.')
     } catch (error) {
