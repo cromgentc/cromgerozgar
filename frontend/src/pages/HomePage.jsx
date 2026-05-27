@@ -213,11 +213,7 @@ function TrustedByCandidates() {
       .then((payload) => {
         if (!active) return
         const testimonials = Array.isArray(payload.data) ? payload.data : []
-        setItems(testimonials.filter((item) => {
-          if (!item.name || !item.text) return false
-          if (item.frontendPlacement) return item.frontendPlacement === 'Users Frontend'
-          return !['Recruiter', 'Company'].includes(item.type)
-        }))
+        setItems(testimonials.filter((item) => item.name && item.text))
       })
       .catch(() => {
         if (active) setItems([])

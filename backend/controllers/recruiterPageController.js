@@ -11,13 +11,7 @@ const getRecruiterPage = asyncHandler(async (req, res) => {
     Job.find().sort('-createdAt').limit(100),
     RecruiterDocument.find().sort('-updatedAt').limit(100),
     Application.countDocuments(),
-    Testimonial.find({
-      status: 'Active',
-      $or: [
-        { frontendPlacement: 'Recruiter Frontend' },
-        { frontendPlacement: { $exists: false }, type: { $in: ['Recruiter', 'Company'] } },
-      ],
-    }).sort('-featured -createdAt').limit(20),
+    Testimonial.find({ status: 'Active' }).sort('-featured -createdAt').limit(20),
   ])
 
   const activeJobs = jobs.filter((job) => job.accountDepartmentStatus === 'Active' || job.approval === 'Approved')

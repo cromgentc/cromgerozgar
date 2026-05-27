@@ -28,11 +28,7 @@ export function TestimonialSlider() {
     }
   }, [])
 
-  const testimonials = useMemo(() => items.filter((item) => {
-    if (!item.name || !item.text) return false
-    if (item.frontendPlacement) return item.frontendPlacement === 'Users Frontend'
-    return !['Recruiter', 'Company'].includes(item.type)
-  }).slice(0, 20), [items])
+  const testimonials = useMemo(() => items.filter((item) => item.name && item.text).slice(0, 20), [items])
 
   useEffect(() => {
     if (testimonials.length <= 1) return undefined
