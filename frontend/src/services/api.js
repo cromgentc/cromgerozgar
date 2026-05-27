@@ -53,6 +53,7 @@ export async function apiRequest(path, options = {}) {
   }
 
   const response = await fetch(apiUrl(path), {
+    cache: 'no-store',
     ...fetchOptions,
     headers,
   })

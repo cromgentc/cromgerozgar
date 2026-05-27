@@ -89,6 +89,7 @@ function getStartupStatus() {
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode
   res.setHeader('Content-Type', 'application/json')
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
   return res.end(JSON.stringify(payload))
 }
 
@@ -201,10 +202,12 @@ export default async function handler(req, res) {
     return app(req, res)
   } catch (error) {
     console.error(error)
-    const fallback = getFallbackPayload(req)
-    if (fallback) return sendJson(res, 200, fallback)
-    const authUnavailable = getAuthUnavailablePayload(req)
-    if (authUnavailable) return sendJson(res, 200, authUnavailable)
+    if (!process.env.MONGO_URI) {
+      const fallback = getFallbackPayload(req)
+      if (fallback) return sendJson(res, 200, fallback)
+      const authUnavailable = getAuthUnavailablePayload(req)
+      if (authUnavailable) return sendJson(res, 200, authUnavailable)
+    }
 
     const status = getStartupStatus()
     status.error = error.message
