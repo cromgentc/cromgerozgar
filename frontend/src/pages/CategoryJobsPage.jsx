@@ -21,7 +21,7 @@ export function CategoryJobsPage({ onApply }) {
     const loadJobs = async () => {
       setLoading(true)
       try {
-        const payload = await api.jobs('?sort=-createdAt&limit=100')
+        const payload = await api.jobListings('?sort=-createdAt')
         if (active) setJobs(Array.isArray(payload.data) ? payload.data : [])
       } catch {
         if (active) setJobs([])

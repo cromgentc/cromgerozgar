@@ -1,5 +1,5 @@
 export const categorySeoTerms = {
-  'IT & Software': ['it', 'software', 'developer', 'engineer', 'frontend', 'backend', 'full stack', 'react', 'node', 'java', 'python', 'php', 'qa', 'devops', 'cloud', 'data', 'technology'],
+  'IT & Software': ['it', 'software', 'engineering', 'developer', 'engineer', 'frontend', 'backend', 'full stack', 'react', 'node', 'java', 'python', 'php', 'qa', 'devops', 'cloud', 'data', 'technology'],
   'Sales & Marketing': ['sales', 'marketing', 'growth', 'campaign', 'lead generation', 'business development', 'seo', 'google ads', 'meta ads', 'brand'],
   'Customer Support': ['customer support', 'customer success', 'support', 'service', 'crm', 'retention', 'client success', 'helpdesk'],
   BPO: ['bpo', 'call center', 'voice process', 'non voice', 'telecaller', 'customer care', 'process executive'],
@@ -38,6 +38,14 @@ export function normalizeJobForCategory(job) {
 export function getCategoryJobScore(job, categoryName) {
   const terms = categorySeoTerms[categoryName] || [categoryName]
   const normalizedJob = normalizeJobForCategory(job)
+  const normalizedCategory = normalizeCategoryText(categoryName)
+  const normalizedDepartment = normalizeCategoryText(normalizedJob.department)
+  const normalizedIndustry = normalizeCategoryText(normalizedJob.industry)
+
+  if (normalizedDepartment === normalizedCategory || normalizedIndustry === normalizedCategory) return 100
+  if (normalizedDepartment.includes(normalizedCategory) || normalizedCategory.includes(normalizedDepartment)) return 80
+  if (normalizedIndustry.includes(normalizedCategory) || normalizedCategory.includes(normalizedIndustry)) return 60
+
   const text = normalizeCategoryText([
     normalizedJob.title,
     normalizedJob.company,

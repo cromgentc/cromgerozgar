@@ -24,7 +24,7 @@ export function HomePage({ onApply }) {
   useEffect(() => {
     let active = true
 
-    api.jobs('?sort=-createdAt&limit=100')
+    api.jobListings('?sort=-createdAt')
       .then((payload) => {
         if (active) setLiveJobs(Array.isArray(payload.data) ? payload.data : [])
       })
