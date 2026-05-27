@@ -345,6 +345,7 @@ const configs = {
     actionLabel: 'Add Testimonial',
     modalTitle: 'Add / Edit Testimonial',
     extra: 'Feature',
+    statusOptions: ['Active', 'Inactive'],
     columns: [
       { key: '_id', label: 'Testimonial ID' },
       { key: 'name', label: 'Name' },
@@ -741,14 +742,20 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       const resumePayload = type === 'resumes' ? { ...payload, source: 'Admin Upload' } : payload
 
       if (selectedRow?._id && !(type === 'resumes' && resumeMode === 'lead')) {
-        await api.update(resource, selectedRow._id, resumePayload)
+        const response = await api.update(resource, selectedRow._id, resumePayload)
+        if (type === 'testimonials' && response.data) {
+          setRows((current) => current.map((row) => (row._id === selectedRow._id ? response.data : row)))
+        }
         setMessage('Record updated successfully.')
       } else {
-        await api.create(resource, resumePayload)
+        const response = await api.create(resource, resumePayload)
+        if (type === 'testimonials' && response.data) {
+          setRows((current) => [response.data, ...current.filter((row) => row._id !== response.data._id)])
+        }
         setMessage('Record created successfully.')
       }
       setModalOpen(false)
-      loadRows()
+      if (type !== 'testimonials') loadRows()
     } catch (error) {
       setMessage(error.message)
     }
