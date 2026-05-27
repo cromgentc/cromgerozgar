@@ -587,7 +587,9 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const search = searchParams.get('search') || ''
   const status = searchParams.get('status') || ''
-  const role = searchParams.get('role') || ''
+  const roleQuery = searchParams.get('role') || ''
+  const googleStyleRoleQuery = type === 'users' && fieldOptions.role.includes(searchParams.get('q') || '') ? searchParams.get('q') || '' : ''
+  const role = roleQuery || googleStyleRoleQuery
   const resumeMode = searchParams.get('resumeMode') || 'lead'
   const frontendPlacement = fixedFilters.frontendPlacement || searchParams.get('frontendPlacement') || ''
   const [rows, setRows] = useState(config.staticRows || [])
