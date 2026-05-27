@@ -96,7 +96,10 @@ function getFallbackPayload(req) {
   if (req.method && req.method !== 'GET') return null
 
   const url = new URL(req.url || '/', 'https://local.test')
-  const pathname = url.pathname.replace(/^\/api(?=\/|$)/, '')
+  const queryPath = url.searchParams.get('path')
+  const pathname = queryPath
+    ? `/${queryPath.replace(/^\/+/, '')}`
+    : url.pathname.replace(/^\/api(?=\/|$)/, '')
 
   if (pathname === '/health') {
     return { success: true, message: 'Cromgen Rozgar API fallback is running' }
@@ -113,6 +116,7 @@ function getFallbackPayload(req) {
           adminName: 'Rozgar Admin',
           recruiterName: 'Rozgar Recruiter',
           logoUrl: '/cromgen-rozgar-logo.png',
+          tollFreeNumber: '+91 98765 43210',
         },
       },
       fallback: true,
@@ -140,7 +144,10 @@ function getFallbackPayload(req) {
 
 function getAuthUnavailablePayload(req) {
   const url = new URL(req.url || '/', 'https://local.test')
-  const pathname = url.pathname.replace(/^\/api(?=\/|$)/, '')
+  const queryPath = url.searchParams.get('path')
+  const pathname = queryPath
+    ? `/${queryPath.replace(/^\/+/, '')}`
+    : url.pathname.replace(/^\/api(?=\/|$)/, '')
   if (!pathname.startsWith('/auth/')) return null
 
   return {
@@ -156,6 +163,15 @@ function getAuthUnavailablePayload(req) {
 function normalizeApiUrl(req) {
   const currentUrl = req.url || '/'
   const parsed = new URL(currentUrl, 'https://local.test')
+  const queryPath = parsed.searchParams.get('path')
+
+  if (queryPath) {
+    parsed.searchParams.delete('path')
+    const normalizedPath = `/api/${queryPath.replace(/^\/+/, '')}`
+    const queryString = parsed.searchParams.toString()
+    return `${normalizedPath}${queryString ? `?${queryString}` : ''}`
+  }
+
   const segments = parsed.pathname.split('/').filter(Boolean)
   const normalizedPath = `/${segments.filter((segment, index) => segment !== 'api' || index === 0).join('/')}`
   if (normalizedPath === '/api' || normalizedPath.startsWith('/api/')) return `${normalizedPath}${parsed.search}`
@@ -164,11 +180,6 @@ function normalizeApiUrl(req) {
 
 export default async function handler(req, res) {
   try {
-    const publicSettingsFallback = getFallbackPayload(req)
-    if (publicSettingsFallback && (req.url || '').includes('/public/')) {
-      return sendJson(res, 200, publicSettingsFallback)
-    }
-
     if (!process.env.MONGO_URI) {
       const fallback = getFallbackPayload(req)
       if (fallback) return sendJson(res, 200, fallback)

@@ -9,6 +9,7 @@ module.exports = function handler(req, res) {
         adminName: 'Rozgar Admin',
         recruiterName: 'Rozgar Recruiter',
         logoUrl: '/cromgen-rozgar-logo.png',
+        tollFreeNumber: '+91 98765 43210',
       },
     },
     fallback: true,
