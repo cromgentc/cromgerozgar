@@ -13,6 +13,21 @@ export const categorySeoTerms = {
   'Business Development': ['business development', 'bd', 'sales', 'partnership', 'lead generation', 'client acquisition'],
 }
 
+export const departmentCategoryMap = {
+  'it & software': ['it & software', 'it', 'software', 'engineering', 'technology', 'development', 'product engineering'],
+  'sales & marketing': ['sales & marketing', 'sales', 'marketing', 'growth', 'business development', 'bd', 'lead generation'],
+  'customer support': ['customer support', 'customer success', 'support', 'service', 'helpdesk'],
+  bpo: ['bpo', 'call center', 'voice process', 'non voice', 'customer care'],
+  'hr & recruitment': ['hr & recruitment', 'hr', 'human resources', 'recruitment', 'recruiter', 'talent acquisition', 'hiring'],
+  finance: ['finance', 'accounting', 'accounts', 'banking', 'audit', 'tax'],
+  'data collection': ['data collection', 'data entry', 'research operations', 'research', 'field data'],
+  'digital marketing': ['digital marketing', 'seo', 'content marketing', 'social media marketing', 'performance marketing'],
+  'work from home': ['work from home', 'wfh', 'remote'],
+  freelance: ['freelance', 'contract', 'consultant', 'part time'],
+  'ai & data annotation': ['ai & data annotation', 'ai operations', 'data annotation', 'annotation', 'machine learning', 'nlp'],
+  'business development': ['business development', 'bd', 'partnership', 'client acquisition'],
+}
+
 export function normalizeCategoryText(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9+#.\s-]/g, ' ')
 }
@@ -41,10 +56,29 @@ export function getCategoryJobScore(job, categoryName) {
   const normalizedCategory = normalizeCategoryText(categoryName)
   const normalizedDepartment = normalizeCategoryText(normalizedJob.department)
   const normalizedIndustry = normalizeCategoryText(normalizedJob.industry)
+  const normalizedTitle = normalizeCategoryText(normalizedJob.title)
+  const normalizedWorkMode = normalizeCategoryText(normalizedJob.workMode)
+  const normalizedType = normalizeCategoryText(normalizedJob.type)
+  const mappedDepartments = departmentCategoryMap[normalizedCategory] || [normalizedCategory]
+  const hasDepartmentOrIndustry = Boolean(normalizedDepartment || normalizedIndustry)
+  const matchesMappedDepartment = mappedDepartments.some((term) => {
+    const normalizedTerm = normalizeCategoryText(term)
+    return normalizedDepartment === normalizedTerm || normalizedIndustry === normalizedTerm
+  })
+  const containsMappedDepartment = mappedDepartments.some((term) => {
+    const normalizedTerm = normalizeCategoryText(term)
+    return (normalizedDepartment && (normalizedDepartment.includes(normalizedTerm) || normalizedTerm.includes(normalizedDepartment)))
+      || (normalizedIndustry && (normalizedIndustry.includes(normalizedTerm) || normalizedTerm.includes(normalizedIndustry)))
+  })
 
-  if (normalizedDepartment === normalizedCategory || normalizedIndustry === normalizedCategory) return 100
-  if (normalizedDepartment.includes(normalizedCategory) || normalizedCategory.includes(normalizedDepartment)) return 80
-  if (normalizedIndustry.includes(normalizedCategory) || normalizedCategory.includes(normalizedIndustry)) return 60
+  if (matchesMappedDepartment) return 100
+  if (containsMappedDepartment) return 80
+
+  if (hasDepartmentOrIndustry) {
+    if (normalizedCategory === 'work from home' && normalizedWorkMode === 'remote') return 50
+    if (normalizedCategory === 'freelance' && ['freelance', 'contract', 'part time'].includes(normalizedType)) return 50
+    return 0
+  }
 
   const text = normalizeCategoryText([
     normalizedJob.title,
@@ -58,7 +92,11 @@ export function getCategoryJobScore(job, categoryName) {
     ...normalizedJob.skills,
   ].filter(Boolean).join(' '))
 
-  return terms.reduce((score, term) => score + (text.includes(normalizeCategoryText(term)) ? 1 : 0), 0)
+  return terms.reduce((score, term) => {
+    const normalizedTerm = normalizeCategoryText(term)
+    const titleBoost = normalizedTitle.includes(normalizedTerm) ? 2 : 0
+    return score + (text.includes(normalizedTerm) ? 1 : 0) + titleBoost
+  }, 0)
 }
 
 export function getJobsForCategory(jobs, categoryName) {
