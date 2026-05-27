@@ -11,6 +11,10 @@ function buildQuery(query) {
   return filter
 }
 
+function normalizeSort(sort) {
+  return String(sort || '-createdAt').replace(/,/g, ' ')
+}
+
 function crudController(Model, options = {}) {
   const searchFields = options.searchFields || []
 
@@ -29,7 +33,7 @@ function crudController(Model, options = {}) {
 
       try {
         let [items, total] = await Promise.all([
-          Model.find(filter).sort(req.query.sort || '-createdAt').skip(skip).limit(limit),
+          Model.find(filter).sort(normalizeSort(req.query.sort)).skip(skip).limit(limit),
           Model.countDocuments(filter),
         ])
 
