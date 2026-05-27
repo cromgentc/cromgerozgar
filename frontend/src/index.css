@@ -277,9 +277,12 @@ button.sponsored-company-filter {
 }
 
 .sponsored-company-card,
-a.sponsored-company-card {
+a.sponsored-company-card,
+a.sponsored-company-card[class*="min-h-"] {
   color: #0f172a !important;
   border-color: rgba(15, 23, 42, 0.14) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .sponsored-company-arrow,

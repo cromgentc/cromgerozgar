@@ -370,7 +370,7 @@ function SponsoredCompaniesShowcase({ liveJobs = [] }) {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {companies.map((company, index) => (
               <Link
-                className="sponsored-company-card group min-h-[213px] rounded-[18px] border border-slate-200 bg-white p-5 text-center shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/70"
+                className="sponsored-company-card group min-h-[213px] rounded-[18px] border border-slate-200 p-5 text-center shadow-sm transition hover:-translate-y-1 hover:border-blue-200"
                 key={`${company.name}-${index}`}
                 to={`/companies/${slugifyCompany(company.name)}`}
               >
