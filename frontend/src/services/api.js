@@ -86,11 +86,10 @@ export async function apiRequest(path, options = {}) {
   return payload
 }
 
-const protectedResources = new Set([
+const readAuthResources = new Set([
   'applications',
   'candidates',
   'employers',
-  'faqs',
   'newsletter-subscribers',
   'payments',
   'recruiter-documents',
@@ -100,8 +99,40 @@ const protectedResources = new Set([
   'users',
 ])
 
-function needsAuth(resource) {
-  return protectedResources.has(resource)
+const writeAuthResources = new Set([
+  'applications',
+  'candidates',
+  'categories',
+  'companies',
+  'content-pages',
+  'employers',
+  'faqs',
+  'locations',
+  'newsletter-subscribers',
+  'payments',
+  'pricing-packages',
+  'recruiter-documents',
+  'resumes',
+  'settings',
+  'support-messages',
+  'testimonials',
+  'users',
+])
+
+const publicCreateResources = new Set([
+  'applications',
+  'employers',
+  'newsletter-subscribers',
+  'recruiter-documents',
+  'support-messages',
+])
+
+function needsReadAuth(resource) {
+  return readAuthResources.has(resource)
+}
+
+function needsWriteAuth(resource) {
+  return writeAuthResources.has(resource) && !publicCreateResources.has(resource)
 }
 
 function mergeParams(params = '', nextParams = {}) {
@@ -114,7 +145,7 @@ function mergeParams(params = '', nextParams = {}) {
 }
 
 async function listAll(resource, params = '') {
-  const firstPayload = await apiRequest(`/${resource}${mergeParams(params, { page: 1, limit: 100 })}`, { authRequired: needsAuth(resource) })
+  const firstPayload = await apiRequest(`/${resource}${mergeParams(params, { page: 1, limit: 100 })}`, { authRequired: needsReadAuth(resource) })
   const firstData = Array.isArray(firstPayload.data) ? firstPayload.data : []
   const pagination = firstPayload.pagination || {}
   const totalPages = Number(pagination.pages || 1)
@@ -125,7 +156,7 @@ async function listAll(resource, params = '') {
 
   const remainingPayloads = await Promise.all(
     Array.from({ length: totalPages - 1 }, (_, index) => (
-      apiRequest(`/${resource}${mergeParams(params, { page: index + 2, limit: 100 })}`, { authRequired: needsAuth(resource) })
+      apiRequest(`/${resource}${mergeParams(params, { page: index + 2, limit: 100 })}`, { authRequired: needsReadAuth(resource) })
     )),
   )
   const data = remainingPayloads.reduce((items, payload) => items.concat(Array.isArray(payload.data) ? payload.data : []), firstData)
@@ -203,10 +234,10 @@ export const api = {
   uploadResumeToSupaCloud: (data) => apiRequest('/resume-uploads/supa-cloud', { method: 'POST', body: data, authRequired: true }),
   resumeViewUrl: (id) => apiUrl(`/resume-uploads/${encodeURIComponent(id)}/view`),
   openResume: (id) => openAuthorizedFile(`/resume-uploads/${encodeURIComponent(id)}/view`),
-  list: (resource, params = '') => apiRequest(`/${resource}${params}`, { authRequired: needsAuth(resource) }),
+  list: (resource, params = '') => apiRequest(`/${resource}${params}`, { authRequired: needsReadAuth(resource) }),
   listAll,
-  get: (resource, id) => apiRequest(`/${resource}/${id}`, { authRequired: needsAuth(resource) }),
-  create: (resource, data) => apiRequest(`/${resource}`, { method: 'POST', body: JSON.stringify(data), authRequired: (needsAuth(resource) || resource === 'testimonials') && !['applications', 'employers', 'newsletter-subscribers', 'recruiter-documents', 'support-messages'].includes(resource) }),
-  update: (resource, id, data) => apiRequest(`/${resource}/${id}`, { method: 'PUT', body: JSON.stringify(data), authRequired: needsAuth(resource) }),
+  get: (resource, id) => apiRequest(`/${resource}/${id}`, { authRequired: needsReadAuth(resource) }),
+  create: (resource, data) => apiRequest(`/${resource}`, { method: 'POST', body: JSON.stringify(data), authRequired: needsWriteAuth(resource) }),
+  update: (resource, id, data) => apiRequest(`/${resource}/${id}`, { method: 'PUT', body: JSON.stringify(data), authRequired: writeAuthResources.has(resource) }),
   remove: (resource, id) => apiRequest(`/${resource}/${id}`, { method: 'DELETE', authRequired: true }),
 }
