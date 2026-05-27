@@ -209,7 +209,7 @@ function TrustedByCandidates() {
   useEffect(() => {
     let active = true
 
-    api.list('testimonials', '?status=Active&sort=-featured,-createdAt&limit=6')
+    api.listAll('testimonials', '?status=Active&sort=-featured,-createdAt')
       .then((payload) => {
         if (!active) return
         const testimonials = Array.isArray(payload.data) ? payload.data : []

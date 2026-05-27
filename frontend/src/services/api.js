@@ -103,6 +103,45 @@ function needsAuth(resource) {
   return protectedResources.has(resource)
 }
 
+function mergeParams(params = '', nextParams = {}) {
+  const query = new URLSearchParams(String(params || '').replace(/^\?/, ''))
+  Object.entries(nextParams).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') query.set(key, value)
+  })
+  const queryString = query.toString()
+  return queryString ? `?${queryString}` : ''
+}
+
+async function listAll(resource, params = '') {
+  const firstPayload = await apiRequest(`/${resource}${mergeParams(params, { page: 1, limit: 100 })}`, { authRequired: needsAuth(resource) })
+  const firstData = Array.isArray(firstPayload.data) ? firstPayload.data : []
+  const pagination = firstPayload.pagination || {}
+  const totalPages = Number(pagination.pages || 1)
+
+  if (totalPages <= 1) {
+    return { ...firstPayload, data: firstData }
+  }
+
+  const remainingPayloads = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) => (
+      apiRequest(`/${resource}${mergeParams(params, { page: index + 2, limit: 100 })}`, { authRequired: needsAuth(resource) })
+    )),
+  )
+  const data = remainingPayloads.reduce((items, payload) => items.concat(Array.isArray(payload.data) ? payload.data : []), firstData)
+
+  return {
+    ...firstPayload,
+    data,
+    pagination: {
+      ...pagination,
+      page: 1,
+      limit: data.length,
+      total: Number(pagination.total || data.length),
+      pages: 1,
+    },
+  }
+}
+
 async function openAuthorizedFile(path) {
   const token = localStorage.getItem('authToken')
   const response = await fetch(apiUrl(path), {
@@ -162,6 +201,7 @@ export const api = {
   resumeViewUrl: (id) => apiUrl(`/resume-uploads/${encodeURIComponent(id)}/view`),
   openResume: (id) => openAuthorizedFile(`/resume-uploads/${encodeURIComponent(id)}/view`),
   list: (resource, params = '') => apiRequest(`/${resource}${params}`, { authRequired: needsAuth(resource) }),
+  listAll,
   get: (resource, id) => apiRequest(`/${resource}/${id}`, { authRequired: needsAuth(resource) }),
   create: (resource, data) => apiRequest(`/${resource}`, { method: 'POST', body: JSON.stringify(data), authRequired: (needsAuth(resource) || resource === 'testimonials') && !['applications', 'employers', 'newsletter-subscribers', 'recruiter-documents', 'support-messages'].includes(resource) }),
   update: (resource, id, data) => apiRequest(`/${resource}/${id}`, { method: 'PUT', body: JSON.stringify(data), authRequired: needsAuth(resource) }),

@@ -11,7 +11,7 @@ export function TestimonialSlider() {
   useEffect(() => {
     let mounted = true
 
-    api.list('testimonials', '?status=Active&sort=-featured,-createdAt&limit=50')
+    api.listAll('testimonials', '?status=Active&sort=-featured,-createdAt')
       .then((payload) => {
         if (!mounted) return
         setItems(Array.isArray(payload.data) ? payload.data : [])
@@ -28,7 +28,7 @@ export function TestimonialSlider() {
     }
   }, [])
 
-  const testimonials = useMemo(() => items.filter((item) => item.name && item.text).slice(0, 20), [items])
+  const testimonials = useMemo(() => items.filter((item) => item.name && item.text), [items])
 
   useEffect(() => {
     if (testimonials.length <= 1) return undefined

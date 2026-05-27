@@ -630,12 +630,12 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     if (status) params.set('status', status)
 
     api
-      .list(resource, params.toString() ? `?${params.toString()}` : '')
+      .listAll(resource, params.toString() ? `?${params.toString()}` : '')
       .then((payload) => {
         const data = payload.data || []
         if (type === 'recruiterDocuments') {
           api
-            .list('employers')
+            .listAll('employers')
             .then((employersPayload) => setRows(groupRecruiterDocuments(attachRecruiterIdsToDocuments(data, employersPayload.data || []))))
             .catch(() => setRows(groupRecruiterDocuments(data.map((document) => ({ ...document, recruiterId: document.recruiterId || '' })))))
           return
@@ -643,7 +643,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
 
         if (type === 'employers') {
           api
-            .list('recruiter-documents', '?sort=-updatedAt')
+            .listAll('recruiter-documents', '?sort=-updatedAt')
             .then((documentsPayload) => setRows(mergeRecruiterDocumentStatus(data, documentsPayload.data || [])))
             .catch(() => setRows(data.map((row) => ({ ...row, source: row.source || 'Admin Upload' }))))
           return
@@ -651,7 +651,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
 
         if (type === 'jobs') {
           api
-            .list('employers')
+            .listAll('employers')
             .then((employersPayload) => setRows(groupJobsByRecruiter(attachRecruiterIdsToJobs(data, employersPayload.data || []))))
             .catch(() => setRows(groupJobsByRecruiter(data.map((row) => ({ ...row, recruiterId: getShortId(row.recruiterId) })))))
           return
@@ -674,7 +674,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
 
   useEffect(() => {
     api
-      .list('companies')
+      .listAll('companies')
       .then((payload) => {
         const names = (payload.data || []).map((company) => company.name).filter(Boolean)
         setCompanyRows(payload.data || [])
