@@ -258,6 +258,51 @@ a.job-card-details-btn:hover {
   border-color: rgba(0, 87, 184, 0.42) !important;
 }
 
+.sponsored-company-filter,
+button.sponsored-company-filter,
+.sponsored-company-card,
+a.sponsored-company-card,
+.sponsored-company-arrow,
+button.sponsored-company-arrow,
+.sponsored-company-link,
+a.sponsored-company-link {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.sponsored-company-filter,
+button.sponsored-company-filter {
+  color: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
+}
+
+.sponsored-company-card,
+a.sponsored-company-card {
+  color: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+.sponsored-company-arrow,
+button.sponsored-company-arrow,
+.sponsored-company-link,
+a.sponsored-company-link {
+  color: #0057b8 !important;
+  border-color: rgba(0, 87, 184, 0.35) !important;
+}
+
+.sponsored-company-filter:hover,
+button.sponsored-company-filter:hover,
+.sponsored-company-card:hover,
+a.sponsored-company-card:hover,
+.sponsored-company-arrow:hover,
+button.sponsored-company-arrow:hover,
+.sponsored-company-link:hover,
+a.sponsored-company-link:hover {
+  background: rgba(0, 87, 184, 0.06) !important;
+  color: #004694 !important;
+  border-color: rgba(0, 87, 184, 0.42) !important;
+}
+
 .job-card-details-link {
   display: inline-flex;
   min-height: 2.75rem;

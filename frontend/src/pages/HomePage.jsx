@@ -352,7 +352,7 @@ function SponsoredCompaniesShowcase({ liveJobs = [] }) {
         <div className="mt-7 flex flex-wrap justify-center gap-3">
           {filters.map((filter, index) => (
             <button
-              className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
+              className={`sponsored-company-filter rounded-full border px-4 py-2 text-xs font-semibold transition ${
                 index === 0
                   ? 'border-slate-950 bg-slate-50 text-slate-950'
                   : 'border-blue-200 bg-white text-slate-700 hover:border-blue-500 hover:text-blue-700'
@@ -363,14 +363,14 @@ function SponsoredCompaniesShowcase({ liveJobs = [] }) {
               {filter}
             </button>
           ))}
-          <button className="rounded-full px-4 py-2 text-xs font-black text-slate-700 hover:text-blue-700" type="button">+2 more</button>
+          <button className="sponsored-company-filter rounded-full px-4 py-2 text-xs font-black text-slate-700 hover:text-blue-700" type="button">+2 more</button>
         </div>
 
         <div className="relative mt-8">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {companies.map((company, index) => (
               <Link
-                className="group min-h-[213px] rounded-[18px] border border-slate-200 bg-white p-5 text-center shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/70"
+                className="sponsored-company-card group min-h-[213px] rounded-[18px] border border-slate-200 bg-white p-5 text-center shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/70"
                 key={`${company.name}-${index}`}
                 to={`/companies/${slugifyCompany(company.name)}`}
               >
@@ -395,7 +395,7 @@ function SponsoredCompaniesShowcase({ liveJobs = [] }) {
 
           <button
             aria-label="Next sponsored companies"
-            className="absolute -right-4 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg shadow-slate-200 transition hover:border-blue-200 hover:text-blue-700 lg:grid"
+            className="sponsored-company-arrow absolute -right-4 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg shadow-slate-200 transition hover:border-blue-200 hover:text-blue-700 lg:grid"
             type="button"
           >
             <ChevronRight size={21} />
@@ -403,7 +403,7 @@ function SponsoredCompaniesShowcase({ liveJobs = [] }) {
         </div>
 
         <div className="mt-9 flex justify-center">
-          <Link className="rounded-full border border-blue-600 px-6 py-3 text-sm font-black text-blue-600 transition hover:bg-blue-600 hover:text-white" to="/companies">
+          <Link className="sponsored-company-link rounded-full border border-blue-600 px-6 py-3 text-sm font-black text-blue-600 transition hover:bg-blue-600 hover:text-white" to="/companies">
             View all companies
           </Link>
         </div>
