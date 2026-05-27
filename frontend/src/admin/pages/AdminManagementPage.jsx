@@ -578,6 +578,16 @@ function normalizeName(value) {
   return String(value || '').trim().toLowerCase()
 }
 
+function mergeAdminQuery(query = '', fallbackQuery = '') {
+  const params = new URLSearchParams(String(query || '').replace(/^\?/, ''))
+  const fallback = new URLSearchParams(fallbackQuery)
+  fallback.forEach((value, key) => {
+    if (!params.has(key)) params.set(key, value)
+  })
+  const next = params.toString()
+  return next ? `?${next}` : ''
+}
+
 function getDefaultJobLocation() {
   const state = State.getStatesOfCountry('IN')[0]
   const city = City.getCitiesOfState('IN', state?.isoCode || '')[0]
@@ -656,8 +666,16 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     if (search) params.set('search', search)
     if (status) params.set('status', status)
 
-    api
-      .listAll(resource, params.toString() ? `?${params.toString()}` : '')
+    const query = params.toString() ? `?${params.toString()}` : ''
+    const listRequest = type === 'faqs'
+      ? api.adminFaqs(mergeAdminQuery(query, 'sort=sortOrder -featured -createdAt'))
+      : type === 'contentPages'
+        ? api.adminContentPages(mergeAdminQuery(query, 'sort=-updatedAt'))
+        : type === 'newsletterSubscribers'
+          ? api.adminNewsletterSubscribers(mergeAdminQuery(query, 'sort=-createdAt'))
+          : api.listAll(resource, query)
+
+    listRequest
       .then((payload) => {
         const data = payload.data || []
         if (type === 'recruiterDocuments') {

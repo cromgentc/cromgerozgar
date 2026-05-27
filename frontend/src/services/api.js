@@ -177,6 +177,36 @@ async function listAll(resource, params = '') {
   }
 }
 
+async function listAllWithAuth(resource, params = '') {
+  const firstPayload = await apiRequest(`/${resource}${mergeParams(params, { page: 1, limit: 100 })}`, { authRequired: true })
+  const firstData = Array.isArray(firstPayload.data) ? firstPayload.data : []
+  const pagination = firstPayload.pagination || {}
+  const totalPages = Number(pagination.pages || 1)
+
+  if (totalPages <= 1) {
+    return { ...firstPayload, data: firstData }
+  }
+
+  const remainingPayloads = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) => (
+      apiRequest(`/${resource}${mergeParams(params, { page: index + 2, limit: 100 })}`, { authRequired: true })
+    )),
+  )
+  const data = remainingPayloads.reduce((items, payload) => items.concat(Array.isArray(payload.data) ? payload.data : []), firstData)
+
+  return {
+    ...firstPayload,
+    data,
+    pagination: {
+      ...pagination,
+      page: 1,
+      limit: data.length,
+      total: Number(pagination.total || data.length),
+      pages: 1,
+    },
+  }
+}
+
 async function openAuthorizedFile(path) {
   const token = localStorage.getItem('authToken')
   const response = await fetch(apiUrl(path), {
@@ -199,7 +229,10 @@ export const api = {
   jobListings: (params = '?sort=-createdAt') => listAll('job-listings', params),
   job: (id) => apiRequest(`/jobs/${id}`),
   faqs: (params = '?status=Active&sort=sortOrder -featured -createdAt') => listAll('faqs', params),
+  adminFaqs: (params = '?sort=sortOrder -featured -createdAt') => listAllWithAuth('faqs', params),
   contentPages: (params = '?status=Published&sort=-updatedAt') => listAll('content-pages', params),
+  adminContentPages: (params = '?sort=-updatedAt') => listAllWithAuth('content-pages', params),
+  adminNewsletterSubscribers: (params = '?sort=-createdAt') => listAllWithAuth('newsletter-subscribers', params),
   companies: (params = '') => apiRequest(`/companies${params}`),
   companyProfiles: () => apiRequest('/company-profiles'),
   adminDashboard: () => apiRequest('/dashboard/admin', { authRequired: true }),
