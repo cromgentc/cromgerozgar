@@ -8,11 +8,10 @@ import { useApiResource } from '../hooks/useApiResource'
 import { api } from '../services/api'
 
 const filterConfig = [
-  { key: 'location', label: 'Location', field: 'location', mode: 'includes' },
-  { key: 'typeFilter', label: 'Job Type', field: 'type' },
-  { key: 'workMode', label: 'Work Mode', field: 'workMode' },
+  { key: 'location', label: 'Location', field: 'locationState' },
+  { key: 'typeFilter', label: 'Job Type', field: 'type', fixedValues: ['Full Time', 'Part Time'] },
+  { key: 'workMode', label: 'Work Mode', field: 'workMode', fixedValues: ['Remote', 'Hybrid', 'Office'] },
   { key: 'skills', label: 'Skills', field: 'skills', array: true },
-  { key: 'company', label: 'Company', field: 'company' },
   { key: 'department', label: 'Department', field: 'department' },
 ]
 
@@ -27,10 +26,13 @@ const salaryBands = [
 
 export function JobsPage({ onApply }) {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [companyPage, setCompanyPage] = useState(1)
+  const [departmentPage, setDepartmentPage] = useState(1)
   const [departmentModalOpen, setDepartmentModalOpen] = useState(false)
   const [departmentSearch, setDepartmentSearch] = useState('')
   const [departmentDraft, setDepartmentDraft] = useState([])
+  const [skillsModalOpen, setSkillsModalOpen] = useState(false)
+  const [skillsSearch, setSkillsSearch] = useState('')
+  const [skillsDraft, setSkillsDraft] = useState([])
   const { data: apiJobs } = useApiResource(() => api.jobListings('?sort=-createdAt'), { data: [] }, [])
   const rawList = Array.isArray(apiJobs) ? apiJobs : apiJobs?.data || []
   const normalizedJobs = useMemo(() => rawList.map(normalizeJob), [rawList])
@@ -41,6 +43,10 @@ export function JobsPage({ onApply }) {
   const selectedExperienceMax = Number(searchParams.get('experienceMax') || 0)
   const selectedSalaryBands = useMemo(() => getParamList(searchParams, 'salaryBand'), [searchParams])
   const selectedFilters = useMemo(() => getSelectedFilters(searchParams), [searchParams])
+  const departmentFilter = dynamicFilters.find((filter) => filter.key === 'department') || { values: [], counts: {} }
+  const departmentPageSize = 5
+  const departmentPageCount = Math.max(1, Math.ceil(departmentFilter.values.length / departmentPageSize))
+  const visibleDepartmentOptions = departmentFilter.values.slice((departmentPage - 1) * departmentPageSize, departmentPage * departmentPageSize)
 
   const list = normalizedJobs.filter((job) => {
     const haystack = [
@@ -51,11 +57,11 @@ export function JobsPage({ onApply }) {
       job.description,
       ...job.skills,
     ].filter(Boolean).join(' ').toLowerCase()
-    const jobLocation = String(job.location || '').toLowerCase()
+    const jobLocationState = String(job.locationState || '').toLowerCase()
     const jobType = String(job.type || '').toLowerCase()
 
     return (!keyword || haystack.includes(keyword))
-      && (!selectedLocation || jobLocation.includes(selectedLocation))
+      && (!selectedLocation || jobLocationState === selectedLocation)
       && (!selectedType || jobType === selectedType)
       && (!selectedExperienceMax || getExperienceMin(job.experience) <= selectedExperienceMax)
       && (!selectedSalaryBands.length || matchesSalaryBands(job.salary, selectedSalaryBands))
@@ -63,18 +69,14 @@ export function JobsPage({ onApply }) {
   })
   const activeFilterCount = Object.values(selectedFilters).reduce((total, values) => total + values.length, 0) + Number(Boolean(selectedExperienceMax)) + selectedSalaryBands.length
   const hasSearch = Boolean(keyword || selectedLocation || selectedType || selectedExperienceMax || selectedSalaryBands.length || activeFilterCount)
-  const companyFilter = dynamicFilters.find((filter) => filter.key === 'company') || { values: [], counts: {} }
-  const companyPageSize = 10
-  const companyPageCount = Math.max(1, Math.ceil(companyFilter.values.length / companyPageSize))
-  const visibleCompanyOptions = companyFilter.values.slice((companyPage - 1) * companyPageSize, companyPage * companyPageSize)
 
   useEffect(() => {
-    setCompanyPage(1)
-  }, [companyFilter.values.join('|')])
+    setDepartmentPage(1)
+  }, [departmentFilter.values.join('|')])
 
   useEffect(() => {
-    if (companyPage > companyPageCount) setCompanyPage(companyPageCount)
-  }, [companyPage, companyPageCount])
+    if (departmentPage > departmentPageCount) setDepartmentPage(departmentPageCount)
+  }, [departmentPage, departmentPageCount])
 
   const setSingleFilter = (key, value) => {
     const params = new URLSearchParams(searchParams)
@@ -96,6 +98,12 @@ export function JobsPage({ onApply }) {
     setDepartmentDraft(selectedFilters.department || [])
     setDepartmentSearch('')
     setDepartmentModalOpen(true)
+  }
+
+  const openSkillsModal = () => {
+    setSkillsDraft(selectedFilters.skills || [])
+    setSkillsSearch('')
+    setSkillsModalOpen(true)
   }
 
   const clearFilters = () => {
@@ -154,7 +162,7 @@ export function JobsPage({ onApply }) {
                 }}
                 selectedValues={selectedSalaryBands}
               />
-              {['location', 'skills'].map((key) => {
+              {['location'].map((key) => {
                 const filter = dynamicFilters.find((item) => item.key === key) || { key, label: key, values: [] }
                 return (
                   <FilterSelect
@@ -165,11 +173,23 @@ export function JobsPage({ onApply }) {
                   />
                 )
               })}
+              <ExpandedFilter
+                allLabel="All skills"
+                filter={dynamicFilters.find((item) => item.key === 'skills') || { key: 'skills', label: 'Skills', values: [], counts: {} }}
+                onChange={(value) => setSingleFilter('skills', value)}
+                onViewMore={openSkillsModal}
+                value={selectedFilters.skills?.[0] || ''}
+              />
               <DepartmentFilter
-                filter={dynamicFilters.find((item) => item.key === 'department') || { key: 'department', label: 'Department', values: [], counts: {} }}
+                filter={departmentFilter}
                 onChange={(value) => setSingleFilter('department', value)}
+                onNext={() => setDepartmentPage((page) => Math.min(departmentPageCount, page + 1))}
+                onPrev={() => setDepartmentPage((page) => Math.max(1, page - 1))}
                 onViewMore={openDepartmentModal}
+                page={departmentPage}
+                pageCount={departmentPageCount}
                 value={selectedFilters.department?.[0] || ''}
+                visibleOptions={visibleDepartmentOptions}
               />
               {['workMode', 'typeFilter'].map((key) => {
                 const filter = dynamicFilters.find((item) => item.key === key) || { key, label: key, values: [] }
@@ -183,52 +203,6 @@ export function JobsPage({ onApply }) {
                 )
               })}
 
-              <div>
-                <h3 className="mb-3 text-sm font-black text-slate-800">Company</h3>
-                {companyFilter.values.length ? (
-                  <>
-                    <div className="grid gap-2">
-                      {visibleCompanyOptions.map((company) => {
-                        const selected = selectedFilters.company?.[0] === company
-                        return (
-                          <button
-                            className={`flex min-h-10 items-center justify-between gap-3 rounded-[7px] px-3 py-2 text-left text-sm font-bold transition ${selected ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-700'}`}
-                            key={company}
-                            onClick={() => setSingleFilter('company', selected ? '' : company)}
-                            type="button"
-                          >
-                            <span className="min-w-0 truncate">{company}</span>
-                            <span className={`shrink-0 rounded-[7px] px-2 py-0.5 text-[11px] font-black ${selected ? 'bg-white/20 text-white' : 'bg-white text-slate-400 ring-1 ring-slate-200'}`}>{companyFilter.counts[company]}</span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                    {companyFilter.values.length > companyPageSize && (
-                      <div className="mt-3 flex items-center justify-between gap-2">
-                        <button
-                          className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 disabled:opacity-40"
-                          disabled={companyPage === 1}
-                          onClick={() => setCompanyPage((page) => Math.max(1, page - 1))}
-                          type="button"
-                        >
-                          Prev
-                        </button>
-                        <span className="text-xs font-black text-slate-500">{companyPage} / {companyPageCount}</span>
-                        <button
-                          className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 disabled:opacity-40"
-                          disabled={companyPage === companyPageCount}
-                          onClick={() => setCompanyPage((page) => Math.min(companyPageCount, page + 1))}
-                          type="button"
-                        >
-                          Next
-                        </button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="rounded-[7px] bg-slate-50 p-3 text-xs font-semibold text-slate-500">No company options yet</p>
-                )}
-              </div>
             </div>
           </aside>
 
@@ -270,6 +244,27 @@ export function JobsPage({ onApply }) {
             ))
           }}
           search={departmentSearch}
+        />
+      )}
+      {skillsModalOpen && (
+        <FilterModal
+          draft={skillsDraft}
+          filter={dynamicFilters.find((item) => item.key === 'skills') || { key: 'skills', label: 'Skills', values: [], counts: {} }}
+          onApply={() => {
+            setMultiFilter('skills', skillsDraft)
+            setSkillsModalOpen(false)
+          }}
+          onClose={() => setSkillsModalOpen(false)}
+          onSearch={setSkillsSearch}
+          onToggle={(skill) => {
+            setSkillsDraft((current) => (
+              current.includes(skill)
+                ? current.filter((item) => item !== skill)
+                : [...current, skill]
+            ))
+          }}
+          search={skillsSearch}
+          searchPlaceholder="Search Skills"
         />
       )}
     </section>
@@ -358,7 +353,7 @@ function SalaryFilter({ counts, onChange, selectedValues }) {
   )
 }
 
-function DepartmentFilter({ filter, onChange, onViewMore, value }) {
+function ExpandedFilter({ allLabel, filter, onChange, onViewMore, value }) {
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between gap-3">
@@ -372,7 +367,7 @@ function DepartmentFilter({ filter, onChange, onViewMore, value }) {
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >
-        <option value="">All departments</option>
+        <option value="">{allLabel}</option>
         {filter.values.slice(0, 10).map((option) => (
           <option key={option} value={option}>{option} ({filter.counts[option]})</option>
         ))}
@@ -381,19 +376,90 @@ function DepartmentFilter({ filter, onChange, onViewMore, value }) {
   )
 }
 
+function DepartmentFilter({ filter, onChange, onNext, onPrev, onViewMore, page, pageCount, value, visibleOptions }) {
+  const hasPages = filter.values.length > visibleOptions.length
+
+  return (
+    <div className="grid gap-2 border-t border-slate-100 pt-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-black text-slate-800">Department</span>
+        <button className="text-xs font-black text-blue-600 hover:text-blue-700" onClick={onViewMore} type="button">
+          View More
+        </button>
+      </div>
+      {visibleOptions.length ? (
+        <div className="grid gap-2">
+          {visibleOptions.map((department) => {
+            const selected = value === department
+            return (
+              <button
+                className={`flex min-h-10 items-center justify-between gap-3 rounded-[7px] px-3 py-2 text-left text-sm font-bold transition ${selected ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-700'}`}
+                key={department}
+                onClick={() => onChange(selected ? '' : department)}
+                type="button"
+              >
+                <span className="min-w-0 truncate">{department}</span>
+                <span className={`shrink-0 rounded-[7px] px-2 py-0.5 text-[11px] font-black ${selected ? 'bg-white/20 text-white' : 'bg-white text-slate-400 ring-1 ring-slate-200'}`}>{filter.counts[department] || 0}</span>
+              </button>
+            )
+          })}
+        </div>
+      ) : (
+        <p className="rounded-[7px] bg-slate-50 p-3 text-xs font-semibold text-slate-500">No department options yet</p>
+      )}
+      {hasPages && (
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <button
+            className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 disabled:opacity-40"
+            disabled={page === 1}
+            onClick={onPrev}
+            type="button"
+          >
+            Prev
+          </button>
+          <span className="text-xs font-black text-slate-500">{page} / {pageCount}</span>
+          <button
+            className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 disabled:opacity-40"
+            disabled={page === pageCount}
+            onClick={onNext}
+            type="button"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function DepartmentModal({ draft, filter, onApply, onClose, onSearch, onToggle, search }) {
+  return (
+    <FilterModal
+      draft={draft}
+      filter={filter}
+      onApply={onApply}
+      onClose={onClose}
+      onSearch={onSearch}
+      onToggle={onToggle}
+      search={search}
+      searchPlaceholder="Search Department"
+    />
+  )
+}
+
+function FilterModal({ draft, filter, onApply, onClose, onSearch, onToggle, search, searchPlaceholder }) {
   const query = search.trim().toLowerCase()
-  const departments = filter.values.filter((department) => department.toLowerCase().includes(query))
+  const options = filter.values.filter((option) => option.toLowerCase().includes(query))
 
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/30 p-4 backdrop-blur-sm">
       <div className="w-full max-w-4xl overflow-hidden rounded-[7px] bg-white shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-5">
           <div>
-            <h3 className="text-xl font-black text-slate-950">Department</h3>
+            <h3 className="text-xl font-black text-slate-950">{filter.label}</h3>
             <p className="mt-1 text-sm font-semibold text-slate-500">{draft.length} selected</p>
           </div>
-          <button className="grid h-9 w-9 place-items-center rounded-[7px] bg-slate-100 text-slate-500 hover:bg-slate-200" onClick={onClose} type="button" aria-label="Close department filter">
+          <button className="grid h-9 w-9 place-items-center rounded-[7px] bg-slate-100 text-slate-500 hover:bg-slate-200" onClick={onClose} type="button" aria-label={`Close ${filter.label.toLowerCase()} filter`}>
             <X size={18} />
           </button>
         </div>
@@ -403,22 +469,22 @@ function DepartmentModal({ draft, filter, onApply, onClose, onSearch, onToggle, 
             <input
               className="w-full bg-transparent font-semibold outline-none placeholder:text-slate-400"
               onChange={(event) => onSearch(event.target.value)}
-              placeholder="Search Department"
+              placeholder={searchPlaceholder}
               value={search}
             />
           </label>
           <div className="grid max-h-[52vh] gap-x-7 gap-y-3 overflow-y-auto pr-2 sm:grid-cols-2 lg:grid-cols-3">
-            {departments.length ? departments.map((department) => {
-              const checked = draft.includes(department)
+            {options.length ? options.map((option) => {
+              const checked = draft.includes(option)
               return (
-                <label className="flex min-w-0 cursor-pointer items-center gap-3 text-sm font-semibold text-slate-600" key={department}>
-                  <input checked={checked} className="h-4 w-4 rounded-[4px] border-slate-300 accent-blue-600" onChange={() => onToggle(department)} type="checkbox" />
-                  <span className="min-w-0 truncate">{department}</span>
-                  <span className="shrink-0 text-slate-400">({filter.counts[department] || 0})</span>
+                <label className="flex min-w-0 cursor-pointer items-center gap-3 text-sm font-semibold text-slate-600" key={option}>
+                  <input checked={checked} className="h-4 w-4 rounded-[4px] border-slate-300 accent-blue-600" onChange={() => onToggle(option)} type="checkbox" />
+                  <span className="min-w-0 truncate">{option}</span>
+                  <span className="shrink-0 text-slate-400">({filter.counts[option] || 0})</span>
                 </label>
               )
             }) : (
-              <p className="rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500 sm:col-span-2 lg:col-span-3">No departments found.</p>
+              <p className="rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500 sm:col-span-2 lg:col-span-3">No {filter.label.toLowerCase()} found.</p>
             )}
           </div>
         </div>
@@ -434,8 +500,36 @@ function DepartmentModal({ draft, filter, onApply, onClose, onSearch, onToggle, 
 function normalizeJob(job) {
   return {
     ...job,
+    locationState: getLocationState(job.location),
+    type: normalizeJobType(job.type),
+    workMode: normalizeWorkMode(job.workMode),
     skills: Array.isArray(job.skills) ? job.skills : String(job.skills || '').split(',').map((skill) => skill.trim()).filter(Boolean),
   }
+}
+
+function normalizeWorkMode(value) {
+  const text = String(value || '').toLowerCase()
+  if (text.includes('hybrid')) return 'Hybrid'
+  if (text.includes('office') || text.includes('onsite') || text.includes('on-site')) return 'Office'
+  if (text.includes('remote') || text.includes('work from home') || text.includes('wfh')) return 'Remote'
+  return 'Office'
+}
+
+function normalizeJobType(value) {
+  const text = String(value || '').toLowerCase()
+  if (text.includes('part')) return 'Part Time'
+  return 'Full Time'
+}
+
+function getLocationState(value) {
+  const parts = String(value || '')
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .filter((part) => !/^india$/i.test(part))
+
+  if (parts.length >= 2) return parts[parts.length - 1]
+  return parts[0] || ''
 }
 
 function getExperienceMin(value) {
@@ -485,7 +579,7 @@ function buildDynamicFilters(jobs) {
     return {
       ...filter,
       counts,
-      values: Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b)).slice(0, 30),
+      values: filter.fixedValues || Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b)),
     }
   })
 }

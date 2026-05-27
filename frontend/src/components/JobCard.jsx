@@ -85,13 +85,12 @@ export function JobCard({ denseMobile = false, job, onApply, featured = false })
       <div className="flex items-start justify-between gap-2 sm:gap-4">
         <div className="flex min-w-0 gap-3 sm:gap-4">
           <div className={`${denseMobile ? 'hidden sm:grid' : 'grid'} h-14 w-14 shrink-0 place-items-center rounded-[7px] bg-gradient-to-br from-blue-50 to-teal-50 text-lg font-bold text-blue-700`}>
-            {job.companyLogo || job.company.slice(0, 2)}
+            {job.companyLogo || String(job.title || 'JR').slice(0, 2)}
           </div>
           <div className="min-w-0">
             <Link className={`${denseMobile ? 'line-clamp-2 text-sm sm:text-lg' : 'text-lg'} font-bold text-slate-950 hover:text-blue-600`} to={`/jobs/${jobRouteId}`}>
               {job.title}
             </Link>
-            <p className={`${denseMobile ? 'truncate text-xs sm:text-sm' : 'text-sm'} mt-1 font-medium text-slate-500`}>{job.company}</p>
           </div>
         </div>
         <button
