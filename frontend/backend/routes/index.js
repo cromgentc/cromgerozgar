@@ -9,6 +9,7 @@ const recruiterPackageRoutes = require('./recruiterPackageRoutes')
 const recruiterJobRoutes = require('./recruiterJobRoutes')
 const resumeUploadRoutes = require('./resumeUploadRoutes')
 const settingsRoutes = require('./settingsRoutes')
+const testimonialRoutes = require('./testimonialRoutes')
 const { getMongoDbConfig, updateMongoDbConfig } = require('../controllers/settingsController')
 const userRoutes = require('./userRoutes')
 const userLocationRoutes = require('./userLocationRoutes')
@@ -61,6 +62,6 @@ router.use('/support-messages', crudRoutes.protected(controllers.supportMessages
   readRoles: accountRoles,
   updateRoles: accountRoles,
 }))
-router.use('/testimonials', crudRoutes.protected(controllers.testimonials, { publicRead: true }))
+router.use('/testimonials', testimonialRoutes)
 
 module.exports = router

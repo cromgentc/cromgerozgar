@@ -96,6 +96,7 @@ const readAuthResources = new Set([
   'resumes',
   'settings',
   'support-messages',
+  'testimonials',
   'users',
 ])
 
