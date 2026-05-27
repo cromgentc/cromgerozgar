@@ -24,6 +24,17 @@ const salaryBands = [
   { label: '25+ Lakhs', min: 25, max: Infinity },
 ]
 
+const workModeToWfhType = {
+  Office: '0',
+  Remote: '2',
+  Hybrid: '3',
+}
+
+const wfhTypeToWorkMode = Object.entries(workModeToWfhType).reduce((map, [label, value]) => {
+  map[value] = label
+  return map
+}, {})
+
 export function JobsPage({ onApply }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [departmentPage, setDepartmentPage] = useState(1)
@@ -40,10 +51,10 @@ export function JobsPage({ onApply }) {
   const keyword = (searchParams.get('q') || '').trim().toLowerCase()
   const selectedLocation = (searchParams.get('location') || '').trim().toLowerCase()
   const selectedType = (searchParams.get('type') || '').trim().toLowerCase()
-  const selectedExperienceMax = Number(searchParams.get('experienceMax') || 0)
+  const selectedExperienceMax = Number(searchParams.get('experience') || searchParams.get('experienceMax') || 0)
   const selectedSalaryBands = useMemo(() => getParamList(searchParams, 'salaryBand'), [searchParams])
-  const selectedFilters = useMemo(() => getSelectedFilters(searchParams), [searchParams])
   const departmentFilter = dynamicFilters.find((filter) => filter.key === 'department') || { values: [], counts: {} }
+  const selectedFilters = useMemo(() => getSelectedFilters(searchParams, departmentFilter.values), [searchParams, departmentFilter.values.join('|')])
   const departmentPageSize = 5
   const departmentPageCount = Math.max(1, Math.ceil(departmentFilter.values.length / departmentPageSize))
   const visibleDepartmentOptions = departmentFilter.values.slice((departmentPage - 1) * departmentPageSize, departmentPage * departmentPageSize)
@@ -80,7 +91,21 @@ export function JobsPage({ onApply }) {
 
   const setSingleFilter = (key, value) => {
     const params = new URLSearchParams(searchParams)
-    if (value) params.set(key, value)
+    if (key === 'experienceMax') {
+      if (value) params.set('experience', value)
+      else params.delete('experience')
+      params.delete('experienceMax')
+    } else if (key === 'workMode') {
+      params.delete('workMode')
+      params.delete('wfhType')
+      if (value) params.set('wfhType', workModeToWfhType[value] || value)
+      syncClusterParam(params)
+    } else if (key === 'department') {
+      params.delete('department')
+      params.delete('functionAreaIdGid')
+      if (value) params.append('functionAreaIdGid', getDepartmentId(value, departmentFilter.values))
+      syncClusterParam(params)
+    } else if (value) params.set(key, value)
     else params.delete(key)
 
     setSearchParams(params)
@@ -89,7 +114,12 @@ export function JobsPage({ onApply }) {
   const setMultiFilter = (key, values) => {
     const params = new URLSearchParams(searchParams)
     const nextValues = values.map((value) => value.trim()).filter(Boolean)
-    if (nextValues.length) params.set(key, nextValues.join('|'))
+    if (key === 'department') {
+      params.delete('department')
+      params.delete('functionAreaIdGid')
+      nextValues.forEach((value) => params.append('functionAreaIdGid', getDepartmentId(value, departmentFilter.values)))
+      syncClusterParam(params)
+    } else if (nextValues.length) params.set(key, nextValues.join('|'))
     else params.delete(key)
     setSearchParams(params)
   }
@@ -109,8 +139,12 @@ export function JobsPage({ onApply }) {
   const clearFilters = () => {
     const params = new URLSearchParams(searchParams)
     filterConfig.forEach((filter) => params.delete(filter.key))
+    params.delete('experience')
     params.delete('experienceMax')
     params.delete('salaryBand')
+    params.delete('wfhType')
+    params.delete('functionAreaIdGid')
+    params.delete('clusters')
     setSearchParams(params)
   }
 
@@ -584,12 +618,43 @@ function buildDynamicFilters(jobs) {
   })
 }
 
+function syncClusterParam(params) {
+  const clusters = []
+  if (params.has('functionAreaIdGid')) clusters.push('functionalAreaGid')
+  if (params.has('wfhType')) clusters.push('wfhType')
+
+  if (clusters.length) params.set('clusters', clusters.join(','))
+  else params.delete('clusters')
+}
+
+function getDepartmentId(department, departments) {
+  const index = departments.findIndex((item) => item === department)
+  return String(index >= 0 ? index + 1 : department)
+}
+
+function getDepartmentById(id, departments) {
+  const index = Number(id) - 1
+  return Number.isInteger(index) && departments[index] ? departments[index] : ''
+}
+
 function getParamList(params, key) {
   return String(params.get(key) || '').split('|').map((item) => item.trim()).filter(Boolean)
 }
 
-function getSelectedFilters(params) {
+function getSelectedFilters(params, departments = []) {
   return filterConfig.reduce((selected, filter) => {
+    if (filter.key === 'workMode') {
+      const modernValues = params.getAll('wfhType').map((value) => wfhTypeToWorkMode[value]).filter(Boolean)
+      selected[filter.key] = modernValues.length ? modernValues : getParamList(params, filter.key)
+      return selected
+    }
+
+    if (filter.key === 'department') {
+      const modernValues = params.getAll('functionAreaIdGid').map((id) => getDepartmentById(id, departments)).filter(Boolean)
+      selected[filter.key] = modernValues.length ? modernValues : getParamList(params, filter.key)
+      return selected
+    }
+
     selected[filter.key] = getParamList(params, filter.key)
     return selected
   }, {})
