@@ -6,9 +6,10 @@ import { canSaveJobs, isJobSaved, toggleSavedJob } from '../utils/savedJobs'
 import { getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
 import { isSameAppliedJob } from '../utils/candidateActivity'
+import { createJobDetailPath } from '../utils/jobRoutes'
 
-export function JobCard({ denseMobile = false, job, onApply, featured = false }) {
-  const jobRouteId = job._id || job.id
+export function JobCard({ denseMobile = false, index = 1, job, onApply, featured = false }) {
+  const jobDetailPath = createJobDetailPath(job, index)
   const navigate = useNavigate()
   const user = getStoredUser()
   const [saved, setSaved] = useState(() => isJobSaved(job))
@@ -88,7 +89,7 @@ export function JobCard({ denseMobile = false, job, onApply, featured = false })
             {job.companyLogo || String(job.title || 'JR').slice(0, 2)}
           </div>
           <div className="min-w-0">
-            <Link className={`${denseMobile ? 'line-clamp-2 text-sm sm:text-lg' : 'text-lg'} font-bold text-slate-950 hover:text-blue-600`} to={`/jobs/${jobRouteId}`}>
+            <Link className={`${denseMobile ? 'line-clamp-2 text-sm sm:text-lg' : 'text-lg'} font-bold text-slate-950 hover:text-blue-600`} to={jobDetailPath}>
               {job.title}
             </Link>
           </div>
@@ -127,7 +128,7 @@ export function JobCard({ denseMobile = false, job, onApply, featured = false })
           {alreadyApplied ? 'Already Applied' : 'Apply Now'}
         </Button>
         <div className={denseMobile ? 'hidden sm:flex sm:flex-1' : 'flex flex-1'}>
-          <Link className="job-card-details-link w-full" to={`/jobs/${jobRouteId}`}>View Details</Link>
+          <Link className="job-card-details-link w-full" to={jobDetailPath}>View Details</Link>
         </div>
       </div>
     </article>

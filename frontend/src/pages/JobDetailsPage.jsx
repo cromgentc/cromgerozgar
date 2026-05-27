@@ -8,13 +8,15 @@ import { api } from '../services/api'
 import { canSaveJobs, isJobSaved, toggleSavedJob } from '../utils/savedJobs'
 import { getStoredUser } from '../routes/authRouting'
 import { isSameAppliedJob } from '../utils/candidateActivity'
+import { extractJobIdFromSlug } from '../utils/jobRoutes'
 
 export function JobDetailsPage({ onApply }) {
-  const { jobId } = useParams()
+  const { jobId, jobSlug } = useParams()
+  const resolvedJobId = extractJobIdFromSlug(jobSlug || jobId)
   const navigate = useNavigate()
   const user = getStoredUser()
   const fallbackJob = {
-    id: jobId,
+    id: resolvedJobId,
     title: 'Job not found',
     company: 'Cromgen Rozgar',
     companyLogo: 'CR',
@@ -33,8 +35,8 @@ export function JobDetailsPage({ onApply }) {
     benefits: [],
     aboutCompany: '',
   }
-  const shouldFetchById = /^[a-f\d]{24}$/i.test(jobId)
-  const { data: apiJob } = useApiResource(() => (shouldFetchById ? api.job(jobId) : Promise.resolve({ data: fallbackJob })), fallbackJob, [jobId])
+  const shouldFetchById = /^[a-f\d]{24}$/i.test(resolvedJobId)
+  const { data: apiJob } = useApiResource(() => (shouldFetchById ? api.job(resolvedJobId) : Promise.resolve({ data: fallbackJob })), fallbackJob, [resolvedJobId])
   const job = apiJob || fallbackJob
   const [saved, setSaved] = useState(() => isJobSaved(job))
   const [shareOpen, setShareOpen] = useState(false)

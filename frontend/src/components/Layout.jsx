@@ -40,7 +40,7 @@ export function Layout() {
   const isCandidate = user?.role === 'Candidate'
   const isUserAccount = ['Candidate', 'users'].includes(user?.role)
   const isRecruiterAccount = user?.role === 'recruiter'
-  const hideFooterOnMobile = location.pathname === '/auth' || location.pathname === '/jobs' || location.pathname.startsWith('/jobs/') || location.pathname === '/candidate-dashboard' || location.pathname.startsWith('/candidate-')
+  const hideFooterOnMobile = location.pathname === '/auth' || location.pathname === '/jobs' || location.pathname.startsWith('/jobs/') || location.pathname.startsWith('/job-listings-') || location.pathname === '/candidate-dashboard' || location.pathname.startsWith('/candidate-')
   const visibleNavItems = navItems
     .filter((item) => !isUserAccount || item.label !== 'Recruiter')
     .map((item) => {

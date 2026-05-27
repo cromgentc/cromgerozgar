@@ -8,6 +8,7 @@ import { DashboardShell, Panel } from './CandidateDashboard'
 import { getSavedJobs } from '../utils/savedJobs'
 import { getCandidateProfileCompletion } from '../utils/candidateActivity'
 import { api } from '../services/api'
+import { createJobDetailPath } from '../utils/jobRoutes'
 
 const profileStats = [
   ['Profile Strength', '86%'],
@@ -392,7 +393,7 @@ export function CandidateProfilePage() {
                       <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">{job.workMode}</span>
                     </div>
                     <p className="mt-3 text-sm font-semibold text-slate-500">{job.location} - {job.salary}</p>
-                    <Button className="mt-4 w-full" to={`/jobs/${job._id || job.id}`} variant="secondary">View Details</Button>
+                    <Button className="mt-4 w-full" to={createJobDetailPath(job)} variant="secondary">View Details</Button>
                   </div>
                 ))
               ) : (

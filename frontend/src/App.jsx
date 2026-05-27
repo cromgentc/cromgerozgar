@@ -56,6 +56,7 @@ function App() {
         { path: '/companies', element: <CompaniesPage /> },
         { path: '/companies/:companySlug', element: <CompanyDetailsPage onApply={setSelectedJob} /> },
         { path: '/jobs/:jobId', element: <JobDetailsPage onApply={setSelectedJob} /> },
+        { path: '/:jobSlug', element: <JobDetailsPage onApply={setSelectedJob} /> },
         { path: '/auth', element: <AuthPage /> },
         {
           path: '/candidate-dashboard',

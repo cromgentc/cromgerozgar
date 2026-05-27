@@ -7,6 +7,7 @@ import { getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
 import { getAppliedJobs, getCandidateProfileStrength, getInterviewInvites, getJobAlerts } from '../utils/candidateActivity'
 import { getSavedJobs } from '../utils/savedJobs'
+import { createJobDetailPath } from '../utils/jobRoutes'
 
 export function CandidateDashboard({ onApply }) {
 const user = getStoredUser()
@@ -251,7 +252,13 @@ export function CandidateAppliedJobsPage() {
                     <td className="px-4 py-3 font-semibold text-slate-600">{application.resumeUrl ? 'Submitted' : 'Not attached'}</td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{application.createdAt ? new Date(application.createdAt).toLocaleString() : 'Recently'}</td>
                     <td className="px-4 py-3">
-                      <Button to={application.jobId ? `/jobs/${application.jobId}` : '/jobs'} variant="secondary">View Job</Button>
+                      <Button to={application.jobId ? createJobDetailPath({
+                        id: application.jobId,
+                        title: application.jobTitle,
+                        company: application.company,
+                        location: application.location,
+                        experience: application.experience,
+                      }, index + 1) : '/jobs'} variant="secondary">View Job</Button>
                     </td>
                   </tr>
                 ))}
@@ -306,7 +313,7 @@ export function CandidateSavedJobsPage() {
                     <td className="px-4 py-3 font-semibold text-slate-600">{job.salary || '-'}</td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{job.savedAt ? new Date(job.savedAt).toLocaleString() : '-'}</td>
                     <td className="px-4 py-3">
-                      <Button to={job._id || job.id ? `/jobs/${job._id || job.id}` : '/jobs'} variant="secondary">View Job</Button>
+                      <Button to={job._id || job.id ? createJobDetailPath(job, index + 1) : '/jobs'} variant="secondary">View Job</Button>
                     </td>
                   </tr>
                 ))}
@@ -369,7 +376,13 @@ export function CandidateInterviewInvitesPage() {
                     <td className="px-4 py-3 font-semibold text-slate-600">{invite.recruiterEmail || invite.email || '-'}</td>
                     <td className="px-4 py-3 font-semibold text-slate-600">{invite.createdAt || invite.invitedAt ? new Date(invite.createdAt || invite.invitedAt).toLocaleString() : '-'}</td>
                     <td className="px-4 py-3">
-                      <Button to={invite.jobId ? `/jobs/${invite.jobId}` : '/candidate-applied-jobs'} variant="secondary">View Details</Button>
+                      <Button to={invite.jobId ? createJobDetailPath({
+                        id: invite.jobId,
+                        title: invite.jobTitle || invite.title,
+                        company: invite.company,
+                        location: invite.location,
+                        experience: invite.experience,
+                      }, index + 1) : '/candidate-applied-jobs'} variant="secondary">View Details</Button>
                     </td>
                   </tr>
                 ))}

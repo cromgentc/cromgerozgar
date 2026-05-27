@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { JobCard } from '../components/JobCard'
@@ -37,7 +37,6 @@ const wfhTypeToWorkMode = Object.entries(workModeToWfhType).reduce((map, [label,
 
 export function JobsPage({ onApply }) {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [departmentPage, setDepartmentPage] = useState(1)
   const [departmentModalOpen, setDepartmentModalOpen] = useState(false)
   const [departmentSearch, setDepartmentSearch] = useState('')
   const [departmentDraft, setDepartmentDraft] = useState([])
@@ -55,9 +54,6 @@ export function JobsPage({ onApply }) {
   const selectedSalaryBands = useMemo(() => getParamList(searchParams, 'salaryBand'), [searchParams])
   const departmentFilter = dynamicFilters.find((filter) => filter.key === 'department') || { values: [], counts: {} }
   const selectedFilters = useMemo(() => getSelectedFilters(searchParams, departmentFilter.values), [searchParams, departmentFilter.values.join('|')])
-  const departmentPageSize = 5
-  const departmentPageCount = Math.max(1, Math.ceil(departmentFilter.values.length / departmentPageSize))
-  const visibleDepartmentOptions = departmentFilter.values.slice((departmentPage - 1) * departmentPageSize, departmentPage * departmentPageSize)
 
   const list = normalizedJobs.filter((job) => {
     const haystack = [
@@ -80,14 +76,6 @@ export function JobsPage({ onApply }) {
   })
   const activeFilterCount = Object.values(selectedFilters).reduce((total, values) => total + values.length, 0) + Number(Boolean(selectedExperienceMax)) + selectedSalaryBands.length
   const hasSearch = Boolean(keyword || selectedLocation || selectedType || selectedExperienceMax || selectedSalaryBands.length || activeFilterCount)
-
-  useEffect(() => {
-    setDepartmentPage(1)
-  }, [departmentFilter.values.join('|')])
-
-  useEffect(() => {
-    if (departmentPage > departmentPageCount) setDepartmentPage(departmentPageCount)
-  }, [departmentPage, departmentPageCount])
 
   const setSingleFilter = (key, value) => {
     const params = new URLSearchParams(searchParams)
@@ -217,22 +205,17 @@ export function JobsPage({ onApply }) {
               <DepartmentFilter
                 filter={departmentFilter}
                 onChange={(value) => setSingleFilter('department', value)}
-                onNext={() => setDepartmentPage((page) => Math.min(departmentPageCount, page + 1))}
-                onPrev={() => setDepartmentPage((page) => Math.max(1, page - 1))}
                 onViewMore={openDepartmentModal}
-                page={departmentPage}
-                pageCount={departmentPageCount}
                 value={selectedFilters.department?.[0] || ''}
-                visibleOptions={visibleDepartmentOptions}
               />
               {['workMode', 'typeFilter'].map((key) => {
                 const filter = dynamicFilters.find((item) => item.key === key) || { key, label: key, values: [] }
                 return (
-                  <CheckboxFilter
+                  <FilterSelect
                     key={key}
                     filter={filter}
-                    onChange={(value) => setSingleFilter(key, selectedFilters[key]?.[0] === value ? '' : value)}
-                    selectedValue={selectedFilters[key]?.[0] || ''}
+                    onChange={(value) => setSingleFilter(key, value)}
+                    value={selectedFilters[key]?.[0] || ''}
                   />
                 )
               })}
@@ -252,7 +235,7 @@ export function JobsPage({ onApply }) {
             </div>
             {list.length ? (
               <div className="grid w-full max-w-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 px-1 sm:grid-cols-1 sm:px-0 sm:gap-5">
-                {list.map((job) => <JobCard denseMobile job={job} key={job._id || job.id} onApply={onApply} />)}
+                {list.map((job, index) => <JobCard denseMobile index={index + 1} job={job} key={job._id || job.id} onApply={onApply} />)}
               </div>
             ) : (
               <div className="mt-8"><EmptyState /></div>
@@ -410,59 +393,9 @@ function ExpandedFilter({ allLabel, filter, onChange, onViewMore, value }) {
   )
 }
 
-function DepartmentFilter({ filter, onChange, onNext, onPrev, onViewMore, page, pageCount, value, visibleOptions }) {
-  const hasPages = filter.values.length > visibleOptions.length
-
+function DepartmentFilter({ filter, onChange, onViewMore, value }) {
   return (
-    <div className="grid gap-2 border-t border-slate-100 pt-4">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-black text-slate-800">Department</span>
-        <button className="text-xs font-black text-blue-600 hover:text-blue-700" onClick={onViewMore} type="button">
-          View More
-        </button>
-      </div>
-      {visibleOptions.length ? (
-        <div className="grid gap-2">
-          {visibleOptions.map((department) => {
-            const selected = value === department
-            return (
-              <button
-                className={`flex min-h-10 items-center justify-between gap-3 rounded-[7px] px-3 py-2 text-left text-sm font-bold transition ${selected ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-700'}`}
-                key={department}
-                onClick={() => onChange(selected ? '' : department)}
-                type="button"
-              >
-                <span className="min-w-0 truncate">{department}</span>
-                <span className={`shrink-0 rounded-[7px] px-2 py-0.5 text-[11px] font-black ${selected ? 'bg-white/20 text-white' : 'bg-white text-slate-400 ring-1 ring-slate-200'}`}>{filter.counts[department] || 0}</span>
-              </button>
-            )
-          })}
-        </div>
-      ) : (
-        <p className="rounded-[7px] bg-slate-50 p-3 text-xs font-semibold text-slate-500">No department options yet</p>
-      )}
-      {hasPages && (
-        <div className="mt-1 flex items-center justify-between gap-2">
-          <button
-            className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 disabled:opacity-40"
-            disabled={page === 1}
-            onClick={onPrev}
-            type="button"
-          >
-            Prev
-          </button>
-          <span className="text-xs font-black text-slate-500">{page} / {pageCount}</span>
-          <button
-            className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 disabled:opacity-40"
-            disabled={page === pageCount}
-            onClick={onNext}
-            type="button"
-          >
-            Next
-          </button>
-        </div>
-      )}
-    </div>
+    <ExpandedFilter allLabel="All departments" filter={filter} onChange={onChange} onViewMore={onViewMore} value={value} />
   )
 }
 
@@ -560,9 +493,8 @@ function getLocationState(value) {
     .split(',')
     .map((part) => part.trim())
     .filter(Boolean)
-    .filter((part) => !/^india$/i.test(part))
 
-  if (parts.length >= 2) return parts[parts.length - 1]
+  if (parts.length >= 2) return parts.slice(-2).join(', ')
   return parts[0] || ''
 }
 
