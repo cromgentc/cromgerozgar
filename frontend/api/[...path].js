@@ -156,8 +156,10 @@ function getAuthUnavailablePayload(req) {
 function normalizeApiUrl(req) {
   const currentUrl = req.url || '/'
   const parsed = new URL(currentUrl, 'https://local.test')
-  if (parsed.pathname === '/api' || parsed.pathname.startsWith('/api/')) return currentUrl
-  return `/api${parsed.pathname}${parsed.search}`
+  const segments = parsed.pathname.split('/').filter(Boolean)
+  const normalizedPath = `/${segments.filter((segment, index) => segment !== 'api' || index === 0).join('/')}`
+  if (normalizedPath === '/api' || normalizedPath.startsWith('/api/')) return `${normalizedPath}${parsed.search}`
+  return `/api${normalizedPath === '/' ? '' : normalizedPath}${parsed.search}`
 }
 
 export default async function handler(req, res) {
