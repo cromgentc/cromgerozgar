@@ -4,7 +4,7 @@ import { ArrowLeft, Building2, Globe2, MapPin, SearchCheck, ShieldCheck } from '
 import { Button } from '../components/Button'
 import { JobCard } from '../components/JobCard'
 import { api } from '../services/api'
-import { getCompanyBySlug, slugifyCompany } from '../utils/companyProfiles'
+import { createCompanyDetailPath, getCompanyBySlug } from '../utils/companyProfiles'
 
 export function CompaniesPage() {
   const { companies, loading } = useCompanyProfiles()
@@ -159,7 +159,7 @@ function CompanyCard({ company }) {
         <div className="rounded-[7px] bg-slate-50 p-2 sm:p-3"><p className="text-sm font-black text-slate-950 sm:text-base">{company.rating}</p><p className="text-[10px] text-slate-500 sm:text-xs">Rating</p></div>
         <div className="hidden rounded-[7px] bg-slate-50 p-3 sm:block"><p className="truncate font-black text-slate-950">{company.location || 'NA'}</p><p className="text-xs text-slate-500">Location</p></div>
       </div>
-      <Button className="mt-3 min-h-9 w-full text-xs sm:mt-5 sm:min-h-11 sm:text-sm" to={`/companies/${slugifyCompany(company.name)}`}>View Jobs</Button>
+      <Button className="mt-3 min-h-9 w-full text-xs sm:mt-5 sm:min-h-11 sm:text-sm" to={createCompanyDetailPath(company)}>View Jobs</Button>
     </article>
   )
 }

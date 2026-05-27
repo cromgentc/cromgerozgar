@@ -23,6 +23,7 @@ import { RecruiterDocumentReviewPage, RecruiterDocumentsPage, RecruiterVerificat
 import { AuthPage } from './pages/AuthPage'
 import { CandidateAppliedJobsPage, CandidateDashboard, CandidateInterviewInvitesPage, CandidateJobAlertsPage, CandidateSavedJobsPage } from './pages/CandidateDashboard'
 import { CandidateProfilePage } from './pages/CandidateProfilePage'
+import { CandidateReviewsPage } from './pages/CandidateReviewsPage'
 import { CategoryJobsPage } from './pages/CategoryJobsPage'
 import { CompaniesPage, CompanyDetailsPage } from './pages/CompaniesPage'
 import { ContactPage } from './pages/ContactPage'
@@ -31,6 +32,7 @@ import { EmployerDashboard } from './pages/EmployerDashboard'
 import { FreelancerPage } from './pages/FreelancerPage'
 import { FreelancerProjectDetailsPage, FreelancerProjectsPage } from './pages/FreelancerProjectsPage'
 import { HomePage } from './pages/HomePage'
+import { IndustriesPage } from './pages/IndustriesPage'
 import { JobDetailsPage } from './pages/JobDetailsPage'
 import { JobsPage } from './pages/JobsPage'
 import { PostJobPage } from './pages/PostJobPage'
@@ -52,8 +54,11 @@ function App() {
       children: [
         { path: '/', element: <HomePage onApply={setSelectedJob} /> },
         { path: '/jobs', element: <JobsPage onApply={setSelectedJob} /> },
+        { path: '/industries', element: <IndustriesPage /> },
+        { path: '/jobs-in-:categorySlug', element: <CategoryJobsPage onApply={setSelectedJob} /> },
         { path: '/categories/:categorySlug', element: <CategoryJobsPage onApply={setSelectedJob} /> },
         { path: '/companies', element: <CompaniesPage /> },
+        { path: '/company-jobs-:companySlug', element: <CompanyDetailsPage onApply={setSelectedJob} /> },
         { path: '/companies/:companySlug', element: <CompanyDetailsPage onApply={setSelectedJob} /> },
         { path: '/jobs/:jobId', element: <JobDetailsPage onApply={setSelectedJob} /> },
         { path: '/:jobSlug', element: <JobDetailsPage onApply={setSelectedJob} /> },
@@ -109,6 +114,7 @@ function App() {
         { path: '/candidate-dashoard', element: <RoleRedirect /> },
         { path: '/employer-dashoard', element: <RoleRedirect /> },
         { path: '/post-job', element: <PostJobPage /> },
+        { path: '/candidate-reviews', element: <CandidateReviewsPage /> },
         { path: '/contact', element: <ContactPage /> },
         { path: '/privacy', element: <ContentPage slug="privacy" /> },
         { path: '/terms', element: <ContentPage slug="terms" /> },
@@ -358,6 +364,7 @@ function App() {
       children: [
         { path: '/freelancer', element: <FreelancerPage /> },
         { path: '/freelancer/projects', element: <FreelancerProjectsPage /> },
+        { path: '/freelance-project-listings-:projectSlug', element: <FreelancerProjectDetailsPage /> },
         { path: '/freelancer/projects/:projectSlug', element: <FreelancerProjectDetailsPage /> },
         { path: '/freelancer-login', element: <AuthPage defaultRole="freelancer" lockRole /> },
         { path: '/freelancer-register', element: <AuthPage defaultMode="register" defaultRole="freelancer" lockRole /> },

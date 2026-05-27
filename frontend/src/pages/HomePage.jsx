@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Building2, ClipboardCheck, Download, FileText, SearchCheck, Send, ShieldCheck, Smartphone, Star } from 'lucide-react'
+import { Building2, ClipboardCheck, Download, FileText, SearchCheck, Send, ShieldCheck, Smartphone } from 'lucide-react'
 import { Button } from '../components/Button'
 import { FAQSection } from '../components/FAQSection'
 import { FeatureShowcase } from '../components/FeatureShowcase'
 import { HeroBanner } from '../components/HeroBanner'
 import { JobCard } from '../components/JobCard'
+import { ReviewCard } from '../components/ReviewCard'
 import { Section } from '../components/Section'
 import { categories } from '../data/portalData'
 import { getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
-import { getJobsForCategory, slugifyCategory } from '../utils/categoryMatching'
-import { slugifyCompany } from '../utils/companyProfiles'
+import { createCategoryJobsPath, getJobsForCategory } from '../utils/categoryMatching'
+import { createCompanyDetailPath } from '../utils/companyProfiles'
 import { getCandidateProfileCompletion } from '../utils/candidateActivity'
 
 export function HomePage({ onApply }) {
@@ -227,6 +228,8 @@ function TrustedByCandidates() {
     }
   }, [])
 
+  const visibleItems = items.slice(0, 3)
+
   return (
     <section className="bg-white py-14 sm:py-18">
       <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
@@ -239,22 +242,16 @@ function TrustedByCandidates() {
             {[1, 2, 3].map((item) => <div className="h-44 animate-pulse rounded-[7px] bg-slate-100" key={item} />)}
           </div>
         ) : items.length ? (
-          <div className="mt-8 grid gap-5 text-left md:grid-cols-3">
-            {items.map((item) => (
-              <article className="rounded-[7px] border border-slate-200 bg-slate-50 p-6 shadow-sm" key={item._id || item.name}>
-                <div className="mb-4 flex items-center gap-1 text-amber-400">
-                  {Array.from({ length: Math.max(1, Math.min(5, Number(item.rating || 5))) }).map((_, index) => (
-                    <Star fill="currentColor" key={index} size={17} />
-                  ))}
-                </div>
-                <p className="text-sm font-semibold leading-7 text-slate-600">"{item.text}"</p>
-                <div className="mt-5 border-t border-slate-200 pt-4">
-                  <p className="font-black text-slate-950">{item.name}</p>
-                  <p className="mt-1 text-sm font-bold text-blue-600">{[item.role, item.company].filter(Boolean).join(' / ') || 'Candidate'}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+          <>
+            <div className="mt-8 grid gap-5 text-left md:grid-cols-3">
+              {visibleItems.map((item) => <ReviewCard item={item} key={item._id || item.name} />)}
+            </div>
+            {items.length > 3 && (
+              <Button className="mt-8" to="/candidate-reviews" variant="secondary">
+                More Reviews
+              </Button>
+            )}
+          </>
         ) : (
           <p className="mx-auto mt-4 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
             When admin adds candidate testimonials, they will appear here automatically.
@@ -333,10 +330,9 @@ function LatestJobsGrid({ hasMore = false, jobs: latestJobs, onApply }) {
 }
 
 function CareerLanes({ compactMobile = false, categoryCounts }) {
-  const [showAllMobileCategories, setShowAllMobileCategories] = useState(false)
   const featured = categories.slice(0, 3)
-  const remaining = categories.slice(3)
-  const mobileCategories = showAllMobileCategories ? categories : categories.slice(0, 4)
+  const remaining = categories.slice(3, 11)
+  const mobileCategories = categories.slice(0, 4)
 
   return (
     <section className={`bg-slate-50 ${compactMobile ? 'py-6' : 'py-16 sm:py-20'}`}>
@@ -377,13 +373,13 @@ function CareerLanes({ compactMobile = false, categoryCounts }) {
               ))}
             </div>
             {categories.length > 4 && (
-              <button
+              <Link
                 className="mt-3 min-h-10 w-full rounded-[7px] border border-blue-200 bg-white px-4 py-2 text-xs font-black text-[#0057B8] shadow-sm transition hover:border-[#0057B8] hover:bg-blue-50"
-                onClick={() => setShowAllMobileCategories((value) => !value)}
-                type="button"
+                target="_blank"
+                to="/industries"
               >
-                {showAllMobileCategories ? 'Show Less' : `More ${categories.length - 4}`}
-              </button>
+                More Industry
+              </Link>
             )}
           </>
         ) : (
@@ -395,6 +391,11 @@ function CareerLanes({ compactMobile = false, categoryCounts }) {
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {remaining.map((category, index) => <CareerLaneCard category={category} count={categoryCounts[category.name] || 0} index={index + featured.length} key={category.name} />)}
             </div>
+            {categories.length > featured.length + remaining.length && (
+              <div className="mt-8 text-center">
+                <Button to="/industries" target="_blank" variant="secondary">More Industry</Button>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -413,7 +414,7 @@ function CareerLaneCard({ category, compactMobile = false, count, featured = fal
       viewport={{ once: true }}
       transition={{ delay: index * 0.025 }}
     >
-      <Link className={`${compactMobile ? 'min-h-32 p-3' : featured ? 'min-h-44 p-6' : 'min-h-32 p-5'} block h-full`} to={`/categories/${slugifyCategory(category.name)}`}>
+      <Link className={`${compactMobile ? 'min-h-32 p-3' : featured ? 'min-h-44 p-6' : 'min-h-32 p-5'} block h-full`} to={createCategoryJobsPath(category)}>
         <div className="flex items-start justify-between gap-4">
           <div className={`grid place-items-center rounded-[7px] ${compactMobile ? `h-9 w-9 ${featured ? 'bg-[#0057B8] text-white' : category.color}` : featured ? 'h-14 w-14 bg-[#0057B8] text-white' : `h-12 w-12 ${category.color}`}`}>
             <Icon size={compactMobile ? 17 : featured ? 24 : 21} />
@@ -629,8 +630,10 @@ export function CompanyGrid({ compactMobile = false }) {
     }
   }, [])
 
-  const list = useMemo(() => liveCompanies.slice(0, 6), [liveCompanies])
-  const visibleList = compactMobile && !showAllMobileCompanies ? list.slice(0, 4) : list
+  const list = useMemo(() => liveCompanies, [liveCompanies])
+  const visibleList = compactMobile
+    ? (showAllMobileCompanies ? list.slice(0, 6) : list.slice(0, 4))
+    : list.slice(0, 3)
 
   return (
     <div className={`grid ${compactMobile ? 'grid-cols-2 gap-2' : 'gap-5 md:grid-cols-2 lg:grid-cols-3'}`}>
@@ -643,7 +646,7 @@ export function CompanyGrid({ compactMobile = false }) {
           <h3 className={`font-black text-slate-950 ${compactMobile ? 'mt-3 truncate text-sm' : 'mt-5 text-lg'}`}>{company.name}</h3>
           <p className="mt-1 text-sm text-slate-500">{company.industry} · {company.location || 'Location not added'}</p>
           <p className="mt-4 text-sm font-bold text-blue-600">{company.openJobs} open jobs</p>
-          <Button className="mt-5 w-full" to={`/companies/${slugifyCompany(company.name)}`} variant="secondary">View Company</Button>
+          <Button className="mt-5 w-full" to={createCompanyDetailPath(company)} variant="secondary">View Company</Button>
         </div>
       )) : (
         <div className="rounded-[7px] border border-dashed border-slate-300 bg-white p-6 text-sm font-semibold text-slate-500 md:col-span-2 lg:col-span-3">
@@ -656,8 +659,13 @@ export function CompanyGrid({ compactMobile = false }) {
           onClick={() => setShowAllMobileCompanies((value) => !value)}
           type="button"
         >
-          {showAllMobileCompanies ? 'Show Less' : `More ${list.length - 4}`}
+          {showAllMobileCompanies ? 'Show Less' : `More ${Math.min(list.length, 6) - 4}`}
         </button>
+      )}
+      {!compactMobile && list.length > 3 && (
+        <div className="md:col-span-2 lg:col-span-3 text-center">
+          <Button target="_blank" to="/companies" variant="secondary">More Companies</Button>
+        </div>
       )}
     </div>
   )

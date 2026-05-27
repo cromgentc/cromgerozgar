@@ -316,7 +316,13 @@ export function FreelancerProjectsPage() {
                               <Link
                                 className="inline-flex min-h-9 items-center justify-center rounded-[7px] bg-[#0057B8] px-4 text-xs font-black text-white hover:bg-[#004694]"
                                 onClick={() => setStartedProjects((current) => [...new Set([...current, getApplicationKey(application)])])}
-                                to={`/freelancer/projects/${application.projectSlug || getProjectSlug({ title: application.jobTitle, company: application.company })}`}
+                                to={getProjectDetailPath({
+                                  title: application.jobTitle,
+                                  company: application.company,
+                                  category: application.projectCategory,
+                                  experience: application.projectExperience,
+                                  mode: application.projectWorkMode,
+                                })}
                               >
                                 {started ? 'Continue Work' : 'Start Work'}
                               </Link>
@@ -732,7 +738,7 @@ function ProjectFilter({ onChange, options, title, value }) {
 }
 
 function ProjectCard({ project }) {
-  const detailsPath = `/freelancer/projects/${getProjectSlug(project)}`
+  const detailsPath = getProjectDetailPath(project)
 
   return (
     <article className="group min-w-0 rounded-[7px] border border-slate-200 bg-white/90 p-3 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/70 sm:p-5">
@@ -837,7 +843,8 @@ function ProjectApplyButton({ project }) {
 
 export function FreelancerProjectDetailsPage() {
   const { projectSlug } = useParams()
-  const project = projects.find((item) => getProjectSlug(item) === projectSlug) || projects[0]
+  const resolvedSlug = extractProjectSlug(projectSlug)
+  const project = projects.find((item) => getProjectSlug(item) === resolvedSlug) || projects[0]
 
   return (
     <section className="bg-[#EEF2F8] py-10 sm:py-14">
@@ -887,6 +894,52 @@ function getProjectSlug(project) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
+}
+
+function getProjectDetailPath(project) {
+  const slug = [
+    'freelance-project-listings',
+    project.title,
+    project.company,
+    project.category,
+    formatProjectExperienceForSlug(project.experience),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  const params = new URLSearchParams({
+    src: 'project',
+    mode: project.mode || 'Remote',
+    xp: String(getProjectExperienceMin(project.experience) || 1),
+  })
+
+  return `/${slug}?${params.toString()}`
+}
+
+function extractProjectSlug(value = '') {
+  const text = String(value)
+  if (!text.startsWith('freelance-project-listings-')) return text
+
+  const prefix = 'freelance-project-listings-'
+  const normalized = text.slice(prefix.length)
+  return projects
+    .map((project) => getProjectSlug(project))
+    .find((slug) => normalized.startsWith(slug)) || normalized
+}
+
+function formatProjectExperienceForSlug(value = '') {
+  const numbers = String(value).match(/\d+/g) || []
+  if (numbers.length >= 2) return `${numbers[0]} to ${numbers[1]} years`
+  if (numbers.length === 1) return `${numbers[0]} years`
+  return ''
+}
+
+function getProjectExperienceMin(value = '') {
+  const numbers = String(value).match(/\d+/g)?.map(Number) || []
+  return numbers.length ? Math.min(...numbers) : 0
 }
 
 function isProjectApplication(application) {

@@ -36,8 +36,35 @@ export function slugifyCategory(name) {
   return normalizeCategoryText(name).trim().replace(/\s+/g, '-').replace(/-+/g, '-')
 }
 
+export function createCategoryJobsPath(category) {
+  const slug = [
+    'jobs-in',
+    category?.name,
+    'openings',
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  const params = new URLSearchParams({
+    src: 'category',
+    cluster: 'department',
+  })
+
+  return `/${slug || 'jobs'}?${params.toString()}`
+}
+
+export function extractCategorySlug(value = '') {
+  return String(value)
+    .replace(/^jobs-in-/, '')
+    .replace(/-openings$/, '')
+}
+
 export function getCategoryBySlug(categories, slug) {
-  return categories.find((category) => slugifyCategory(category.name) === slug)
+  const normalizedSlug = slugifyCategory(extractCategorySlug(slug))
+  return categories.find((category) => slugifyCategory(category.name) === normalizedSlug)
 }
 
 export function normalizeJobForCategory(job) {

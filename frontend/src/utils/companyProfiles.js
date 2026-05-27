@@ -11,8 +11,38 @@ export function slugifyCompany(name) {
   return String(name || '').toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').trim().replace(/\s+/g, '-').replace(/-+/g, '-')
 }
 
+export function createCompanyDetailPath(company) {
+  const slug = [
+    'company-jobs',
+    company?.name,
+    company?.location,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  const params = new URLSearchParams({
+    src: 'company',
+    jobs: String(company?.openJobs || 0),
+  })
+
+  return `/${slug || 'companies'}?${params.toString()}`
+}
+
+export function extractCompanySlug(value = '') {
+  return String(value)
+    .replace(/^company-jobs-/, '')
+    .replace(/-\d+$/, '')
+}
+
 export function getCompanyBySlug(companies, slug) {
-  return companies.find((company) => slugifyCompany(company.name) === slug)
+  const normalizedSlug = slugifyCompany(extractCompanySlug(slug))
+  return companies.find((company) => {
+    const companySlug = slugifyCompany(company.name)
+    return normalizedSlug === companySlug || normalizedSlug.startsWith(companySlug)
+  })
 }
 
 export function getCompanyInitials(name) {
