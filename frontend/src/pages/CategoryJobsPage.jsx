@@ -14,6 +14,7 @@ export function CategoryJobsPage({ onApply }) {
   const [loading, setLoading] = useState(true)
   const [workMode, setWorkMode] = useState('')
   const [jobType, setJobType] = useState('')
+  const [companyPage, setCompanyPage] = useState(1)
 
   useEffect(() => {
     let active = true
@@ -54,8 +55,19 @@ export function CategoryJobsPage({ onApply }) {
       return items
     }, {})
 
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4)
+    return Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
   }, [matchedJobs])
+  const companyPageSize = 10
+  const companyPageCount = Math.max(1, Math.ceil(topCompanies.length / companyPageSize))
+  const visibleCompanies = topCompanies.slice((companyPage - 1) * companyPageSize, companyPage * companyPageSize)
+
+  useEffect(() => {
+    setCompanyPage(1)
+  }, [categorySlug, jobType, workMode])
+
+  useEffect(() => {
+    if (companyPage > companyPageCount) setCompanyPage(companyPageCount)
+  }, [companyPage, companyPageCount])
 
   if (!category) {
     return (
@@ -130,7 +142,7 @@ export function CategoryJobsPage({ onApply }) {
               <div className="rounded-[7px] bg-slate-50 p-4">
                 <p className="text-sm font-black text-slate-950">Top companies</p>
                 <div className="mt-3 grid gap-2">
-                  {topCompanies.length ? topCompanies.map(([company, count]) => (
+                  {visibleCompanies.length ? visibleCompanies.map(([company, count]) => (
                     <p className="flex items-center justify-between rounded-[7px] bg-white px-3 py-2 text-sm font-bold text-slate-600" key={company}>
                       <span>{company}</span>
                       <span className="text-blue-700">{count}</span>
@@ -139,6 +151,27 @@ export function CategoryJobsPage({ onApply }) {
                     <p className="text-sm font-semibold text-slate-500">No company data yet.</p>
                   )}
                 </div>
+                {topCompanies.length > companyPageSize && (
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <button
+                      className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 disabled:opacity-40"
+                      disabled={companyPage === 1}
+                      onClick={() => setCompanyPage((page) => Math.max(1, page - 1))}
+                      type="button"
+                    >
+                      Prev
+                    </button>
+                    <span className="text-xs font-black text-slate-500">{companyPage} / {companyPageCount}</span>
+                    <button
+                      className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 disabled:opacity-40"
+                      disabled={companyPage === companyPageCount}
+                      onClick={() => setCompanyPage((page) => Math.min(companyPageCount, page + 1))}
+                      type="button"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </aside>

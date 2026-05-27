@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { SlidersHorizontal, X } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { JobCard } from '../components/JobCard'
@@ -20,6 +20,7 @@ const filterConfig = [
 
 export function JobsPage({ onApply }) {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [companyPage, setCompanyPage] = useState(1)
   const { data: apiJobs } = useApiResource(() => api.jobListings('?sort=-createdAt'), { data: [] }, [])
   const rawList = Array.isArray(apiJobs) ? apiJobs : apiJobs?.data || []
   const normalizedJobs = useMemo(() => rawList.map(normalizeJob), [rawList])
@@ -48,14 +49,22 @@ export function JobsPage({ onApply }) {
   })
   const activeFilterCount = Object.values(selectedFilters).reduce((total, values) => total + values.length, 0)
   const hasSearch = Boolean(keyword || selectedLocation || selectedType || activeFilterCount)
+  const companyFilter = dynamicFilters.find((filter) => filter.key === 'company') || { values: [], counts: {} }
+  const companyPageSize = 10
+  const companyPageCount = Math.max(1, Math.ceil(companyFilter.values.length / companyPageSize))
+  const visibleCompanyOptions = companyFilter.values.slice((companyPage - 1) * companyPageSize, companyPage * companyPageSize)
 
-  const toggleFilter = (key, value) => {
+  useEffect(() => {
+    setCompanyPage(1)
+  }, [companyFilter.values.join('|')])
+
+  useEffect(() => {
+    if (companyPage > companyPageCount) setCompanyPage(companyPageCount)
+  }, [companyPage, companyPageCount])
+
+  const setSingleFilter = (key, value) => {
     const params = new URLSearchParams(searchParams)
-    const values = getParamList(params, key)
-    const exists = values.includes(value)
-    const nextValues = exists ? values.filter((item) => item !== value) : [...values, value]
-
-    if (nextValues.length) params.set(key, nextValues.join('|'))
+    if (value) params.set(key, value)
     else params.delete(key)
 
     setSearchParams(params)
@@ -93,30 +102,65 @@ export function JobsPage({ onApply }) {
                 <X size={16} /> Clear filters
               </button>
             )}
-            <div className="grid gap-6">
-              {dynamicFilters.map((filter) => (
-                <div key={filter.key}>
-                  <h3 className="mb-3 text-sm font-black text-slate-800">{filter.label}</h3>
-                  {filter.values.length ? (
-                    <div className="grid max-h-52 gap-2 overflow-y-auto pr-1">
-                      {filter.values.map((value) => {
-                        const checked = selectedFilters[filter.key]?.includes(value)
+            <div className="grid gap-5">
+              {['location', 'experience', 'salary', 'skills', 'department'].map((key) => {
+                const filter = dynamicFilters.find((item) => item.key === key) || { key, label: key, values: [] }
+                return (
+                  <FilterSelect
+                    key={key}
+                    filter={filter}
+                    onChange={(value) => setSingleFilter(key, value)}
+                    value={selectedFilters[key]?.[0] || ''}
+                  />
+                )
+              })}
+
+              <div>
+                <h3 className="mb-3 text-sm font-black text-slate-800">Company</h3>
+                {companyFilter.values.length ? (
+                  <>
+                    <div className="grid gap-2">
+                      {visibleCompanyOptions.map((company) => {
+                        const selected = selectedFilters.company?.[0] === company
                         return (
-                          <label className={`flex items-center justify-between gap-3 rounded-[7px] px-2 py-1.5 text-sm transition ${checked ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50'}`} key={value}>
-                            <span className="flex min-w-0 items-center gap-2">
-                              <input checked={checked || false} className="h-4 w-4 rounded-[7px] border-slate-300 text-blue-600 accent-blue-600" onChange={() => toggleFilter(filter.key, value)} type="checkbox" />
-                              <span className="truncate">{value}</span>
-                            </span>
-                            <span className="shrink-0 rounded-[7px] bg-white px-2 py-0.5 text-[11px] font-black text-slate-400 ring-1 ring-slate-200">{filter.counts[value]}</span>
-                          </label>
+                          <button
+                            className={`flex min-h-10 items-center justify-between gap-3 rounded-[7px] px-3 py-2 text-left text-sm font-bold transition ${selected ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-700'}`}
+                            key={company}
+                            onClick={() => setSingleFilter('company', selected ? '' : company)}
+                            type="button"
+                          >
+                            <span className="min-w-0 truncate">{company}</span>
+                            <span className={`shrink-0 rounded-[7px] px-2 py-0.5 text-[11px] font-black ${selected ? 'bg-white/20 text-white' : 'bg-white text-slate-400 ring-1 ring-slate-200'}`}>{companyFilter.counts[company]}</span>
+                          </button>
                         )
                       })}
                     </div>
-                  ) : (
-                    <p className="rounded-[7px] bg-slate-50 p-3 text-xs font-semibold text-slate-500">No options yet</p>
-                  )}
-                </div>
-              ))}
+                    {companyFilter.values.length > companyPageSize && (
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <button
+                          className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 disabled:opacity-40"
+                          disabled={companyPage === 1}
+                          onClick={() => setCompanyPage((page) => Math.max(1, page - 1))}
+                          type="button"
+                        >
+                          Prev
+                        </button>
+                        <span className="text-xs font-black text-slate-500">{companyPage} / {companyPageCount}</span>
+                        <button
+                          className="rounded-[7px] bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200 disabled:opacity-40"
+                          disabled={companyPage === companyPageCount}
+                          onClick={() => setCompanyPage((page) => Math.min(companyPageCount, page + 1))}
+                          type="button"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="rounded-[7px] bg-slate-50 p-3 text-xs font-semibold text-slate-500">No company options yet</p>
+                )}
+              </div>
             </div>
           </aside>
 
@@ -141,6 +185,24 @@ export function JobsPage({ onApply }) {
         </div>
       </div>
     </section>
+  )
+}
+
+function FilterSelect({ filter, onChange, value }) {
+  return (
+    <label className="grid gap-2">
+      <span className="text-sm font-black text-slate-800">{filter.label}</span>
+      <select
+        className="min-h-11 rounded-[7px] border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 outline-none focus:border-blue-500"
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        <option value="">All {filter.label.toLowerCase()}</option>
+        {filter.values.map((option) => (
+          <option key={option} value={option}>{option} ({filter.counts[option]})</option>
+        ))}
+      </select>
+    </label>
   )
 }
 
