@@ -4290,7 +4290,7 @@ export function AdminSEOBrandingPage() {
     setLoading(true)
     setMessage('')
     api
-      .list('settings', '?search=siteSeoBranding&limit=10')
+      .list('settings', '?key=siteSeoBranding&limit=1')
       .then((payload) => {
         const setting = (payload.data || []).find((item) => item.key === 'siteSeoBranding')
         const value = setting?.value || {}
@@ -4348,13 +4348,16 @@ export function AdminSEOBrandingPage() {
     }
 
     try {
+      let saved
       if (settingId) {
-        await api.update('settings', settingId, payload)
+        saved = await api.update('settings', settingId, payload)
       } else {
-        const created = await api.create('settings', payload)
-        setSettingId(created.data?._id || '')
+        saved = await api.create('settings', payload)
       }
-      const nextBranding = publishSiteBranding(payload.value)
+
+      const savedSetting = saved.data || {}
+      const nextBranding = publishSiteBranding(savedSetting.value || payload.value)
+      setSettingId(savedSetting._id || settingId)
       setForm(nextBranding)
       setMessage('SEO, logo, and favicon saved successfully.')
     } catch (error) {
