@@ -17,6 +17,7 @@ const Setting = require('../models/Setting')
 const SupportMessage = require('../models/SupportMessage')
 const Testimonial = require('../models/Testimonial')
 const User = require('../models/User')
+const { ensureDefaultTestimonials } = require('./testimonialDefaults')
 
 function normalizeEmail(value = '') {
   return String(value).trim().toLowerCase()
@@ -434,5 +435,8 @@ module.exports = {
     beforeGetAll: scopeSupportMessagesForRequester,
     canAccess: canAccessSupportMessage,
   }),
-  testimonials: crudController(Testimonial, { searchFields: ['name', 'role', 'company', 'type', 'frontendPlacement', 'text', 'status'] }),
+  testimonials: crudController(Testimonial, {
+    searchFields: ['name', 'role', 'company', 'type', 'frontendPlacement', 'text', 'status'],
+    afterGetAll: async (items) => (items.length ? items : ensureDefaultTestimonials(Testimonial)),
+  }),
 }
