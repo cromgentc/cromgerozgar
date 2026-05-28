@@ -996,11 +996,11 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
 
     const reviewer = getStoredAdminUser() || {}
     const statusMap = {
-      Pending: { employerStatus: 'Pending', userStatus: 'Review', recruiterStatus: 'account_review', verified: false, message: 'Recruiter account moved to pending.' },
-      Approved: { employerStatus: 'Approved', userStatus: 'Active', recruiterStatus: 'approved', verified: true, message: 'Recruiter account approved.' },
-      Rejected: { employerStatus: 'Rejected', userStatus: 'Inactive', recruiterStatus: 'rejected', verified: false, message: 'Recruiter account rejected.' },
-      Suspended: { employerStatus: 'Suspended', userStatus: 'Suspend', recruiterStatus: 'suspended', verified: false, message: 'Recruiter account suspended.' },
-      Blocked: { employerStatus: 'Blocked', userStatus: 'Suspend', recruiterStatus: 'suspended', verified: false, message: 'Recruiter account blocked.' },
+      Pending: { documentStatus: 'Pending', employerStatus: 'Pending', userStatus: 'Review', recruiterStatus: 'account_review', verified: false, message: 'Recruiter account moved to pending.' },
+      Approved: { documentStatus: 'Approved', employerStatus: 'Approved', userStatus: 'Active', recruiterStatus: 'approved', verified: true, message: 'Recruiter account approved.' },
+      Rejected: { documentStatus: 'Rejected', employerStatus: 'Rejected', userStatus: 'Inactive', recruiterStatus: 'rejected', verified: false, message: 'Recruiter account rejected.' },
+      Suspended: { documentStatus: 'Suspended', employerStatus: 'Suspended', userStatus: 'Suspend', recruiterStatus: 'suspended', verified: false, message: 'Recruiter account suspended.' },
+      Blocked: { documentStatus: 'Blocked', employerStatus: 'Blocked', userStatus: 'Suspend', recruiterStatus: 'suspended', verified: false, message: 'Recruiter account blocked.' },
     }
     const next = statusMap[action]
     if (!next) return
@@ -1019,13 +1019,27 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       const response = await api.update('employers', row._id, authPayload)
       const email = row.businessEmail
       if (email) {
-        const usersPayload = await api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`)
+        const [usersPayload, documentsPayload] = await Promise.all([
+          api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`),
+          api.list('recruiter-documents', `?recruiterEmail=${encodeURIComponent(email)}&sort=-updatedAt&limit=1`).catch(() => ({ data: [] })),
+        ])
         const recruiter = (usersPayload.data || []).find((item) => item.email?.toLowerCase() === email.toLowerCase())
         if (recruiter?._id) {
           await api.update('users', recruiter._id, {
             status: next.userStatus,
             recruiterVerificationStatus: next.recruiterStatus,
             recruiterVerificationRemark: remark,
+          })
+        }
+        const latestDocument = (documentsPayload.data || [])[0]
+        if (latestDocument?._id) {
+          await api.update('recruiter-documents', latestDocument._id, {
+            status: next.documentStatus,
+            remark,
+            reviewedByName: authPayload.accountAuthorizedByName,
+            reviewedByEmail: authPayload.accountAuthorizedByEmail,
+            reviewedAction: next.documentStatus,
+            reviewedAt: authPayload.accountAuthorizedAt,
           })
         }
       }
@@ -2946,7 +2960,7 @@ function buildRecruiterDocumentFallbackRows(recruiters = [], users = []) {
       gstNumber: '',
       gstDocument: '',
       submissionsCount: 0,
-      status: 'Not Submitted',
+      status: user.status || 'Not Submitted',
       createdAt: user.createdAt,
     })
   })
@@ -2962,6 +2976,7 @@ function buildRecruiterDocumentFallbackRows(recruiters = [], users = []) {
       recruiterId: current.recruiterId || getShortId(recruiter._id),
       recruiterName: recruiter.companyName || current.recruiterName || 'Recruiter',
       recruiterEmail: recruiter.businessEmail || current.recruiterEmail || '',
+      status: recruiter.status || current.status || 'Not Submitted',
       createdAt: current.createdAt || recruiter.createdAt,
     })
   })
