@@ -6,7 +6,7 @@ import { AdminLayout } from './admin/components/AdminLayout'
 import { AdminBulkHiringPage, AdminHiringPage, AdminSingleHiringPage } from './admin/pages/AdminHiringPages'
 import { AdminHiringTeamPage } from './admin/pages/AdminHiringTeamPage'
 import { AdminProfilePage } from './admin/pages/AdminProfilePage'
-import { AdminDiscountCouponPage, AdminGoogleAuthPage, AdminManagementPage, AdminMongoDbPage, AdminPricingPage, AdminSEOBrandingPage, AdminSettingsPage, AdminSupaCloudPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
+import { AdminDiscountCouponPage, AdminGoogleAuthPage, AdminManagementPage, AdminMongoDbPage, AdminNewsletterSendPage, AdminPricingPage, AdminSEOBrandingPage, AdminSettingsPage, AdminSupaCloudPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
 import { AdminWhatsAppApiPage } from './admin/pages/AdminWhatsAppApiPage'
 import { AdminEmailApiPage } from './admin/pages/AdminEmailApiPage'
 import { AdminAddPluginsPage, AdminInstalledPluginsPage } from './admin/pages/AdminPluginsPage'
@@ -152,6 +152,7 @@ function App() {
         { path: 'testimonials', element: <AdminManagementPage type="testimonials" /> },
         { path: 'faqs', element: <AdminManagementPage type="faqs" /> },
         { path: 'hiring-insights', element: <AdminManagementPage type="newsletterSubscribers" /> },
+        { path: 'hiring-insights/send', element: <AdminNewsletterSendPage /> },
         { path: 'support-messages', element: <AdminManagementPage type="supportMessages" /> },
         { path: 'support-messages/:messageId', element: <SupportMessageDetailPage /> },
         { path: 'policy', element: <AdminManagementPage type="contentPages" /> },

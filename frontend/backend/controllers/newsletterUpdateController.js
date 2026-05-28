@@ -21,6 +21,7 @@ const sendNewsletterUpdate = asyncHandler(async (req, res) => {
   const subject = String(req.body.subject || '').trim()
   const previewText = String(req.body.previewText || '').trim()
   const message = String(req.body.message || '').trim()
+  const imageUrl = String(req.body.imageUrl || '').trim()
   const ctaLabel = String(req.body.ctaLabel || '').trim()
   const ctaUrl = String(req.body.ctaUrl || '').trim()
 
@@ -41,6 +42,7 @@ const sendNewsletterUpdate = asyncHandler(async (req, res) => {
     subject,
     previewText,
     message,
+    imageUrl,
     ctaLabel,
     ctaUrl,
     status: 'Sending',
@@ -49,7 +51,7 @@ const sendNewsletterUpdate = asyncHandler(async (req, res) => {
     sentByEmail: req.user?.email || '',
   })
 
-  const html = buildNewsletterHtml({ ctaLabel, ctaUrl, message, previewText, subject })
+  const html = buildNewsletterHtml({ ctaLabel, ctaUrl, imageUrl, message, previewText, subject })
   const text = `${subject}\n\n${previewText ? `${previewText}\n\n` : ''}${message}${ctaUrl ? `\n\n${ctaLabel || 'Open update'}: ${ctaUrl}` : ''}`
 
   try {
@@ -81,9 +83,10 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;')
 }
 
-function buildNewsletterHtml({ ctaLabel, ctaUrl, message, previewText, subject }) {
+function buildNewsletterHtml({ ctaLabel, ctaUrl, imageUrl, message, previewText, subject }) {
   const safeSubject = escapeHtml(subject)
   const safePreview = escapeHtml(previewText)
+  const safeImageUrl = escapeHtml(imageUrl)
   const paragraphs = escapeHtml(message).split(/\n+/).filter(Boolean).map((line) => `<p style="margin:0 0 14px;color:#334155;font-size:15px;line-height:1.7">${line}</p>`).join('')
   const button = ctaUrl
     ? `<div style="padding-top:12px"><a href="${escapeHtml(ctaUrl)}" style="display:inline-block;border-radius:8px;background:#0f5bbb;color:#ffffff;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:800">${escapeHtml(ctaLabel || 'Open update')}</a></div>`
@@ -102,6 +105,7 @@ function buildNewsletterHtml({ ctaLabel, ctaUrl, message, previewText, subject }
                   ${safePreview ? `<p style="margin:10px 0 0;color:#dcfce7;font-size:15px;line-height:1.6">${safePreview}</p>` : ''}
                 </td>
               </tr>
+              ${safeImageUrl ? `<tr><td><img src="${safeImageUrl}" alt="" style="display:block;width:100%;max-height:260px;object-fit:cover;border:0" /></td></tr>` : ''}
               <tr>
                 <td style="padding:30px 32px">
                   ${paragraphs}

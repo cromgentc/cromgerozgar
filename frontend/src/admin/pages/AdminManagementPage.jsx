@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { City, Country, State } from 'country-state-city'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Ban, BriefcaseBusiness, CheckCircle2, Clock, Download, Eye, EyeOff, FileText, ImagePlus, MapPin, Navigation, PauseCircle, Pencil, Phone, RefreshCw, Route, ShieldCheck, Trash2, XCircle } from 'lucide-react'
+import { Ban, BriefcaseBusiness, CheckCircle2, Clock, Download, Eye, EyeOff, FileText, ImagePlus, MailPlus, MapPin, Navigation, PauseCircle, Pencil, Phone, RefreshCw, Route, Send, ShieldCheck, Trash2, XCircle } from 'lucide-react'
 import {
   ActionButtons,
   AdminCard,
@@ -571,6 +571,7 @@ const defaultNewsletterUpdateForm = {
   subject: '',
   previewText: '',
   message: '',
+  imageUrl: '',
   ctaLabel: '',
   ctaUrl: '',
 }
@@ -642,9 +643,6 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   const [message, setMessage] = useState('')
   const [companyOptions, setCompanyOptions] = useState(fieldOptions.company)
   const [companyRows, setCompanyRows] = useState([])
-  const [newsletterForm, setNewsletterForm] = useState(defaultNewsletterUpdateForm)
-  const [newsletterUpdates, setNewsletterUpdates] = useState([])
-  const [newsletterSending, setNewsletterSending] = useState(false)
 
   const loadRows = () => {
     if (!config.resource) {
@@ -717,19 +715,6 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     setForm({})
     loadRows()
   }, [type, search, status, role, resumeMode, frontendPlacement])
-
-  const loadNewsletterUpdates = () => {
-    if (type !== 'newsletterSubscribers') return
-
-    api
-      .newsletterUpdates('?limit=10')
-      .then((payload) => setNewsletterUpdates(payload.data || []))
-      .catch(() => setNewsletterUpdates([]))
-  }
-
-  useEffect(() => {
-    loadNewsletterUpdates()
-  }, [type])
 
   useEffect(() => {
     api
@@ -818,37 +803,6 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       loadRows()
     } catch (error) {
       setMessage(error.message)
-    }
-  }
-
-  const sendNewsletterUpdate = async () => {
-    const subject = newsletterForm.subject.trim()
-    const updateMessage = newsletterForm.message.trim()
-
-    if (!subject || !updateMessage) {
-      setMessage('Subject and update message are required.')
-      return
-    }
-
-    setNewsletterSending(true)
-    setMessage('')
-
-    try {
-      const payload = await api.sendNewsletterUpdate({
-        subject,
-        previewText: newsletterForm.previewText.trim(),
-        message: updateMessage,
-        ctaLabel: newsletterForm.ctaLabel.trim(),
-        ctaUrl: newsletterForm.ctaUrl.trim(),
-      })
-      setNewsletterForm(defaultNewsletterUpdateForm)
-      setNewsletterUpdates((current) => [payload.data, ...current].filter(Boolean).slice(0, 10))
-      setMessage(payload.message || 'Hiring insight update sent successfully.')
-    } catch (error) {
-      setMessage(error.message || 'Hiring insight update could not be sent.')
-      loadNewsletterUpdates()
-    } finally {
-      setNewsletterSending(false)
     }
   }
 
@@ -1201,15 +1155,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         rows={type === 'recruiterDocuments' ? displayRows : formatRows(displayRows)}
       />
       {!displayRows.length && <EmptyAdminState title={`${config.title} empty state`} />}
-      {type === 'newsletterSubscribers' && (
-        <NewsletterUpdatePanel
-          form={newsletterForm}
-          onChange={(key, value) => setNewsletterForm((current) => ({ ...current, [key]: value }))}
-          onSend={sendNewsletterUpdate}
-          sending={newsletterSending}
-          updates={newsletterUpdates}
-        />
-      )}
+      {type === 'newsletterSubscribers' && <NewsletterSendShortcut />}
       <CrudModal companyOptions={companyOptions} companyRows={companyRows} config={config} form={form} isCreate={!selectedRow} onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))} onClose={() => setModalOpen(false)} onSave={save} open={modalOpen} type={type} />
       <AdminModal open={Boolean(reviewAction)} title={reviewAction?.type === 'jobReview' ? 'Add job reject remark' : reviewAction?.type === 'recruiterDocument' ? 'Add document review remark' : 'Add recruiter account remark'} onClose={() => setReviewAction(null)}>
         <p className="text-sm leading-6 text-slate-500">{reviewAction?.type === 'jobReview' ? 'This remark will be shown to the recruiter on their posted jobs page.' : 'This remark will be shown to the recruiter on their verification screen.'}</p>
@@ -3400,43 +3346,145 @@ function ApplicationStatusPanel() {
   )
 }
 
-function NewsletterUpdatePanel({ form, onChange, onSend, sending, updates }) {
+function NewsletterSendShortcut() {
   return (
-    <section className="grid gap-4 rounded-[7px] border border-blue-100 bg-white p-4 shadow-sm lg:grid-cols-[1fr_420px]">
+    <section className="flex flex-col justify-between gap-4 rounded-[7px] border border-blue-100 bg-white p-5 shadow-sm sm:flex-row sm:items-center">
       <div>
-        <p className="text-sm font-black uppercase tracking-wide text-blue-600">Send Hiring Insight Update</p>
-        <h3 className="mt-1 text-2xl font-black text-slate-950">Notify all subscribed emails</h3>
-        <div className="mt-4 grid gap-3">
-          <input className="input" onChange={(event) => onChange('subject', event.target.value)} placeholder="Subject, e.g. Fresh hiring trends for this week" value={form.subject} />
-          <input className="input" onChange={(event) => onChange('previewText', event.target.value)} placeholder="Short preview text" value={form.previewText} />
-          <textarea className="input min-h-32" onChange={(event) => onChange('message', event.target.value)} placeholder="Write the update that subscribers will receive by email" value={form.message} />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input className="input" onChange={(event) => onChange('ctaLabel', event.target.value)} placeholder="Button label, optional" value={form.ctaLabel} />
-            <input className="input" onChange={(event) => onChange('ctaUrl', event.target.value)} placeholder="Button URL, optional" value={form.ctaUrl} />
+        <p className="text-sm font-black uppercase tracking-wide text-blue-600">Hiring Insight Email</p>
+        <h3 className="mt-1 text-xl font-black text-slate-950">Send updates to all subscribed emails</h3>
+        <p className="mt-1 text-sm font-semibold text-slate-500">Open the professional email composer with image, URL, and message controls.</p>
+      </div>
+      <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-100" onClick={() => window.open('/admin/hiring-insights/send', '_blank', 'noopener,noreferrer')} type="button">
+        <MailPlus size={18} /> Send Hiring Insight Update
+      </button>
+    </section>
+  )
+}
+
+export function AdminNewsletterSendPage() {
+  const [form, setForm] = useState({
+    subject: 'Fresh hiring insights from CromGen Rozgar',
+    previewText: 'Latest jobs, recruiter trends, and platform updates curated for you.',
+    message: 'Hello,\n\nHere are the latest hiring insights from CromGen Rozgar. Explore fresh verified openings, recruiter updates, and career trends from active companies.\n\nStay connected for more job alerts and hiring updates.',
+    imageUrl: '',
+    ctaLabel: 'Explore Latest Jobs',
+    ctaUrl: 'https://www.cromgenrozgar.in/jobs',
+  })
+  const [updates, setUpdates] = useState([])
+  const [message, setMessage] = useState('')
+  const [sending, setSending] = useState(false)
+
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+
+  const loadUpdates = () => {
+    api.newsletterUpdates('?limit=10')
+      .then((payload) => setUpdates(payload.data || []))
+      .catch(() => setUpdates([]))
+  }
+
+  useEffect(() => {
+    loadUpdates()
+  }, [])
+
+  const sendUpdate = async () => {
+    const subject = form.subject.trim()
+    const updateMessage = form.message.trim()
+
+    if (!subject || !updateMessage) {
+      setMessage('Subject and update message are required.')
+      return
+    }
+
+    setSending(true)
+    setMessage('')
+
+    try {
+      const payload = await api.sendNewsletterUpdate({
+        subject,
+        previewText: form.previewText.trim(),
+        message: updateMessage,
+        imageUrl: form.imageUrl.trim(),
+        ctaLabel: form.ctaLabel.trim(),
+        ctaUrl: form.ctaUrl.trim(),
+      })
+      setMessage(payload.message || 'Hiring insight update sent successfully.')
+      setUpdates((current) => [payload.data, ...current].filter(Boolean).slice(0, 10))
+    } catch (error) {
+      setMessage(error.message || 'Hiring insight update could not be sent.')
+      loadUpdates()
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-5">
+      <section className="overflow-hidden rounded-[7px] border border-blue-100 bg-white shadow-xl shadow-blue-100/50">
+        <div className="grid gap-5 bg-gradient-to-br from-blue-600 via-sky-500 to-teal-400 p-6 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-50">Hiring Insights / Email Composer</p>
+            <h2 className="mt-3 text-3xl font-black sm:text-4xl">Send Hiring Insight Update</h2>
+            <p className="mt-2 max-w-2xl text-sm font-semibold text-blue-50">Compose a branded email with image, URL, CTA, and message for every subscribed email.</p>
           </div>
-          <button className="w-max rounded-[7px] bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 disabled:cursor-not-allowed disabled:bg-slate-300" disabled={sending} onClick={onSend} type="button">
-            {sending ? 'Sending Update...' : 'Send Update To Subscribers'}
+          <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-white px-5 py-3 text-sm font-black text-blue-700 shadow-lg" disabled={sending} onClick={sendUpdate} type="button">
+            <Send size={17} /> {sending ? 'Sending...' : 'Send Email'}
           </button>
         </div>
-      </div>
-      <div className="rounded-[7px] border border-slate-200 bg-slate-50 p-4">
-        <p className="text-sm font-black uppercase tracking-wide text-slate-500">Recent Updates</p>
-        <div className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
-          {updates.length ? updates.map((item) => (
-            <div className="rounded-[7px] bg-white p-3 shadow-sm" key={item._id || item.subject}>
-              <div className="flex items-start justify-between gap-3">
-                <p className="font-black text-slate-900">{item.subject}</p>
-                <StatusBadge status={item.status || 'Sent'} />
-              </div>
-              <p className="mt-2 text-xs font-bold text-slate-500">Sent {item.sentCount || 0}/{item.recipientCount || 0} subscribers</p>
-              <p className="mt-1 text-xs font-bold text-slate-400">{formatDateTime(item.sentAt || item.createdAt)}</p>
+      </section>
+
+      {message && <p className="rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
+
+      <section className="grid gap-5 lg:grid-cols-[1fr_420px]">
+        <div className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="grid gap-3">
+            <input className="input" onChange={(event) => update('subject', event.target.value)} placeholder="Email subject" value={form.subject} />
+            <input className="input" onChange={(event) => update('previewText', event.target.value)} placeholder="Preview text" value={form.previewText} />
+            <input className="input" onChange={(event) => update('imageUrl', event.target.value)} placeholder="Image URL, optional" value={form.imageUrl} />
+            <textarea className="input min-h-44" onChange={(event) => update('message', event.target.value)} placeholder="Write the email message" value={form.message} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input className="input" onChange={(event) => update('ctaLabel', event.target.value)} placeholder="Button label" value={form.ctaLabel} />
+              <input className="input" onChange={(event) => update('ctaUrl', event.target.value)} placeholder="Button URL" value={form.ctaUrl} />
             </div>
-          )) : (
-            <p className="rounded-[7px] bg-white p-4 text-sm font-bold text-slate-500">No hiring insight updates sent yet.</p>
-          )}
+          </div>
         </div>
-      </div>
-    </section>
+
+        <div className="grid gap-5">
+          <div className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-black uppercase tracking-wide text-slate-500">Email Preview</p>
+            <div className="mt-4 overflow-hidden rounded-[7px] border border-slate-200">
+              <div className="bg-gradient-to-br from-blue-600 to-teal-500 p-5 text-white">
+                <p className="text-xs font-black uppercase tracking-wide text-blue-50">Hiring Insights</p>
+                <h3 className="mt-2 text-xl font-black">{form.subject || 'Email subject'}</h3>
+                {form.previewText ? <p className="mt-2 text-sm text-blue-50">{form.previewText}</p> : null}
+              </div>
+              {form.imageUrl ? <img className="h-40 w-full object-cover" src={form.imageUrl} alt="" /> : null}
+              <div className="p-5">
+                <p className="whitespace-pre-line text-sm font-semibold leading-6 text-slate-600">{form.message}</p>
+                {form.ctaUrl ? <span className="mt-4 inline-flex rounded-[7px] bg-blue-600 px-4 py-2 text-sm font-black text-white">{form.ctaLabel || 'Open update'}</span> : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[7px] border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-black uppercase tracking-wide text-slate-500">Recent Updates</p>
+            <div className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
+              {updates.length ? updates.map((item) => (
+                <div className="rounded-[7px] bg-white p-3 shadow-sm" key={item._id || item.subject}>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-black text-slate-900">{item.subject}</p>
+                    <StatusBadge status={item.status || 'Sent'} />
+                  </div>
+                  <p className="mt-2 text-xs font-bold text-slate-500">Sent {item.sentCount || 0}/{item.recipientCount || 0} subscribers</p>
+                  <p className="mt-1 text-xs font-bold text-slate-400">{formatDateTime(item.sentAt || item.createdAt)}</p>
+                </div>
+              )) : (
+                <p className="rounded-[7px] bg-white p-4 text-sm font-bold text-slate-500">No hiring insight updates sent yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   )
 }
 

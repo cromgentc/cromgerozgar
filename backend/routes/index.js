@@ -6,6 +6,7 @@ const dashboardRoutes = require('./dashboardRoutes')
 const gstRoutes = require('./gstRoutes')
 const { getRecruiterPage } = require('../controllers/recruiterPageController')
 const { getCompanyProfiles } = require('../controllers/companyProfileController')
+const { listFaqs } = require('../controllers/faqController')
 const { getJobListings } = require('../controllers/jobListingController')
 const { listNewsletterSubscribers } = require('../controllers/newsletterSubscriberController')
 const { listNewsletterUpdates, sendNewsletterUpdate } = require('../controllers/newsletterUpdateController')
@@ -40,6 +41,7 @@ router.use('/employers', crudRoutes.protected(controllers.employers, {
   readRoles: ['Admin', 'staff', 'account team', 'recruiter'],
   updateRoles: ['Admin', 'staff', 'account team', 'recruiter'],
 }))
+router.get('/faqs', listFaqs)
 router.use('/faqs', crudRoutes.protected(controllers.faqs, { publicRead: true }))
 router.use('/candidates', crudRoutes.protected(controllers.candidates, { readRoles: ['Admin', 'hiring', 'recruiter'] }))
 router.use('/applications', crudRoutes.protected(controllers.applications, {
