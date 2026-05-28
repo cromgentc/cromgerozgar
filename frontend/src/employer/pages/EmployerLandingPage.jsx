@@ -424,7 +424,7 @@ function EmployerCTA({ isLoggedIn, isRecruiterAccount }) {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             {!isLoggedIn && <Button className="bg-white !text-black ring-0 hover:bg-blue-50" to="/recruiter-register" variant="secondary">Register Recruiter</Button>}
             {isRecruiterAccount && <Button className="bg-white !text-black ring-0 hover:bg-blue-50" to="/recruiter-dashboard" variant="secondary">Recruiter Dashboard</Button>}
-            <Button className="bg-slate-950 text-white ring-0 hover:bg-slate-800" to="/post-job" variant="secondary">Post Your First Job</Button>
+            <Button className="border border-white/55 !bg-white/10 !text-white shadow-none ring-0 backdrop-blur-md hover:!bg-white/20" to="/post-job" variant="secondary">Post Your First Job</Button>
           </div>
         </div>
       </div>
