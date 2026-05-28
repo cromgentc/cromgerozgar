@@ -668,6 +668,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   const [accountActionViewer, setAccountActionViewer] = useState(null)
   const [userViewer, setUserViewer] = useState(null)
   const [applicationViewer, setApplicationViewer] = useState(null)
+  const [companyViewer, setCompanyViewer] = useState(null)
   const [selectedRow, setSelectedRow] = useState(null)
   const [form, setForm] = useState({})
   const [message, setMessage] = useState('')
@@ -1128,6 +1129,17 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         return <PolicyManagementActions onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} row={row} />
       }
 
+      if (type === 'companies') {
+        return (
+          <ActionButtons
+            extra={undefined}
+            onDelete={row._id ? () => requestDelete(row) : undefined}
+            onEdit={() => openEdit(row)}
+            onView={() => setCompanyViewer(row)}
+          />
+        )
+      }
+
       return (
         <ActionButtons
           extra={type === 'resumes' ? 'Preview' : config.extra}
@@ -1219,6 +1231,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       <AccountActionViewerModal onClose={() => setAccountActionViewer(null)} row={accountActionViewer} />
       <UserViewerModal onClose={() => setUserViewer(null)} row={userViewer} />
       <ApplicationViewerModal onClose={() => setApplicationViewer(null)} row={applicationViewer} />
+      <CompanyViewerModal onClose={() => setCompanyViewer(null)} row={companyViewer} />
       <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={remove} />
     </div>
   )
@@ -1979,6 +1992,32 @@ function ApplicationViewerModal({ onClose, row }) {
           <ProfileLine label="Application ID" value={row._id || row.id || '-'} />
           <ProfileLine label="Created" value={row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'} />
           <ProfileLine label="Recruiter note" value={row.coverNote || '-'} />
+        </div>
+      )}
+    </AdminModal>
+  )
+}
+
+function CompanyViewerModal({ onClose, row }) {
+  return (
+    <AdminModal open={Boolean(row)} title="Company details" onClose={onClose}>
+      {row && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ProfileLine label="Company ID" value={row._id || row.id || '-'} />
+          <ProfileLine label="Company" value={row.name || '-'} />
+          <ProfileLine label="Contact person" value={row.contactPerson || '-'} />
+          <ProfileLine label="Contact number" value={row.contactNumber || '-'} />
+          <ProfileLine label="Contact email" value={row.contactEmail || '-'} />
+          <ProfileLine label="GST no" value={row.gstNumber || '-'} />
+          <ProfileLine label="Industry" value={row.industry || '-'} />
+          <ProfileLine label="Status" value={row.status || '-'} />
+          <ProfileLine label="Open jobs" value={row.jobs ?? row.openJobs ?? 0} />
+          <ProfileLine label="Website" value={row.website || '-'} />
+          <ProfileLine label="Location" value={row.location || '-'} />
+          <ProfileLine label="Address" value={row.address || '-'} />
+          <ProfileLine label="Documents" value={row.documents || '-'} />
+          <ProfileLine label="Plan" value={row.plan || '-'} />
+          <ProfileLine label="Created" value={row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'} />
         </div>
       )}
     </AdminModal>

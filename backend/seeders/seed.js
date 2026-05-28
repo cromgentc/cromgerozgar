@@ -11,45 +11,36 @@ const Location = require('../models/Location')
 const Payment = require('../models/Payment')
 const Setting = require('../models/Setting')
 const User = require('../models/User')
-const demoData = require('../data/demoData')
 
 const collections = [
-  [Application, demoData.applications],
-  [Candidate, demoData.candidates],
-  [Category, demoData.categories],
-  [Company, demoData.companies],
-  [Employer, demoData.employers],
-  [Job, demoData.jobs],
-  [Location, demoData.locations],
-  [Payment, demoData.payments],
-  [Setting, demoData.settings],
-  [User, demoData.users],
+  Application,
+  Candidate,
+  Category,
+  Company,
+  Employer,
+  Job,
+  Location,
+  Payment,
+  Setting,
+  User,
 ]
 
 async function clearDatabase() {
-  for (const [Model] of collections) {
+  for (const Model of collections) {
     await Model.deleteMany({})
   }
 }
 
 async function seed() {
-  await connectDB()
-  await clearDatabase()
-
-  if (process.argv.includes('--clear')) {
-    console.log('Demo data cleared')
+  if (!process.argv.includes('--clear')) {
+    console.log('Demo data seeding is disabled. Use npm run seed:clear only when you want to clear the database.')
     process.exit(0)
   }
 
-  for (const [Model, data] of collections) {
-    if (Model.modelName === 'User') {
-      await Model.create(data)
-    } else {
-      await Model.insertMany(data)
-    }
-  }
+  await connectDB()
+  await clearDatabase()
 
-  console.log('Demo data seeded successfully')
+  console.log('Database cleared.')
   process.exit(0)
 }
 

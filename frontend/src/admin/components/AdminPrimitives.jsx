@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Download, FileSpreadsheet, FileText, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { CheckCircle2, Download, Eye, FileSpreadsheet, FileText, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 
 export function AdminCard({ children, className = '' }) {
   return <div className={`rounded-[7px] border border-white/70 bg-white/90 p-5 shadow-lg shadow-slate-200/70 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/86 dark:shadow-black/25 ${className}`}>{children}</div>
@@ -155,13 +155,17 @@ function formatCell(key, value) {
   return value
 }
 
-export function ActionButtons({ onEdit, onDelete, extra = 'Approve' }) {
+export function ActionButtons({ onEdit, onDelete, onView, extra = 'Approve' }) {
   return (
     <div className="flex flex-wrap gap-2">
       <button aria-label="Edit record" className="grid h-8 w-8 place-items-center rounded-[7px] bg-slate-100 text-slate-700 transition hover:bg-slate-200" onClick={onEdit} title="Edit" type="button">
         <Pencil size={16} />
       </button>
-      {extra && (
+      {onView ? (
+        <button aria-label="View record" className="grid h-8 w-8 place-items-center rounded-[7px] bg-blue-50 text-blue-700 transition hover:bg-blue-100" onClick={onView} title="View" type="button">
+          <Eye size={16} />
+        </button>
+      ) : extra && (
         <button aria-label={extra} className="grid h-8 w-8 place-items-center rounded-[7px] bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100" title={extra} type="button">
           <CheckCircle2 size={16} />
         </button>
