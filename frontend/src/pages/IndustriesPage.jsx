@@ -47,11 +47,11 @@ export function IndustriesPage() {
   }, [jobs])
 
   return (
-    <section className="bg-white py-10 sm:py-14">
+    <section className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/60 py-10 sm:py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Button to="/" variant="secondary"><ArrowLeft size={17} /> Back Home</Button>
-        <div className="mt-6 rounded-[7px] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-teal-50 p-6 shadow-sm sm:p-8">
-          <div className="grid h-12 w-12 place-items-center rounded-[7px] bg-blue-600 text-white">
+        <div className="mt-6 rounded-[7px] border border-blue-100/80 bg-white/72 p-6 shadow-sm shadow-blue-100/60 backdrop-blur sm:p-8">
+          <div className="grid h-12 w-12 place-items-center rounded-[7px] bg-blue-600 text-white shadow-lg shadow-blue-100">
             <Building2 size={22} />
           </div>
           <h1 className="mt-4 text-3xl font-black text-slate-950 sm:text-5xl">All Industries</h1>
@@ -66,20 +66,20 @@ export function IndustriesPage() {
             const count = industryCounts[category.name] || 0
             return (
               <Link
-                className="group min-h-40 rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100"
+                className="group min-h-40 rounded-[7px] border border-blue-100/80 bg-white/78 p-5 shadow-sm shadow-slate-200/60 backdrop-blur transition hover:-translate-y-1 hover:border-blue-300 hover:bg-white/95 hover:shadow-xl hover:shadow-blue-100"
                 key={category.name}
                 to={createCategoryJobsPath(category)}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div className={`grid h-12 w-12 place-items-center rounded-[7px] ${category.color}`}>
+                  <div className={`grid h-12 w-12 place-items-center rounded-[7px] ${category.color} ring-1 ring-white/80`}>
                     <Icon size={21} />
                   </div>
-                  <span className="rounded-[7px] bg-slate-50 px-3 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
+                  <span className="rounded-[7px] bg-blue-50/80 px-3 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100">
                     {loading ? '...' : `${count} roles`}
                   </span>
                 </div>
-                <h2 className="mt-5 text-lg font-black text-slate-950 group-hover:text-blue-600">{category.name}</h2>
-                <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
+                <h2 className="mt-5 text-lg font-black text-slate-950 transition group-hover:text-blue-700">{category.name}</h2>
+                <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
                   {loading ? 'Loading live openings...' : `${count} open roles in ${category.name}`}
                 </p>
               </Link>
