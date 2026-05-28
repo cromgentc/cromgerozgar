@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { CookieConsent } from './components/CookieConsent'
+import { FAQPage } from './components/FAQSection'
 import { ApplyModal, Toast } from './components/PortalUI'
 import { AdminLayout } from './admin/components/AdminLayout'
 import { AdminBulkHiringPage, AdminHiringPage, AdminSingleHiringPage } from './admin/pages/AdminHiringPages'
@@ -116,6 +117,7 @@ function App() {
         { path: '/post-job', element: <PostJobPage /> },
         { path: '/candidate-reviews', element: <CandidateReviewsPage /> },
         { path: '/contact', element: <ContactPage /> },
+        { path: '/faqs', element: <FAQPage /> },
         { path: '/privacy', element: <ContentPage slug="privacy" /> },
         { path: '/terms', element: <ContentPage slug="terms" /> },
         { path: '/support', element: <ContentPage slug="support" /> },

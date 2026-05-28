@@ -21,6 +21,7 @@ const initialRegister = {
   fullAddress: '',
   password: '',
   confirmPassword: '',
+  termsAccepted: false,
 }
 
 const companySuggestions = ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'Cromgen Rozgar']
@@ -209,6 +210,11 @@ export function EmployerRegisterPage() {
   }
 
   const continueToSetup = () => {
+    if (!form.termsAccepted) {
+      setMessage('Please tick recruiter terms and hiring policies to continue.')
+      return
+    }
+
     if (!form.companyName || !form.businessEmail) {
       setMessage('Company name and business email are required.')
       return
@@ -240,6 +246,11 @@ export function EmployerRegisterPage() {
   }
 
   const submit = async () => {
+    if (!form.termsAccepted) {
+      setMessage('Please tick recruiter terms and hiring policies before registration.')
+      return
+    }
+
     if (!isBusinessEmail(form.businessEmail)) {
       setMessage('Please use a business email address. Personal email domains are not accepted.')
       return
@@ -291,6 +302,11 @@ export function EmployerRegisterPage() {
   }
 
   const googleSubmit = async (credential) => {
+    if (!form.termsAccepted) {
+      setMessage('Please tick recruiter terms and hiring policies before Google registration.')
+      return
+    }
+
     setLoading(true)
     setMessage('')
 
@@ -353,7 +369,10 @@ export function EmployerRegisterPage() {
           </>
         )}
       </div>
-      <label className="mt-4 flex items-center gap-2 text-sm text-slate-500"><input type="checkbox" /> I agree to recruiter terms and hiring policies.</label>
+      <label className="mt-4 flex items-center gap-2 rounded-[7px] bg-white/65 p-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-200">
+        <input checked={form.termsAccepted} onChange={(event) => update('termsAccepted', event.target.checked)} type="checkbox" />
+        I agree to recruiter terms and hiring policies.
+      </label>
       {message && <p className="mt-4 rounded-[7px] bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         {step > 1 && <Button className="flex-1" onClick={() => setStep(1)} variant="secondary">Back</Button>}
@@ -376,20 +395,20 @@ export function EmployerRegisterPage() {
 
 function EmployerAuthShell({ title, subtitle, children }) {
   return (
-    <section className="grid min-h-[calc(100vh-76px)] place-items-center bg-[linear-gradient(135deg,#FFFFFF_0%,#F8FBFF_55%,#FFF7ED_100%)] px-4 py-5 sm:py-7">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-[7px] border border-[#0057B8]/10 bg-white/95 shadow-2xl shadow-[#0057B8]/15 backdrop-blur-xl lg:grid-cols-[0.86fr_1.14fr]">
-        <div className="relative bg-gradient-to-br from-[#0057B8] via-[#0057B8] to-[#FF8A00] p-6 text-white sm:p-7">
+    <section className="grid min-h-[calc(100vh-76px)] place-items-center bg-[radial-gradient(circle_at_top_left,#DBEAFE_0,transparent_34%),radial-gradient(circle_at_bottom_right,#FFEDD5_0,transparent_34%),linear-gradient(135deg,#FFFFFF_0%,#F8FBFF_55%,#FFF7ED_100%)] px-4 py-5 sm:py-7">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-[7px] border border-white/80 bg-white/68 shadow-2xl shadow-[#0057B8]/15 backdrop-blur-2xl lg:grid-cols-[0.86fr_1.14fr]">
+        <div className="relative border-b border-white/25 bg-gradient-to-br from-[#0057B8]/88 via-[#0057B8]/80 to-[#FF8A00]/82 p-6 text-white backdrop-blur-xl sm:p-7 lg:border-b-0 lg:border-r">
           <div className="relative z-10">
             <div className="grid h-12 w-12 place-items-center rounded-[7px] bg-white/15"><Building2 size={24} /></div>
             <h1 className="mt-4 text-3xl font-black sm:text-4xl">{title}</h1>
             <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-blue-50">{subtitle}</p>
             <div className="mt-6 grid gap-2.5">
-              {['Verified recruiter profile', 'Collaborative recruiter workspace', 'Application and shortlist management'].map((item) => <p className="flex items-center gap-3 rounded-[7px] bg-white/15 px-4 py-3 text-sm font-semibold" key={item}><CheckCircle2 className="text-[#A7F3A0]" size={17} />{item}</p>)}
+              {['Verified recruiter profile', 'Collaborative recruiter workspace', 'Application and shortlist management'].map((item) => <p className="flex items-center gap-3 rounded-[7px] bg-white/18 px-4 py-3 text-sm font-semibold ring-1 ring-white/15" key={item}><CheckCircle2 className="text-[#A7F3A0]" size={17} />{item}</p>)}
             </div>
           </div>
-          <img className="relative z-10 mt-6 max-h-56 w-full rounded-[7px] bg-white/10 object-contain p-2 lg:max-h-60" src={employerImage} alt="Recruiter portal illustration" />
+          <img className="relative z-10 mt-6 max-h-56 w-full rounded-[7px] bg-white/12 object-contain p-2 ring-1 ring-white/15 lg:max-h-60" src={employerImage} alt="Recruiter portal illustration" />
         </div>
-        <div className="p-6 sm:p-8">{children}</div>
+        <div className="bg-white/56 p-6 backdrop-blur-xl sm:p-8">{children}</div>
       </div>
     </section>
   )

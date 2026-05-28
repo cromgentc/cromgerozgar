@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown, HelpCircle, MessageCircle, Minus, Plus, Search, Send, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { api } from '../services/api'
 
-export function FAQSection() {
+export function FAQSection({ fullPage = false }) {
   const [activeCategory, setActiveCategory] = useState('All')
   const [query, setQuery] = useState('')
   const [openIndex, setOpenIndex] = useState(0)
@@ -48,13 +49,15 @@ export function FAQSection() {
     })
   }, [activeCategory, items, query])
 
+  const visibleFaqs = fullPage ? filteredFaqs : filteredFaqs.slice(0, 8)
+
   return (
-    <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,#E0F2FE_0,transparent_34%),radial-gradient(circle_at_bottom_right,#F3E8FF_0,transparent_32%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] py-16 sm:py-20">
+    <section className={`relative overflow-hidden bg-[radial-gradient(circle_at_top_left,#E0F2FE_0,transparent_34%),radial-gradient(circle_at_bottom_right,#F3E8FF_0,transparent_32%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] ${fullPage ? 'min-h-screen py-10 sm:py-14' : 'py-16 sm:py-20'}`}>
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <motion.div className="mx-auto max-w-3xl text-center" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
-          <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Common Questions</h2>
+          <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">{fullPage ? 'All FAQs' : 'Common Questions'}</h2>
           <p className="mt-4 text-base leading-7 text-slate-500">
-            Dynamic answers for candidates, recruiters, applications, payments, and platform support.
+            {fullPage ? 'Browse all MongoDB FAQs for candidates, recruiters, applications, payments, documents, and support.' : 'Dynamic answers for candidates, recruiters, applications, payments, and platform support.'}
           </p>
         </motion.div>
 
@@ -97,7 +100,7 @@ export function FAQSection() {
             {loading ? (
               [1, 2, 3].map((item) => <div className="h-24 animate-pulse rounded-[7px] bg-white ring-1 ring-slate-200" key={item} />)
             ) : filteredFaqs.length > 0 ? (
-              filteredFaqs.map((item, index) => (
+              visibleFaqs.map((item, index) => (
                 <FAQCard
                   isOpen={openIndex === index}
                   item={item}
@@ -114,6 +117,18 @@ export function FAQSection() {
             )}
           </AnimatePresence>
         </div>
+
+        {!fullPage && filteredFaqs.length > visibleFaqs.length && (
+          <div className="mt-7 flex justify-center">
+            <Link
+              className="inline-flex min-h-11 items-center justify-center rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700"
+              target="_blank"
+              to="/faqs"
+            >
+              More FAQ
+            </Link>
+          </div>
+        )}
 
         <motion.div className="mt-8 rounded-[7px] border border-blue-100 bg-white/85 p-5 text-center shadow-xl shadow-blue-100/50 backdrop-blur sm:p-6" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
           <p className="text-lg font-black text-slate-950">Still have questions?</p>
@@ -134,6 +149,10 @@ export function FAQSection() {
       </AnimatePresence>
     </section>
   )
+}
+
+export function FAQPage() {
+  return <FAQSection fullPage />
 }
 
 function FAQCard({ item, isOpen, onClick }) {
