@@ -18,6 +18,7 @@ const Setting = require('../models/Setting')
 const SupportMessage = require('../models/SupportMessage')
 const Testimonial = require('../models/Testimonial')
 const User = require('../models/User')
+const { ensureDefaultFaqs } = require('./faqDefaults')
 const { ensureDefaultTestimonials } = require('./testimonialDefaults')
 const {
   collectSupaCloudObjectsFromFields,
@@ -94,33 +95,6 @@ async function upsertNewsletterSubscriber(body, req) {
   req.res.status(200).json({ success: true, data: existing, message: 'You are already subscribed. We refreshed your subscription.' })
   return true
 }
-
-const defaultFaqs = [
-  {
-    category: 'General',
-    question: 'How do I apply for jobs on CromGen Rozgar?',
-    answer: 'Create or login to your candidate account, complete your profile, open a job, and click Apply. You can track submitted applications from your dashboard.',
-    status: 'Active',
-    sortOrder: 1,
-    featured: true,
-  },
-  {
-    category: 'Recruiter',
-    question: 'How can recruiters post jobs?',
-    answer: 'Recruiters can register, complete company verification, choose an active package, and submit jobs for admin approval.',
-    status: 'Active',
-    sortOrder: 2,
-    featured: true,
-  },
-  {
-    category: 'Support',
-    question: 'Who should I contact for account or application help?',
-    answer: 'Use the support option on the website or contact CromGen Rozgar support with your registered email and issue details.',
-    status: 'Active',
-    sortOrder: 3,
-    featured: false,
-  },
-]
 
 const defaultCategoryNames = [
   'IT & Software',
@@ -216,11 +190,8 @@ async function ensureDefaultCategories() {
   )
 }
 
-async function ensureDefaultFaqs(filter) {
-  const keys = Object.keys(filter)
-  if (keys.length && !(keys.length === 1 && filter.status === 'Active')) return
-  const total = await Faq.countDocuments({})
-  if (!total) await Faq.insertMany(defaultFaqs)
+async function ensureMongoDefaultFaqs(filter) {
+  await ensureDefaultFaqs(Faq, filter)
 }
 
 const defaultPolicyPage = {
@@ -646,7 +617,7 @@ module.exports = {
       ])
     },
   }),
-  faqs: crudController(Faq, { searchFields: ['category', 'question', 'answer', 'status'], beforeGetAll: ensureDefaultFaqs }),
+  faqs: crudController(Faq, { searchFields: ['category', 'question', 'answer', 'status'], beforeGetAll: ensureMongoDefaultFaqs }),
   freelancerProfiles: crudController(FreelancerProfile, { searchFields: ['name', 'email', 'role', 'location', 'rate', 'skills', 'availability', 'status'] }),
   jobs: crudController(Job, {
     searchFields: ['title', 'company', 'department', 'location', 'skills'],

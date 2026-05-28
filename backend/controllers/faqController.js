@@ -1,11 +1,14 @@
 const asyncHandler = require('../middleware/asyncHandler')
 const Faq = require('../models/Faq')
+const { ensureDefaultFaqs } = require('./faqDefaults')
 
 const listFaqs = asyncHandler(async (req, res) => {
   const page = Math.max(Number(req.query.page) || 1, 1)
   const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100)
   const search = String(req.query.search || '').trim().toLowerCase()
   const status = String(req.query.status || '').trim()
+  const seedFilter = status ? { status } : {}
+  await ensureDefaultFaqs(Faq, seedFilter)
   const rows = await Faq.db.collection('faqs').find({}).toArray()
 
   let data = rows.map((row) => ({
