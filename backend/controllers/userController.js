@@ -25,12 +25,16 @@ function normalizeUser(user) {
   if (!user) return user
   const data = typeof user.toObject === 'function' ? user.toObject() : user
   const role = normalizeRole(data.role)
+  const recruiterVerificationStatus = data.recruiterVerificationStatus || (role === 'recruiter' ? 'documents_required' : 'approved')
+  const status = role === 'recruiter' && recruiterVerificationStatus !== 'approved' && data.status === 'Active'
+    ? 'Review'
+    : data.status || (role === 'recruiter' ? 'Review' : 'Active')
 
   return {
     ...data,
     role,
-    status: data.status || (role === 'recruiter' ? 'Review' : 'Active'),
-    recruiterVerificationStatus: data.recruiterVerificationStatus || (role === 'recruiter' ? 'documents_required' : 'approved'),
+    status,
+    recruiterVerificationStatus,
     recruiterVerificationRemark: data.recruiterVerificationRemark || '',
   }
 }

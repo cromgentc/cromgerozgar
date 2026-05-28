@@ -106,6 +106,10 @@ function signResetToken(user) {
 
 function authPayload(user) {
   const role = normalizeRole(user.role)
+  const recruiterVerificationStatus = user.recruiterVerificationStatus || (role === 'recruiter' ? 'documents_required' : 'approved')
+  const status = role === 'recruiter' && recruiterVerificationStatus !== 'approved' && user.status === 'Active'
+    ? 'Review'
+    : user.status
 
   return {
     id: user._id,
@@ -113,10 +117,10 @@ function authPayload(user) {
     email: user.email,
     phone: user.phone,
     role,
-    status: user.status,
+    status,
     avatar: user.avatar,
     authProvider: user.authProvider,
-    recruiterVerificationStatus: user.recruiterVerificationStatus || (role === 'recruiter' ? 'documents_required' : 'approved'),
+    recruiterVerificationStatus,
     recruiterVerificationRemark: user.recruiterVerificationRemark,
   }
 }
