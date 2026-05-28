@@ -116,7 +116,7 @@ const defaultFaqs = [
   },
 ]
 
-const defaultCategories = [
+const defaultCategoryNames = [
   'IT & Software',
   'Sales & Marketing',
   'Customer Support',
@@ -129,14 +129,38 @@ const defaultCategories = [
   'Freelance',
   'AI & Data Annotation',
   'Business Development',
-].map((name) => ({ name, jobs: 0, status: 'Active' }))
+]
+
+const defaultDepartmentNames = [
+  'Engineering',
+  'Product',
+  'Design',
+  'Growth',
+  'Marketing',
+  'Sales',
+  'Customer Success',
+  'Support',
+  'HR & Recruitment',
+  'Finance',
+  'Operations',
+  'Research Operations',
+  'AI Operations',
+  'Human Resources',
+  'Recruitment',
+  'Data & Analytics',
+  'Administration',
+  'Legal',
+]
 
 async function ensureDefaultCategories() {
+  const jobDepartments = await Job.distinct('department', { department: { $nin: ['', null] } })
+  const categoryNames = Array.from(new Set([...defaultCategoryNames, ...defaultDepartmentNames, ...jobDepartments].map((name) => String(name || '').trim()).filter(Boolean)))
+
   await Category.bulkWrite(
-    defaultCategories.map((category) => ({
+    categoryNames.map((name) => ({
       updateOne: {
-        filter: { name: category.name },
-        update: { $setOnInsert: category },
+        filter: { name },
+        update: { $setOnInsert: { name, jobs: 0, status: 'Active' } },
         upsert: true,
       },
     })),

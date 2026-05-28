@@ -11,6 +11,21 @@ const categories = [
   { name: 'Freelance', jobs: 0, status: 'Active' },
   { name: 'AI & Data Annotation', jobs: 0, status: 'Active' },
   { name: 'Business Development', jobs: 0, status: 'Active' },
+  { name: 'Engineering', jobs: 0, status: 'Active' },
+  { name: 'Product', jobs: 0, status: 'Active' },
+  { name: 'Design', jobs: 0, status: 'Active' },
+  { name: 'Growth', jobs: 0, status: 'Active' },
+  { name: 'Marketing', jobs: 0, status: 'Active' },
+  { name: 'Sales', jobs: 0, status: 'Active' },
+  { name: 'Support', jobs: 0, status: 'Active' },
+  { name: 'Operations', jobs: 0, status: 'Active' },
+  { name: 'Research Operations', jobs: 0, status: 'Active' },
+  { name: 'AI Operations', jobs: 0, status: 'Active' },
+  { name: 'Human Resources', jobs: 0, status: 'Active' },
+  { name: 'Recruitment', jobs: 0, status: 'Active' },
+  { name: 'Data & Analytics', jobs: 0, status: 'Active' },
+  { name: 'Administration', jobs: 0, status: 'Active' },
+  { name: 'Legal', jobs: 0, status: 'Active' },
 ]
 
 const companies = [
