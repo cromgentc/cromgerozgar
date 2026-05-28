@@ -86,16 +86,8 @@ const sidebarItems = [
   { label: 'Candidates', to: '/admin/candidates', icon: UsersRound, roles: ['Admin'] },
   { label: 'Hiring Team', to: '/admin/hiring-team', icon: UserPlus, roles: ['Admin'] },
   { label: 'Applications', to: '/admin/applications', icon: FileCheck2, roles: ['Admin'] },
-  {
-    label: 'Bridge Management',
-    to: '/admin/categories',
-    icon: Globe2,
-    roles: ['Admin'],
-    children: [
-      { label: 'Industry', to: '/admin/categories', icon: Building2 },
-      { label: 'Company', to: '/admin/companies', icon: Building2 },
-    ],
-  },
+  { label: 'Industry', to: '/admin/categories', icon: Building2, roles: ['Admin'] },
+  { label: 'Company', to: '/admin/companies', icon: Building2, roles: ['Admin'] },
   {
     label: 'Website Content',
     to: '/admin/testimonials',

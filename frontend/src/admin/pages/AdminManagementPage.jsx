@@ -568,7 +568,6 @@ const fieldOptions = {
   featuredToggle: ['false', 'true'],
   supportStatus: ['Open', 'In Progress', 'Resolved', 'Closed'],
   accountDepartmentStatus: ['Pending', 'Active', 'Rejected', 'Hold', 'Removed'],
-  company: ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'Cromgen Solutions'],
   department: ['Engineering', 'Product', 'Design', 'Growth', 'Marketing', 'Sales', 'Customer Success', 'Support', 'HR & Recruitment', 'Finance', 'Operations', 'Research Operations', 'AI Operations'],
   experience: ['Fresher', '0-1 years', '1-3 years', '3-6 years', '6-10 years', '10+ years'],
   type: ['Full Time', 'Part Time', 'Contract', 'Freelance'],
@@ -672,7 +671,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   const [selectedRow, setSelectedRow] = useState(null)
   const [form, setForm] = useState({})
   const [message, setMessage] = useState('')
-  const [companyOptions, setCompanyOptions] = useState(fieldOptions.company)
+  const [companyOptions, setCompanyOptions] = useState([])
   const [companyRows, setCompanyRows] = useState([])
 
   const loadRows = () => {
@@ -767,13 +766,13 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     api
       .listAll('companies')
       .then((payload) => {
-        const names = (payload.data || []).map((company) => company.name).filter(Boolean)
+        const names = Array.from(new Set((payload.data || []).map((company) => company.name).filter(Boolean)))
         setCompanyRows(payload.data || [])
-        if (names.length) setCompanyOptions(names)
+        setCompanyOptions(names)
       })
       .catch(() => {
         setCompanyRows([])
-        setCompanyOptions(fieldOptions.company)
+        setCompanyOptions([])
       })
   }, [])
 
@@ -1461,7 +1460,7 @@ export function RecruiterDocumentDetailPage() {
   )
 }
 
-function getInitialForm(type, companyOptions = fieldOptions.company) {
+function getInitialForm(type, companyOptions = []) {
   if (type === 'users') {
     return {
       name: '',
@@ -1488,7 +1487,7 @@ function getInitialForm(type, companyOptions = fieldOptions.company) {
     return {
       ...location,
       title: jobTitleOptions[0],
-      company: companyOptions[0] || fieldOptions.company[0],
+      company: companyOptions[0] || '',
       industry: '',
       department: fieldOptions.department[0],
       location: formatJobLocation(location),
@@ -3132,6 +3131,23 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+          ) : type === 'jobs' && key === 'company' ? (
+            <select
+              className="input"
+              key={key}
+              onChange={(event) => {
+                onChange(key, event.target.value)
+                const company = companyRows.find((item) => normalizeName(item.name) === normalizeName(event.target.value))
+                if (company?.industry) {
+                  onChange('industry', company.industry)
+                  onChange('department', company.industry)
+                }
+              }}
+              value={form[key] || ''}
+            >
+              <option value="">{companyOptions.length ? 'Select admin company' : 'Add company first'}</option>
+              {companyOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
           ) : fieldOptions[key] ? (
             <select
               className="input"
