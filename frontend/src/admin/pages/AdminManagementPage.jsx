@@ -1151,7 +1151,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       </div>
       {message && <p className="rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
       {type === 'applications' && <ApplicationStatusPanel />}
-      {['payments', 'paymentLogs'].includes(type) && <RevenueSummary />}
+      {['payments', 'paymentLogs'].includes(type) && <RevenueSummary rows={displayRows} />}
       <DataTable
         actions={type === 'jobs' || config.readonly ? undefined : actions}
         columns={config.columns}
@@ -3521,13 +3521,18 @@ export function AdminNewsletterSendPage() {
   )
 }
 
-function RevenueSummary() {
+function RevenueSummary({ rows = [] }) {
+  const paidRows = rows.filter((row) => String(row.status || '').toLowerCase() === 'paid')
+  const failedRows = rows.filter((row) => String(row.status || '').toLowerCase() === 'failed')
+  const activeTiers = new Set(rows.map((row) => String(row.plan || '').trim()).filter(Boolean)).size
+  const revenue = paidRows.reduce((total, row) => total + parsePaymentAmount(row.amount), 0)
+
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {[
-        ['Subscription Plans', '4 active tiers', ShieldCheck],
-        ['Revenue Summary', 'INR 42.8L', FileText],
-        ['Failed Payments', '16 retries', Download],
+        ['Subscription Plans', `${activeTiers} active ${activeTiers === 1 ? 'tier' : 'tiers'}`, ShieldCheck],
+        ['Revenue Summary', formatInrAmount(revenue), FileText],
+        ['Failed Payments', `${failedRows.length} ${failedRows.length === 1 ? 'retry' : 'retries'}`, Download],
       ].map(([label, value, Icon]) => (
         <AdminCard key={label}>
           <Icon className="text-blue-600" size={24} />
@@ -3537,6 +3542,21 @@ function RevenueSummary() {
       ))}
     </div>
   )
+}
+
+function parsePaymentAmount(value) {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0
+
+  const text = String(value || '').trim().toLowerCase()
+  if (!text) return 0
+
+  const multiplier = text.includes('cr') ? 10000000 : text.includes('l') ? 100000 : text.includes('k') ? 1000 : 1
+  const amount = Number(text.replace(/,/g, '').match(/\d+(?:\.\d+)?/)?.[0] || 0)
+  return Number.isFinite(amount) ? amount * multiplier : 0
+}
+
+function formatInrAmount(value) {
+  return `INR ${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.max(0, Math.round(value || 0)))}`
 }
 
 function LabeledInput({ className = '', label, min, onChange, placeholder, type = 'text', value }) {
