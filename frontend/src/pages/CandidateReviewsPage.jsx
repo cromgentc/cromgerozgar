@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Star } from 'lucide-react'
 import { Button } from '../components/Button'
 import { ReviewCard } from '../components/ReviewCard'
 import { api } from '../services/api'
 
+const PAGE_SIZE = 10
+
 export function CandidateReviewsPage() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const currentPage = Math.max(Number(searchParams.get('page')) || 1, 1)
+  const totalPages = Math.max(Math.ceil(items.length / PAGE_SIZE), 1)
+  const safePage = Math.min(currentPage, totalPages)
+  const visibleItems = items.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   useEffect(() => {
     let active = true
@@ -29,6 +37,18 @@ export function CandidateReviewsPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!loading && currentPage > totalPages) {
+      setSearchParams(totalPages > 1 ? { page: String(totalPages) } : {}, { replace: true })
+    }
+  }, [currentPage, loading, setSearchParams, totalPages])
+
+  const goToPage = (page) => {
+    const nextPage = Math.min(Math.max(page, 1), totalPages)
+    setSearchParams(nextPage > 1 ? { page: String(nextPage) } : {})
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <section className="bg-white py-10 sm:py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -48,9 +68,35 @@ export function CandidateReviewsPage() {
             {[1, 2, 3, 4, 5, 6].map((item) => <div className="h-48 animate-pulse rounded-[7px] bg-slate-100" key={item} />)}
           </div>
         ) : items.length ? (
-          <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {items.map((item) => <ReviewCard item={item} key={item._id || item.name} />)}
-          </div>
+          <>
+            <div className="mt-8 flex flex-col justify-between gap-3 rounded-[7px] border border-slate-200 bg-slate-50 p-4 text-sm font-bold text-slate-600 sm:flex-row sm:items-center">
+              <span>Showing {(safePage - 1) * PAGE_SIZE + 1}-{Math.min(safePage * PAGE_SIZE, items.length)} of {items.length} reviews</span>
+              <span>Page {safePage} of {totalPages}</span>
+            </div>
+            <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {visibleItems.map((item) => <ReviewCard item={item} key={item._id || item.name} />)}
+            </div>
+            {totalPages > 1 && (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                <button className="rounded-[7px] bg-slate-100 px-4 py-2 text-sm font-black text-slate-600 disabled:cursor-not-allowed disabled:opacity-50" disabled={safePage === 1} onClick={() => goToPage(safePage - 1)} type="button">
+                  Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    className={`grid h-10 min-w-10 place-items-center rounded-[7px] px-3 text-sm font-black ${page === safePage ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700'}`}
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    type="button"
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button className="rounded-[7px] bg-slate-100 px-4 py-2 text-sm font-black text-slate-600 disabled:cursor-not-allowed disabled:opacity-50" disabled={safePage === totalPages} onClick={() => goToPage(safePage + 1)} type="button">
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="mt-8 rounded-[7px] border border-dashed border-slate-300 bg-white p-10 text-center">
             <h2 className="text-2xl font-black text-slate-950">No reviews yet</h2>

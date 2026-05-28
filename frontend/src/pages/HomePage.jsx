@@ -21,6 +21,7 @@ export function HomePage({ onApply }) {
   const isCandidate = user?.role === 'Candidate'
   const isRecruiter = user?.role === 'recruiter'
   const [liveJobs, setLiveJobs] = useState([])
+  const [liveCompanies, setLiveCompanies] = useState([])
 
   useEffect(() => {
     let active = true
@@ -31,6 +32,14 @@ export function HomePage({ onApply }) {
       })
       .catch(() => {
         if (active) setLiveJobs([])
+      })
+
+    api.companyProfiles()
+      .then((payload) => {
+        if (active) setLiveCompanies(Array.isArray(payload.data) ? payload.data : [])
+      })
+      .catch(() => {
+        if (active) setLiveCompanies([])
       })
 
     return () => {
@@ -55,9 +64,11 @@ export function HomePage({ onApply }) {
 
       <MobileHomeJobs jobs={latestJobs} onApply={onApply} />
 
-      <Section className="bg-white md:hidden" title="Trusted companies hiring on CromGen Rozgar" subtitle="Verified recruiters with active openings.">
-        <CompanyGrid compactMobile />
-      </Section>
+      {liveCompanies.length >= 50 && (
+        <Section className="bg-white md:hidden" title="Trusted companies hiring on CromGen Rozgar" subtitle="Verified recruiters with active openings.">
+          <CompanyGrid companies={liveCompanies} compactMobile />
+        </Section>
+      )}
 
       <div className="md:hidden">
         <CareerLanes compactMobile categoryCounts={categoryCounts} />
@@ -66,9 +77,11 @@ export function HomePage({ onApply }) {
       <div className="hidden md:block">
         <CareerFocusBand />
 
-        <Section className="bg-white" title="Trusted companies hiring on CromGen Rozgar" subtitle="Verified recruiter profiles with active openings and transparent role information.">
-          <CompanyGrid />
-        </Section>
+        {liveCompanies.length >= 50 && (
+          <Section className="bg-white" title="Trusted companies hiring on CromGen Rozgar" subtitle="Verified recruiter profiles with active openings and transparent role information.">
+            <CompanyGrid companies={liveCompanies} />
+          </Section>
+        )}
 
         <Section className="bg-white" title="Latest Jobs" subtitle="Fresh verified openings from active recruiters, updated as new jobs are approved.">
           <LatestJobsGrid hasMore jobs={latestJobs} onApply={onApply} />
@@ -612,27 +625,9 @@ function getProcessSteps({ isCandidate, isRecruiter, jobsCount, profileCompletio
   ]
 }
 
-export function CompanyGrid({ compactMobile = false }) {
-  const [liveCompanies, setLiveCompanies] = useState([])
+export function CompanyGrid({ compactMobile = false, companies = [] }) {
   const [showAllMobileCompanies, setShowAllMobileCompanies] = useState(false)
-
-  useEffect(() => {
-    let active = true
-
-    api.companyProfiles()
-      .then((payload) => {
-        if (active) setLiveCompanies(Array.isArray(payload.data) ? payload.data : [])
-      })
-      .catch(() => {
-        if (active) setLiveCompanies([])
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
-
-  const list = useMemo(() => liveCompanies, [liveCompanies])
+  const list = useMemo(() => companies, [companies])
   const visibleList = compactMobile
     ? (showAllMobileCompanies ? list.slice(0, 6) : list.slice(0, 4))
     : list.slice(0, 3)
