@@ -1122,11 +1122,11 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       }
 
       if (type === 'recruiterDocuments') {
-        return <RecruiterDocumentActions canDelete={user?.role !== 'account team'} onAction={(action) => selectRecruiterDocumentAction(row, action)} onView={() => window.open(`/admin/recruiter-documents/${row._id}`, '_blank', 'noopener,noreferrer')} row={row} />
+        return <RecruiterDocumentActions onAction={(action) => selectRecruiterDocumentAction(row, action)} row={row} />
       }
 
       if (type === 'employers') {
-        return <RecruiterAccountActions canDelete={user?.role !== 'account team'} onAction={(action) => selectEmployerAccountAction(row, action)} onEdit={() => openEdit(row)} onView={() => window.open(`/admin/recruiters/${row._id}`, '_blank', 'noopener,noreferrer')} row={row} />
+        return <RecruiterAccountActions canDelete={user?.role !== 'account team'} onAction={(action) => selectEmployerAccountAction(row, action)} row={row} />
       }
 
       if (type === 'applications') {
@@ -1676,14 +1676,12 @@ function getIconActionConfig(action = '') {
   return { icon: ShieldCheck, className: 'bg-teal-50 text-teal-700 hover:bg-teal-100' }
 }
 
-function RecruiterAccountActions({ canDelete = true, onAction, onEdit, onView, row }) {
+function RecruiterAccountActions({ canDelete = true, onAction, row }) {
   const authorisedBy = row.accountAuthorizedByName || row.accountAuthorizedByEmail
 
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap gap-2">
-        <IconAction kind="view" label="View recruiter details" onClick={onView} />
-        <IconAction kind="edit" label="Edit recruiter" onClick={onEdit} />
         <StatusActionSelect onChange={onAction} value={recruiterStatusOptions.includes(row.status) ? row.status : ''} />
         {canDelete ? <IconAction kind="delete" label="Delete" onClick={() => onAction('delete')} /> : null}
       </div>
@@ -1698,15 +1696,13 @@ function RecruiterAccountActions({ canDelete = true, onAction, onEdit, onView, r
   )
 }
 
-function RecruiterDocumentActions({ canDelete = true, onAction, onView, row = {} }) {
+function RecruiterDocumentActions({ onAction, row = {} }) {
   const authorisedBy = row.reviewedByName || row.reviewedByEmail
 
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap gap-2">
-        <IconAction kind="view" label="View documents" onClick={onView} />
         <StatusActionSelect onChange={onAction} value={recruiterStatusOptions.includes(row.status) ? row.status : ''} />
-        {canDelete ? <IconAction kind="delete" label="Delete" onClick={() => onAction('delete')} /> : null}
       </div>
       {authorisedBy && (
         <div className="rounded-[7px] bg-teal-50 px-3 py-2 text-xs font-bold leading-5 text-teal-700">
