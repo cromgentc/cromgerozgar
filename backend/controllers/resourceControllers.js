@@ -89,6 +89,75 @@ async function upsertNewsletterSubscriber(body, req) {
   return true
 }
 
+const defaultFaqs = [
+  {
+    category: 'General',
+    question: 'How do I apply for jobs on CromGen Rozgar?',
+    answer: 'Create or login to your candidate account, complete your profile, open a job, and click Apply. You can track submitted applications from your dashboard.',
+    status: 'Active',
+    sortOrder: 1,
+    featured: true,
+  },
+  {
+    category: 'Recruiter',
+    question: 'How can recruiters post jobs?',
+    answer: 'Recruiters can register, complete company verification, choose an active package, and submit jobs for admin approval.',
+    status: 'Active',
+    sortOrder: 2,
+    featured: true,
+  },
+  {
+    category: 'Support',
+    question: 'Who should I contact for account or application help?',
+    answer: 'Use the support option on the website or contact CromGen Rozgar support with your registered email and issue details.',
+    status: 'Active',
+    sortOrder: 3,
+    featured: false,
+  },
+]
+
+async function ensureDefaultFaqs(filter) {
+  const keys = Object.keys(filter)
+  if (keys.length && !(keys.length === 1 && filter.status === 'Active')) return
+  const total = await Faq.countDocuments({})
+  if (!total) await Faq.insertMany(defaultFaqs)
+}
+
+const defaultPolicyPage = {
+  slug: 'privacy',
+  title: 'Privacy Policy',
+  subtitle: 'How CromGen Rozgar handles candidate, recruiter, application, and hiring data.',
+  category: 'Privacy',
+  frontendPlacement: 'Users Frontend',
+  status: 'Published',
+  effectiveDate: new Date(),
+  sections: [
+    {
+      heading: 'Data We Collect',
+      body: 'We collect account details, profile information, resumes, job applications, recruiter documents, payment and wallet activity, and platform usage data needed to operate hiring workflows.',
+    },
+    {
+      heading: 'How We Use Data',
+      body: 'Data is used to verify accounts, match candidates with jobs, process applications, help recruiters manage hiring, improve platform security, and send relevant hiring insights when users subscribe.',
+    },
+    {
+      heading: 'User Control',
+      body: 'Users can update profile data, manage application activity, unsubscribe from updates, and request support for privacy-related account actions.',
+    },
+  ],
+}
+
+async function ensureDefaultPolicyPage(filter) {
+  const requestedSlug = filter.slug || 'privacy'
+  if (requestedSlug !== 'privacy') return
+
+  await ContentPage.updateOne(
+    { slug: 'privacy' },
+    { $setOnInsert: defaultPolicyPage },
+    { upsert: true },
+  )
+}
+
 async function upsertSettingByKey(body, req) {
   const key = String(body.key || '').trim()
   if (!key) {
@@ -412,7 +481,7 @@ module.exports = {
   candidates: crudController(Candidate, { searchFields: ['name', 'email', 'role', 'location'] }),
   categories: crudController(Category, { searchFields: ['name', 'status'] }),
   companies: crudController(Company, { searchFields: ['name', 'industry', 'location', 'status'] }),
-  contentPages: crudController(ContentPage, { searchFields: ['slug', 'title', 'subtitle', 'category', 'frontendPlacement', 'status'] }),
+  contentPages: crudController(ContentPage, { searchFields: ['slug', 'title', 'subtitle', 'category', 'frontendPlacement', 'status'], beforeGetAll: ensureDefaultPolicyPage }),
   employers: crudController(Employer, {
     searchFields: ['companyName', 'businessEmail', 'industry', 'location'],
     beforeCreate: ensureUniqueEmployerIdentity,
@@ -428,7 +497,7 @@ module.exports = {
       ])
     },
   }),
-  faqs: crudController(Faq, { searchFields: ['category', 'question', 'answer', 'status'] }),
+  faqs: crudController(Faq, { searchFields: ['category', 'question', 'answer', 'status'], beforeGetAll: ensureDefaultFaqs }),
   jobs: crudController(Job, {
     searchFields: ['title', 'company', 'department', 'location', 'skills'],
     safeGet: true,

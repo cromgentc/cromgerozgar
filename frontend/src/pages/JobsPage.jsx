@@ -44,12 +44,16 @@ export function JobsPage({ onApply }) {
   const [skillsModalOpen, setSkillsModalOpen] = useState(false)
   const [skillsSearch, setSkillsSearch] = useState('')
   const [skillsDraft, setSkillsDraft] = useState([])
+  const [locationModalOpen, setLocationModalOpen] = useState(false)
+  const [locationSearch, setLocationSearch] = useState('')
+  const [locationDraft, setLocationDraft] = useState([])
+  const [salaryModalOpen, setSalaryModalOpen] = useState(false)
+  const [salaryDraft, setSalaryDraft] = useState([])
   const { data: apiJobs } = useApiResource(() => api.jobListings('?sort=-createdAt'), { data: [] }, [])
   const rawList = Array.isArray(apiJobs) ? apiJobs : apiJobs?.data || []
   const normalizedJobs = useMemo(() => rawList.map(normalizeJob), [rawList])
   const dynamicFilters = useMemo(() => buildDynamicFilters(normalizedJobs), [normalizedJobs])
   const keyword = (searchParams.get('q') || '').trim().toLowerCase()
-  const selectedLocation = (searchParams.get('location') || '').trim().toLowerCase()
   const selectedType = (searchParams.get('type') || '').trim().toLowerCase()
   const selectedExperienceMax = Number(searchParams.get('experience') || searchParams.get('experienceMax') || 0)
   const selectedSalaryBands = useMemo(() => getParamList(searchParams, 'salaryBand'), [searchParams])
@@ -65,18 +69,16 @@ export function JobsPage({ onApply }) {
       job.description,
       ...job.skills,
     ].filter(Boolean).join(' ').toLowerCase()
-    const jobLocationState = String(job.locationState || '').toLowerCase()
     const jobType = String(job.type || '').toLowerCase()
 
     return (!keyword || haystack.includes(keyword))
-      && (!selectedLocation || jobLocationState === selectedLocation)
       && (!selectedType || jobType === selectedType)
       && (!selectedExperienceMax || getExperienceMin(job.experience) <= selectedExperienceMax)
       && (!selectedSalaryBands.length || matchesSalaryBands(job.salary, selectedSalaryBands))
       && matchesAdvancedFilters(job, selectedFilters)
   })
   const activeFilterCount = Object.values(selectedFilters).reduce((total, values) => total + values.length, 0) + Number(Boolean(selectedExperienceMax)) + selectedSalaryBands.length
-  const hasSearch = Boolean(keyword || selectedLocation || selectedType || selectedExperienceMax || selectedSalaryBands.length || activeFilterCount)
+  const hasSearch = Boolean(keyword || selectedType || selectedExperienceMax || selectedSalaryBands.length || activeFilterCount)
 
   const setSingleFilter = (key, value) => {
     const params = new URLSearchParams(searchParams)
@@ -123,6 +125,17 @@ export function JobsPage({ onApply }) {
     setSkillsDraft(selectedFilters.skills || [])
     setSkillsSearch('')
     setSkillsModalOpen(true)
+  }
+
+  const openLocationModal = () => {
+    setLocationDraft(selectedFilters.location || [])
+    setLocationSearch('')
+    setLocationModalOpen(true)
+  }
+
+  const openSalaryModal = () => {
+    setSalaryDraft(selectedSalaryBands)
+    setSalaryModalOpen(true)
   }
 
   const clearFilters = () => {
@@ -177,25 +190,15 @@ export function JobsPage({ onApply }) {
               />
               <SalaryFilter
                 counts={salaryBandCounts}
-                onChange={(band) => {
-                  const next = selectedSalaryBands.includes(band)
-                    ? selectedSalaryBands.filter((item) => item !== band)
-                    : [...selectedSalaryBands, band]
-                  setMultiFilter('salaryBand', next)
-                }}
+                onViewMore={openSalaryModal}
                 selectedValues={selectedSalaryBands}
               />
-              {['location'].map((key) => {
-                const filter = dynamicFilters.find((item) => item.key === key) || { key, label: key, values: [] }
-                return (
-                  <FilterSelect
-                    key={key}
-                    filter={filter}
-                    onChange={(value) => setSingleFilter(key, value)}
-                    value={selectedFilters[key]?.[0] || ''}
-                  />
-                )
-              })}
+              <ModalOnlyFilter
+                allLabel="All locations"
+                filter={dynamicFilters.find((item) => item.key === 'location') || { key: 'location', label: 'Location', values: [], counts: {} }}
+                onViewMore={openLocationModal}
+                selectedValues={selectedFilters.location || []}
+              />
               <ExpandedFilter
                 allLabel="All skills"
                 filter={dynamicFilters.find((item) => item.key === 'skills') || { key: 'skills', label: 'Skills', values: [], counts: {} }}
@@ -213,6 +216,7 @@ export function JobsPage({ onApply }) {
                 const filter = dynamicFilters.find((item) => item.key === key) || { key, label: key, values: [] }
                 return (
                   <FilterSelect
+                    allLabel={key === 'workMode' ? 'All mode' : 'All type'}
                     key={key}
                     filter={filter}
                     onChange={(value) => setSingleFilter(key, value)}
@@ -285,11 +289,54 @@ export function JobsPage({ onApply }) {
           searchPlaceholder="Search Skills"
         />
       )}
+      {locationModalOpen && (
+        <FilterModal
+          draft={locationDraft}
+          filter={dynamicFilters.find((item) => item.key === 'location') || { key: 'location', label: 'Location', values: [], counts: {} }}
+          onApply={() => {
+            setMultiFilter('location', locationDraft)
+            setLocationModalOpen(false)
+          }}
+          onClose={() => setLocationModalOpen(false)}
+          onSearch={setLocationSearch}
+          onToggle={(location) => {
+            setLocationDraft((current) => (
+              current.includes(location)
+                ? current.filter((item) => item !== location)
+                : [...current, location]
+            ))
+          }}
+          search={locationSearch}
+          searchPlaceholder="Search Location"
+        />
+      )}
+      {salaryModalOpen && (
+        <FilterModal
+          draft={salaryDraft}
+          filter={{ key: 'salaryBand', label: 'Salary', values: salaryBands.map((band) => band.label), counts: salaryBandCounts }}
+          onApply={() => {
+            setMultiFilter('salaryBand', salaryDraft)
+            setSalaryModalOpen(false)
+          }}
+          onClose={() => setSalaryModalOpen(false)}
+          onSearch={() => {}}
+          onToggle={(salary) => {
+            setSalaryDraft((current) => (
+              current.includes(salary)
+                ? current.filter((item) => item !== salary)
+                : [...current, salary]
+            ))
+          }}
+          search=""
+          searchPlaceholder="Search Salary"
+          showSearch={false}
+        />
+      )}
     </section>
   )
 }
 
-function FilterSelect({ filter, onChange, value }) {
+function FilterSelect({ allLabel, filter, onChange, value }) {
   return (
     <label className="grid gap-2">
       <span className="text-sm font-black text-slate-800">{filter.label}</span>
@@ -298,7 +345,7 @@ function FilterSelect({ filter, onChange, value }) {
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >
-        <option value="">All {filter.label.toLowerCase()}</option>
+        <option value="">{allLabel || `All ${filter.label.toLowerCase()}`}</option>
         {filter.values.map((option) => (
           <option key={option} value={option}>{option} ({filter.counts[option]})</option>
         ))}
@@ -351,21 +398,40 @@ function RangeFilter({ label, max, minLabel, onChange, step, suffix, value }) {
   )
 }
 
-function SalaryFilter({ counts, onChange, selectedValues }) {
+function SalaryFilter({ counts, onViewMore, selectedValues }) {
   return (
     <div className="grid gap-2 border-t border-slate-100 pt-4">
-      <span className="text-sm font-black text-slate-800">Salary</span>
-      <div className="grid gap-2">
-        {salaryBands.map((band) => {
-          const checked = selectedValues.includes(band.label)
-          return (
-            <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-600" key={band.label}>
-              <input checked={checked} className="h-4 w-4 rounded-[4px] border-slate-300 accent-blue-600" onChange={() => onChange(band.label)} type="checkbox" />
-              <span className="min-w-0 truncate">{band.label}</span>
-              <span className="ml-auto text-slate-400">({counts[band.label] || 0})</span>
-            </label>
-          )
-        })}
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-black text-slate-800">Salary</span>
+        <button className="text-xs font-black text-blue-600 hover:text-blue-700" onClick={onViewMore} type="button">
+          View More
+        </button>
+      </div>
+      <div className="rounded-[7px] border border-slate-100 bg-slate-50 p-3">
+        <p className="text-xs font-black uppercase tracking-wide text-slate-400">Selected salary</p>
+        <p className="mt-1 text-sm font-bold text-slate-700">{selectedValues.length ? selectedValues.join(', ') : 'All salary ranges'}</p>
+        {selectedValues.length ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {selectedValues.map((salary) => <span className="rounded-[7px] bg-white px-2.5 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100" key={salary}>{salary} ({counts[salary] || 0})</span>)}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function ModalOnlyFilter({ allLabel, filter, onViewMore, selectedValues }) {
+  return (
+    <div className="grid gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-black text-slate-800">{filter.label}</span>
+        <button className="text-xs font-black text-blue-600 hover:text-blue-700" onClick={onViewMore} type="button">
+          View More
+        </button>
+      </div>
+      <div className="rounded-[7px] border border-slate-100 bg-slate-50 p-3">
+        <p className="text-xs font-black uppercase tracking-wide text-slate-400">Selected {filter.label.toLowerCase()}</p>
+        <p className="mt-1 text-sm font-bold text-slate-700">{selectedValues.length ? selectedValues.join(', ') : allLabel}</p>
       </div>
     </div>
   )
@@ -415,7 +481,7 @@ function DepartmentModal({ draft, filter, onApply, onClose, onSearch, onToggle, 
   )
 }
 
-function FilterModal({ draft, filter, onApply, onClose, onSearch, onToggle, search, searchPlaceholder }) {
+function FilterModal({ draft, filter, onApply, onClose, onSearch, onToggle, search, searchPlaceholder, showSearch = true }) {
   const query = search.trim().toLowerCase()
   const options = filter.values.filter((option) => option.toLowerCase().includes(query))
 
@@ -432,15 +498,17 @@ function FilterModal({ draft, filter, onApply, onClose, onSearch, onToggle, sear
           </button>
         </div>
         <div className="p-5">
-          <label className="mb-5 flex min-h-11 max-w-sm items-center gap-2 rounded-[7px] border border-slate-200 bg-white px-3 text-sm text-slate-500 shadow-sm">
-            <Search size={17} className="text-blue-600" />
-            <input
-              className="w-full bg-transparent font-semibold outline-none placeholder:text-slate-400"
-              onChange={(event) => onSearch(event.target.value)}
-              placeholder={searchPlaceholder}
-              value={search}
-            />
-          </label>
+          {showSearch && (
+            <label className="mb-5 flex min-h-11 max-w-sm items-center gap-2 rounded-[7px] border border-slate-200 bg-white px-3 text-sm text-slate-500 shadow-sm">
+              <Search size={17} className="text-blue-600" />
+              <input
+                className="w-full bg-transparent font-semibold outline-none placeholder:text-slate-400"
+                onChange={(event) => onSearch(event.target.value)}
+                placeholder={searchPlaceholder}
+                value={search}
+              />
+            </label>
+          )}
           <div className="grid max-h-[52vh] gap-x-7 gap-y-3 overflow-y-auto pr-2 sm:grid-cols-2 lg:grid-cols-3">
             {options.length ? options.map((option) => {
               const checked = draft.includes(option)
