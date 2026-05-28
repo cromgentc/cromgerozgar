@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 async function connectDB() {
-  const mongoUri = normalizeMongoUri(process.env.MONGO_URI)
+  const mongoUri = buildMongoUri(process.env.MONGO_URI)
 
   if (!mongoUri) {
     throw new Error('MONGO_URI is required. Copy .env.example to .env and set MongoDB connection string.')
@@ -10,6 +10,26 @@ async function connectDB() {
   const dbName = getMongoDbName(mongoUri)
   const connection = await mongoose.connect(mongoUri, dbName ? { dbName } : {})
   console.log(`MongoDB connected: ${connection.connection.host}/${connection.connection.name}`)
+}
+
+function buildMongoUri(mongoUri) {
+  const normalizedUri = normalizeMongoUri(mongoUri)
+  const username = String(process.env.MONGO_USERNAME || '').trim()
+  const password = String(process.env.MONGO_PASSWORD || '').trim()
+
+  if (!normalizedUri || !username || !password) return normalizedUri
+
+  try {
+    const parsed = new URL(normalizedUri)
+
+    if (parsed.username || parsed.password) return normalizedUri
+
+    parsed.username = username
+    parsed.password = password
+    return parsed.toString()
+  } catch {
+    return normalizedUri
+  }
 }
 
 function normalizeMongoUri(mongoUri) {
