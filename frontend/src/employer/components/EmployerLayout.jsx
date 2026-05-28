@@ -63,7 +63,7 @@ export function EmployerLayout() {
               <CompanyMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
             ) : (
               <>
-              <Button to="/recruiter-login" variant="ghost">Recruiter Login</Button>
+              <Button className="border border-[#0057B8]/35 !bg-white/15 !text-[#0057B8] shadow-none ring-0 backdrop-blur-md hover:!bg-[#0057B8]/10" to="/recruiter-login" variant="ghost">Recruiter Login</Button>
               {!isLoggedIn && <Button to="/recruiter-register" variant="secondary">Register Recruiter</Button>}
                 <Button to="/post-job">Post a Job</Button>
               </>
@@ -100,7 +100,7 @@ export function EmployerLayout() {
                 </div>
               ) : (
                 <div className="grid gap-2 pt-2 sm:grid-cols-3">
-                  <Button onClick={() => setOpen(false)} to="/recruiter-login" variant="secondary">Login</Button>
+                  <Button className="border border-[#0057B8]/35 !bg-white/15 !text-[#0057B8] shadow-none ring-0 backdrop-blur-md hover:!bg-[#0057B8]/10" onClick={() => setOpen(false)} to="/recruiter-login" variant="secondary">Login</Button>
                   {!isLoggedIn && <Button onClick={() => setOpen(false)} to="/recruiter-register" variant="secondary">Register</Button>}
                   <Button onClick={() => setOpen(false)} to="/post-job">Post Job</Button>
                 </div>
