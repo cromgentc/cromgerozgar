@@ -1078,6 +1078,10 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         return <FaqManagementActions onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} />
       }
 
+      if (type === 'contentPages') {
+        return <PolicyManagementActions onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} row={row} />
+      }
+
       return (
         <ActionButtons
           extra={type === 'resumes' ? 'Preview' : config.extra}
@@ -1539,6 +1543,35 @@ function FaqManagementActions({ onDelete, onEdit }) {
       <IconAction kind="delete" label="Delete FAQ" onClick={onDelete} />
     </div>
   )
+}
+
+function PolicyManagementActions({ onDelete, onEdit, row }) {
+  const frontendPath = getPolicyFrontendPath(row)
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <IconAction kind="edit" label="Edit policy" onClick={onEdit} />
+      <IconAction kind="view" label={`View frontend: ${frontendPath}`} onClick={() => window.open(frontendPath, '_blank', 'noopener,noreferrer')} />
+      <IconAction kind="delete" label="Delete policy" onClick={onDelete} />
+    </div>
+  )
+}
+
+function getPolicyFrontendPath(row = {}) {
+  const slug = String(row.slug || 'privacy').trim().toLowerCase()
+  const recruiter = row.frontendPlacement === 'Recruiter Frontend'
+
+  if (recruiter) {
+    if (slug === 'recruiter-privacy') return '/recruiter/privacy'
+    if (slug === 'recruiter-terms') return '/recruiter/terms'
+    if (slug === 'recruiter-support') return '/recruiter/support'
+    return `/recruiter/policies/${slug}`
+  }
+
+  if (slug === 'privacy') return '/privacy'
+  if (slug === 'terms') return '/terms'
+  if (slug === 'support') return '/support'
+  return `/policies/${slug}`
 }
 
 function IconAction({ action, kind, label, onClick }) {
