@@ -1440,8 +1440,8 @@ function getInitialForm(type, companyOptions = fieldOptions.company) {
   if (type === 'companies') {
     return {
       ...getDefaultJobLocation(),
-      name: companyNameOptions[0],
-      industry: industryOptions[0],
+      name: '',
+      industry: '',
       jobs: 0,
       status: 'Pending',
       address: '',
