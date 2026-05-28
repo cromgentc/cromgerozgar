@@ -137,7 +137,7 @@ const configs = {
       ['documents', 'Documents status'],
       ['status', 'Status'],
     ],
-    required: ['name', 'contactPerson', 'contactNumber', 'gstNumber', 'industry'],
+    required: [],
     transform: (form) => ({
       ...form,
       contactNumber: String(form.contactNumber || '').replace(/\D/g, ''),

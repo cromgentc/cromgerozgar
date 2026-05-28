@@ -2,8 +2,8 @@ const mongoose = require('mongoose')
 
 const companySchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    industry: { type: String, required: true },
+    name: { type: String, default: '', trim: true },
+    industry: { type: String, default: '' },
     jobs: { type: Number, default: 0 },
     badge: { type: String, default: '' },
     location: { type: String, default: '' },
