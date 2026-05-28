@@ -3,12 +3,13 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, BriefcaseBusiness, Building2, Clock3, MapPin, SearchCheck, SlidersHorizontal } from 'lucide-react'
 import { JobCard } from '../components/JobCard'
 import { Button } from '../components/Button'
-import { categories } from '../data/portalData'
 import { api } from '../services/api'
 import { getCategoryBySlug, getJobsForCategory } from '../utils/categoryMatching'
+import { decorateCategories } from '../utils/portalResources'
 
 export function CategoryJobsPage({ onApply }) {
   const { categorySlug } = useParams()
+  const [categories, setCategories] = useState([])
   const category = getCategoryBySlug(categories, categorySlug)
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -22,10 +23,19 @@ export function CategoryJobsPage({ onApply }) {
     const loadJobs = async () => {
       setLoading(true)
       try {
-        const payload = await api.jobListings('?sort=-createdAt')
-        if (active) setJobs(Array.isArray(payload.data) ? payload.data : [])
+        const [jobsPayload, categoriesPayload] = await Promise.all([
+          api.jobListings('?sort=-createdAt'),
+          api.listAll('categories', '?status=Active&sort=name'),
+        ])
+        if (active) {
+          setJobs(Array.isArray(jobsPayload.data) ? jobsPayload.data : [])
+          setCategories(decorateCategories(Array.isArray(categoriesPayload.data) ? categoriesPayload.data : []))
+        }
       } catch {
-        if (active) setJobs([])
+        if (active) {
+          setJobs([])
+          setCategories([])
+        }
       } finally {
         if (active) setLoading(false)
       }

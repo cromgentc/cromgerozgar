@@ -69,23 +69,25 @@ function crudController(Model, options = {}) {
     }),
 
     update: asyncHandler(async (req, res) => {
-      if (options.canAccess) {
-        const existing = await Model.findById(req.params.id)
+      let existing = null
+      if (options.canAccess || options.beforeUpdate || options.afterUpdate) {
+        existing = await Model.findById(req.params.id)
         if (!existing) {
           res.status(404)
           throw new Error(`${Model.modelName} not found`)
         }
-        if (!options.canAccess(existing, req)) {
+        if (options.canAccess && !options.canAccess(existing, req)) {
           res.status(403)
           throw new Error('Forbidden: insufficient record access')
         }
       }
-      if (options.beforeUpdate) await options.beforeUpdate(req.body, req)
+      if (options.beforeUpdate) await options.beforeUpdate(req.body, req, existing)
       const item = await Model.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
       if (!item) {
         res.status(404)
         throw new Error(`${Model.modelName} not found`)
       }
+      if (options.afterUpdate) await options.afterUpdate(item, req, existing)
       res.json({ success: true, data: item })
     }),
 

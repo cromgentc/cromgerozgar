@@ -223,6 +223,53 @@ const configs = {
     fields: [['name', 'Candidate'], ['email', 'Email'], ['role', 'Resume title'], ['skills', 'Skills comma separated'], ['experience', 'Experience'], ['resumeUrl', 'Resume URL']],
     transform: (form) => ({ ...form, skills: splitComma(form.skills) }),
   },
+  freelancerProfiles: {
+    resource: 'freelancer-profiles',
+    title: 'Freelancer Profiles',
+    subtitle: 'Manage marketplace freelancer profiles from MongoDB.',
+    actionLabel: 'Add Freelancer',
+    modalTitle: 'Add / Edit Freelancer',
+    extra: 'Feature',
+    statusOptions: ['Active', 'Review', 'Inactive', 'Blocked'],
+    columns: [
+      { key: '_id', label: 'Freelancer ID' },
+      { key: 'name', label: 'Name' },
+      { key: 'email', label: 'Email' },
+      { key: 'role', label: 'Role' },
+      { key: 'location', label: 'Location' },
+      { key: 'rate', label: 'Rate' },
+      { key: 'rating', label: 'Rating' },
+      { key: 'featured', label: 'Featured', badge: true },
+      { key: 'status', label: 'Status', badge: true },
+    ],
+    fields: [
+      ['name', 'Name'],
+      ['email', 'Email'],
+      ['role', 'Role'],
+      ['location', 'Location'],
+      ['rate', 'Rate'],
+      ['rating', 'Rating', 'number'],
+      ['reviews', 'Reviews', 'number'],
+      ['experience', 'Experience'],
+      ['availability', 'Availability'],
+      ['skills', 'Skills comma separated'],
+      ['summary', 'Summary', 'textarea'],
+      ['featured', 'Featured', 'featuredToggle'],
+      ['sortOrder', 'Sort order', 'number'],
+      ['status', 'Status'],
+    ],
+    required: ['name', 'role', 'status'],
+    transform: (form) => ({
+      ...form,
+      email: String(form.email || '').trim().toLowerCase(),
+      rating: Math.min(Math.max(Number(form.rating || 0), 0), 5),
+      reviews: Number(form.reviews || 0),
+      sortOrder: Number(form.sortOrder || 0),
+      featured: ['true', 'Yes', 'Featured', true].includes(form.featured),
+      skills: splitComma(form.skills),
+      status: form.status || 'Review',
+    }),
+  },
   categories: {
     resource: 'categories',
     title: 'Category Management',
@@ -544,7 +591,7 @@ const configs = {
 }
 
 const accessByRole = {
-  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'categories', 'locations', 'payments', 'paymentLogs', 'contentPages', 'testimonials', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
+  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'freelancerProfiles', 'categories', 'locations', 'payments', 'paymentLogs', 'contentPages', 'testimonials', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
   staff: [],
   recruiter: [],
   users: [],
@@ -1560,6 +1607,25 @@ function getInitialForm(type, companyOptions = []) {
       featured: 'false',
       status: 'Active',
       text: '',
+    }
+  }
+
+  if (type === 'freelancerProfiles') {
+    return {
+      name: '',
+      email: '',
+      role: '',
+      location: '',
+      rate: '',
+      rating: 0,
+      reviews: 0,
+      experience: '',
+      availability: 'Available',
+      skills: '',
+      summary: '',
+      featured: 'false',
+      sortOrder: 0,
+      status: 'Review',
     }
   }
 
@@ -4189,8 +4255,12 @@ const defaultSupaCloudConfig = {
   enabled: true,
   supabaseUrl: '',
   serviceRoleKey: '',
-  bucket: 'resumes',
-  folder: 'hiring-team',
+  resumeBucket: 'resumes',
+  resumeFolder: 'hiring-team',
+  documentBucket: 'documents',
+  documentFolder: 'recruiter-documents',
+  brandingBucket: 'branding',
+  brandingFolder: 'site-assets',
   publicBucket: true,
   notes: '',
 }
@@ -4562,8 +4632,12 @@ export function AdminSupaCloudPage() {
           enabled: value.enabled !== false,
           supabaseUrl: value.supabaseUrl || '',
           serviceRoleKey: value.serviceRoleKey || '',
-          bucket: value.bucket || 'resumes',
-          folder: value.folder || 'hiring-team',
+          resumeBucket: value.resumeBucket || value.bucket || 'resumes',
+          resumeFolder: value.resumeFolder || value.folder || 'hiring-team',
+          documentBucket: value.documentBucket || 'documents',
+          documentFolder: value.documentFolder || 'recruiter-documents',
+          brandingBucket: value.brandingBucket || 'branding',
+          brandingFolder: value.brandingFolder || 'site-assets',
           publicBucket: value.publicBucket !== false,
           notes: value.notes || '',
         })
@@ -4589,16 +4663,20 @@ export function AdminSupaCloudPage() {
         enabled: Boolean(form.enabled),
         supabaseUrl: form.supabaseUrl.trim().replace(/\/+$/, ''),
         serviceRoleKey: form.serviceRoleKey.trim(),
-        bucket: form.bucket.trim() || 'resumes',
-        folder: form.folder.trim() || 'hiring-team',
+        resumeBucket: form.resumeBucket.trim() || 'resumes',
+        resumeFolder: form.resumeFolder.trim() || 'hiring-team',
+        documentBucket: form.documentBucket.trim() || 'documents',
+        documentFolder: form.documentFolder.trim() || 'recruiter-documents',
+        brandingBucket: form.brandingBucket.trim() || 'branding',
+        brandingFolder: form.brandingFolder.trim() || 'site-assets',
         publicBucket: Boolean(form.publicBucket),
         notes: form.notes.trim(),
       },
     }
 
-    if (!payload.value.supabaseUrl || !payload.value.serviceRoleKey || !payload.value.bucket) {
+    if (!payload.value.supabaseUrl || !payload.value.serviceRoleKey || !payload.value.resumeBucket || !payload.value.documentBucket || !payload.value.brandingBucket) {
       setSaving(false)
-      setMessage('Supa Cloud URL, service role key, and bucket are required.')
+      setMessage('Supa Cloud URL, service role key, resume bucket, document bucket, and branding bucket are required.')
       return
     }
 
@@ -4609,7 +4687,7 @@ export function AdminSupaCloudPage() {
         const created = await api.create('settings', payload)
         setSettingId(created.data?._id || '')
       }
-      setMessage('Supa Cloud storage saved successfully. Resume uploads will use this config.')
+      setMessage('Supa Cloud storage saved successfully. Resume, document, and branding uploads will use these paths.')
     } catch (error) {
       setMessage(error.message || 'Supa Cloud config could not be saved.')
     } finally {
@@ -4625,7 +4703,7 @@ export function AdminSupaCloudPage() {
             <p className="text-sm font-black uppercase tracking-wide text-blue-50">Settings / Storage Configuration</p>
             <h2 className="mt-3 text-3xl font-black sm:text-4xl">Supa Cloud Storage</h2>
             <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-50">
-              Configure Supabase/Supa Cloud storage for PDF resumes. Uploads go to storage, while MongoDB stores resume JSON metadata.
+              Configure Supabase/Supa Cloud storage for resumes, recruiter documents, and website branding assets.
             </p>
           </div>
           <StatusBadge status={form.enabled ? 'Active' : 'Inactive'} />
@@ -4637,7 +4715,7 @@ export function AdminSupaCloudPage() {
           <div className="flex flex-col justify-between gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
             <div>
               <p className="text-sm font-black uppercase tracking-wide text-blue-600">Storage API</p>
-              <h3 className="mt-1 text-2xl font-black text-slate-950">Supa Cloud resume upload</h3>
+              <h3 className="mt-1 text-2xl font-black text-slate-950">Supa Cloud upload paths</h3>
             </div>
             <label className="flex items-center gap-3 rounded-[7px] bg-slate-50 px-4 py-2 text-sm font-black text-slate-600">
               <input checked={form.enabled} onChange={(event) => update('enabled', event.target.checked)} type="checkbox" />
@@ -4651,11 +4729,24 @@ export function AdminSupaCloudPage() {
             <div className="mt-5 grid gap-4">
               <LabeledInput label="Supa Cloud / Supabase URL" onChange={(value) => update('supabaseUrl', value)} placeholder="https://xxxx.supabase.co" value={form.supabaseUrl} />
               <LabeledInput label="Service Role Key" onChange={(value) => update('serviceRoleKey', value)} placeholder="Paste service_role key" value={form.serviceRoleKey} />
-              <LabeledInput label="Storage Bucket" onChange={(value) => update('bucket', value)} placeholder="resumes" value={form.bucket} />
-              <LabeledInput label="Folder Path" onChange={(value) => update('folder', value)} placeholder="hiring-team" value={form.folder} />
+              <div className="grid gap-4 rounded-[7px] border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+                <p className="text-sm font-black uppercase tracking-wide text-blue-600 sm:col-span-2">Resume Storage</p>
+                <LabeledInput label="Resume Bucket" onChange={(value) => update('resumeBucket', value)} placeholder="resumes" value={form.resumeBucket} />
+                <LabeledInput label="Resume Folder Path" onChange={(value) => update('resumeFolder', value)} placeholder="hiring-team" value={form.resumeFolder} />
+              </div>
+              <div className="grid gap-4 rounded-[7px] border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+                <p className="text-sm font-black uppercase tracking-wide text-blue-600 sm:col-span-2">Recruiter Document Storage</p>
+                <LabeledInput label="Document Bucket" onChange={(value) => update('documentBucket', value)} placeholder="documents" value={form.documentBucket} />
+                <LabeledInput label="Document Folder Path" onChange={(value) => update('documentFolder', value)} placeholder="recruiter-documents" value={form.documentFolder} />
+              </div>
+              <div className="grid gap-4 rounded-[7px] border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+                <p className="text-sm font-black uppercase tracking-wide text-blue-600 sm:col-span-2">Logo / Branding Storage</p>
+                <LabeledInput label="Branding Bucket" onChange={(value) => update('brandingBucket', value)} placeholder="branding" value={form.brandingBucket} />
+                <LabeledInput label="Branding Folder Path" onChange={(value) => update('brandingFolder', value)} placeholder="site-assets" value={form.brandingFolder} />
+              </div>
               <label className="flex items-center gap-3 rounded-[7px] bg-slate-50 px-4 py-3 text-sm font-black text-slate-600">
                 <input checked={form.publicBucket} onChange={(event) => update('publicBucket', event.target.checked)} type="checkbox" />
-                Bucket is public, save public resume URL
+                Buckets are public, save public file URLs
               </label>
               <label className="grid gap-1">
                 <span className="text-xs font-black uppercase tracking-wide text-slate-400">Internal notes</span>
@@ -4676,10 +4767,10 @@ export function AdminSupaCloudPage() {
           <AdminCard>
             <p className="text-sm font-black uppercase tracking-wide text-teal-600">Upload Flow</p>
             <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-600">
-              <p>1. Admin uploads PDF resume from Hiring Team Add Candidate modal.</p>
-              <p>2. Backend uploads file to Supa Cloud Storage bucket.</p>
-              <p>3. MongoDB stores resume JSON metadata, storage path, public URL, and candidate details.</p>
-              <p>4. Resume table can download/view using saved metadata.</p>
+              <p>1. Resume PDFs upload to resume bucket/folder.</p>
+              <p>2. Recruiter PAN, GST, offer letter, and Aadhar PDFs upload to document bucket/folder.</p>
+              <p>3. Website logo and favicon upload to branding bucket/folder.</p>
+              <p>4. MongoDB stores metadata, storage path, public URL, and form details.</p>
             </div>
           </AdminCard>
           <AdminCard>
@@ -4878,7 +4969,7 @@ export function AdminSEOBrandingPage() {
 
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
 
-  const uploadBrandAsset = (key, file) => {
+  const uploadBrandAsset = async (key, file) => {
     if (!file) return
 
     const isIconFile = key === 'faviconUrl' && file.name.toLowerCase().endsWith('.ico')
@@ -4887,13 +4978,28 @@ export function AdminSEOBrandingPage() {
       return
     }
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      update(key, reader.result || '')
-      setMessage(`${key === 'logoUrl' ? 'Logo' : 'Favicon'} uploaded. Save SEO & Branding to publish.`)
+    const data = new FormData()
+    data.append('asset', file)
+    data.append('field', key === 'logoUrl' ? 'logo' : 'favicon')
+    if (form[key]) data.append('previousFileUrl', form[key])
+
+    setSaving(true)
+    setMessage('')
+
+    try {
+      const payload = await api.uploadBrandAssetToSupaCloud(data)
+      const url = payload.data?.url
+      if (!url) {
+        setMessage('Brand asset uploaded, but public URL was not returned. Please check public bucket setting.')
+        return
+      }
+      update(key, url)
+      setMessage(`${key === 'logoUrl' ? 'Logo' : 'Favicon'} uploaded to Supa Cloud. Save SEO & Branding to publish.`)
+    } catch (error) {
+      setMessage(error.message || 'Brand asset could not be uploaded to Supa Cloud.')
+    } finally {
+      setSaving(false)
     }
-    reader.onerror = () => setMessage('Image upload failed. Please try again.')
-    reader.readAsDataURL(file)
   }
 
   const save = async () => {

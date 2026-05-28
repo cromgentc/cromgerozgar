@@ -9,12 +9,12 @@ import { HeroBanner } from '../components/HeroBanner'
 import { JobCard } from '../components/JobCard'
 import { ReviewCard } from '../components/ReviewCard'
 import { Section } from '../components/Section'
-import { categories } from '../data/portalData'
 import { getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
 import { createCategoryJobsPath, getJobsForCategory } from '../utils/categoryMatching'
 import { createCompanyDetailPath } from '../utils/companyProfiles'
 import { getCandidateProfileCompletion } from '../utils/candidateActivity'
+import { decorateCategories } from '../utils/portalResources'
 
 export function HomePage({ onApply }) {
   const user = getStoredUser()
@@ -22,6 +22,7 @@ export function HomePage({ onApply }) {
   const isRecruiter = user?.role === 'recruiter'
   const [liveJobs, setLiveJobs] = useState([])
   const [liveCompanies, setLiveCompanies] = useState([])
+  const [categories, setCategories] = useState([])
 
   useEffect(() => {
     let active = true
@@ -37,6 +38,14 @@ export function HomePage({ onApply }) {
     api.companyProfiles()
       .then((payload) => {
         if (active) setLiveCompanies(Array.isArray(payload.data) ? payload.data : [])
+      })
+
+    api.listAll('categories', '?status=Active&sort=name')
+      .then((payload) => {
+        if (active) setCategories(decorateCategories(Array.isArray(payload.data) ? payload.data : []))
+      })
+      .catch(() => {
+        if (active) setCategories([])
       })
       .catch(() => {
         if (active) setLiveCompanies([])
@@ -71,7 +80,7 @@ export function HomePage({ onApply }) {
       )}
 
       <div className="md:hidden">
-        <CareerLanes compactMobile categoryCounts={categoryCounts} />
+        <CareerLanes categories={categories} compactMobile categoryCounts={categoryCounts} />
       </div>
 
       <div className="hidden md:block">
@@ -91,7 +100,7 @@ export function HomePage({ onApply }) {
           <ProcessGrid isCandidate={isCandidate} isRecruiter={isRecruiter} jobsCount={liveJobs.length} user={user} />
         </Section>
 
-        <CareerLanes categoryCounts={categoryCounts} />
+        <CareerLanes categories={categories} categoryCounts={categoryCounts} />
 
         {!isCandidate && <FeatureShowcase />}
 
@@ -342,7 +351,7 @@ function LatestJobsGrid({ hasMore = false, jobs: latestJobs, onApply }) {
   )
 }
 
-function CareerLanes({ compactMobile = false, categoryCounts }) {
+function CareerLanes({ categories = [], compactMobile = false, categoryCounts }) {
   const featured = categories.slice(0, 3)
   const remaining = categories.slice(3, 11)
   const mobileCategories = categories.slice(0, 4)
@@ -371,7 +380,7 @@ function CareerLanes({ compactMobile = false, categoryCounts }) {
           </div>
         </div>
 
-        {compactMobile ? (
+        {categories.length ? compactMobile ? (
           <>
             <div className="grid grid-cols-2 gap-2">
               {mobileCategories.map((category, index) => (
@@ -412,6 +421,11 @@ function CareerLanes({ compactMobile = false, categoryCounts }) {
               </div>
             )}
           </>
+        ) : (
+          <div className="rounded-[7px] border border-dashed border-slate-300 bg-white p-8 text-center">
+            <h3 className="text-xl font-black text-slate-950">No active categories yet</h3>
+            <p className="mt-2 text-sm font-semibold text-slate-500">Add categories from admin to show them here.</p>
+          </div>
         )}
       </div>
     </section>

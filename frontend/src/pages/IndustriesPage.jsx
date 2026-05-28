@@ -2,23 +2,33 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Building2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/Button'
-import { categories } from '../data/portalData'
 import { api } from '../services/api'
 import { createCategoryJobsPath, getJobsForCategory } from '../utils/categoryMatching'
+import { decorateCategories } from '../utils/portalResources'
 
 export function IndustriesPage() {
   const [jobs, setJobs] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
 
-    api.jobListings('?sort=-createdAt')
-      .then((payload) => {
-        if (active) setJobs(Array.isArray(payload.data) ? payload.data : [])
+    Promise.all([
+      api.jobListings('?sort=-createdAt'),
+      api.listAll('categories', '?status=Active&sort=name'),
+    ])
+      .then(([jobsPayload, categoriesPayload]) => {
+        if (active) {
+          setJobs(Array.isArray(jobsPayload.data) ? jobsPayload.data : [])
+          setCategories(decorateCategories(Array.isArray(categoriesPayload.data) ? categoriesPayload.data : []))
+        }
       })
       .catch(() => {
-        if (active) setJobs([])
+        if (active) {
+          setJobs([])
+          setCategories([])
+        }
       })
       .finally(() => {
         if (active) setLoading(false)

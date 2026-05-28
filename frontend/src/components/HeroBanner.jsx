@@ -3,8 +3,8 @@ import { motion } from 'framer-motion'
 import { ArrowRight, BadgeCheck, BriefcaseBusiness, CheckCircle2, Layers3, MapPin, Search } from 'lucide-react'
 import { Button } from './Button'
 import { SearchBar } from './SearchBar'
-import { stats } from '../data/portalData'
 import { getStoredUser } from '../routes/authRouting'
+import { api } from '../services/api'
 
 const heroSlides = [
   {
@@ -31,6 +31,7 @@ export function HeroBanner() {
   const user = getStoredUser()
   const isUserAccount = ['Candidate', 'users'].includes(user?.role)
   const [activeSlide, setActiveSlide] = useState(0)
+  const [stats, setStats] = useState([])
   const slide = heroSlides[activeSlide]
 
   useEffect(() => {
@@ -39,6 +40,22 @@ export function HeroBanner() {
     }, 5500)
 
     return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    api.portalSummary()
+      .then((payload) => {
+        if (active) setStats(Array.isArray(payload.data?.stats) ? payload.data.stats : [])
+      })
+      .catch(() => {
+        if (active) setStats([])
+      })
+
+    return () => {
+      active = false
+    }
   }, [])
 
   return (
@@ -101,7 +118,7 @@ export function HeroBanner() {
             )}
           </div>
 
-          <div className="mt-7 hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-4">
+          {stats.length > 0 && <div className="mt-7 hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-4">
             {stats.map((stat, index) => (
               <motion.div
                 className="rounded-[7px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-[#0057B8]/10"
@@ -114,7 +131,7 @@ export function HeroBanner() {
                 <p className="text-xs font-bold text-slate-500 sm:text-sm">{stat.label}</p>
               </motion.div>
             ))}
-          </div>
+          </div>}
 
           <div className="mt-6 hidden justify-center gap-2 sm:flex lg:justify-start">
             {heroSlides.map((item, index) => (

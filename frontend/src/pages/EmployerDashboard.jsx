@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Bell,
   BriefcaseBusiness,
@@ -28,7 +28,6 @@ import { FreelancerCard } from '../components/FreelancerCard'
 import { useApiResource } from '../hooks/useApiResource'
 import { getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
-import { featuredFreelancers } from '../data/marketplaceData'
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard },
@@ -41,54 +40,35 @@ const navItems = [
   { label: 'Settings', icon: Settings },
 ]
 
-const fallbackApplications = [
-  { id: 1, name: 'Neha Sharma', role: 'React Developer', status: 'Shortlisted', skills: ['React', 'Tailwind', 'API'], experience: '5 years', rate: 'INR 900/hr' },
-  { id: 2, name: 'Rohan Mehta', role: 'Product Designer', status: 'Review', skills: ['Figma', 'UX', 'Mobile'], experience: '6 years', rate: 'INR 1,200/hr' },
-  { id: 3, name: 'Simran Kaur', role: 'SEO Specialist', status: 'Interview', skills: ['SEO', 'Blogs', 'Research'], experience: '4 years', rate: 'INR 700/hr' },
-]
-
-const fallbackJobs = [
-  { _id: 'demo-1', title: 'Senior React Engineer', status: 'Active', applicationsCount: 42, location: 'Remote', type: 'Full Time', budget: 'INR 80k' },
-  { _id: 'demo-2', title: 'Product UI Designer', status: 'Active', applicationsCount: 18, location: 'Bengaluru', type: 'Freelance', budget: 'INR 45k' },
-  { _id: 'demo-3', title: 'SEO Content Specialist', status: 'Closed', applicationsCount: 31, location: 'Mumbai', type: 'Part Time', budget: 'INR 25k' },
-]
-
-const conversations = [
-  { name: 'Neha Sharma', status: 'Online', message: 'I can start the React dashboard this week.' },
-  { name: 'Rohan Mehta', status: 'Offline', message: 'Shared product redesign portfolio.' },
-  { name: 'Simran Kaur', status: 'Online', message: 'SEO article samples are attached.' },
-]
-
-const invoices = [
-  { id: 'INV-1024', project: 'React Website Revamp', amount: 'INR 35,000', status: 'Paid' },
-  { id: 'INV-1025', project: 'Product Landing Design', amount: 'INR 22,000', status: 'Pending' },
-  { id: 'INV-1026', project: 'SEO Content Sprint', amount: 'INR 12,000', status: 'Draft' },
-]
-
-const activity = [
-  'Neha Sharma shortlisted for React Website Revamp',
-  'New application received for Product Designer role',
-  'Invoice INV-1024 marked as paid',
-  'Job performance report updated',
-]
-
 export function EmployerDashboard() {
   const user = getStoredUser()
   const [jobModalOpen, setJobModalOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [freelancerQuery, setFreelancerQuery] = useState('')
   const { data } = useApiResource(() => api.employerDashboard(user?.email), { metrics: {}, jobs: [], applications: [], shortlistedApplications: [] }, [user?.email])
+  const { data: freelancerData } = useApiResource(() => api.freelancerProfiles(), { data: [] }, [])
 
   const metrics = data.metrics || {}
-  const jobs = Array.isArray(data.jobs) && data.jobs.length ? data.jobs : fallbackJobs
-  const applications = Array.isArray(data.applications) && data.applications.length ? data.applications : fallbackApplications
+  const jobs = Array.isArray(data.jobs) ? data.jobs : []
+  const applications = Array.isArray(data.applications) ? data.applications : []
   const shortlistedApplications = Array.isArray(data.shortlistedApplications) ? data.shortlistedApplications : []
+  const freelancerProfiles = Array.isArray(freelancerData.data) ? freelancerData.data : []
+  const conversations = applications.slice(0, 6).map((item) => ({
+    name: item.candidateName || item.name || item.candidateEmail || 'Candidate',
+    status: item.status || 'Review',
+    message: item.coverNote || item.jobTitle || 'Application update available.',
+  }))
+  const invoices = []
+  const activity = [
+    ...jobs.slice(0, 2).map((job) => `${job.title || 'Job'} status: ${job.accountDepartmentStatus || job.status || 'Pending'}`),
+    ...applications.slice(0, 2).map((item) => `${item.candidateName || item.name || 'Candidate'} applied for ${item.jobTitle || 'a job'}`),
+  ]
 
   const freelancers = useMemo(() => {
     const term = freelancerQuery.toLowerCase().trim()
-    if (!term) return featuredFreelancers
-    return featuredFreelancers.filter((item) => [item.name, item.role, item.location, ...item.skills].join(' ').toLowerCase().includes(term))
-  }, [freelancerQuery])
+    if (!term) return freelancerProfiles
+    return freelancerProfiles.filter((item) => [item.name, item.role, item.location, ...normalizeSkills(item.skills)].join(' ').toLowerCase().includes(term))
+  }, [freelancerProfiles, freelancerQuery])
 
   const stats = [
     { label: 'Posted Jobs', value: metrics.totalJobs ?? jobs.length, icon: BriefcaseBusiness, trend: '+12%' },
@@ -159,7 +139,7 @@ export function EmployerDashboard() {
           <section className="mt-5 grid gap-5 2xl:grid-cols-[1.25fr_0.75fr]">
             <Panel action={<Button onClick={() => setJobModalOpen(true)}>Post Job</Button>} title="Dashboard Overview">
               <div className="grid gap-4 lg:grid-cols-2">
-                <RecentActivity />
+                <RecentActivity activity={activity} />
                 <QuickActions onPost={() => setJobModalOpen(true)} />
               </div>
             </Panel>
@@ -194,7 +174,7 @@ export function EmployerDashboard() {
                 {freelancers.slice(0, 2).map((freelancer) => (
                   <FreelancerCard
                     freelancer={freelancer}
-                    key={freelancer.id}
+                    key={freelancer._id || freelancer.id}
                     onHire={() => toast(`${freelancer.name} invited to job`)}
                     onShortlist={() => toast(`${freelancer.name} saved`)}
                   />
@@ -202,13 +182,13 @@ export function EmployerDashboard() {
               </div>
             </Panel>
             <Panel title="Messages / Chat">
-              <ChatPreview />
+              <ChatPreview conversations={conversations} />
             </Panel>
           </section>
 
           <section className="mt-5 grid gap-5 2xl:grid-cols-[1fr_1fr]">
             <Panel title="Payments / Hiring">
-              <PaymentsPanel />
+              <PaymentsPanel invoices={invoices} />
             </Panel>
             <Panel title="Company Profile">
               <CompanyProfile user={user} totalJobs={metrics.totalJobs ?? jobs.length} />
@@ -310,7 +290,11 @@ function Panel({ action, children, title }) {
   )
 }
 
-function RecentActivity() {
+function RecentActivity({ activity = [] }) {
+  if (!activity.length) {
+    return <p className="rounded-[7px] border border-dashed border-slate-300 bg-white p-5 text-sm font-bold text-slate-500">No live activity yet.</p>
+  }
+
   return (
     <div className="rounded-[7px] border border-slate-200">
       {activity.map((item, index) => (
@@ -408,8 +392,18 @@ function CandidateManagement({ applications }) {
   )
 }
 
-function ChatPreview() {
-  const [selected, setSelected] = useState(conversations[0])
+function ChatPreview({ conversations = [] }) {
+  const [selected, setSelected] = useState(conversations[0] || null)
+
+  useEffect(() => {
+    if (!selected && conversations[0]) setSelected(conversations[0])
+    if (selected && !conversations.some((item) => item.name === selected.name)) setSelected(conversations[0] || null)
+  }, [conversations, selected])
+
+  if (!conversations.length || !selected) {
+    return <p className="rounded-[7px] border border-dashed border-slate-300 bg-white p-5 text-sm font-bold text-slate-500">No candidate conversations yet.</p>
+  }
+
   return (
     <div className="grid overflow-hidden rounded-[7px] border border-slate-200 lg:grid-cols-[260px_1fr]">
       <div className="border-b border-slate-200 bg-slate-50 p-3 lg:border-b-0 lg:border-r">
@@ -441,7 +435,7 @@ function ChatPreview() {
   )
 }
 
-function PaymentsPanel() {
+function PaymentsPanel({ invoices = [] }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
       <div className="rounded-[7px] bg-slate-950 p-5 text-white">
@@ -454,7 +448,7 @@ function PaymentsPanel() {
         </div>
       </div>
       <div className="grid gap-2">
-        {invoices.map((invoice) => (
+        {invoices.length ? invoices.map((invoice) => (
           <div className="flex items-center justify-between rounded-[7px] border border-slate-200 bg-slate-50 p-3" key={invoice.id}>
             <div>
               <p className="font-black text-slate-950">{invoice.id}</p>
@@ -465,7 +459,7 @@ function PaymentsPanel() {
               <StatusBadge status={invoice.status} />
             </div>
           </div>
-        ))}
+        )) : <p className="rounded-[7px] border border-dashed border-slate-300 bg-white p-4 text-sm font-bold text-slate-500">No payment records yet.</p>}
       </div>
     </div>
   )
@@ -559,4 +553,9 @@ function getInitials(value) {
 
 function toast(message) {
   window.dispatchEvent(new CustomEvent('portalToast', { detail: { message } }))
+}
+
+function normalizeSkills(skills = []) {
+  if (Array.isArray(skills)) return skills
+  return String(skills).split(',').map((skill) => skill.trim()).filter(Boolean)
 }

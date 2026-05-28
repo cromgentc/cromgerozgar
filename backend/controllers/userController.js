@@ -2,6 +2,12 @@ const asyncHandler = require('../middleware/asyncHandler')
 const Employer = require('../models/Employer')
 const RecruiterDocument = require('../models/RecruiterDocument')
 const User = require('../models/User')
+const {
+  collectSupaCloudObjectsFromFields,
+  removeSupaCloudObjects,
+} = require('../utils/supaCloudStorage')
+
+const recruiterDocumentFileFields = ['panDocument', 'gstDocument', 'offerLetter', 'aadhaarDocument']
 
 function normalizeRole(role) {
   const roleMap = {
@@ -172,6 +178,11 @@ const deleteUser = asyncHandler(async (req, res) => {
 
   if (normalized.role === 'recruiter') {
     const email = String(normalized.email || '').toLowerCase()
+    const documents = await RecruiterDocument.find({ recruiterEmail: email })
+    for (const document of documents) {
+      await removeSupaCloudObjects(collectSupaCloudObjectsFromFields(document, recruiterDocumentFileFields), 'Supa Cloud recruiter document file')
+    }
+
     await Promise.all([
       Employer.deleteMany({ businessEmail: email }),
       RecruiterDocument.deleteMany({ recruiterEmail: email }),

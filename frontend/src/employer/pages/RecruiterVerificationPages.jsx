@@ -153,6 +153,7 @@ export function RecruiterDocumentsPage() {
     data.append('document', file)
     data.append('field', key)
     data.append('recruiterEmail', user.email || '')
+    if (form[key]) data.append('previousFileUrl', form[key])
 
     setUploadingFields((current) => ({ ...current, [key]: true }))
     setMessage('')

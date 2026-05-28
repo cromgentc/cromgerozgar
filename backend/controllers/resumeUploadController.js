@@ -1,6 +1,10 @@
 const path = require('path')
 const Resume = require('../models/Resume')
 const Setting = require('../models/Setting')
+const {
+  parseSupaCloudObjectUrl,
+  removeSupaCloudObject,
+} = require('../utils/supaCloudStorage')
 
 function cleanSegment(value = '') {
   return String(value || 'file')
@@ -9,6 +13,14 @@ function cleanSegment(value = '') {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .toLowerCase()
+}
+
+function cleanPath(value = '') {
+  return String(value || '')
+    .split('/')
+    .map(cleanSegment)
+    .filter(Boolean)
+    .join('/')
 }
 
 function storageError(message, statusCode = 502) {
@@ -37,8 +49,14 @@ async function getSupaCloudConfig() {
     enabled: value.enabled !== false,
     supabaseUrl: String(value.supabaseUrl || '').replace(/\/+$/, ''),
     serviceRoleKey: value.serviceRoleKey || value.serviceKey || '',
-    bucket: value.bucket || 'resumes',
-    folder: value.folder || 'hiring-team',
+    bucket: value.resumeBucket || value.bucket || 'resumes',
+    folder: value.resumeFolder || value.folder || 'hiring-team',
+    resumeBucket: value.resumeBucket || value.bucket || 'resumes',
+    resumeFolder: value.resumeFolder || value.folder || 'hiring-team',
+    documentBucket: value.documentBucket || 'documents',
+    documentFolder: value.documentFolder || 'recruiter-documents',
+    brandingBucket: value.brandingBucket || 'branding',
+    brandingFolder: value.brandingFolder || 'site-assets',
     publicBucket: value.publicBucket !== false,
   }
 }
@@ -87,7 +105,8 @@ async function uploadToSupaCloud({ buffer, config, contentType, fileName }) {
 
   await ensureSupaCloudBucket(config)
 
-  const storagePath = `${cleanSegment(config.folder)}/${Date.now()}-${cleanSegment(fileName)}`
+  const folder = cleanPath(config.folder)
+  const storagePath = `${folder ? `${folder}/` : ''}${Date.now()}-${cleanSegment(fileName)}`
   const uploadUrl = `${config.supabaseUrl}/storage/v1/object/${encodeURIComponent(config.bucket)}/${storagePath}`
   const response = await fetch(uploadUrl, {
     method: 'POST',
@@ -174,6 +193,22 @@ async function uploadResume(req, res) {
     status: 'Active',
   })
 
+  if (req.body.previousResumeId) {
+    const previousResume = await Resume.findById(req.body.previousResumeId).catch(() => null)
+    const currentEmail = String(metadata.candidate.email || '').trim().toLowerCase()
+    const previousEmail = String(previousResume?.email || '').trim().toLowerCase()
+
+    if (previousResume && (!currentEmail || !previousEmail || currentEmail === previousEmail)) {
+      if (previousResume.storageBucket && previousResume.storagePath) {
+        await removeSupaCloudObject({ bucket: previousResume.storageBucket, storagePath: previousResume.storagePath }, 'Supa Cloud old resume file')
+      } else {
+        const parsed = parseSupaCloudObjectUrl(previousResume.resumeUrl)
+        if (parsed) await removeSupaCloudObject(parsed, 'Supa Cloud old resume file')
+      }
+      await Resume.findByIdAndDelete(previousResume._id)
+    }
+  }
+
   res.status(201).json({ success: true, data: resume, resumeJson: metadata })
 }
 
@@ -196,22 +231,72 @@ async function uploadRecruiterDocumentFile(req, res) {
     buffer: req.file.buffer,
     config: {
       ...config,
-      bucket: 'documents',
-      folder: `recruiter-documents/${cleanSegment(recruiterEmail)}`,
+      bucket: config.documentBucket,
+      folder: `${config.documentFolder}/${cleanSegment(recruiterEmail)}`,
     },
     contentType: req.file.mimetype,
     fileName: `${field}-${originalFileName}`,
   })
+
+  const previousObject = parseSupaCloudObjectUrl(req.body.previousFileUrl || req.body.previousUrl)
+  if (previousObject && previousObject.bucket === config.documentBucket) {
+    await removeSupaCloudObject(previousObject, 'Supa Cloud old recruiter document file')
+  }
 
   res.status(201).json({
     success: true,
     data: {
       url: upload.publicUrl,
       storageProvider: 'supa-cloud',
-      storageBucket: 'documents',
+      storageBucket: config.documentBucket,
       storagePath: upload.storagePath,
       originalFileName,
       mimeType: req.file.mimetype,
+      fileSize: req.file.size,
+      field,
+    },
+  })
+}
+
+async function uploadBrandAsset(req, res) {
+  if (!req.file) {
+    res.status(400)
+    throw new Error('Brand image is required.')
+  }
+
+  const isIconFile = String(req.file.originalname || '').toLowerCase().endsWith('.ico')
+  if (!String(req.file.mimetype || '').startsWith('image/') && !isIconFile) {
+    res.status(400)
+    throw new Error('Only image upload is allowed for logo or favicon.')
+  }
+
+  const config = await getSupaCloudConfig()
+  const field = cleanSegment(req.body.field || 'brand-asset')
+  const upload = await uploadToSupaCloud({
+    buffer: req.file.buffer,
+    config: {
+      ...config,
+      bucket: config.brandingBucket,
+      folder: `${config.brandingFolder}/${field}`,
+    },
+    contentType: req.file.mimetype || 'application/octet-stream',
+    fileName: req.file.originalname || `${field}.png`,
+  })
+
+  const previousObject = parseSupaCloudObjectUrl(req.body.previousFileUrl || req.body.previousUrl)
+  if (previousObject && previousObject.bucket === config.brandingBucket) {
+    await removeSupaCloudObject(previousObject, 'Supa Cloud old brand asset')
+  }
+
+  res.status(201).json({
+    success: true,
+    data: {
+      url: upload.publicUrl,
+      storageProvider: 'supa-cloud',
+      storageBucket: config.brandingBucket,
+      storagePath: upload.storagePath,
+      originalFileName: req.file.originalname || '',
+      mimeType: req.file.mimetype || '',
       fileSize: req.file.size,
       field,
     },
@@ -258,4 +343,4 @@ async function viewResume(req, res) {
   res.send(Buffer.from(arrayBuffer))
 }
 
-module.exports = { uploadRecruiterDocumentFile, uploadResume, viewResume }
+module.exports = { uploadBrandAsset, uploadRecruiterDocumentFile, uploadResume, viewResume }

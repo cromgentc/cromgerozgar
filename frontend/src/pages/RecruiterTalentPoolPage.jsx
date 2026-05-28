@@ -1,16 +1,34 @@
 import { CalendarDays, Mail, Search, Star, UsersRound } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FreelancerCard } from '../components/FreelancerCard'
 import { DashboardShell, MetricCard, Panel } from './CandidateDashboard'
-import { featuredFreelancers } from '../data/marketplaceData'
+import { api } from '../services/api'
 
 export function RecruiterTalentPoolPage() {
   const [query, setQuery] = useState('')
+  const [freelancers, setFreelancers] = useState([])
+
+  useEffect(() => {
+    let active = true
+
+    api.freelancerProfiles()
+      .then((payload) => {
+        if (active) setFreelancers(Array.isArray(payload.data) ? payload.data : [])
+      })
+      .catch(() => {
+        if (active) setFreelancers([])
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
   const visibleFreelancers = useMemo(() => {
     const term = query.trim().toLowerCase()
-    if (!term) return featuredFreelancers
-    return featuredFreelancers.filter((freelancer) => [freelancer.name, freelancer.role, freelancer.location, ...freelancer.skills].join(' ').toLowerCase().includes(term))
-  }, [query])
+    if (!term) return freelancers
+    return freelancers.filter((freelancer) => [freelancer.name, freelancer.role, freelancer.location, ...normalizeSkills(freelancer.skills)].join(' ').toLowerCase().includes(term))
+  }, [freelancers, query])
 
   const notify = (message) => window.dispatchEvent(new CustomEvent('portalToast', { detail: { message } }))
 
@@ -34,7 +52,7 @@ export function RecruiterTalentPoolPage() {
               {visibleFreelancers.map((freelancer) => (
                 <FreelancerCard
                   freelancer={freelancer}
-                  key={freelancer.id}
+                  key={freelancer._id || freelancer.id}
                   onHire={() => notify(`${freelancer.name} hire flow opened`)}
                   onShortlist={() => notify(`${freelancer.name} shortlisted`)}
                 />
@@ -65,4 +83,9 @@ export function RecruiterTalentPoolPage() {
       </div>
     </DashboardShell>
   )
+}
+
+function normalizeSkills(skills = []) {
+  if (Array.isArray(skills)) return skills
+  return String(skills).split(',').map((skill) => skill.trim()).filter(Boolean)
 }

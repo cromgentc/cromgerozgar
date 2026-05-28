@@ -6,6 +6,7 @@ const Company = require('../models/Company')
 const ContentPage = require('../models/ContentPage')
 const Employer = require('../models/Employer')
 const Faq = require('../models/Faq')
+const FreelancerProfile = require('../models/FreelancerProfile')
 const Job = require('../models/Job')
 const Location = require('../models/Location')
 const NewsletterSubscriber = require('../models/NewsletterSubscriber')
@@ -18,6 +19,11 @@ const SupportMessage = require('../models/SupportMessage')
 const Testimonial = require('../models/Testimonial')
 const User = require('../models/User')
 const { ensureDefaultTestimonials } = require('./testimonialDefaults')
+const {
+  collectSupaCloudObjectsFromFields,
+  removeSupaCloudObject,
+  removeSupaCloudObjects,
+} = require('../utils/supaCloudStorage')
 
 function normalizeEmail(value = '') {
   return String(value).trim().toLowerCase()
@@ -335,6 +341,41 @@ async function ensureUniqueRecruiterDocumentIdentity(body, req) {
   duplicateError(req.res, 'Recruiter identity document already registered.')
 }
 
+async function createOrReplaceRecruiterDocument(body, req) {
+  await ensureUniqueRecruiterDocumentIdentity(body, req)
+
+  const recruiterEmail = normalizeEmail(body.recruiterEmail)
+  if (!recruiterEmail) return
+
+  const existingDocuments = await RecruiterDocument.find({ recruiterEmail }).sort('-updatedAt')
+  const existing = existingDocuments[0]
+  if (!existing) return
+
+  const changedFields = recruiterDocumentFileFields.filter((field) => (
+    Object.prototype.hasOwnProperty.call(body, field)
+      && String(body[field] || '') !== String(existing[field] || '')
+  ))
+  const oldObjects = [
+    ...collectSupaCloudObjectsFromFields(existing, changedFields),
+    ...existingDocuments.slice(1).flatMap((document) => collectSupaCloudObjectsFromFields(document, recruiterDocumentFileFields)),
+  ]
+
+  Object.assign(existing, body, {
+    submittedAt: body.submittedAt || new Date(),
+    updatedAt: new Date(),
+  })
+  const saved = await existing.save()
+
+  if (existingDocuments.length > 1) {
+    await RecruiterDocument.deleteMany({ _id: { $in: existingDocuments.slice(1).map((document) => document._id) } })
+  }
+
+  await removeSupaCloudObjects(oldObjects, 'Supa Cloud old recruiter document file')
+
+  req.res.status(200).json({ success: true, data: saved, message: 'Recruiter document updated. Old Supa Cloud files were removed.' })
+  return true
+}
+
 async function attachRecruiterToApplication(body, req) {
   body.candidateEmail = normalizeEmail(body.candidateEmail)
   body.candidatePhone = normalizePhone(body.candidatePhone || body.phone)
@@ -529,38 +570,51 @@ function normalizeJobReview(body) {
   }
 }
 
-async function getSupaCloudStorageConfig() {
-  const setting = await Setting.findOne({ key: 'supaCloudStorage' })
-  const value = setting?.value || {}
+async function removeResumeFromSupaCloud(resume) {
+  if (resume.storageProvider === 'supa-cloud' && resume.storageBucket && resume.storagePath) {
+    await removeSupaCloudObject({ bucket: resume.storageBucket, storagePath: resume.storagePath }, 'Supa Cloud resume file')
+    return
+  }
 
-  return {
-    supabaseUrl: String(value.supabaseUrl || '').replace(/\/+$/, ''),
-    serviceRoleKey: value.serviceRoleKey || value.serviceKey || '',
+  await removeSupaCloudObjects(collectSupaCloudObjectsFromFields(resume, ['resumeUrl']), 'Supa Cloud resume file')
+}
+
+async function removeChangedResumeFile(item, req, previous) {
+  if (!previous) return
+  const urlChanged = Object.prototype.hasOwnProperty.call(req.body, 'resumeUrl') && String(req.body.resumeUrl || '') !== String(previous.resumeUrl || '')
+  const pathChanged = Object.prototype.hasOwnProperty.call(req.body, 'storagePath') && String(req.body.storagePath || '') !== String(previous.storagePath || '')
+  const bucketChanged = Object.prototype.hasOwnProperty.call(req.body, 'storageBucket') && String(req.body.storageBucket || '') !== String(previous.storageBucket || '')
+
+  if (urlChanged || pathChanged || bucketChanged) {
+    await removeResumeFromSupaCloud(previous)
   }
 }
 
-async function removeResumeFromSupaCloud(resume) {
-  if (resume.storageProvider !== 'supa-cloud' || !resume.storageBucket || !resume.storagePath) return
+const recruiterDocumentFileFields = ['panDocument', 'gstDocument', 'offerLetter', 'aadhaarDocument']
 
-  const config = await getSupaCloudStorageConfig()
-  if (!config.supabaseUrl || !config.serviceRoleKey) {
-    throw new Error('Supa Cloud storage is not configured. Resume file was not deleted.')
-  }
+async function removeRecruiterDocumentFiles(document) {
+  await removeSupaCloudObjects(collectSupaCloudObjectsFromFields(document, recruiterDocumentFileFields), 'Supa Cloud recruiter document file')
+}
 
-  const response = await fetch(`${config.supabaseUrl}/storage/v1/object/${encodeURIComponent(resume.storageBucket)}`, {
-    method: 'DELETE',
-    headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ prefixes: [resume.storagePath] }),
-  })
+async function removeChangedRecruiterDocumentFiles(item, req, previous) {
+  if (!previous) return
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => '')
-    if (response.status === 404 || text.toLowerCase().includes('not found')) return
-    throw new Error(text || 'Supa Cloud resume file could not be deleted.')
+  const changedFields = recruiterDocumentFileFields.filter((field) => (
+    Object.prototype.hasOwnProperty.call(req.body, field)
+      && String(req.body[field] || '') !== String(previous[field] || '')
+  ))
+
+  if (!changedFields.length) return
+  await removeSupaCloudObjects(collectSupaCloudObjectsFromFields(previous, changedFields), 'Supa Cloud old recruiter document file')
+}
+
+async function removeRecruiterDocumentFilesByEmail(email) {
+  const normalizedEmail = normalizeEmail(email)
+  if (!normalizedEmail) return
+
+  const documents = await RecruiterDocument.find({ recruiterEmail: normalizedEmail })
+  for (const document of documents) {
+    await removeRecruiterDocumentFiles(document)
   }
 }
 
@@ -585,6 +639,7 @@ module.exports = {
       const email = String(employer.businessEmail || '').toLowerCase()
       if (!email) return
 
+      await removeRecruiterDocumentFilesByEmail(email)
       await Promise.all([
         User.deleteMany({ email, role: 'recruiter' }),
         RecruiterDocument.deleteMany({ recruiterEmail: email }),
@@ -592,6 +647,7 @@ module.exports = {
     },
   }),
   faqs: crudController(Faq, { searchFields: ['category', 'question', 'answer', 'status'], beforeGetAll: ensureDefaultFaqs }),
+  freelancerProfiles: crudController(FreelancerProfile, { searchFields: ['name', 'email', 'role', 'location', 'rate', 'skills', 'availability', 'status'] }),
   jobs: crudController(Job, {
     searchFields: ['title', 'company', 'department', 'location', 'skills'],
     safeGet: true,
@@ -607,12 +663,15 @@ module.exports = {
   pricingPackages: crudController(PricingPackage, { searchFields: ['name', 'description', 'price', 'badge'] }),
   recruiterDocuments: crudController(RecruiterDocument, {
     searchFields: ['recruiterName', 'recruiterEmail', 'documentType', 'panNumber', 'gstNumber', 'status'],
-    beforeCreate: ensureUniqueRecruiterDocumentIdentity,
+    beforeCreate: createOrReplaceRecruiterDocument,
     beforeGetAll: scopeRecruiterDocumentsForRequester,
+    afterUpdate: removeChangedRecruiterDocumentFiles,
+    beforeRemove: removeRecruiterDocumentFiles,
     canAccess: canAccessRecruiterDocument,
   }),
   resumes: crudController(Resume, {
     searchFields: ['name', 'email', 'role', 'skills', 'experience', 'source', 'resumeUrl', 'storagePath'],
+    afterUpdate: removeChangedResumeFile,
     beforeRemove: removeResumeFromSupaCloud,
   }),
   settings: crudController(Setting, { searchFields: ['key', 'group'], beforeCreate: upsertSettingByKey }),

@@ -1,39 +1,34 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BriefcaseBusiness, Download, FileText, Mail, Search, Sparkles, UsersRound } from 'lucide-react'
 import { Button } from '../components/Button'
-import { jobs } from '../data/portalData'
 import { api } from '../services/api'
 import { DashboardShell, Panel } from './CandidateDashboard'
-
-const fallbackResumes = [
-  { name: 'Neha Sharma', email: 'neha@example.com', phone: '9000000001', role: 'React Developer', skills: ['React', 'Tailwind', 'API', 'TypeScript'], experience: '4 years', location: 'Bengaluru', resumeUrl: '', source: 'Lead Resume', status: 'Active' },
-  { name: 'Rohan Mehta', email: 'rohan@example.com', phone: '9000000002', role: 'Marketing Manager', skills: ['SEO', 'Google Ads', 'Analytics', 'Meta Ads'], experience: '6 years', location: 'Mumbai', resumeUrl: '', source: 'Lead Resume', status: 'Shortlisted' },
-  { name: 'Simran Kaur', email: 'simran@example.com', phone: '9000000003', role: 'Customer Success Specialist', skills: ['CRM', 'Communication', 'Retention', 'SLA'], experience: '3 years', location: 'Delhi NCR', resumeUrl: '', source: 'Lead Resume', status: 'Active' },
-  { name: 'Aditya Rao', email: 'aditya@example.com', phone: '9000000004', role: 'Data Collection Lead', skills: ['Excel', 'Quality Audit', 'Research', 'Reporting'], experience: '5 years', location: 'Hyderabad', resumeUrl: '', source: 'Admin Upload', status: 'Active' },
-]
 
 export function RecruiterFindResumePage() {
   const [query, setQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
-  const [resumes, setResumes] = useState(fallbackResumes)
+  const [resumes, setResumes] = useState([])
+  const [jobs, setJobs] = useState([])
 
   useEffect(() => {
     let ignore = false
 
-    Promise.all([api.list('resumes'), api.list('candidates')])
-      .then(([resumePayload, candidatePayload]) => {
+    Promise.all([api.list('resumes'), api.list('candidates'), api.jobListings('?sort=-createdAt')])
+      .then(([resumePayload, candidatePayload, jobsPayload]) => {
         if (ignore) return
 
         const uploaded = Array.isArray(resumePayload.data) ? resumePayload.data : []
         const leads = Array.isArray(candidatePayload.data)
           ? candidatePayload.data.map((candidate) => ({ ...candidate, source: 'Lead Resume' }))
           : []
-        const next = [...uploaded, ...leads]
-
-        if (next.length) setResumes(next)
+        setResumes([...uploaded, ...leads])
+        setJobs(Array.isArray(jobsPayload.data) ? jobsPayload.data : [])
       })
       .catch(() => {
-        if (!ignore) setResumes(fallbackResumes)
+        if (!ignore) {
+          setResumes([])
+          setJobs([])
+        }
       })
 
     return () => {

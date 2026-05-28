@@ -211,6 +211,7 @@ export function CandidateProfilePage() {
     data.append('entity', 'Candidate Profile')
     data.append('department', profile.headline)
     data.append('qualification', profile.experience)
+    if (profile.resumeMongoId) data.append('previousResumeId', profile.resumeMongoId)
 
     try {
       const payload = await api.uploadResumeToSupaCloud(data)
