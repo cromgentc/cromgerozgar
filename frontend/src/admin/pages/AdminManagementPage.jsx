@@ -554,8 +554,8 @@ const accessByRole = {
 
 const fieldOptions = {
   role: ['users', 'Admin', 'staff', 'recruiter', 'freelancer', 'hiring', 'account team'],
-  status: ['Active', 'Inactive', 'Pending', 'Approved', 'Rejected', 'Suspended', 'Blocked', 'Open', 'Closed', 'New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected'],
-  userStatus: ['Active', 'Review', 'Inactive', 'Suspend'],
+  status: ['Active', 'Review', 'Inactive', 'Pending', 'Approved', 'Rejected', 'Suspended', 'Blocked', 'Open', 'Closed', 'New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected'],
+  userStatus: ['Review', 'Active', 'Inactive', 'Suspend'],
   documentType: ['GST', 'Offer Letter', 'Aadhar Card'],
   testimonialType: ['Candidate', 'Recruiter', 'Company', 'Admin'],
   testimonialPlacement: ['Users Frontend', 'Recruiter Frontend'],
@@ -709,7 +709,12 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
               api.listAll('employers'),
               api.listAll('users', '?role=recruiter'),
             ])
-            .then(([employersPayload, usersPayload]) => setRows(groupRecruiterDocuments(attachRecruiterIdsToDocuments(data, employersPayload.data || [], usersPayload.data || []))))
+            .then(([employersPayload, usersPayload]) => {
+              const employers = employersPayload.data || []
+              const users = usersPayload.data || []
+              const documentRows = groupRecruiterDocuments(attachRecruiterIdsToDocuments(data, employers, users))
+              setRows(documentRows.length ? documentRows : buildRecruiterDocumentFallbackRows(employers, users))
+            })
             .catch(() => setRows(groupRecruiterDocuments(data.map((document) => ({ ...document, recruiterId: document.recruiterId || '' })))))
           return
         }
@@ -2897,6 +2902,48 @@ function attachRecruiterIdsToDocuments(documents, recruiters, users = []) {
   })
 }
 
+function buildRecruiterDocumentFallbackRows(recruiters = [], users = []) {
+  const rowsByEmail = new Map()
+
+  users.forEach((user) => {
+    const email = String(user.email || '').toLowerCase()
+    if (!email) return
+
+    rowsByEmail.set(email, {
+      _id: user._id,
+      recruiterId: getShortId(user._id),
+      recruiterUserId: user._id,
+      recruiterName: user.name || 'Recruiter',
+      recruiterEmail: user.email || '',
+      documentType: 'Not Submitted',
+      panNumber: '',
+      panDocument: '',
+      gstNumber: '',
+      gstDocument: '',
+      submissionsCount: 0,
+      status: 'Not Submitted',
+      createdAt: user.createdAt,
+    })
+  })
+
+  recruiters.forEach((recruiter) => {
+    const email = String(recruiter.businessEmail || recruiter.email || '').toLowerCase()
+    if (!email) return
+
+    const current = rowsByEmail.get(email) || {}
+    rowsByEmail.set(email, {
+      ...current,
+      _id: current._id || recruiter._id,
+      recruiterId: current.recruiterId || getShortId(recruiter._id),
+      recruiterName: recruiter.companyName || current.recruiterName || 'Recruiter',
+      recruiterEmail: recruiter.businessEmail || current.recruiterEmail || '',
+      createdAt: current.createdAt || recruiter.createdAt,
+    })
+  })
+
+  return Array.from(rowsByEmail.values()).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+}
+
 function attachRecruiterIdsToJobs(jobs, recruiters) {
   const recruiterIdByEmail = new Map()
   const recruiterByEmail = new Map()
@@ -3201,7 +3248,7 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
           ) : fieldType === 'number' ? (
             <input className="input" key={key} min="0" onChange={(event) => onChange(key, event.target.value)} placeholder={label} type="number" value={form[key] || ''} />
           ) : type === 'users' && key === 'status' ? (
-            <select className="input" key={key} onChange={(event) => onChange(key, event.target.value)} value={form[key] || 'Active'}>
+            <select className="input" key={key} onChange={(event) => onChange(key, event.target.value)} value={form[key] || (form.role === 'recruiter' ? 'Review' : 'Active')}>
               {fieldOptions.userStatus.map((option) => <option key={option}>{option}</option>)}
             </select>
           ) : type === 'users' && key === 'password' ? (
