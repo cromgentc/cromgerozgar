@@ -65,8 +65,13 @@ function getFallbackPayload(req) {
   }
 
   const resource = pathname.split('/').filter(Boolean)[0]
-  if (['jobs', 'job-listings', 'companies', 'faqs', 'testimonials', 'content-pages'].includes(resource)) {
-    let data = fallbackData[resource] || (resource === 'job-listings' ? fallbackData.jobs : [])
+  const resourceAliases = {
+    'job-listings': 'jobs',
+    'company-profiles': 'companies',
+  }
+  const fallbackKey = resourceAliases[resource] || resource
+  if (['jobs', 'job-listings', 'companies', 'company-profiles', 'faqs', 'testimonials', 'content-pages'].includes(resource)) {
+    let data = fallbackData[fallbackKey] || []
     ;['slug', 'status', 'frontendPlacement'].forEach((key) => {
       const value = url.searchParams.get(key)
       if (value) data = data.filter((item) => String(item[key] || '') === value)
