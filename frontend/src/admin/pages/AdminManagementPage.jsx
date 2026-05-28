@@ -1056,6 +1056,20 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     applyRecruiterDocumentAction(row, action)
   }
 
+  const updateUserManagementStatus = async (row, status) => {
+    if (!row?._id || !status || status === row.status) return
+
+    const payload = normalizeUserManagementPayload({ ...row, status })
+    try {
+      const response = await api.update('users', row._id, payload)
+      const nextRow = normalizeUserManagementRow(response.data || payload)
+      setRows((current) => current.map((item) => (item._id === row._id ? { ...item, ...nextRow } : item)))
+      setMessage(`User status updated to ${nextRow.status || status}.`)
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
   const applyJobReviewAction = async (row, action, remark = '') => {
     const payload = action === 'active'
       ? { accountDepartmentStatus: 'Active', status: 'Active', approval: 'Approved', accountDepartmentRemark: '' }
@@ -1118,7 +1132,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   const actions = useMemo(
     () => (row) => {
       if (type === 'users') {
-        return <UserManagementActions onDelete={() => requestDelete(row)} onEdit={() => openEdit(row)} onView={() => setUserViewer(row)} />
+        return <UserManagementActions onDelete={() => requestDelete(row)} onStatusChange={(nextStatus) => updateUserManagementStatus(row, nextStatus)} row={row} />
       }
 
       if (type === 'recruiterDocuments') {
@@ -1585,11 +1599,20 @@ function RecruiterReviewActions({ onAction, onDelete, onEdit }) {
   )
 }
 
-function UserManagementActions({ onDelete, onEdit, onView }) {
+function UserManagementActions({ onDelete, onStatusChange, row }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <IconAction kind="view" label="View user" onClick={onView} />
-      <IconAction kind="edit" label="Edit user" onClick={onEdit} />
+      <select
+        className="h-8 rounded-[7px] border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 outline-none transition hover:border-blue-300 focus:border-blue-500"
+        onChange={(event) => {
+          const next = event.target.value
+          if (next) onStatusChange(next)
+        }}
+        value={fieldOptions.userStatus.includes(row?.status) ? row.status : ''}
+      >
+        <option value="">Status</option>
+        {fieldOptions.userStatus.map((status) => <option key={status} value={status}>{status}</option>)}
+      </select>
       <IconAction kind="delete" label="Delete user" onClick={onDelete} />
     </div>
   )
@@ -5086,13 +5109,18 @@ function rowToForm(row, fields) {
 function normalizeUserManagementPayload(payload) {
   if (payload?.role !== 'recruiter') return payload
 
-  const recruiterVerificationStatus = payload.recruiterVerificationStatus || 'documents_required'
-  if (recruiterVerificationStatus === 'approved') return payload
+  const status = payload.status || 'Review'
+  const verificationByStatus = {
+    Active: 'approved',
+    Review: 'documents_required',
+    Inactive: 'rejected',
+    Suspend: 'suspended',
+  }
 
   return {
     ...payload,
-    status: payload.status === 'Active' || !payload.status ? 'Review' : payload.status,
-    recruiterVerificationStatus,
+    status,
+    recruiterVerificationStatus: verificationByStatus[status] || payload.recruiterVerificationStatus || 'documents_required',
   }
 }
 
