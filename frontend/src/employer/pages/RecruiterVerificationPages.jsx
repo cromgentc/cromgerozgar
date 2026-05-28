@@ -318,7 +318,7 @@ export function RecruiterDocumentReviewPage() {
         ))}
       </div>
       <div className="mt-6 rounded-[7px] bg-blue-50 p-5 text-sm font-semibold leading-7 text-blue-800">
-        {reviewBlocked ? 'Please fill company documents again and submit updated details for admin review.' : 'Admin verification complete hone ke baad login se recruiter dashboard access milega.'}
+        {reviewBlocked ? 'Please fill company documents again and submit updated details for admin review.' : 'After Account Team verification is completed, access to the Recruiter Dashboard will be available through login.'}
       </div>
       {reviewBlocked && (
         <button className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white" onClick={refillDocuments} type="button">
