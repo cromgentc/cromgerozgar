@@ -33,6 +33,7 @@ router.use('/user-locations', userLocationRoutes)
 router.use('/jobs', crudRoutes.protected(controllers.jobs, { publicRead: true }))
 router.use('/companies', crudRoutes.protected(controllers.companies, { publicRead: true }))
 router.use('/content-pages', crudRoutes.protected(controllers.contentPages, { publicRead: true }))
+router.use('/contentpages', crudRoutes.protected(controllers.contentPages, { publicRead: true }))
 router.use('/employers', crudRoutes.protected(controllers.employers, {
   publicCreate: true,
   readRoles: ['Admin', 'staff', 'account team', 'recruiter'],
