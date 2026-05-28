@@ -169,7 +169,7 @@ export function Layout() {
 
     setNewsletterLoading(true)
     try {
-      const payload = await api.create('newsletter-subscribers', {
+      const payload = await api.subscribeNewsletter({
         email,
         source: user?.role ? `${user.role} footer` : 'public footer',
         topics: ['Hiring insights', 'Latest jobs', 'Recruiter updates'],

@@ -142,7 +142,7 @@ export function EmployerFooter() {
     setSubmitting(true)
     setMessage('')
     try {
-      await api.create('newsletter-subscribers', {
+      await api.subscribeNewsletter({
         email,
         source: isRecruiterLoggedIn ? 'recruiter-footer-logged-in' : 'recruiter-footer-visitor',
         topics: ['Recruiter updates', 'Hiring insights', 'Policy updates'],
