@@ -3,6 +3,10 @@ const mongoose = require('mongoose')
 const companySchema = new mongoose.Schema(
   {
     name: { type: String, default: '', trim: true },
+    contactPerson: { type: String, default: '', trim: true },
+    contactNumber: { type: String, default: '', trim: true },
+    contactEmail: { type: String, default: '', lowercase: true, trim: true },
+    gstNumber: { type: String, default: '', uppercase: true, trim: true },
     industry: { type: String, default: '' },
     jobs: { type: Number, default: 0 },
     badge: { type: String, default: '' },

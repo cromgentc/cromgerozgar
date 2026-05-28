@@ -116,6 +116,33 @@ const defaultFaqs = [
   },
 ]
 
+const defaultCategories = [
+  'IT & Software',
+  'Sales & Marketing',
+  'Customer Support',
+  'BPO',
+  'HR & Recruitment',
+  'Finance',
+  'Data Collection',
+  'Digital Marketing',
+  'Work From Home',
+  'Freelance',
+  'AI & Data Annotation',
+  'Business Development',
+].map((name) => ({ name, jobs: 0, status: 'Active' }))
+
+async function ensureDefaultCategories() {
+  await Category.bulkWrite(
+    defaultCategories.map((category) => ({
+      updateOne: {
+        filter: { name: category.name },
+        update: { $setOnInsert: category },
+        upsert: true,
+      },
+    })),
+  )
+}
+
 async function ensureDefaultFaqs(filter) {
   const keys = Object.keys(filter)
   if (keys.length && !(keys.length === 1 && filter.status === 'Active')) return
@@ -479,7 +506,7 @@ module.exports = {
     canAccess: canAccessApplication,
   }),
   candidates: crudController(Candidate, { searchFields: ['name', 'email', 'role', 'location'] }),
-  categories: crudController(Category, { searchFields: ['name', 'status'] }),
+  categories: crudController(Category, { searchFields: ['name', 'status'], beforeGetAll: ensureDefaultCategories }),
   companies: crudController(Company, { searchFields: ['name', 'contactPerson', 'contactNumber', 'contactEmail', 'gstNumber', 'industry', 'location', 'status'] }),
   contentPages: crudController(ContentPage, { searchFields: ['slug', 'title', 'subtitle', 'category', 'frontendPlacement', 'status'], beforeGetAll: ensureDefaultPolicyPage }),
   employers: crudController(Employer, {

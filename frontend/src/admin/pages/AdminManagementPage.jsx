@@ -20,6 +20,7 @@ import { updateRecruiterVerificationRemark } from '../../routes/authRouting'
 import { fetchPricingPackages, getPricingPackages, seedDefaultPricingPackages } from '../../utils/pricingPackages'
 import { applySiteBrandingMeta, defaultSiteBranding, publishSiteBranding } from '../../utils/siteBranding'
 import { buildStateCountryLocation } from '../../utils/locationDisplay'
+import { getJobsForCategory } from '../../utils/categoryMatching'
 
 const configs = {
   users: {
@@ -230,7 +231,12 @@ const configs = {
     modalTitle: 'Add / Edit Category',
     extra: 'Toggle',
     columns: [{ key: '_id', label: 'Category ID' }, { key: 'name', label: 'Category' }, { key: 'jobs', label: 'Jobs' }, { key: 'status', label: 'Status', badge: true }],
-    fields: [['name', 'Category name'], ['jobs', 'Jobs count'], ['status', 'Status']],
+    fields: [['name', 'Category name'], ['status', 'Status']],
+    transform: (form) => {
+      const payload = { ...form }
+      delete payload.jobs
+      return payload
+    },
   },
   locations: {
     resource: 'locations',
@@ -722,6 +728,22 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
             .listAll('employers')
             .then((employersPayload) => setRows(groupJobsByRecruiter(attachRecruiterIdsToJobs(data, employersPayload.data || []))))
             .catch(() => setRows(groupJobsByRecruiter(data.map((row) => ({ ...row, recruiterId: getShortId(row.recruiterId) })))))
+          return
+        }
+
+        if (type === 'companies') {
+          api
+            .companyProfiles()
+            .then((profilesPayload) => setRows(mergeCompanyManagementRows(data, profilesPayload.data || [], { search, status })))
+            .catch(() => setRows(data))
+          return
+        }
+
+        if (type === 'categories') {
+          api
+            .listAll('jobs', '?includeAll=true&limit=100')
+            .then((jobsPayload) => setRows(withAutomaticCategoryJobCounts(data, jobsPayload.data || [])))
+            .catch(() => setRows(data.map((row) => ({ ...row, jobs: Number(row.jobs || 0) }))))
           return
         }
 
@@ -2820,6 +2842,55 @@ function groupJobsByRecruiter(jobs) {
   })
 
   return Array.from(grouped.values()).sort((a, b) => b.latestCreatedAt - a.latestCreatedAt)
+}
+
+function withAutomaticCategoryJobCounts(categories, jobs) {
+  return categories.map((category) => ({
+    ...category,
+    jobs: getJobsForCategory(jobs, category.name).length,
+  }))
+}
+
+function mergeCompanyManagementRows(companyRows, profileRows, filters = {}) {
+  const rowsByKey = new Map()
+
+  ;[...companyRows, ...profileRows].forEach((company, index) => {
+    const normalized = normalizeCompanyManagementRow(company, index)
+    const key = normalizeName(normalized.name) || String(normalized._id || normalized.id || `company-${index}`)
+    const current = rowsByKey.get(key)
+    rowsByKey.set(key, current ? { ...normalized, ...current } : normalized)
+  })
+
+  return Array.from(rowsByKey.values()).filter((company) => matchesCompanyManagementFilters(company, filters))
+}
+
+function normalizeCompanyManagementRow(company = {}, index = 0) {
+  const openJobs = Number(company.jobs ?? company.openJobs ?? 0)
+  const name = company.name || company.companyName || ''
+
+  return {
+    ...company,
+    _id: company._id,
+    id: company.id || company._id || `profile-${normalizeName(name) || index}`,
+    name,
+    contactPerson: company.contactPerson || company.recruiterName || '',
+    contactNumber: company.contactNumber || company.phone || '',
+    contactEmail: company.contactEmail || company.businessEmail || '',
+    gstNumber: company.gstNumber || '',
+    industry: company.industry || 'Not added',
+    status: company.status || 'Active',
+    jobs: openJobs,
+  }
+}
+
+function matchesCompanyManagementFilters(company, { search = '', status = '' } = {}) {
+  const matchesSearch = search
+    ? [company.name, company.contactPerson, company.contactNumber, company.contactEmail, company.gstNumber, company.industry, company.location, company.status]
+      .some((value) => String(value || '').toLowerCase().includes(search.toLowerCase()))
+    : true
+  const matchesStatus = status ? String(company.status || '').toLowerCase() === status.toLowerCase() : true
+
+  return matchesSearch && matchesStatus
 }
 
 function groupRecruiterDocuments(documents) {

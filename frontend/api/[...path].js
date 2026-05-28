@@ -19,6 +19,20 @@ let connectDB
 let dbPromise
 
 const fallbackData = {
+  categories: [
+    { name: 'IT & Software', jobs: 0, status: 'Active' },
+    { name: 'Sales & Marketing', jobs: 0, status: 'Active' },
+    { name: 'Customer Support', jobs: 0, status: 'Active' },
+    { name: 'BPO', jobs: 0, status: 'Active' },
+    { name: 'HR & Recruitment', jobs: 0, status: 'Active' },
+    { name: 'Finance', jobs: 0, status: 'Active' },
+    { name: 'Data Collection', jobs: 0, status: 'Active' },
+    { name: 'Digital Marketing', jobs: 0, status: 'Active' },
+    { name: 'Work From Home', jobs: 0, status: 'Active' },
+    { name: 'Freelance', jobs: 0, status: 'Active' },
+    { name: 'AI & Data Annotation', jobs: 0, status: 'Active' },
+    { name: 'Business Development', jobs: 0, status: 'Active' },
+  ],
   jobs: [
     {
       title: 'Senior React Engineer',
@@ -155,7 +169,7 @@ function getFallbackPayload(req) {
     'company-profiles': 'companies',
   }
   const fallbackKey = resourceAliases[resource] || resource
-  if (['jobs', 'job-listings', 'companies', 'company-profiles', 'faqs', 'testimonials', 'content-pages'].includes(resource)) {
+  if (['jobs', 'job-listings', 'categories', 'companies', 'company-profiles', 'faqs', 'testimonials', 'content-pages'].includes(resource)) {
     let data = fallbackData[fallbackKey] || []
     ;['slug', 'status', 'frontendPlacement'].forEach((key) => {
       const value = url.searchParams.get(key)

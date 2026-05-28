@@ -1,11 +1,16 @@
 const categories = [
-  { name: 'IT & Software', jobs: 1842, status: 'Active' },
-  { name: 'Sales & Marketing', jobs: 936, status: 'Active' },
-  { name: 'Customer Support', jobs: 710, status: 'Active' },
-  { name: 'BPO', jobs: 524, status: 'Inactive' },
-  { name: 'HR & Recruitment', jobs: 388, status: 'Active' },
-  { name: 'Finance', jobs: 624, status: 'Active' },
-  { name: 'AI & Data Annotation', jobs: 690, status: 'Active' },
+  { name: 'IT & Software', jobs: 0, status: 'Active' },
+  { name: 'Sales & Marketing', jobs: 0, status: 'Active' },
+  { name: 'Customer Support', jobs: 0, status: 'Active' },
+  { name: 'BPO', jobs: 0, status: 'Active' },
+  { name: 'HR & Recruitment', jobs: 0, status: 'Active' },
+  { name: 'Finance', jobs: 0, status: 'Active' },
+  { name: 'Data Collection', jobs: 0, status: 'Active' },
+  { name: 'Digital Marketing', jobs: 0, status: 'Active' },
+  { name: 'Work From Home', jobs: 0, status: 'Active' },
+  { name: 'Freelance', jobs: 0, status: 'Active' },
+  { name: 'AI & Data Annotation', jobs: 0, status: 'Active' },
+  { name: 'Business Development', jobs: 0, status: 'Active' },
 ]
 
 const companies = [
