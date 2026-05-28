@@ -105,6 +105,7 @@ export function RecruiterDocumentsPage() {
   const [gstDetails, setGstDetails] = useState(null)
   const [gstLoading, setGstLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [uploadingFields, setUploadingFields] = useState({})
 
   if (!user) return <Navigate replace to="/recruiter-login" />
   if (status === 'account_review' && !canRefillDocuments) return <Navigate replace to="/recruiter-verification" />
@@ -138,6 +139,37 @@ export function RecruiterDocumentsPage() {
 
     setGstDetails({ ...validation.details, valid: true })
     setGstLoading(false)
+  }
+
+  const uploadDocument = async (key, file) => {
+    if (!file) return
+
+    if (file.type !== 'application/pdf') {
+      setMessage('Only PDF document upload is allowed.')
+      return
+    }
+
+    const data = new FormData()
+    data.append('document', file)
+    data.append('field', key)
+    data.append('recruiterEmail', user.email || '')
+
+    setUploadingFields((current) => ({ ...current, [key]: true }))
+    setMessage('')
+
+    try {
+      const payload = await api.uploadRecruiterDocumentToSupaCloud(data)
+      const url = payload.data?.url
+      if (!url) {
+        setMessage('Document uploaded, but Supa Cloud public URL was not returned. Please check public bucket setting.')
+        return
+      }
+      update(key, url)
+    } catch (error) {
+      setMessage(error.message || 'Document could not be uploaded to Supa Cloud.')
+    } finally {
+      setUploadingFields((current) => ({ ...current, [key]: false }))
+    }
   }
 
   const submit = async (event) => {
@@ -230,25 +262,25 @@ export function RecruiterDocumentsPage() {
               </button>
             </div>
             {gstDetails && <GstDetailsPanel details={gstDetails} />}
-            <DocumentField label="PAN card document" onChange={(value) => update('panDocument', value)} required value={form.panDocument} />
-            <DocumentField label="GST certificate" onChange={(value) => update('gstDocument', value)} required value={form.gstDocument} />
+            <DocumentField label="PAN card document" loading={uploadingFields.panDocument} onChange={(file) => uploadDocument('panDocument', file)} required value={form.panDocument} />
+            <DocumentField label="GST certificate" loading={uploadingFields.gstDocument} onChange={(file) => uploadDocument('gstDocument', file)} required value={form.gstDocument} />
           </>
         )}
 
         {form.documentType === 'Offer Letter' && (
           <>
             <input className="input" onChange={(event) => update('panNumber', event.target.value)} placeholder="Company PAN number" required value={form.panNumber} />
-            <DocumentField label="PAN card document" onChange={(value) => update('panDocument', value)} required value={form.panDocument} />
-            <DocumentField label="Offer letter" onChange={(value) => update('offerLetter', value)} required value={form.offerLetter} />
+            <DocumentField label="PAN card document" loading={uploadingFields.panDocument} onChange={(file) => uploadDocument('panDocument', file)} required value={form.panDocument} />
+            <DocumentField label="Offer letter" loading={uploadingFields.offerLetter} onChange={(file) => uploadDocument('offerLetter', file)} required value={form.offerLetter} />
           </>
         )}
 
         {form.documentType === 'Aadhar Card' && (
           <>
             <input className="input" onChange={(event) => update('panNumber', event.target.value)} placeholder="Company PAN number" required value={form.panNumber} />
-            <DocumentField label="PAN card document" onChange={(value) => update('panDocument', value)} required value={form.panDocument} />
+            <DocumentField label="PAN card document" loading={uploadingFields.panDocument} onChange={(file) => uploadDocument('panDocument', file)} required value={form.panDocument} />
             <input className="input" inputMode="numeric" maxLength={12} onChange={(event) => update('aadhaarNumber', event.target.value)} pattern="[0-9]*" placeholder="Aadhar number" required value={form.aadhaarNumber} />
-            <DocumentField label="Aadhar card" onChange={(value) => update('aadhaarDocument', value)} required value={form.aadhaarDocument} />
+            <DocumentField label="Aadhar card" loading={uploadingFields.aadhaarDocument} onChange={(file) => uploadDocument('aadhaarDocument', file)} required value={form.aadhaarDocument} />
           </>
         )}
 
@@ -451,12 +483,12 @@ function StatusSteps({ active }) {
   )
 }
 
-function DocumentField({ label, onChange, required = false, value }) {
+function DocumentField({ label, loading = false, onChange, required = false, value }) {
   return (
     <label className="rounded-[7px] border border-dashed border-blue-200 bg-blue-50 p-4">
       <span className="flex items-center gap-2 text-sm font-black text-blue-700"><Upload size={17} /> {label}</span>
-      <input className="mt-3 w-full rounded-[7px] border border-blue-100 bg-white px-4 py-3 text-sm font-semibold outline-none" onChange={(event) => onChange(event.target.files?.[0]?.name || '')} required={required} type="file" />
-      <span className="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-500"><FileText size={14} /> {value || 'Choose file to upload'}</span>
+      <input accept="application/pdf" className="mt-3 w-full rounded-[7px] border border-blue-100 bg-white px-4 py-3 text-sm font-semibold outline-none" disabled={loading} onChange={(event) => onChange(event.target.files?.[0] || null)} required={required && !value} type="file" />
+      <span className="mt-2 flex items-center gap-2 break-all text-xs font-semibold text-slate-500"><FileText size={14} /> {loading ? 'Uploading to Supa Cloud...' : value || 'Choose PDF to upload'}</span>
     </label>
   )
 }

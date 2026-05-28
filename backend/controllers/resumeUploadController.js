@@ -177,6 +177,47 @@ async function uploadResume(req, res) {
   res.status(201).json({ success: true, data: resume, resumeJson: metadata })
 }
 
+async function uploadRecruiterDocumentFile(req, res) {
+  if (!req.file) {
+    res.status(400)
+    throw new Error('Recruiter document PDF is required.')
+  }
+
+  if (req.file.mimetype !== 'application/pdf') {
+    res.status(400)
+    throw new Error('Only PDF document upload is allowed.')
+  }
+
+  const config = await getSupaCloudConfig()
+  const recruiterEmail = req.body.recruiterEmail || req.user?.email || 'recruiter'
+  const field = cleanSegment(req.body.field || 'document')
+  const originalFileName = req.file.originalname || `${field}.pdf`
+  const upload = await uploadToSupaCloud({
+    buffer: req.file.buffer,
+    config: {
+      ...config,
+      bucket: 'documents',
+      folder: `recruiter-documents/${cleanSegment(recruiterEmail)}`,
+    },
+    contentType: req.file.mimetype,
+    fileName: `${field}-${originalFileName}`,
+  })
+
+  res.status(201).json({
+    success: true,
+    data: {
+      url: upload.publicUrl,
+      storageProvider: 'supa-cloud',
+      storageBucket: 'documents',
+      storagePath: upload.storagePath,
+      originalFileName,
+      mimeType: req.file.mimetype,
+      fileSize: req.file.size,
+      field,
+    },
+  })
+}
+
 async function viewResume(req, res) {
   const resume = await Resume.findById(req.params.id)
   if (!resume) {
@@ -217,4 +258,4 @@ async function viewResume(req, res) {
   res.send(Buffer.from(arrayBuffer))
 }
 
-module.exports = { uploadResume, viewResume }
+module.exports = { uploadRecruiterDocumentFile, uploadResume, viewResume }

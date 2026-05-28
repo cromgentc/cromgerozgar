@@ -1,6 +1,6 @@
 const express = require('express')
 const multer = require('multer')
-const { uploadResume, viewResume } = require('../controllers/resumeUploadController')
+const { uploadRecruiterDocumentFile, uploadResume, viewResume } = require('../controllers/resumeUploadController')
 const { authorize, protect } = require('../middleware/authMiddleware')
 
 const router = express.Router()
@@ -9,7 +9,7 @@ const upload = multer({
   limits: { fileSize: 8 * 1024 * 1024 },
   fileFilter(req, file, callback) {
     if (file.mimetype !== 'application/pdf') {
-      callback(new Error('Only PDF resume upload is allowed.'))
+      callback(new Error('Only PDF upload is allowed.'))
       return
     }
     callback(null, true)
@@ -17,6 +17,7 @@ const upload = multer({
 })
 
 router.post('/supa-cloud', protect, authorize('Admin', 'hiring', 'recruiter', 'users'), upload.single('resume'), uploadResume)
+router.post('/recruiter-document', protect, authorize('Admin', 'account team', 'recruiter'), upload.single('document'), uploadRecruiterDocumentFile)
 router.get('/:id/view', protect, authorize('Admin', 'hiring', 'recruiter', 'account team'), viewResume)
 
 module.exports = router

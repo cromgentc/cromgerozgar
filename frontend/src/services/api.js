@@ -279,6 +279,7 @@ export const api = {
   purchaseRecruiterCoins: (data) => apiRequest('/recruiter-package-subscriptions/purchase-coins', { method: 'POST', body: JSON.stringify(data), authRequired: true }),
   submitRecruiterJob: (data) => apiRequest('/recruiter-job-posts/submit', { method: 'POST', body: JSON.stringify(data), authRequired: true }),
   uploadResumeToSupaCloud: (data) => apiRequest('/resume-uploads/supa-cloud', { method: 'POST', body: data, authRequired: true }),
+  uploadRecruiterDocumentToSupaCloud: (data) => apiRequest('/resume-uploads/recruiter-document', { method: 'POST', body: data, authRequired: true }),
   resumeViewUrl: (id) => apiUrl(`/resume-uploads/${encodeURIComponent(id)}/view`),
   openResume: (id) => openAuthorizedFile(`/resume-uploads/${encodeURIComponent(id)}/view`),
   list: (resource, params = '') => apiRequest(`/${resource}${params}`, { authRequired: needsReadAuth(resource) }),
