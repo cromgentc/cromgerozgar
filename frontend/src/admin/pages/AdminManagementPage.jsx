@@ -1105,11 +1105,11 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       }
 
       if (type === 'recruiterDocuments') {
-        return <RecruiterDocumentActions canDelete={user?.role !== 'account team'} onAction={(action) => selectRecruiterDocumentAction(row, action)} onView={() => setDocumentViewer(row)} row={row} />
+        return <RecruiterDocumentActions canDelete={user?.role !== 'account team'} onAction={(action) => selectRecruiterDocumentAction(row, action)} onView={() => navigate(`/admin/recruiter-documents/${row._id}`)} row={row} />
       }
 
       if (type === 'employers') {
-        return <RecruiterAccountActions canDelete={user?.role !== 'account team'} onAction={(action) => selectEmployerAccountAction(row, action)} onEdit={() => openEdit(row)} onView={() => setAccountActionViewer(row)} row={row} />
+        return <RecruiterAccountActions canDelete={user?.role !== 'account team'} onAction={(action) => selectEmployerAccountAction(row, action)} onEdit={() => openEdit(row)} onView={() => navigate(`/admin/recruiters/${row._id}`)} row={row} />
       }
 
       if (type === 'applications') {
@@ -1147,7 +1147,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         />
       )
     },
-    [config.extra, resumeMode, type, user?.role],
+    [config.extra, navigate, resumeMode, type, user?.role],
   )
   const displayRows = type === 'jobs'
     ? (rows.some((row) => !row.jobPostCount) ? groupJobsByRecruiter(rows) : rows)
@@ -1164,7 +1164,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     : type === 'recruiterDocuments'
       ? (row) => navigate(`/admin/recruiter-documents/${row._id}`)
       : type === 'employers'
-        ? (row) => window.open(`/admin/recruiters/${row._id}`, '_blank', 'noopener,noreferrer')
+        ? (row) => navigate(`/admin/recruiters/${row._id}`)
         : type === 'supportMessages'
           ? (row) => window.open(`/admin/support-messages/${row.latestMessageId || row._id}`, '_blank', 'noopener,noreferrer')
           : type === 'users'
@@ -2170,7 +2170,7 @@ export function RecruiterDetailPage() {
         const email = nextRecruiter?.businessEmail || ''
 
         const [jobsPayload, applicationsPayload, documentsPayload, packagePayload] = await Promise.all([
-          api.jobs(`?recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`),
+          api.list('jobs', `?includeAll=true&recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`),
           api.list('applications', `?recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`),
           api.list('recruiter-documents', `?recruiterEmail=${encodeURIComponent(email)}&sort=-updatedAt&limit=100`),
           api.currentRecruiterPackage(email).catch(() => ({ data: null })),
@@ -3154,6 +3154,9 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
               key={key}
               onChange={(event) => {
                 onChange(key, event.target.value)
+                if (type === 'users' && key === 'role' && event.target.value === 'recruiter' && isCreate) {
+                  onChange('status', 'Inactive')
+                }
                 if (type === 'jobs' && key === 'company') {
                   const company = companyRows.find((item) => normalizeName(item.name) === normalizeName(event.target.value))
                   if (company?.industry) {

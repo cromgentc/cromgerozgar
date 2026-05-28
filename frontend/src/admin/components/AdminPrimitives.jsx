@@ -9,13 +9,13 @@ export function AdminCard({ children, className = '' }) {
 export function StatusBadge({ status }) {
   const key = String(status).toLowerCase()
   const tone =
-    key.includes('active') || key.includes('approved') || key.includes('paid') || key.includes('selected') || key.includes('verified')
+    key.includes('suspend') || key.includes('blocked') || key.includes('rejected') || key.includes('failed') || key.includes('closed')
+      ? 'bg-rose-50 text-rose-700 ring-rose-100 dark:bg-rose-400/10 dark:text-rose-200 dark:ring-rose-400/20'
+      : key.includes('inactive') || key.includes('pending') || key.includes('review') || key.includes('interview') || key.includes('open') || key.includes('submitted')
+        ? 'bg-amber-50 text-amber-700 ring-amber-100 dark:bg-amber-400/10 dark:text-amber-200 dark:ring-amber-400/20'
+        : key.includes('active') || key.includes('approved') || key.includes('paid') || key.includes('selected') || key.includes('verified')
       ? 'bg-emerald-50 text-emerald-700 ring-emerald-100 dark:bg-emerald-400/10 dark:text-emerald-200 dark:ring-emerald-400/20'
-      : key.includes('pending') || key.includes('review') || key.includes('interview') || key.includes('open')
-        ? 'bg-blue-50 text-blue-700 ring-blue-100 dark:bg-blue-400/10 dark:text-blue-200 dark:ring-blue-400/20'
-        : key.includes('blocked') || key.includes('rejected') || key.includes('failed') || key.includes('closed')
-          ? 'bg-rose-50 text-rose-700 ring-rose-100 dark:bg-rose-400/10 dark:text-rose-200 dark:ring-rose-400/20'
-          : 'bg-indigo-50 text-indigo-700 ring-indigo-100 dark:bg-indigo-400/10 dark:text-indigo-200 dark:ring-indigo-400/20'
+      : 'bg-indigo-50 text-indigo-700 ring-indigo-100 dark:bg-indigo-400/10 dark:text-indigo-200 dark:ring-indigo-400/20'
 
   return <span className={`inline-flex rounded-[7px] px-3 py-1 text-xs font-black ring-1 ${tone}`}>{status}</span>
 }

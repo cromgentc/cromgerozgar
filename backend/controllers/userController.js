@@ -24,11 +24,13 @@ function normalizeRole(role) {
 function normalizeUser(user) {
   if (!user) return user
   const data = typeof user.toObject === 'function' ? user.toObject() : user
+  const role = normalizeRole(data.role)
+
   return {
     ...data,
-    role: normalizeRole(data.role),
-    status: data.status || 'Active',
-    recruiterVerificationStatus: data.recruiterVerificationStatus || (normalizeRole(data.role) === 'recruiter' ? 'documents_required' : 'approved'),
+    role,
+    status: data.status || (role === 'recruiter' ? 'Inactive' : 'Active'),
+    recruiterVerificationStatus: data.recruiterVerificationStatus || (role === 'recruiter' ? 'documents_required' : 'approved'),
     recruiterVerificationRemark: data.recruiterVerificationRemark || '',
   }
 }
@@ -110,7 +112,7 @@ const createUser = asyncHandler(async (req, res) => {
     email,
     password,
     role: normalizedRole,
-    status,
+    status: status || (normalizedRole === 'recruiter' ? 'Inactive' : 'Active'),
     recruiterVerificationStatus: normalizedRole === 'recruiter' ? 'documents_required' : 'approved',
   })
   const safeUser = await User.findById(user._id).select('-password')

@@ -90,6 +90,7 @@ const readAuthResources = new Set([
   'applications',
   'candidates',
   'employers',
+  'jobs',
   'newsletter-subscribers',
   'newslettersubscribers',
   'newsletter-updates',
