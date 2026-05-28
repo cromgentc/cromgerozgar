@@ -4,5 +4,7 @@ dist/
 .env
 .env.*
 !.env.example
+!frontend/.env.development
+!frontend/.env.production
 
 .vercel

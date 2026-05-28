@@ -28,7 +28,15 @@ npm run dev
 API health:
 
 ```bash
-GET https://www.cromgenrozgar.in/api/health
+GET http://localhost:5050/api/health
+GET https://www.cromgenrozgar.in/api?path=health
+```
+
+Postman login:
+
+```bash
+POST http://localhost:5050/api/auth/login
+POST https://www.cromgenrozgar.in/api?path=auth%2Flogin
 ```
 
 ## Seed Demo Data
