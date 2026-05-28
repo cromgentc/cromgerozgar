@@ -4,6 +4,7 @@ import { Eye, Plus, Send, Sparkles, X } from 'lucide-react'
 import { getRecruiterVerificationPath, getRecruiterVerificationStatus, getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
 import { fetchPricingPackages, getPricingPackages } from '../utils/pricingPackages'
+import { buildStateCountryLocation } from '../utils/locationDisplay'
 
 const jobTitleSuggestions = [
   'Senior React Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'Node.js Developer', 'Python Developer',
@@ -198,7 +199,7 @@ export function PostJobPage() {
     const skills = form.skills.length ? form.skills.join(', ') : 'relevant tools and workflows'
     const title = form.title || 'skilled professional'
     const company = form.company || 'our company'
-    const location = [form.city, form.state, form.country].filter(Boolean).join(', ') || 'the selected location'
+    const location = buildStateCountryLocation(form) || 'the selected location'
 
     setForm((current) => ({
       ...current,
@@ -210,7 +211,7 @@ export function PostJobPage() {
   }
 
   const buildJobPayload = () => {
-    const location = [form.city, form.state, form.country].filter(Boolean).join(', ')
+    const location = buildStateCountryLocation(form)
     const interviewAddress = form.interviewSameAsOffice ? form.officeAddress : form.interviewAddress
 
     return {
@@ -429,7 +430,7 @@ function JobPreviewModal({ form, onClose }) {
           <div>
             <p className="text-sm font-black uppercase tracking-wide text-blue-600">Job Preview</p>
             <h2 className="mt-2 text-3xl font-black text-slate-950">{form.title || 'Job title'}</h2>
-            <p className="mt-2 font-semibold text-slate-500">{form.company || 'Company'} · {[form.city, form.state, form.country].filter(Boolean).join(', ') || 'Location'}</p>
+            <p className="mt-2 font-semibold text-slate-500">{form.company || 'Company'} · {buildStateCountryLocation(form) || 'Location'}</p>
           </div>
           <button className="grid h-10 w-10 place-items-center rounded-[7px] bg-slate-100" onClick={onClose} type="button"><X size={18} /></button>
         </div>

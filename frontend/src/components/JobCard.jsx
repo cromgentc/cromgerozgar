@@ -7,9 +7,11 @@ import { getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
 import { isSameAppliedJob } from '../utils/candidateActivity'
 import { createJobDetailPath } from '../utils/jobRoutes'
+import { formatStateCountryLocation } from '../utils/locationDisplay'
 
 export function JobCard({ denseMobile = false, index = 1, job, onApply, featured = false }) {
   const jobDetailPath = createJobDetailPath(job, index)
+  const displayLocation = formatStateCountryLocation(job.location)
   const navigate = useNavigate()
   const user = getStoredUser()
   const [saved, setSaved] = useState(() => isJobSaved(job))
@@ -97,7 +99,7 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
         <button
           aria-label={saved ? 'Remove saved job' : 'Save job'}
           className={`grid shrink-0 place-items-center rounded-[7px] border transition ${denseMobile ? 'h-9 w-9 sm:h-11 sm:w-11' : 'h-11 w-11'} ${
-            saved ? 'border-blue-200 bg-blue-600 text-white shadow-lg shadow-blue-100' : 'border-slate-200 text-slate-500 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600'
+            saved ? 'border-red-200 bg-red-500/10 text-red-600 shadow-sm' : 'border-red-100 bg-red-500/5 text-red-500 hover:border-red-200 hover:bg-red-500/10 hover:text-red-600'
           }`}
           onClick={saveJob}
           type="button"
@@ -107,7 +109,7 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
       </div>
 
       <div className={`${denseMobile ? 'mt-3 gap-2 text-xs sm:mt-5 sm:gap-3 sm:text-sm' : 'mt-5 gap-3 text-sm'} grid text-slate-500 sm:grid-cols-2`}>
-        <span className="flex min-w-0 items-center gap-2"><MapPin className="shrink-0" size={16} /><span className="truncate">{job.location}</span></span>
+        <span className="flex min-w-0 items-center gap-2"><MapPin className="shrink-0" size={16} /><span className="truncate">{displayLocation}</span></span>
         <span className="flex min-w-0 items-center gap-2"><Wallet className="shrink-0" size={16} /><span className="truncate">{job.salary}</span></span>
         <span className={`${denseMobile ? 'hidden sm:flex' : 'flex'} items-center gap-2`}><Briefcase size={16} />{job.experience}</span>
         <span className={`${denseMobile ? 'hidden sm:flex' : 'flex'} items-center gap-2`}><Clock size={16} />{job.posted}</span>

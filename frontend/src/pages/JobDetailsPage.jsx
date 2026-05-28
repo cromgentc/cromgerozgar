@@ -9,6 +9,7 @@ import { canSaveJobs, isJobSaved, toggleSavedJob } from '../utils/savedJobs'
 import { getStoredUser } from '../routes/authRouting'
 import { isSameAppliedJob } from '../utils/candidateActivity'
 import { extractJobIdFromSlug } from '../utils/jobRoutes'
+import { formatStateCountryLocation } from '../utils/locationDisplay'
 
 export function JobDetailsPage({ onApply }) {
   const { jobId, jobSlug } = useParams()
@@ -38,6 +39,7 @@ export function JobDetailsPage({ onApply }) {
   const shouldFetchById = /^[a-f\d]{24}$/i.test(resolvedJobId)
   const { data: apiJob } = useApiResource(() => (shouldFetchById ? api.job(resolvedJobId) : Promise.resolve({ data: fallbackJob })), fallbackJob, [resolvedJobId])
   const job = apiJob || fallbackJob
+  const displayLocation = formatStateCountryLocation(job.location)
   const [saved, setSaved] = useState(() => isJobSaved(job))
   const [shareOpen, setShareOpen] = useState(false)
   const [alreadyApplied, setAlreadyApplied] = useState(false)
@@ -154,7 +156,7 @@ export function JobDetailsPage({ onApply }) {
 
             <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:gap-3 lg:grid-cols-4">
               {[
-                [MapPin, job.location],
+                [MapPin, displayLocation],
                 [Wallet, job.salary],
                 [Briefcase, job.experience],
                 [Monitor, job.type],

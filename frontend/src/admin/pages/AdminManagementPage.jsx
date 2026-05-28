@@ -19,6 +19,7 @@ import { api } from '../../services/api'
 import { updateRecruiterVerificationRemark } from '../../routes/authRouting'
 import { fetchPricingPackages, getPricingPackages, seedDefaultPricingPackages } from '../../utils/pricingPackages'
 import { applySiteBrandingMeta, defaultSiteBranding, publishSiteBranding } from '../../utils/siteBranding'
+import { buildStateCountryLocation } from '../../utils/locationDisplay'
 
 const configs = {
   users: {
@@ -4699,7 +4700,7 @@ function toDateInputValue(value) {
 }
 
 function formatJobLocation(form) {
-  return [form.city, form.state, form.country].filter(Boolean).join(', ') || form.location || ''
+  return buildStateCountryLocation(form) || form.location || ''
 }
 
 function formatRows(rows) {

@@ -373,13 +373,15 @@ function CareerLanes({ compactMobile = false, categoryCounts }) {
               ))}
             </div>
             {categories.length > 4 && (
-              <Link
-                className="mt-3 min-h-10 w-full rounded-[7px] border border-blue-200 bg-white px-4 py-2 text-xs font-black text-[#0057B8] shadow-sm transition hover:border-[#0057B8] hover:bg-blue-50"
-                target="_blank"
-                to="/industries"
-              >
-                More Industry
-              </Link>
+              <div className="mt-3 flex justify-center">
+                <Link
+                  className="inline-flex min-h-9 items-center justify-center rounded-[7px] bg-[#0057B8] px-4 py-2 text-xs font-black text-white shadow-lg shadow-blue-100 transition hover:bg-[#004694]"
+                  target="_blank"
+                  to="/industries"
+                >
+                  More Industry
+                </Link>
+              </div>
             )}
           </>
         ) : (
@@ -654,13 +656,15 @@ export function CompanyGrid({ compactMobile = false }) {
         </div>
       )}
       {compactMobile && list.length > 4 && (
-        <button
-          className="col-span-2 min-h-10 rounded-[7px] border border-blue-200 bg-white px-4 py-2 text-xs font-black text-[#0057B8] shadow-sm transition hover:border-[#0057B8] hover:bg-blue-50"
-          onClick={() => setShowAllMobileCompanies((value) => !value)}
-          type="button"
-        >
-          {showAllMobileCompanies ? 'Show Less' : `More ${Math.min(list.length, 6) - 4}`}
-        </button>
+        <div className="col-span-2 flex justify-center">
+          <button
+            className="inline-flex min-h-9 items-center justify-center rounded-[7px] bg-[#0057B8] px-4 py-2 text-xs font-black text-white shadow-lg shadow-blue-100 transition hover:bg-[#004694]"
+            onClick={() => setShowAllMobileCompanies((value) => !value)}
+            type="button"
+          >
+            {showAllMobileCompanies ? 'Show Less' : 'More Companies'}
+          </button>
+        </div>
       )}
       {!compactMobile && list.length > 3 && (
         <div className="md:col-span-2 lg:col-span-3 text-center">

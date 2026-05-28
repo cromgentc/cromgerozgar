@@ -6,6 +6,7 @@ import { SearchBar } from '../components/SearchBar'
 import { EmptyState } from '../components/PortalUI'
 import { useApiResource } from '../hooks/useApiResource'
 import { api } from '../services/api'
+import { formatStateCountryLocation } from '../utils/locationDisplay'
 
 const filterConfig = [
   { key: 'location', label: 'Location', field: 'locationState' },
@@ -489,13 +490,7 @@ function normalizeJobType(value) {
 }
 
 function getLocationState(value) {
-  const parts = String(value || '')
-    .split(',')
-    .map((part) => part.trim())
-    .filter(Boolean)
-
-  if (parts.length >= 2) return parts.slice(-2).join(', ')
-  return parts[0] || ''
+  return formatStateCountryLocation(value)
 }
 
 function getExperienceMin(value) {
