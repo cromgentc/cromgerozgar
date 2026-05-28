@@ -39,6 +39,13 @@ function normalizeUser(user) {
   }
 }
 
+function normalizeRecruiterAccessStatus(role, status, recruiterVerificationStatus) {
+  if (normalizeRole(role) !== 'recruiter') return status || 'Active'
+  if (recruiterVerificationStatus === 'approved') return status || 'Active'
+  if (!status || status === 'Active') return 'Review'
+  return status
+}
+
 function buildUserFilter(query) {
   const filter = {}
 
@@ -111,13 +118,14 @@ const createUser = asyncHandler(async (req, res) => {
   }
 
   const normalizedRole = normalizeRole(role)
+  const recruiterVerificationStatus = normalizedRole === 'recruiter' ? 'documents_required' : 'approved'
   const user = await User.create({
     name,
     email,
     password,
     role: normalizedRole,
-    status: status || (normalizedRole === 'recruiter' ? 'Review' : 'Active'),
-    recruiterVerificationStatus: normalizedRole === 'recruiter' ? 'documents_required' : 'approved',
+    status: normalizeRecruiterAccessStatus(normalizedRole, status, recruiterVerificationStatus),
+    recruiterVerificationStatus,
   })
   const safeUser = await User.findById(user._id).select('-password')
   res.status(201).json({ success: true, data: normalizeUser(safeUser) })
@@ -135,6 +143,7 @@ const updateUser = asyncHandler(async (req, res) => {
     user.status = req.body.status ?? user.status
     user.recruiterVerificationStatus = req.body.recruiterVerificationStatus ?? user.recruiterVerificationStatus
     user.recruiterVerificationRemark = req.body.recruiterVerificationRemark ?? user.recruiterVerificationRemark
+    user.status = normalizeRecruiterAccessStatus(user.role, user.status, user.recruiterVerificationStatus)
   } else {
     user.name = req.body.name ?? user.name
     user.email = req.body.email ?? user.email
@@ -142,6 +151,7 @@ const updateUser = asyncHandler(async (req, res) => {
     user.status = req.body.status ?? user.status
     user.recruiterVerificationStatus = req.body.recruiterVerificationStatus ?? user.recruiterVerificationStatus
     user.recruiterVerificationRemark = req.body.recruiterVerificationRemark ?? user.recruiterVerificationRemark
+    user.status = normalizeRecruiterAccessStatus(user.role, user.status, user.recruiterVerificationStatus)
     if (req.body.password) user.password = req.body.password
   }
 

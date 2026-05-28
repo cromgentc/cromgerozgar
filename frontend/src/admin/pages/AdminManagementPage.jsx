@@ -703,6 +703,11 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     listRequest
       .then((payload) => {
         const data = payload.data || []
+        if (type === 'users') {
+          setRows(data.map(normalizeUserManagementRow))
+          return
+        }
+
         if (type === 'recruiterDocuments') {
           Promise
             .all([
@@ -837,7 +842,8 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
 
     try {
       const resource = type === 'resumes' ? 'resumes' : config.resource
-      const resumePayload = type === 'resumes' ? { ...payload, source: 'Admin Upload' } : payload
+      const normalizedPayload = normalizeUserManagementPayload(payload)
+      const resumePayload = type === 'resumes' ? { ...normalizedPayload, source: 'Admin Upload' } : normalizedPayload
 
       if (selectedRow?._id && !(type === 'resumes' && resumeMode === 'lead')) {
         const payload = await api.update(resource, selectedRow._id, resumePayload)
