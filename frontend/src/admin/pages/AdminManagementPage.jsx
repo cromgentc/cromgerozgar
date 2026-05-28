@@ -1192,15 +1192,6 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         {config.export && <ExportButtons />}
       </div>
       {message && <p className="rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
-      {type === 'newsletterSubscribers' && (
-        <NewsletterUpdatePanel
-          form={newsletterForm}
-          onChange={(key, value) => setNewsletterForm((current) => ({ ...current, [key]: value }))}
-          onSend={sendNewsletterUpdate}
-          sending={newsletterSending}
-          updates={newsletterUpdates}
-        />
-      )}
       {type === 'applications' && <ApplicationStatusPanel />}
       {['payments', 'paymentLogs'].includes(type) && <RevenueSummary />}
       <DataTable
@@ -1210,6 +1201,15 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         rows={type === 'recruiterDocuments' ? displayRows : formatRows(displayRows)}
       />
       {!displayRows.length && <EmptyAdminState title={`${config.title} empty state`} />}
+      {type === 'newsletterSubscribers' && (
+        <NewsletterUpdatePanel
+          form={newsletterForm}
+          onChange={(key, value) => setNewsletterForm((current) => ({ ...current, [key]: value }))}
+          onSend={sendNewsletterUpdate}
+          sending={newsletterSending}
+          updates={newsletterUpdates}
+        />
+      )}
       <CrudModal companyOptions={companyOptions} companyRows={companyRows} config={config} form={form} isCreate={!selectedRow} onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))} onClose={() => setModalOpen(false)} onSave={save} open={modalOpen} type={type} />
       <AdminModal open={Boolean(reviewAction)} title={reviewAction?.type === 'jobReview' ? 'Add job reject remark' : reviewAction?.type === 'recruiterDocument' ? 'Add document review remark' : 'Add recruiter account remark'} onClose={() => setReviewAction(null)}>
         <p className="text-sm leading-6 text-slate-500">{reviewAction?.type === 'jobReview' ? 'This remark will be shown to the recruiter on their posted jobs page.' : 'This remark will be shown to the recruiter on their verification screen.'}</p>
