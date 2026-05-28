@@ -5087,6 +5087,32 @@ function rowToForm(row, fields) {
   }, {})
 }
 
+function normalizeUserManagementPayload(payload) {
+  if (payload?.role !== 'recruiter') return payload
+
+  const recruiterVerificationStatus = payload.recruiterVerificationStatus || 'documents_required'
+  if (recruiterVerificationStatus === 'approved') return payload
+
+  return {
+    ...payload,
+    status: payload.status === 'Active' || !payload.status ? 'Review' : payload.status,
+    recruiterVerificationStatus,
+  }
+}
+
+function normalizeUserManagementRow(row) {
+  if (row?.role !== 'recruiter') return row
+
+  const recruiterVerificationStatus = row.recruiterVerificationStatus || 'documents_required'
+  if (recruiterVerificationStatus === 'approved') return row
+
+  return {
+    ...row,
+    status: row.status === 'Active' || !row.status ? 'Review' : row.status,
+    recruiterVerificationStatus,
+  }
+}
+
 function toDateInputValue(value) {
   if (!value || value === 'Today') return ''
   if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return value
