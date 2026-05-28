@@ -49,6 +49,7 @@ router.use('/applications', crudRoutes.protected(controllers.applications, {
 router.use('/categories', crudRoutes.protected(controllers.categories, { publicRead: true }))
 router.use('/locations', crudRoutes.protected(controllers.locations, { publicRead: true }))
 router.use('/newsletter-subscribers', crudRoutes.protected(controllers.newsletterSubscribers, { publicCreate: true }))
+router.use('/newslettersubscribers', crudRoutes.protected(controllers.newsletterSubscribers, { publicCreate: true }))
 router.get('/newsletter-updates', protect, authorize('Admin', 'staff', 'hiring', 'account team'), listNewsletterUpdates)
 router.post('/newsletter-updates/send', protect, authorize('Admin', 'staff', 'hiring', 'account team'), sendNewsletterUpdate)
 router.use('/payments', crudRoutes.protected(controllers.payments))

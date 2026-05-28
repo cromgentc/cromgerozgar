@@ -232,7 +232,7 @@ export const api = {
   adminFaqs: (params = '?sort=sortOrder -featured -createdAt') => listAllWithAuth('faqs', params),
   contentPages: (params = '?status=Published&sort=-updatedAt') => listAll('contentpages', params),
   adminContentPages: (params = '?sort=-updatedAt') => listAllWithAuth('contentpages', params),
-  adminNewsletterSubscribers: (params = '?sort=-createdAt') => listAllWithAuth('newsletter-subscribers', params),
+  adminNewsletterSubscribers: (params = '?sort=-createdAt') => listAllWithAuth('newslettersubscribers', params),
   companies: (params = '') => apiRequest(`/companies${params}`),
   companyProfiles: () => apiRequest('/company-profiles'),
   adminDashboard: () => apiRequest('/dashboard/admin', { authRequired: true }),
