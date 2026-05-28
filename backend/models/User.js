@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
     googleId: { type: String, default: '', index: true },
     avatar: { type: String, default: '' },
     role: { type: String, enum: ['Admin', 'staff', 'recruiter', 'users', 'hiring', 'account team', 'Candidate', 'freelancer'], default: 'Candidate' },
-    status: { type: String, enum: ['Active', 'Inactive', 'Suspend'], default: 'Active' },
+    status: { type: String, enum: ['Active', 'Inactive', 'Review', 'Suspend'], default: 'Active' },
     recruiterVerificationStatus: {
       type: String,
       enum: ['account_review', 'documents_required', 'documents_review', 'approved', 'rejected', 'hold', 'suspended'],

@@ -171,7 +171,7 @@ const register = asyncHandler(async (req, res) => {
     phone,
     password,
     role: normalizedRole,
-    status: normalizedRole === 'recruiter' ? 'Inactive' : 'Active',
+    status: normalizedRole === 'recruiter' ? 'Review' : 'Active',
     recruiterVerificationStatus: normalizedRole === 'recruiter' ? 'documents_required' : 'approved',
   })
   res.status(201).json({ success: true, token: signToken(user), data: authPayload(user) })
@@ -534,7 +534,7 @@ const googleAuth = asyncHandler(async (req, res) => {
       authProvider: 'google',
       googleId: googleProfile.sub,
       avatar: googleProfile.picture || '',
-      status: requestedRole === 'recruiter' ? 'Inactive' : 'Active',
+      status: requestedRole === 'recruiter' ? 'Review' : 'Active',
       recruiterVerificationStatus: requestedRole === 'recruiter' ? 'documents_required' : 'approved',
     })
   }

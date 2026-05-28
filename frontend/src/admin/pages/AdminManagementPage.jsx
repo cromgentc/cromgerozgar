@@ -555,7 +555,7 @@ const accessByRole = {
 const fieldOptions = {
   role: ['users', 'Admin', 'staff', 'recruiter', 'freelancer', 'hiring', 'account team'],
   status: ['Active', 'Inactive', 'Pending', 'Approved', 'Rejected', 'Suspended', 'Blocked', 'Open', 'Closed', 'New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected'],
-  userStatus: ['Active', 'Inactive', 'Suspend'],
+  userStatus: ['Active', 'Review', 'Inactive', 'Suspend'],
   documentType: ['GST', 'Offer Letter', 'Aadhar Card'],
   testimonialType: ['Candidate', 'Recruiter', 'Company', 'Admin'],
   testimonialPlacement: ['Users Frontend', 'Recruiter Frontend'],
@@ -589,12 +589,8 @@ const recruiterReviewActions = [
   { label: 'Suspended', value: 'suspended', status: 'suspended' },
 ]
 
-const recruiterAccountActions = [
-  { label: 'Approve', value: 'approve' },
-  { label: 'Reject', value: 'reject' },
-  { label: 'Suspend', value: 'suspend' },
-  { label: 'Delete', value: 'delete' },
-]
+const recruiterStatusOptions = ['Pending', 'Approved', 'Rejected', 'Suspended', 'Blocked']
+const recruiterRemarkStatuses = ['Rejected', 'Suspended', 'Blocked']
 
 const defaultNewsletterUpdateForm = {
   subject: '',
@@ -708,17 +704,23 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       .then((payload) => {
         const data = payload.data || []
         if (type === 'recruiterDocuments') {
-          api
-            .listAll('employers')
-            .then((employersPayload) => setRows(groupRecruiterDocuments(attachRecruiterIdsToDocuments(data, employersPayload.data || []))))
+          Promise
+            .all([
+              api.listAll('employers'),
+              api.listAll('users', '?role=recruiter'),
+            ])
+            .then(([employersPayload, usersPayload]) => setRows(groupRecruiterDocuments(attachRecruiterIdsToDocuments(data, employersPayload.data || [], usersPayload.data || []))))
             .catch(() => setRows(groupRecruiterDocuments(data.map((document) => ({ ...document, recruiterId: document.recruiterId || '' })))))
           return
         }
 
         if (type === 'employers') {
-          api
-            .listAll('recruiter-documents', '?sort=-updatedAt')
-            .then((documentsPayload) => setRows(mergeRecruiterDocumentStatus(data, documentsPayload.data || [])))
+          Promise
+            .all([
+              api.listAll('recruiter-documents', '?sort=-updatedAt'),
+              api.listAll('users', '?role=recruiter'),
+            ])
+            .then(([documentsPayload, usersPayload]) => setRows(mergeRecruiterDocumentStatus(attachRecruiterUserIdsToRecruiters(data, usersPayload.data || []), documentsPayload.data || [])))
             .catch(() => setRows(data.map((row) => ({ ...row, source: row.source || 'Admin Upload' }))))
           return
         }
@@ -935,9 +937,11 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     }
 
     const statusMap = {
-      approve: { documentStatus: 'Approved', recruiterStatus: 'approved', userStatus: 'Active', message: 'Recruiter documents approved. Recruiter can login to dashboard now.' },
-      reject: { documentStatus: 'Rejected', recruiterStatus: 'rejected', userStatus: 'Inactive', message: 'Recruiter documents rejected. Remark sent to recruiter.' },
-      suspend: { documentStatus: 'Suspend', recruiterStatus: 'suspended', userStatus: 'Suspend', message: 'Recruiter documents suspended. Remark sent to recruiter.' },
+      Pending: { documentStatus: 'Pending', recruiterStatus: 'documents_review', userStatus: 'Review', message: 'Recruiter documents marked pending.' },
+      Approved: { documentStatus: 'Approved', recruiterStatus: 'approved', userStatus: 'Active', message: 'Recruiter documents approved. Recruiter can login to dashboard now.' },
+      Rejected: { documentStatus: 'Rejected', recruiterStatus: 'rejected', userStatus: 'Inactive', message: 'Recruiter documents rejected. Remark sent to recruiter.' },
+      Suspended: { documentStatus: 'Suspended', recruiterStatus: 'suspended', userStatus: 'Suspend', message: 'Recruiter documents suspended. Remark sent to recruiter.' },
+      Blocked: { documentStatus: 'Blocked', recruiterStatus: 'suspended', userStatus: 'Suspend', message: 'Recruiter documents blocked. Remark sent to recruiter.' },
     }
     const next = statusMap[action]
     const email = row.recruiterEmail
@@ -981,9 +985,11 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
 
     const reviewer = getStoredAdminUser() || {}
     const statusMap = {
-      approve: { employerStatus: 'Approved', userStatus: 'Active', recruiterStatus: 'approved', verified: true, message: 'Recruiter account approved.' },
-      reject: { employerStatus: 'Rejected', userStatus: 'Inactive', recruiterStatus: 'rejected', verified: false, message: 'Recruiter account rejected.' },
-      suspend: { employerStatus: 'Suspended', userStatus: 'Suspend', recruiterStatus: 'suspended', verified: false, message: 'Recruiter account suspended.' },
+      Pending: { employerStatus: 'Pending', userStatus: 'Review', recruiterStatus: 'account_review', verified: false, message: 'Recruiter account moved to pending.' },
+      Approved: { employerStatus: 'Approved', userStatus: 'Active', recruiterStatus: 'approved', verified: true, message: 'Recruiter account approved.' },
+      Rejected: { employerStatus: 'Rejected', userStatus: 'Inactive', recruiterStatus: 'rejected', verified: false, message: 'Recruiter account rejected.' },
+      Suspended: { employerStatus: 'Suspended', userStatus: 'Suspend', recruiterStatus: 'suspended', verified: false, message: 'Recruiter account suspended.' },
+      Blocked: { employerStatus: 'Blocked', userStatus: 'Suspend', recruiterStatus: 'suspended', verified: false, message: 'Recruiter account blocked.' },
     }
     const next = statusMap[action]
     if (!next) return
@@ -1012,7 +1018,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
           })
         }
       }
-      setRows((current) => current.map((item) => (item._id === row._id ? response.data : item)))
+      setRows((current) => current.map((item) => (item._id === row._id ? { ...item, ...(response.data || authPayload) } : item)))
       setMessage(`${next.message} Authorised by ${authPayload.accountAuthorizedByName}.`)
     } catch (error) {
       setMessage(error.message)
@@ -1020,7 +1026,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   }
 
   const selectEmployerAccountAction = (row, action) => {
-    if (['reject', 'suspend'].includes(action)) {
+    if (recruiterRemarkStatuses.includes(action)) {
       setReviewAction({ row, action, type: 'employerAccount' })
       setReviewRemark('')
       return
@@ -1030,7 +1036,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   }
 
   const selectRecruiterDocumentAction = (row, action) => {
-    if (['reject', 'suspend'].includes(action)) {
+    if (recruiterRemarkStatuses.includes(action)) {
       setReviewAction({ row, action, type: 'recruiterDocument' })
       setReviewRemark('')
       return
@@ -1081,7 +1087,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
     if (!reviewAction) return
 
     if (!reviewRemark.trim()) {
-      setMessage('Remark is required for rejected, hold, and suspended accounts.')
+      setMessage('Remark is required for rejected, suspended, and blocked accounts.')
       return
     }
 
@@ -1105,11 +1111,11 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       }
 
       if (type === 'recruiterDocuments') {
-        return <RecruiterDocumentActions canDelete={user?.role !== 'account team'} onAction={(action) => selectRecruiterDocumentAction(row, action)} onView={() => navigate(`/admin/recruiter-documents/${row._id}`)} row={row} />
+        return <RecruiterDocumentActions canDelete={user?.role !== 'account team'} onAction={(action) => selectRecruiterDocumentAction(row, action)} onView={() => window.open(`/admin/recruiter-documents/${row._id}`, '_blank', 'noopener,noreferrer')} row={row} />
       }
 
       if (type === 'employers') {
-        return <RecruiterAccountActions canDelete={user?.role !== 'account team'} onAction={(action) => selectEmployerAccountAction(row, action)} onEdit={() => openEdit(row)} onView={() => navigate(`/admin/recruiters/${row._id}`)} row={row} />
+        return <RecruiterAccountActions canDelete={user?.role !== 'account team'} onAction={(action) => selectEmployerAccountAction(row, action)} onEdit={() => openEdit(row)} onView={() => window.open(`/admin/recruiters/${row._id}`, '_blank', 'noopener,noreferrer')} row={row} />
       }
 
       if (type === 'applications') {
@@ -1162,9 +1168,9 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   const rowClickHandler = type === 'jobs'
     ? openRecruiterJobs
     : type === 'recruiterDocuments'
-      ? (row) => navigate(`/admin/recruiter-documents/${row._id}`)
+      ? (row) => window.open(`/admin/recruiter-documents/${row._id}`, '_blank', 'noopener,noreferrer')
       : type === 'employers'
-        ? (row) => navigate(`/admin/recruiters/${row._id}`)
+        ? (row) => window.open(`/admin/recruiters/${row._id}`, '_blank', 'noopener,noreferrer')
         : type === 'supportMessages'
           ? (row) => window.open(`/admin/support-messages/${row.latestMessageId || row._id}`, '_blank', 'noopener,noreferrer')
           : type === 'users'
@@ -1271,8 +1277,11 @@ export function RecruiterDocumentDetailPage() {
       const history = historyPayload.data || []
       const documentsToShow = history.length ? history : [document]
       try {
-        const recruitersPayload = await api.list('employers', `?search=${encodeURIComponent(email)}`)
-        setDocuments(attachRecruiterIdsToDocuments(documentsToShow, recruitersPayload.data || []))
+        const [recruitersPayload, usersPayload] = await Promise.all([
+          api.list('employers', `?search=${encodeURIComponent(email)}`),
+          api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`),
+        ])
+        setDocuments(attachRecruiterIdsToDocuments(documentsToShow, recruitersPayload.data || [], usersPayload.data || []))
       } catch {
         setDocuments(documentsToShow.map((item) => ({ ...item, recruiterId: item.recruiterId || '' })))
       }
@@ -1297,9 +1306,11 @@ export function RecruiterDocumentDetailPage() {
     }
 
     const statusMap = {
-      approve: { documentStatus: 'Approved', recruiterStatus: 'approved', userStatus: 'Active', message: 'Recruiter documents approved. Recruiter can login to dashboard now.' },
-      reject: { documentStatus: 'Rejected', recruiterStatus: 'rejected', userStatus: 'Inactive', message: 'Recruiter documents rejected. Remark sent to recruiter.' },
-      suspend: { documentStatus: 'Suspend', recruiterStatus: 'suspended', userStatus: 'Suspend', message: 'Recruiter documents suspended. Remark sent to recruiter.' },
+      Pending: { documentStatus: 'Pending', recruiterStatus: 'documents_review', userStatus: 'Review', message: 'Recruiter documents marked pending.' },
+      Approved: { documentStatus: 'Approved', recruiterStatus: 'approved', userStatus: 'Active', message: 'Recruiter documents approved. Recruiter can login to dashboard now.' },
+      Rejected: { documentStatus: 'Rejected', recruiterStatus: 'rejected', userStatus: 'Inactive', message: 'Recruiter documents rejected. Remark sent to recruiter.' },
+      Suspended: { documentStatus: 'Suspended', recruiterStatus: 'suspended', userStatus: 'Suspend', message: 'Recruiter documents suspended. Remark sent to recruiter.' },
+      Blocked: { documentStatus: 'Blocked', recruiterStatus: 'suspended', userStatus: 'Suspend', message: 'Recruiter documents blocked. Remark sent to recruiter.' },
     }
     const next = statusMap[action]
     const email = document.recruiterEmail
@@ -1313,7 +1324,7 @@ export function RecruiterDocumentDetailPage() {
       const reviewer = getStoredAdminUser() || {}
       const reviewPayload = {
         status: next.documentStatus,
-        remark: action === 'approve' ? '' : remark,
+        remark: action === 'Approved' ? '' : remark,
         reviewedByName: reviewer.name || 'Account Team',
         reviewedByEmail: reviewer.email || '',
         reviewedAction: next.documentStatus,
@@ -1327,7 +1338,7 @@ export function RecruiterDocumentDetailPage() {
         await api.update('users', recruiter._id, {
           status: next.userStatus,
           recruiterVerificationStatus: next.recruiterStatus,
-          recruiterVerificationRemark: action === 'approve' ? '' : remark,
+            recruiterVerificationRemark: action === 'Approved' ? '' : remark,
         })
       }
 
@@ -1344,7 +1355,7 @@ export function RecruiterDocumentDetailPage() {
       return
     }
 
-    if (['reject', 'suspend'].includes(action)) {
+    if (recruiterRemarkStatuses.includes(action)) {
       setReviewAction({ document, action })
       setReviewRemark('')
       return
@@ -1357,7 +1368,7 @@ export function RecruiterDocumentDetailPage() {
     if (!reviewAction) return
 
     if (!reviewRemark.trim()) {
-      setMessage('Remark is required for rejected and suspended documents.')
+      setMessage('Remark is required for rejected, suspended, and blocked documents.')
       return
     }
 
@@ -1416,9 +1427,9 @@ export function RecruiterDocumentDetailPage() {
                   <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.recruiterEmail || 'Not added'}</td>
                   <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.documentType || 'Not added'}</td>
                   <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.panNumber || 'Not added'}</td>
-                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.panDocument || 'Not uploaded'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{renderDocumentFileCell(document.panDocument, 'PAN Card')}</td>
                   <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.gstNumber || 'Not added'}</td>
-                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{document.gstDocument || 'Not uploaded'}</td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">{renderDocumentFileCell(document.gstDocument, 'GST Certificate')}</td>
                   <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-600">
                     {document.remark && ['rejected', 'suspend', 'suspended'].includes(String(document.status || '').toLowerCase()) ? (
                       <button className="rounded-[7px] bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-700" onClick={() => setRemarkViewer({ status: document.status, remark: document.remark })} type="button">
@@ -1432,9 +1443,7 @@ export function RecruiterDocumentDetailPage() {
                   <td className="whitespace-nowrap px-5 py-4">
                     <div className="flex items-center gap-2">
                       <IconAction kind="view" label="View documents" onClick={() => setDocumentViewer(document)} />
-                      <IconAction action="approve" label="Approve" onClick={() => selectDocumentAction(document, 'approve')} />
-                      <IconAction action="reject" label="Reject" onClick={() => selectDocumentAction(document, 'reject')} />
-                      <IconAction action="suspend" label="Suspend" onClick={() => selectDocumentAction(document, 'suspend')} />
+                      <StatusActionSelect onChange={(status) => selectDocumentAction(document, status)} value={recruiterStatusOptions.includes(document.status) ? document.status : ''} />
                       <IconAction kind="delete" label="Delete" onClick={() => selectDocumentAction(document, 'delete')} />
                     </div>
                   </td>
@@ -1658,14 +1667,14 @@ function getIconActionConfig(action = '') {
 
 function RecruiterAccountActions({ canDelete = true, onAction, onEdit, onView, row }) {
   const authorisedBy = row.accountAuthorizedByName || row.accountAuthorizedByEmail
-  const actions = canDelete ? recruiterAccountActions : recruiterAccountActions.filter((action) => action.value !== 'delete')
 
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap gap-2">
-        <IconAction kind="view" label="View recruiter account remark" onClick={onView} />
+        <IconAction kind="view" label="View recruiter details" onClick={onView} />
         <IconAction kind="edit" label="Edit recruiter" onClick={onEdit} />
-        {actions.map((action) => <IconAction action={action.value} key={action.value} label={action.label} onClick={() => onAction(action.value)} />)}
+        <StatusActionSelect onChange={onAction} value={recruiterStatusOptions.includes(row.status) ? row.status : ''} />
+        {canDelete ? <IconAction kind="delete" label="Delete" onClick={() => onAction('delete')} /> : null}
       </div>
       {authorisedBy && (
         <div className="rounded-[7px] bg-teal-50 px-3 py-2 text-xs font-bold leading-5 text-teal-700">
@@ -1685,9 +1694,7 @@ function RecruiterDocumentActions({ canDelete = true, onAction, onView, row = {}
     <div className="grid gap-2">
       <div className="flex flex-wrap gap-2">
         <IconAction kind="view" label="View documents" onClick={onView} />
-        <IconAction action="approve" label="Approve" onClick={() => onAction('approve')} />
-        <IconAction action="reject" label="Reject" onClick={() => onAction('reject')} />
-        <IconAction action="suspend" label="Suspend" onClick={() => onAction('suspend')} />
+        <StatusActionSelect onChange={onAction} value={recruiterStatusOptions.includes(row.status) ? row.status : ''} />
         {canDelete ? <IconAction kind="delete" label="Delete" onClick={() => onAction('delete')} /> : null}
       </div>
       {authorisedBy && (
@@ -1698,6 +1705,22 @@ function RecruiterDocumentActions({ canDelete = true, onAction, onView, row = {}
         </div>
       )}
     </div>
+  )
+}
+
+function StatusActionSelect({ onChange, value = '' }) {
+  return (
+    <select
+      className="h-8 rounded-[7px] border border-slate-200 bg-white px-2 text-xs font-black text-slate-700 outline-none transition hover:border-blue-300 focus:border-blue-500"
+      onChange={(event) => {
+        const next = event.target.value
+        if (next) onChange(next)
+      }}
+      value={value}
+    >
+      <option value="">Action</option>
+      {recruiterStatusOptions.map((status) => <option key={status} value={status}>{status}</option>)}
+    </select>
   )
 }
 
@@ -2143,6 +2166,7 @@ export function RecruiterDetailPage() {
   const { recruiterId } = useParams()
   const allowedTypes = accessByRole[user?.role] || accessByRole.Admin
   const [recruiter, setRecruiter] = useState(null)
+  const [recruiterUser, setRecruiterUser] = useState(null)
   const [jobs, setJobs] = useState([])
   const [applications, setApplications] = useState([])
   const [documents, setDocuments] = useState([])
@@ -2169,15 +2193,18 @@ export function RecruiterDetailPage() {
         const nextRecruiter = recruiterPayload.data
         const email = nextRecruiter?.businessEmail || ''
 
-        const [jobsPayload, applicationsPayload, documentsPayload, packagePayload] = await Promise.all([
+        const [jobsPayload, applicationsPayload, documentsPayload, packagePayload, usersPayload] = await Promise.all([
           api.list('jobs', `?includeAll=true&recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`),
           api.list('applications', `?recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`),
           api.list('recruiter-documents', `?recruiterEmail=${encodeURIComponent(email)}&sort=-updatedAt&limit=100`),
           api.currentRecruiterPackage(email).catch(() => ({ data: null })),
+          api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`).catch(() => ({ data: [] })),
         ])
+        const matchedRecruiterUser = (usersPayload.data || []).find((item) => item.email?.toLowerCase() === email.toLowerCase()) || null
 
         if (!mounted) return
         setRecruiter(nextRecruiter)
+        setRecruiterUser(matchedRecruiterUser)
         setJobs(jobsPayload.data || [])
         setApplications(applicationsPayload.data || [])
         setDocuments(documentsPayload.data || [])
@@ -2358,7 +2385,8 @@ export function RecruiterDetailPage() {
               <AdminCard className="min-w-0">
                 <h2 className="text-xl font-black text-slate-950">Full Profile</h2>
                 <div className="mt-4 grid gap-3 text-sm font-bold text-slate-700">
-                  <ProfileLine label="Recruiter ID" value={getShortId(recruiter?._id)} />
+                  <ProfileLine label="Recruiter ID" value={getShortId(recruiterUser?._id || recruiter?.recruiterUserId || recruiter?._id)} />
+                  <ProfileLine label="Profile ID" value={getShortId(recruiter?._id)} />
                   <ProfileLine label="Company" value={recruiter?.companyName || 'Not added'} />
                   <ProfileLine label="Email" value={recruiter?.businessEmail || 'Not added'} />
                   <ProfileLine label="Phone" value={recruiter?.phone || 'Not added'} />
@@ -2366,7 +2394,21 @@ export function RecruiterDetailPage() {
                   <ProfileLine label="Company size" value={recruiter?.companySize || 'Not added'} />
                   <ProfileLine label="Website" value={recruiter?.website || 'Not added'} />
                   <ProfileLine label="Status" value={recruiter?.status || 'Pending'} />
+                  <ProfileLine label="User status" value={recruiterUser?.status || 'Not available'} />
                   <ProfileLine label="Document status" value={latestDocument?.status || 'Not submitted'} />
+                </div>
+              </AdminCard>
+
+              <AdminCard className="min-w-0">
+                <h2 className="text-xl font-black text-slate-950">Account Action</h2>
+                <div className="mt-4 grid gap-3 text-sm font-bold text-slate-700">
+                  <ProfileLine label="Action" value={recruiter?.accountAuthorizedAction || recruiter?.status || 'No action recorded'} />
+                  <ProfileLine label="Authorised by" value={recruiter?.accountAuthorizedByName || 'Not added'} />
+                  <ProfileLine label="Authoriser email" value={recruiter?.accountAuthorizedByEmail || 'Not added'} />
+                  <ProfileLine label="Action time" value={recruiter?.accountAuthorizedAt ? formatDateTime(recruiter.accountAuthorizedAt) : 'Not added'} />
+                  <div className="rounded-[7px] bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-800">
+                    <span className="font-black">Remark:</span> {recruiter?.accountAuthorizedRemark || 'No remark added for this action.'}
+                  </div>
                 </div>
               </AdminCard>
 
@@ -2778,7 +2820,26 @@ function submissionSuffix(count) {
 }
 
 function isDocumentUrl(value) {
-  return /^https?:\/\//i.test(String(value || ''))
+  return /^(https?:\/\/|data:application\/pdf)/i.test(String(value || ''))
+}
+
+function renderDocumentFileCell(value, label = 'Document') {
+  if (!value) return <span className="text-slate-400">Not uploaded</span>
+
+  if (isDocumentUrl(value)) {
+    return (
+      <a className="rounded-[7px] bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700" href={value} rel="noreferrer" target="_blank">
+        View PDF
+      </a>
+    )
+  }
+
+  return (
+    <span className="inline-flex max-w-48 flex-col gap-1 whitespace-normal">
+      <span className="break-all text-xs font-bold text-slate-600">{value}</span>
+      <span className="text-[11px] font-black uppercase tracking-wide text-amber-600">{label} URL not available</span>
+    </span>
+  )
 }
 
 function getSelectOptions(key, companyOptions) {
@@ -2789,8 +2850,35 @@ function getShortId(value) {
   return value ? String(value).slice(-8) : ''
 }
 
-function attachRecruiterIdsToDocuments(documents, recruiters) {
+function buildRecruiterUserByEmail(users = []) {
+  const userByEmail = new Map()
+
+  users.forEach((user) => {
+    const email = String(user.email || '').toLowerCase()
+    if (email) userByEmail.set(email, user)
+  })
+
+  return userByEmail
+}
+
+function attachRecruiterUserIdsToRecruiters(recruiters, users = []) {
+  const userByEmail = buildRecruiterUserByEmail(users)
+
+  return recruiters.map((recruiter) => {
+    const user = userByEmail.get(String(recruiter.businessEmail || '').toLowerCase())
+
+    return {
+      ...recruiter,
+      recruiterId: getShortId(user?._id || recruiter.recruiterId || recruiter._id),
+      recruiterUserId: user?._id || recruiter.recruiterUserId || '',
+      recruiterUserStatus: user?.status || recruiter.recruiterUserStatus || '',
+    }
+  })
+}
+
+function attachRecruiterIdsToDocuments(documents, recruiters, users = []) {
   const recruiterIdByEmail = new Map()
+  const userByEmail = buildRecruiterUserByEmail(users)
 
   recruiters.forEach((recruiter) => {
     const email = (recruiter.businessEmail || recruiter.email || '').toLowerCase()
@@ -2799,9 +2887,12 @@ function attachRecruiterIdsToDocuments(documents, recruiters) {
 
   return documents.map((document) => {
     const email = (document.recruiterEmail || '').toLowerCase()
+    const user = userByEmail.get(email)
+
     return {
       ...document,
-      recruiterId: recruiterIdByEmail.get(email) || getShortId(document.recruiterId),
+      recruiterId: getShortId(user?._id || document.recruiterUserId || document.recruiterId) || recruiterIdByEmail.get(email) || getShortId(document._id),
+      recruiterUserId: user?._id || document.recruiterUserId || '',
     }
   })
 }
@@ -3016,7 +3107,7 @@ function mergeRecruiterDocumentStatus(recruiters, documents) {
 
   return recruiters.map((recruiter) => {
     const document = latestStatusByEmail.get(recruiter.businessEmail?.toLowerCase())
-    return document ? { ...recruiter, status: document.status || recruiter.status } : recruiter
+    return document ? { ...recruiter, latestDocumentStatus: document.status || '' } : recruiter
   })
 }
 
@@ -3155,7 +3246,7 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
               onChange={(event) => {
                 onChange(key, event.target.value)
                 if (type === 'users' && key === 'role' && event.target.value === 'recruiter' && isCreate) {
-                  onChange('status', 'Inactive')
+                  onChange('status', 'Review')
                 }
                 if (type === 'jobs' && key === 'company') {
                   const company = companyRows.find((item) => normalizeName(item.name) === normalizeName(event.target.value))
