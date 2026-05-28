@@ -136,6 +136,19 @@ function getFallbackPayload(req) {
     return { success: true, data: [], fallback: true }
   }
 
+  if (pathname === '/auth/google-config' || pathname.endsWith('/auth/google-config')) {
+    return {
+      success: true,
+      data: {
+        enabled: Boolean(process.env.GOOGLE_CLIENT_ID),
+        clientId: process.env.GOOGLE_CLIENT_ID || '',
+        projectId: '',
+        authorizedDomains: ['www.cromgenrozgar.in', 'cromgenrozgar.in'],
+      },
+      fallback: true,
+    }
+  }
+
   const resource = pathname.split('/').filter(Boolean)[0]
   if (['jobs', 'job-listings', 'companies', 'faqs', 'testimonials', 'content-pages'].includes(resource)) {
     let data = fallbackData[resource] || (resource === 'job-listings' ? fallbackData.jobs : [])
@@ -214,9 +227,9 @@ export default async function handler(req, res) {
     return app(req, res)
   } catch (error) {
     console.error(error)
+    const fallback = getFallbackPayload(req)
+    if (fallback) return sendJson(res, 200, fallback)
     if (!process.env.MONGO_URI) {
-      const fallback = getFallbackPayload(req)
-      if (fallback) return sendJson(res, 200, fallback)
       const authUnavailable = getAuthUnavailablePayload(req)
       if (authUnavailable) return sendJson(res, 200, authUnavailable)
     }
