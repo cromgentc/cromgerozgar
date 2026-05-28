@@ -480,7 +480,7 @@ module.exports = {
   }),
   candidates: crudController(Candidate, { searchFields: ['name', 'email', 'role', 'location'] }),
   categories: crudController(Category, { searchFields: ['name', 'status'] }),
-  companies: crudController(Company, { searchFields: ['name', 'industry', 'location', 'status'] }),
+  companies: crudController(Company, { searchFields: ['name', 'contactPerson', 'contactNumber', 'contactEmail', 'gstNumber', 'industry', 'location', 'status'] }),
   contentPages: crudController(ContentPage, { searchFields: ['slug', 'title', 'subtitle', 'category', 'frontendPlacement', 'status'], beforeGetAll: ensureDefaultPolicyPage }),
   employers: crudController(Employer, {
     searchFields: ['companyName', 'businessEmail', 'industry', 'location'],

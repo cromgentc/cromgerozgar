@@ -93,6 +93,7 @@ const sidebarItems = [
     roles: ['Admin'],
     children: [
       { label: 'Industry', to: '/admin/categories', icon: Building2 },
+      { label: 'Company', to: '/admin/companies', icon: Building2 },
     ],
   },
   {
