@@ -17,7 +17,6 @@ const recruiterJobRoutes = require('./recruiterJobRoutes')
 const resumeUploadRoutes = require('./resumeUploadRoutes')
 const settingsRoutes = require('./settingsRoutes')
 const testimonialRoutes = require('./testimonialRoutes')
-const { getMongoDbConfig, updateMongoDbConfig } = require('../controllers/settingsController')
 const userRoutes = require('./userRoutes')
 const userLocationRoutes = require('./userLocationRoutes')
 const { authorize, protect } = require('../middleware/authMiddleware')
@@ -74,8 +73,6 @@ router.use('/recruiter-documents', crudRoutes.protected(controllers.recruiterDoc
 }))
 router.use('/resume-uploads', resumeUploadRoutes)
 router.use('/resumes', crudRoutes.protected(controllers.resumes, { readRoles: ['Admin', 'hiring', 'recruiter'] }))
-router.get('/settings/mongodb-config', protect, authorize('Admin'), getMongoDbConfig)
-router.put('/settings/mongodb-config', protect, authorize('Admin'), updateMongoDbConfig)
 router.use('/settings', settingsRoutes)
 router.use('/support-messages', crudRoutes.protected(controllers.supportMessages, {
   publicCreate: true,

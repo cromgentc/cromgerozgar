@@ -7,7 +7,7 @@ import { AdminLayout } from './admin/components/AdminLayout'
 import { AdminBulkHiringPage, AdminHiringPage, AdminSingleHiringPage } from './admin/pages/AdminHiringPages'
 import { AdminHiringTeamPage } from './admin/pages/AdminHiringTeamPage'
 import { AdminProfilePage } from './admin/pages/AdminProfilePage'
-import { AdminDiscountCouponPage, AdminGoogleAuthPage, AdminManagementPage, AdminMongoDbPage, AdminNewsletterSendPage, AdminPricingPage, AdminSEOBrandingPage, AdminSettingsPage, AdminSupaCloudPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
+import { AdminDiscountCouponPage, AdminGoogleAuthPage, AdminManagementPage, AdminNewsletterSendPage, AdminPricingPage, AdminSEOBrandingPage, AdminSettingsPage, AdminSupaCloudPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
 import { AdminWhatsAppApiPage } from './admin/pages/AdminWhatsAppApiPage'
 import { AdminEmailApiPage } from './admin/pages/AdminEmailApiPage'
 import { AdminAddPluginsPage, AdminInstalledPluginsPage } from './admin/pages/AdminPluginsPage'
@@ -177,7 +177,6 @@ function App() {
         { path: 'settings/email-api', element: <AdminEmailApiPage /> },
         { path: 'settings/razorpay', element: <AdminRazorpayPage /> },
         { path: 'settings/supa-cloud', element: <AdminSupaCloudPage /> },
-        { path: 'settings/mongodb', element: <AdminMongoDbPage /> },
         { path: 'settings/role-permission', element: <AdminRolePermissionPage /> },
         { path: 'plugins/add-new', element: <AdminAddPluginsPage /> },
         { path: 'plugins/installed', element: <AdminInstalledPluginsPage /> },

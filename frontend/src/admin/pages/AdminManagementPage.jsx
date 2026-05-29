@@ -4276,18 +4276,6 @@ const defaultWhatsAppApiConfig = {
   notes: '',
 }
 
-const defaultMongoDbConfig = {
-  enabled: true,
-  connectionName: 'Primary MongoDB',
-  mongoUri: '',
-  databaseName: 'cromgenrozgar',
-  host: '',
-  username: '',
-  port: '5050',
-  clientUrl: '',
-  notes: '',
-}
-
 export function AdminWhatsAppApiPage() {
   const [settingId, setSettingId] = useState('')
   const [form, setForm] = useState(defaultWhatsAppApiConfig)
@@ -4785,163 +4773,6 @@ export function AdminSupaCloudPage() {
   )
 }
 
-export function AdminMongoDbPage() {
-  const [form, setForm] = useState(defaultMongoDbConfig)
-  const [source, setSource] = useState('env')
-  const [envPreview, setEnvPreview] = useState({})
-  const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-
-  const loadConfig = () => {
-    setLoading(true)
-    setMessage('')
-    api
-      .mongodbConfig()
-      .then((payload) => {
-        const data = payload.data || {}
-        const value = data.value || {}
-        setSource(data.source || 'env')
-        setEnvPreview(data.envPreview || {})
-        setForm({
-          ...defaultMongoDbConfig,
-          enabled: value.enabled !== false,
-          connectionName: value.connectionName || defaultMongoDbConfig.connectionName,
-          mongoUri: value.mongoUri || '',
-          databaseName: value.databaseName || defaultMongoDbConfig.databaseName,
-          host: value.host || '',
-          username: value.username || '',
-          port: value.port || '5050',
-          clientUrl: value.clientUrl || '',
-          notes: value.notes || '',
-        })
-      })
-      .catch((error) => setMessage(error.message || 'MongoDB details could not be loaded.'))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(() => {
-    loadConfig()
-  }, [])
-
-  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
-
-  const save = async () => {
-    setSaving(true)
-    setMessage('')
-
-    if (!form.mongoUri.trim()) {
-      setSaving(false)
-      setMessage('MongoDB URI is required.')
-      return
-    }
-
-    try {
-      await api.updateMongodbConfig({
-        enabled: Boolean(form.enabled),
-        connectionName: form.connectionName.trim() || defaultMongoDbConfig.connectionName,
-        mongoUri: form.mongoUri.trim(),
-        databaseName: form.databaseName.trim(),
-        host: form.host.trim(),
-        username: form.username.trim(),
-        port: form.port.trim(),
-        clientUrl: form.clientUrl.trim(),
-        notes: form.notes.trim(),
-      })
-      setSource('settings')
-      setMessage('MongoDB details saved successfully.')
-    } catch (error) {
-      setMessage(error.message || 'MongoDB details could not be saved.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div className="grid gap-6">
-      <section className="overflow-hidden rounded-[7px] border border-blue-100 bg-white shadow-xl shadow-blue-100/50">
-        <div className="grid gap-5 bg-gradient-to-br from-blue-600 via-sky-500 to-teal-400 p-6 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div>
-            <p className="text-sm font-black uppercase tracking-wide text-blue-50">Settings / Database</p>
-            <h2 className="mt-3 text-3xl font-black sm:text-4xl">MongoDB Details</h2>
-            <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-50">
-              View current MongoDB connection details, edit them, and save the updated configuration in MongoDB settings.
-            </p>
-          </div>
-          <StatusBadge status={source === 'settings' ? 'Saved Config' : 'ENV Config'} />
-        </div>
-      </section>
-
-      <div className="grid gap-5 xl:grid-cols-[1fr_0.75fr]">
-        <AdminCard>
-          <div className="flex flex-col justify-between gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
-            <div>
-              <p className="text-sm font-black uppercase tracking-wide text-blue-600">Connection</p>
-              <h3 className="mt-1 text-2xl font-black text-slate-950">MongoDB connection config</h3>
-            </div>
-            <label className="flex items-center gap-3 rounded-[7px] bg-slate-50 px-4 py-2 text-sm font-black text-slate-600">
-              <input checked={form.enabled} onChange={(event) => update('enabled', event.target.checked)} type="checkbox" />
-              Enable MongoDB
-            </label>
-          </div>
-
-          {loading ? (
-            <div className="mt-5 h-56 animate-pulse rounded-[7px] bg-slate-100" />
-          ) : (
-            <div className="mt-5 grid gap-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <LabeledInput label="Connection Name" onChange={(value) => update('connectionName', value)} placeholder="Primary MongoDB" value={form.connectionName} />
-                <LabeledInput label="Database Name" onChange={(value) => update('databaseName', value)} placeholder="cromgenrozgar" value={form.databaseName} />
-              </div>
-              <label className="grid gap-1">
-                <span className="text-xs font-black uppercase tracking-wide text-slate-400">MongoDB URI</span>
-                <textarea className="input min-h-24" onChange={(event) => update('mongoUri', event.target.value)} placeholder="mongodb+srv://user:password@cluster.mongodb.net/database" value={form.mongoUri} />
-              </label>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <LabeledInput label="Host / Cluster" onChange={(value) => update('host', value)} placeholder="cluster.mongodb.net" value={form.host} />
-                <LabeledInput label="Username" onChange={(value) => update('username', value)} placeholder="database user" value={form.username} />
-                <LabeledInput label="Backend Port" onChange={(value) => update('port', value)} placeholder="5050" value={form.port} />
-                <LabeledInput label="Client URL" onChange={(value) => update('clientUrl', value)} placeholder="https://www.cromgenrozgar.in" value={form.clientUrl} />
-              </div>
-              <label className="grid gap-1">
-                <span className="text-xs font-black uppercase tracking-wide text-slate-400">Internal Notes</span>
-                <textarea className="input min-h-24" onChange={(event) => update('notes', event.target.value)} placeholder="Cluster owner, environment, rotation notes..." value={form.notes} />
-              </label>
-              {message && <p className="rounded-[7px] bg-blue-50 p-3 text-sm font-bold text-blue-700">{message}</p>}
-              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-700" onClick={loadConfig} type="button">Refresh</button>
-                <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-100 disabled:opacity-60" disabled={saving} onClick={save} type="button">
-                  {saving ? 'Saving...' : 'Save MongoDB Details'}
-                </button>
-              </div>
-            </div>
-          )}
-        </AdminCard>
-
-        <div className="grid gap-5">
-          <AdminCard>
-            <p className="text-sm font-black uppercase tracking-wide text-teal-600">Current Source</p>
-            <h3 className="mt-1 text-xl font-black text-slate-950">{source === 'settings' ? 'Saved settings collection' : 'Backend .env fallback'}</h3>
-            <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-600">
-              <InfoLine label="Database" value={envPreview.databaseName || form.databaseName || 'Not detected'} />
-              <InfoLine label="Host" value={envPreview.host || form.host || 'Not detected'} />
-              <InfoLine label="Username" value={envPreview.username || form.username || 'Not detected'} />
-              <InfoLine label="Port" value={envPreview.port || form.port || 'Not added'} />
-              <InfoLine label="Client URL" value={envPreview.clientUrl || form.clientUrl || 'Not added'} />
-            </div>
-          </AdminCard>
-          <AdminCard>
-            <p className="text-sm font-black uppercase tracking-wide text-blue-600">Runtime Note</p>
-            <p className="mt-3 text-sm font-semibold leading-6 text-slate-500">
-              This page saves editable MongoDB details in the settings collection. The running backend still uses MONGO_URI from backend .env until the server is restarted or reconnect logic is added.
-            </p>
-          </AdminCard>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export function AdminSEOBrandingPage() {
   const [form, setForm] = useState(defaultSiteBranding)
   const [message, setMessage] = useState('')
@@ -5157,15 +4988,6 @@ function PreviewBox({ compact = false, label, value }) {
   )
 }
 
-function InfoLine({ label, value }) {
-  return (
-    <div className="rounded-[7px] bg-slate-50 p-3">
-      <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-1 break-words font-black text-slate-800">{value}</p>
-    </div>
-  )
-}
-
 export function AdminSettingsPage() {
   const items = [
     ['Google Auth API', '/admin/settings/google-auth', 'Google OAuth login client ID and authorized domains.'],
@@ -5173,7 +4995,6 @@ export function AdminSettingsPage() {
     ['Email API', '/admin/settings/email-api', 'Password reset email provider, sender, API key, and SMTP details.'],
     ['Razorpay Gateway', '/admin/settings/razorpay', 'Razorpay package payments, wallet coin checkout, and payment keys.'],
     ['Supa Cloud Storage', '/admin/settings/supa-cloud', 'Resume upload bucket, folder, and storage credentials.'],
-    ['MongoDB Details', '/admin/settings/mongodb', 'MongoDB URI, database, host, backend port, and client URL.'],
     ['Role & Permission', '/admin/settings/role-permission', 'Control dashboard module permissions for every role.'],
   ]
 
