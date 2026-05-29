@@ -14,11 +14,11 @@ const DEFAULT_PRICING_PACKAGES = [
     badge: '',
     description: 'For new recruiters getting started',
     price: 'INR 0',
-    buttonLabel: 'Start Hiring',
+    buttonLabel: 'Start Free Trial',
     status: 'Active',
     sortOrder: 1,
     jobLimit: 1,
-    validityDays: 30,
+    validityDays: 3,
     discountPercent: 0,
     coinPerJob: 10,
     features: ['1 active job', 'Basic candidate visibility', 'Recruiter profile', 'Email support'],
@@ -126,6 +126,16 @@ function getPackagePayableAmount(selectedPackage) {
   return Math.max(0, Math.round(amount - (amount * discountPercent) / 100))
 }
 
+function isFreeTrialPackage(selectedPackage) {
+  const key = normalizePackageKey(selectedPackage.key || selectedPackage.name)
+  return getPackagePayableAmount(selectedPackage) <= 0 || key === 'starter' || key === 'free-trial'
+}
+
+function getPackageValidityDays(selectedPackage) {
+  if (isFreeTrialPackage(selectedPackage)) return 3
+  return Number(selectedPackage.validityDays || 30)
+}
+
 function buildInvoiceNo() {
   return `CR-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`
 }
@@ -209,7 +219,8 @@ async function activatePaidPackage({ recruiterEmail, recruiterName, selectedPack
 
   const activatedAt = new Date()
   const expiresAt = new Date(activatedAt)
-  expiresAt.setDate(expiresAt.getDate() + Number(selectedPackage.validityDays || 30))
+  const validityDays = getPackageValidityDays(selectedPackage)
+  expiresAt.setDate(expiresAt.getDate() + validityDays)
   const coinCredit = getCoinCredit(selectedPackage)
   const coinPerJob = Number(selectedPackage.coinPerJob || 10)
 
@@ -223,7 +234,7 @@ async function activatePaidPackage({ recruiterEmail, recruiterName, selectedPack
       badge: selectedPackage.badge,
       description: selectedPackage.description,
       jobLimit: selectedPackage.jobLimit,
-      validityDays: selectedPackage.validityDays,
+      validityDays,
       discountPercent: selectedPackage.discountPercent,
       coinPerJob,
       coinCredit,

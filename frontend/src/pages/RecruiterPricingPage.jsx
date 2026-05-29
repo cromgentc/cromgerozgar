@@ -17,6 +17,23 @@ function getPackageAmount(plan) {
   return Number.isFinite(amount) ? amount : 0
 }
 
+function getPackageKey(plan) {
+  return String(plan?.key || plan?.name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+function isFreeTrialPlan(plan) {
+  const key = getPackageKey(plan)
+  return getPackageAmount(plan) <= 0 || key === 'starter' || key === 'free-trial'
+}
+
+function getPlanValidityDays(plan) {
+  return isFreeTrialPlan(plan) ? 3 : Number(plan?.validityDays || 30)
+}
+
 function getPackageCoins(plan) {
   const amount = getPackageAmount(plan)
   const discount = Number(plan?.discountPercent || 0)
@@ -295,7 +312,7 @@ export function RecruiterPricingPage() {
             <h2 className="mt-5 text-2xl font-black text-slate-950">{plan.name}</h2>
             <p className="mt-2 text-sm font-semibold text-slate-500">{plan.description}</p>
             <p className="mt-5 text-3xl font-black text-slate-950">{plan.price}</p>
-            <p className="mt-2 text-xs font-black uppercase tracking-wide text-slate-400">{plan.jobLimit || 1} jobs / {plan.validityDays || 30} days / {plan.coinPerJob || 10} coins per job</p>
+            <p className="mt-2 text-xs font-black uppercase tracking-wide text-slate-400">{plan.jobLimit || 1} jobs / {getPlanValidityDays(plan)} days / {plan.coinPerJob || 10} coins per job</p>
             <div className="mt-6 grid gap-3">
               {plan.features.map((feature) => (
                 <p className="flex items-center gap-3 text-sm font-bold text-slate-600" key={feature}>
@@ -310,7 +327,7 @@ export function RecruiterPricingPage() {
               onClick={() => choosePackage(plan)}
               type="button"
             >
-              {isActive ? 'Current Package' : getPackageAmount(plan) > 0 ? 'Pay & Activate' : plan.buttonLabel || 'Start Hiring'}
+              {isActive ? 'Current Package' : getPackageAmount(plan) > 0 ? 'Pay & Activate' : isFreeTrialPlan(plan) ? 'Start Free Trial' : plan.buttonLabel || 'Start Hiring'}
             </button>
           </article>
           )

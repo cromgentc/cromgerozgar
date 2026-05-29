@@ -42,6 +42,26 @@ function buildPackageRequest(user, plan) {
   return payload
 }
 
+function getPackageAmount(plan) {
+  const amount = Number(String(plan?.price || '').replace(/[^\d.]/g, ''))
+  return Number.isFinite(amount) ? amount : 0
+}
+
+function getPackageKey(plan) {
+  return String(plan?.key || plan?.name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+function getPlanValidityDays(plan) {
+  const key = getPackageKey(plan)
+  return getPackageAmount(plan) <= 0 || key === 'starter' || key === 'free-trial'
+    ? 3
+    : Number(plan?.validityDays || 30)
+}
+
 const indiaLocations = {
   'Andaman and Nicobar Islands': ['Port Blair'],
   'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Nellore', 'Kurnool', 'Kakinada', 'Rajahmundry', 'Anantapur', 'Kadapa', 'Eluru', 'Ongole', 'Srikakulam', 'Vizianagaram'],
@@ -522,11 +542,6 @@ function JobPreviewModal({ form, onClose }) {
   )
 }
 
-function getPackageAmount(plan) {
-  const amount = Number(String(plan?.price || '').replace(/[^\d.]/g, ''))
-  return Number.isFinite(amount) ? amount : 0
-}
-
 function PackageSelectionModal({ activePackage, onChoose, onClose, packages }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
@@ -544,7 +559,7 @@ function PackageSelectionModal({ activePackage, onChoose, onClose, packages }) {
             <div className="rounded-[7px] border border-slate-200 p-5" key={plan._id || plan.name}>
               <h3 className="text-xl font-black text-slate-950">{plan.name}</h3>
               <p className="mt-2 text-2xl font-black text-blue-600">{plan.price}</p>
-              <p className="mt-2 text-sm font-bold text-slate-500">{plan.jobLimit || 1} jobs / {plan.validityDays || 30} days / {plan.discountPercent || 0}% discount</p>
+              <p className="mt-2 text-sm font-bold text-slate-500">{plan.jobLimit || 1} jobs / {getPlanValidityDays(plan)} days / {plan.discountPercent || 0}% discount</p>
               <p className="mt-1 text-xs font-black uppercase tracking-wide text-slate-400">100 rupees = 10 coins / {plan.coinPerJob || 10} coins per job</p>
               {getPackageAmount(plan) > 0 && (
                 <div className="mt-4 grid gap-2 rounded-[7px] bg-slate-50 p-3 text-xs font-black text-slate-600">
