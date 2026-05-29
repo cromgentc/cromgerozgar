@@ -131,6 +131,7 @@ export function PostJobPage() {
   const [activePackage, setActivePackage] = useState(null)
   const [pendingJobPayload, setPendingJobPayload] = useState(null)
   const [companyLoading, setCompanyLoading] = useState(false)
+  const [skillSuggestionsOpen, setSkillSuggestionsOpen] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
@@ -189,6 +190,13 @@ export function PostJobPage() {
   }, [form.country, form.locationType, form.state])
 
   const fullAddressOpen = Boolean(form.city)
+  const filteredSkillSuggestions = useMemo(() => {
+    const query = form.skillInput.trim().toLowerCase()
+    return skillSuggestions
+      .filter((skill) => !form.skills.includes(skill))
+      .filter((skill) => !query || skill.toLowerCase().includes(query))
+      .slice(0, 10)
+  }, [form.skillInput, form.skills])
 
   const update = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }))
@@ -211,17 +219,6 @@ export function PostJobPage() {
     const nextSkill = skill.trim()
     if (!nextSkill || form.skills.includes(nextSkill)) return
     setForm((current) => ({ ...current, skills: [...current.skills, nextSkill], skillInput: '' }))
-  }
-
-  const toggleSkill = (skill) => {
-    setForm((current) => ({
-      ...current,
-      skills: current.skills.includes(skill)
-        ? current.skills.filter((item) => item !== skill)
-        : [...current.skills, skill],
-      skillInput: '',
-    }))
-    setMessage('')
   }
 
   const removeSkill = (skill) => {
@@ -405,31 +402,48 @@ export function PostJobPage() {
 
             <section className="rounded-[7px] border border-[#0057B8]/10 bg-[#F8FBFF] p-5">
               <h2 className="mb-4 text-xl font-black text-slate-950">Skills</h2>
-              <div className="mb-4 flex flex-wrap gap-2">
-                {skillSuggestions.map((skill) => {
-                  const selected = form.skills.includes(skill)
-                  return (
-                    <button
-                      className={`rounded-[7px] px-3 py-2 text-xs font-black ring-1 transition ${selected ? 'bg-blue-600 text-white ring-blue-600' : 'bg-white text-slate-600 ring-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200'}`}
-                      key={skill}
-                      onClick={() => toggleSkill(skill)}
-                      type="button"
-                    >
-                      {skill}
-                    </button>
-                  )
-                })}
-              </div>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <input className="input flex-1" list="skill-suggestions" onChange={(e) => update('skillInput', e.target.value)} onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addSkill()
-                  }
-                }} placeholder="Select or type skill" value={form.skillInput} />
+                <div className="relative flex-1">
+                  <input
+                    className="input"
+                    onBlur={() => window.setTimeout(() => setSkillSuggestionsOpen(false), 120)}
+                    onChange={(e) => {
+                      update('skillInput', e.target.value)
+                      setSkillSuggestionsOpen(true)
+                    }}
+                    onFocus={() => setSkillSuggestionsOpen(true)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addSkill()
+                        setSkillSuggestionsOpen(false)
+                      }
+                    }}
+                    placeholder="Search or type skill"
+                    value={form.skillInput}
+                  />
+                  {skillSuggestionsOpen && filteredSkillSuggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 top-[calc(100%+0.4rem)] z-20 max-h-64 overflow-y-auto rounded-[7px] border border-blue-100 bg-white p-2 shadow-xl shadow-blue-100">
+                      {filteredSkillSuggestions.map((skill) => (
+                        <button
+                          className="flex w-full items-center justify-between rounded-[7px] px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:bg-blue-50 hover:text-blue-700"
+                          key={skill}
+                          onMouseDown={(event) => {
+                            event.preventDefault()
+                            addSkill(skill)
+                            setSkillSuggestionsOpen(false)
+                          }}
+                          type="button"
+                        >
+                          {skill}
+                          <Plus size={15} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-[#0057B8] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#0057B8]/15 hover:bg-[#004694]" onClick={() => addSkill()} type="button"><Plus size={18} /> Add Skill</button>
               </div>
-              <datalist id="skill-suggestions">{skillSuggestions.map((item) => <option key={item} value={item} />)}</datalist>
               <div className="mt-4 flex flex-wrap gap-2">
                 {form.skills.map((skill) => (
                   <button className="inline-flex items-center gap-2 rounded-[7px] bg-white px-3 py-1.5 text-sm font-black text-slate-700 ring-1 ring-slate-200" key={skill} onClick={() => removeSkill(skill)} type="button">
