@@ -57,9 +57,9 @@ function getMongoDbName(mongoUri) {
   try {
     const parsed = new URL(mongoUri)
     const dbName = parsed.pathname.replace(/^\/+/, '').split('/')[0]
-    return dbName || 'rozgarportal'
+    return dbName || 'cromgenrozgarjobportal'
   } catch {
-    return 'rozgarportal'
+    return 'cromgenrozgarjobportal'
   }
 }
 
