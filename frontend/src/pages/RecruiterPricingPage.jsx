@@ -471,13 +471,8 @@ function PackagePaymentModal({ activePackage, onClose, onPay, plan, processing }
           <div className="flex justify-between gap-3 text-teal-700"><span>Coins credited</span><span>{coins} coins</span></div>
         </div>
 
-        <div className="mt-5 grid gap-3">
-          <button className="rounded-[7px] border border-slate-200 bg-white px-4 py-3 text-left text-sm font-black text-slate-700" type="button">Razorpay UPI / QR Payment</button>
-          <button className="rounded-[7px] border border-slate-200 bg-white px-4 py-3 text-left text-sm font-black text-slate-700" type="button">Razorpay Card / Net Banking</button>
-        </div>
-
         <div className="mt-6 flex flex-col justify-end gap-2 sm:flex-row">
-          <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={onClose} type="button">Cancel</button>
+          <button className="rounded-[7px] border border-slate-200 bg-transparent px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50" onClick={onClose} type="button">Cancel</button>
           <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-bold text-white disabled:bg-slate-300" disabled={processing} onClick={onPay} type="button">
             {processing ? 'Opening Razorpay...' : 'Pay with Razorpay'}
           </button>
