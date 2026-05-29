@@ -1,6 +1,6 @@
 const express = require('express')
 const rateLimit = require('express-rate-limit')
-const { googleAuth, googleConfig, login, register, requestEmailReset, requestWhatsappOtp, resetPassword, sendWhatsappAppLink, updateRecruiterStatus, verifyWhatsappOtp } = require('../controllers/authController')
+const { currentUser, googleAuth, googleConfig, login, register, requestEmailReset, requestWhatsappOtp, resetPassword, sendWhatsappAppLink, updateRecruiterStatus, verifyWhatsappOtp } = require('../controllers/authController')
 const { protect } = require('../middleware/authMiddleware')
 
 const router = express.Router()
@@ -28,6 +28,7 @@ router.post('/whatsapp/verify-otp', authLimiter, verifyWhatsappOtp)
 router.post('/app-link/whatsapp', otpLimiter, sendWhatsappAppLink)
 router.get('/google-config', googleConfig)
 router.post('/google', authLimiter, googleAuth)
+router.get('/me', protect, currentUser)
 router.patch('/recruiter-status', protect, updateRecruiterStatus)
 
 module.exports = router

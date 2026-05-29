@@ -98,9 +98,9 @@ export function RecruiterProfilePage() {
       if (currentUser) {
         localStorage.setItem('authUser', JSON.stringify({
           ...currentUser,
-          name: employer.companyName || profile.name,
           email: employer.businessEmail || profile.email,
           phone: employer.phone || profile.phone,
+          companyName: employer.companyName || profile.name,
         }))
       }
 

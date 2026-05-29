@@ -243,6 +243,7 @@ export const api = {
   createApplication: (data) => apiRequest('/applications', { method: 'POST', body: JSON.stringify(data) }),
   login: (data) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   register: (data) => apiRequest('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  currentAuthUser: () => apiRequest('/auth/me', { authRequired: true }),
   forgotEmail: (data) => apiRequest('/auth/forgot/email', { method: 'POST', body: JSON.stringify(data) }),
   resetPassword: (data) => apiRequest('/auth/reset-password', { method: 'POST', body: JSON.stringify(data) }),
   requestWhatsappOtp: (data) => apiRequest('/auth/forgot/whatsapp/request-otp', { method: 'POST', body: JSON.stringify(data) }),
