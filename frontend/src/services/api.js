@@ -105,6 +105,7 @@ const writeAuthResources = new Set([
   'employers',
   'faqs',
   'freelancer-profiles',
+  'jobs',
   'locations',
   'newsletter-subscribers',
   'newslettersubscribers',
