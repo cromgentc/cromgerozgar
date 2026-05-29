@@ -7,7 +7,7 @@ import { AdminLayout } from './admin/components/AdminLayout'
 import { AdminBulkHiringPage, AdminHiringPage, AdminSingleHiringPage } from './admin/pages/AdminHiringPages'
 import { AdminHiringTeamPage } from './admin/pages/AdminHiringTeamPage'
 import { AdminProfilePage } from './admin/pages/AdminProfilePage'
-import { AdminDiscountCouponPage, AdminGoogleAuthPage, AdminManagementPage, AdminNewsletterSendPage, AdminPricingPage, AdminSEOBrandingPage, AdminSettingsPage, AdminSupaCloudPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
+import { AdminDiscountCouponPage, AdminGoogleAuthPage, AdminManagementPage, AdminNewsletterSendPage, AdminPaymentDetailPage, AdminPricingPage, AdminSEOBrandingPage, AdminSettingsPage, AdminSupaCloudPage, RecruiterDetailPage, RecruiterDocumentDetailPage, SupportMessageDetailPage } from './admin/pages/AdminManagementPage'
 import { AdminWhatsAppApiPage } from './admin/pages/AdminWhatsAppApiPage'
 import { AdminEmailApiPage } from './admin/pages/AdminEmailApiPage'
 import { AdminAddPluginsPage, AdminInstalledPluginsPage } from './admin/pages/AdminPluginsPage'
@@ -164,6 +164,7 @@ function App() {
         { path: 'social-media', element: <AdminSocialMediaPage /> },
         { path: 'payments', element: <Navigate replace to="/admin/payments/transactions" /> },
         { path: 'payments/transactions', element: <AdminManagementPage type="payments" /> },
+        { path: 'payments/transactions/:paymentId', element: <AdminPaymentDetailPage /> },
         { path: 'payments/logs', element: <AdminManagementPage type="paymentLogs" /> },
         { path: 'payments/methods', element: <AdminRazorpayPage /> },
         { path: 'discount-coupons', element: <Navigate replace to="/admin/package/discount-coupons" /> },

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { City, Country, State } from 'country-state-city'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Ban, BriefcaseBusiness, CheckCircle2, Clock, Download, Eye, EyeOff, FileText, ImagePlus, MailPlus, MapPin, Navigation, PauseCircle, Pencil, Phone, RefreshCw, Route, Send, ShieldCheck, Trash2, XCircle } from 'lucide-react'
+import { Ban, BriefcaseBusiness, CheckCircle2, Clock, Download, ExternalLink, Eye, EyeOff, FileSpreadsheet, FileText, ImagePlus, MailPlus, MapPin, Navigation, PauseCircle, Pencil, Phone, RefreshCw, Route, Send, ShieldCheck, Trash2, XCircle } from 'lucide-react'
 import {
   ActionButtons,
   AdminCard,
@@ -11,6 +11,7 @@ import {
   DataTable,
   EmptyAdminState,
   ExportButtons,
+  LoadingSkeleton,
   StatusBadge,
   Toolbar,
 } from '../components/AdminPrimitives'
@@ -305,7 +306,7 @@ const configs = {
     extra: 'Invoice',
     export: true,
     disableCreate: true,
-    columns: [{ key: 'invoiceNo', label: 'Invoice' }, { key: 'employer', label: 'Recruiter' }, { key: 'plan', label: 'Plan' }, { key: 'amount', label: 'Amount' }, { key: 'status', label: 'Status', badge: true }],
+    columns: [{ key: 'invoiceNo', label: 'Invoice' }, { key: 'employer', label: 'Recruiter', render: (row) => <PaymentRecruiterLink row={row} /> }, { key: 'plan', label: 'Plan' }, { key: 'amount', label: 'Total Fee' }, { key: 'status', label: 'Status', badge: true }],
     fields: [['invoiceNo', 'Invoice number'], ['employer', 'Recruiter'], ['plan', 'Plan'], ['amount', 'Amount'], ['status', 'Payment status']],
   },
   paymentLogs: {
@@ -1241,6 +1242,10 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
         )
       }
 
+      if (type === 'payments') {
+        return <PaymentTransactionActions onDelete={() => requestDelete(row)} row={row} />
+      }
+
       return (
         <ActionButtons
           extra={type === 'resumes' ? 'Preview' : config.extra}
@@ -1334,6 +1339,143 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
       <ApplicationViewerModal onClose={() => setApplicationViewer(null)} row={applicationViewer} />
       <CompanyViewerModal onClose={() => setCompanyViewer(null)} row={companyViewer} />
       <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={remove} />
+    </div>
+  )
+}
+
+export function AdminPaymentDetailPage() {
+  const user = getStoredAdminUser()
+  const { paymentId } = useParams()
+  const [payment, setPayment] = useState(null)
+  const [recruiter, setRecruiter] = useState(null)
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const allowedTypes = accessByRole[user?.role] || accessByRole.Admin
+
+  if (!allowedTypes.includes('payments')) {
+    return <Navigate replace to="/admin" />
+  }
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadPayment = async () => {
+      setLoading(true)
+      setMessage('')
+
+      try {
+        const payload = await api.get('payments', paymentId)
+        const nextPayment = payload.data || payload
+        let matchedRecruiter = null
+
+        if (nextPayment?.recruiterEmail) {
+          const recruiterPayload = await api.list('employers', `?search=${encodeURIComponent(nextPayment.recruiterEmail)}`)
+          matchedRecruiter = (recruiterPayload.data || []).find((item) => item.businessEmail?.toLowerCase() === nextPayment.recruiterEmail.toLowerCase()) || null
+        } else if (nextPayment?.employer) {
+          const recruiterPayload = await api.list('employers', `?search=${encodeURIComponent(nextPayment.employer)}`)
+          matchedRecruiter = (recruiterPayload.data || [])[0] || null
+        }
+
+        if (!mounted) return
+        setPayment(nextPayment)
+        setRecruiter(matchedRecruiter)
+      } catch (error) {
+        if (mounted) setMessage(error.message)
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    loadPayment()
+
+    return () => {
+      mounted = false
+    }
+  }, [paymentId])
+
+  if (loading) {
+    return <LoadingSkeleton />
+  }
+
+  if (message) {
+    return <p className="rounded-[7px] bg-rose-50 p-4 text-sm font-bold text-rose-700">{message}</p>
+  }
+
+  if (!payment) {
+    return <EmptyAdminState title="Payment record not found" />
+  }
+
+  const customerName = recruiter?.contactPerson || payment.employer || 'Not added'
+  const companyName = recruiter?.companyName || payment.employer || 'Not added'
+  const totalFee = getPaymentTotalFee(payment)
+
+  return (
+    <div className="grid gap-5">
+      <AdminCard>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-blue-600">Payment details</p>
+            <h1 className="mt-2 text-4xl font-black text-slate-950">{payment.invoiceNo || 'Transaction'}</h1>
+            <p className="mt-2 text-sm font-semibold text-slate-500">Full customer, recruiter, gateway, and total fee information for this transaction.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button className="export-btn" onClick={() => downloadPaymentRecord(payment, 'excel', recruiter)} type="button"><FileSpreadsheet size={16} /> Excel</button>
+            <button className="export-btn" onClick={() => downloadPaymentRecord(payment, 'pdf', recruiter)} type="button"><FileText size={16} /> PDF</button>
+            <button className="export-btn" onClick={() => downloadPaymentRecord(payment, 'doc', recruiter)} type="button"><FileText size={16} /> DOC</button>
+          </div>
+        </div>
+      </AdminCard>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <AdminCard>
+          <p className="text-xs font-black uppercase tracking-wide text-slate-400">Total Fee</p>
+          <p className="mt-3 text-4xl font-black text-slate-950">{totalFee}</p>
+          <p className="mt-1 text-sm font-bold text-slate-500">{payment.currency || 'INR'} charged to recruiter</p>
+        </AdminCard>
+        <AdminCard>
+          <p className="text-xs font-black uppercase tracking-wide text-slate-400">Payment Status</p>
+          <div className="mt-4"><StatusBadge status={payment.status || 'Pending'} /></div>
+          <p className="mt-3 text-sm font-bold text-slate-500">{payment.paidAt ? `Paid at ${formatDateTime(payment.paidAt)}` : `Created at ${formatDateTime(payment.createdAt)}`}</p>
+        </AdminCard>
+        <AdminCard>
+          <p className="text-xs font-black uppercase tracking-wide text-slate-400">Plan</p>
+          <p className="mt-3 text-3xl font-black text-slate-950">{payment.plan || 'Manual'}</p>
+          <p className="mt-1 text-sm font-bold text-slate-500">{payment.coins ? `${payment.coins} coins` : payment.purpose || 'package'}</p>
+        </AdminCard>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <AdminCard>
+          <h2 className="text-xl font-black text-slate-950">Customer Details</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ProfileLine label="Contact person" value={customerName} />
+            <ProfileLine label="Company" value={companyName} />
+            <ProfileLine label="Email" value={payment.recruiterEmail || recruiter?.businessEmail || 'Not added'} />
+            <ProfileLine label="Phone" value={recruiter?.phone || 'Not added'} />
+            <ProfileLine label="Industry" value={recruiter?.industry || 'Not added'} />
+            <ProfileLine label="Company size" value={recruiter?.companySize || 'Not added'} />
+            <ProfileLine label="Location" value={recruiter?.location || 'Not added'} />
+            <ProfileLine label="Website" value={recruiter?.website || 'Not added'} />
+          </div>
+        </AdminCard>
+
+        <AdminCard>
+          <h2 className="text-xl font-black text-slate-950">Transaction Details</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ProfileLine label="Invoice" value={payment.invoiceNo || 'Not added'} />
+            <ProfileLine label="Gateway" value={payment.gateway || 'Not added'} />
+            <ProfileLine label="Payment method" value={payment.paymentMethod || 'Not added'} />
+            <ProfileLine label="Purpose" value={payment.purpose || 'Not added'} />
+            <ProfileLine label="Razorpay order ID" value={payment.razorpayOrderId || 'Not added'} />
+            <ProfileLine label="Razorpay payment ID" value={payment.razorpayPaymentId || 'Not added'} />
+            <ProfileLine label="Created" value={formatDateTime(payment.createdAt)} />
+            <ProfileLine label="Updated" value={formatDateTime(payment.updatedAt)} />
+          </div>
+          {payment.failureReason ? (
+            <p className="mt-4 rounded-[7px] bg-rose-50 p-4 text-sm font-bold text-rose-700">{payment.failureReason}</p>
+          ) : null}
+        </AdminCard>
+      </div>
     </div>
   )
 }
@@ -1677,6 +1819,54 @@ function getInitialForm(type, companyOptions = []) {
 
 function getFieldLabel(fields, key) {
   return fields.find(([fieldKey]) => fieldKey === key)?.[1] || key
+}
+
+function PaymentRecruiterLink({ row }) {
+  const label = row?.employer || row?.recruiterEmail || 'View recruiter'
+  const href = row?._id ? `/admin/payments/transactions/${row._id}` : ''
+
+  if (!href) return <span>{label}</span>
+
+  return (
+    <a
+      className="inline-flex items-center gap-2 rounded-[7px] px-2 py-1 font-black text-blue-700 transition hover:bg-blue-50 hover:text-blue-800"
+      href={href}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      {label}
+      <ExternalLink size={14} />
+    </a>
+  )
+}
+
+function PaymentTransactionActions({ onDelete, row }) {
+  const openDetails = () => {
+    if (row?._id) window.open(`/admin/payments/transactions/${row._id}`, '_blank', 'noopener,noreferrer')
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        className="inline-flex h-9 items-center gap-2 rounded-[7px] bg-blue-600 px-3 text-xs font-black text-white shadow-sm transition hover:bg-blue-700"
+        onClick={openDetails}
+        type="button"
+      >
+        View
+      </button>
+      <details className="relative">
+        <summary className="inline-flex h-9 cursor-pointer list-none items-center gap-2 rounded-[7px] border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-700">
+          <Download size={15} /> Download
+        </summary>
+        <div className="absolute right-0 z-20 mt-2 w-36 overflow-hidden rounded-[7px] border border-slate-200 bg-white p-1 shadow-xl">
+          <button className="flex w-full items-center gap-2 rounded-[6px] px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-blue-50" onClick={() => downloadPaymentRecord(row, 'excel')} type="button"><FileSpreadsheet size={14} /> Excel</button>
+          <button className="flex w-full items-center gap-2 rounded-[6px] px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-blue-50" onClick={() => downloadPaymentRecord(row, 'pdf')} type="button"><FileText size={14} /> PDF</button>
+          <button className="flex w-full items-center gap-2 rounded-[6px] px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-blue-50" onClick={() => downloadPaymentRecord(row, 'doc')} type="button"><FileText size={14} /> DOC</button>
+        </div>
+      </details>
+      {onDelete && <IconAction kind="delete" label="Delete transaction" onClick={onDelete} />}
+    </div>
+  )
 }
 
 function RecruiterReviewActions({ onAction, onDelete, onEdit }) {
@@ -2841,6 +3031,104 @@ function ProfileLine({ label, value }) {
       <p className="mt-1 break-words text-slate-800">{value}</p>
     </div>
   )
+}
+
+function getPaymentTotalFee(payment = {}) {
+  const amount = String(payment.amount || '').trim()
+  if (!amount) return `${payment.currency || 'INR'} 0`
+  if (/^(inr|rs\.?|₹)/i.test(amount)) return amount
+  return `${payment.currency || 'INR'} ${amount}`
+}
+
+function getPaymentExportRows(payment = {}, recruiter = {}) {
+  return [
+    ['Invoice', payment.invoiceNo || 'Not added'],
+    ['Recruiter', payment.employer || recruiter.companyName || 'Not added'],
+    ['Contact person', recruiter.contactPerson || payment.employer || 'Not added'],
+    ['Customer email', payment.recruiterEmail || recruiter.businessEmail || 'Not added'],
+    ['Phone', recruiter.phone || 'Not added'],
+    ['Company', recruiter.companyName || payment.employer || 'Not added'],
+    ['Plan', payment.plan || 'Not added'],
+    ['Total fee', getPaymentTotalFee(payment)],
+    ['Status', payment.status || 'Pending'],
+    ['Gateway', payment.gateway || 'Not added'],
+    ['Payment method', payment.paymentMethod || 'Not added'],
+    ['Purpose', payment.purpose || 'Not added'],
+    ['Coins', payment.coins || 0],
+    ['Razorpay order ID', payment.razorpayOrderId || 'Not added'],
+    ['Razorpay payment ID', payment.razorpayPaymentId || 'Not added'],
+    ['Paid at', payment.paidAt ? formatDateTime(payment.paidAt) : 'Not paid'],
+    ['Created at', payment.createdAt ? formatDateTime(payment.createdAt) : 'Not added'],
+  ]
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function paymentDocumentHtml(payment = {}, recruiter = {}) {
+  const rows = getPaymentExportRows(payment, recruiter)
+    .map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`)
+    .join('')
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(payment.invoiceNo || 'payment-details')}</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #0f172a; padding: 32px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { margin: 0 0 24px; color: #475569; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #dbe4f0; padding: 12px; text-align: left; vertical-align: top; }
+    th { width: 220px; background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
+  </style>
+</head>
+<body>
+  <h1>Payment Details</h1>
+  <p>Invoice ${escapeHtml(payment.invoiceNo || 'Not added')} / Total Fee ${escapeHtml(getPaymentTotalFee(payment))}</p>
+  <table>${rows}</table>
+</body>
+</html>`
+}
+
+function downloadBlob(content, filename, type) {
+  const blob = new Blob([content], { type })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
+function downloadPaymentRecord(payment = {}, format = 'excel', recruiter = {}) {
+  const safeInvoice = String(payment.invoiceNo || payment._id || 'payment-details').replace(/[^a-z0-9-_]+/gi, '-').toLowerCase()
+  const html = paymentDocumentHtml(payment, recruiter)
+
+  if (format === 'excel') {
+    downloadBlob(html, `${safeInvoice}.xls`, 'application/vnd.ms-excel')
+    return
+  }
+
+  if (format === 'doc') {
+    downloadBlob(html, `${safeInvoice}.doc`, 'application/msword')
+    return
+  }
+
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
+  printWindow.document.write(html)
+  printWindow.document.close()
+  printWindow.focus()
+  setTimeout(() => printWindow.print(), 250)
 }
 
 function normalizeSupportTicket(ticket) {
