@@ -555,12 +555,12 @@ export function PostJobPage() {
                   <h2 className="text-xl font-black text-slate-950">Skills</h2>
                   <p className="mt-1 text-sm font-semibold text-slate-500">Search and select multiple skills for better candidate matching.</p>
                 </div>
-                <span className="w-fit rounded-[7px] bg-white px-3 py-1.5 text-xs font-black text-blue-700 ring-1 ring-blue-100">{form.skills.length} selected</span>
+                <span className="w-fit rounded-[7px] bg-white px-3 py-1.5 text-xs font-black text-slate-600 ring-1 ring-slate-200">{form.skills.length} selected</span>
               </div>
               {form.skills.length > 0 && (
                 <div className="mb-4 flex flex-wrap gap-2 rounded-[7px] border border-slate-200 bg-white p-3">
                   {form.skills.map((skill) => (
-                    <button className="inline-flex items-center gap-2 rounded-[7px] bg-blue-50 px-3 py-1.5 text-sm font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100" key={skill} onClick={() => removeSkill(skill)} type="button">
+                    <button className="inline-flex items-center gap-2 rounded-[7px] bg-white px-3 py-1.5 text-sm font-black text-slate-700 ring-1 ring-slate-200 transition hover:border-blue-200 hover:bg-blue-50/40 hover:text-blue-700" key={skill} onClick={() => removeSkill(skill)} type="button">
                       <Check size={14} />
                       {skill}
                       <X size={14} />
@@ -594,7 +594,7 @@ export function PostJobPage() {
                       <p className="px-3 pb-2 pt-1 text-[11px] font-black uppercase tracking-wide text-slate-400">Suggestions</p>
                       {filteredSkillSuggestions.map((skill) => (
                         <button
-                          className="flex w-full items-center justify-between rounded-[7px] px-3 py-2.5 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-50 hover:text-blue-700"
+                          className="group flex w-full items-center justify-between rounded-[7px] border border-transparent bg-white px-3 py-2.5 text-left text-sm font-bold text-slate-700 transition hover:border-blue-100 hover:bg-blue-50/35 hover:text-blue-700"
                           key={skill}
                           onMouseDown={(event) => {
                             event.preventDefault()
@@ -604,13 +604,13 @@ export function PostJobPage() {
                           type="button"
                         >
                           <span>{skill}</span>
-                          <span className="grid h-6 w-6 place-items-center rounded-full bg-blue-50 text-blue-700"><Plus size={14} /></span>
+                          <span className="grid h-6 w-6 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 group-hover:border-blue-200 group-hover:text-blue-700"><Plus size={14} /></span>
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
-                <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-[#0057B8] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#0057B8]/15 hover:bg-[#004694]" onClick={() => addSkill()} type="button"><Plus size={18} /> Add Skill</button>
+                <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-blue-200 bg-white px-5 py-2.5 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50/50 hover:text-blue-800" onClick={() => addSkill()} type="button"><Plus size={18} /> Add Skill</button>
               </div>
             </section>
 
