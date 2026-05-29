@@ -8,9 +8,10 @@ function normalizeSort(sort) {
 function buildFilter(query = {}) {
   const filter = {}
 
-  if (query.status) filter.status = query.status
-  if (query.approval) filter.approval = query.approval
-  if (query.accountDepartmentStatus) filter.accountDepartmentStatus = query.accountDepartmentStatus
+  filter.status = 'Active'
+  filter.approval = 'Approved'
+  filter.accountDepartmentStatus = 'Active'
+
   if (query.company) filter.company = query.company
   if (query.recruiterEmail) filter.recruiterEmail = String(query.recruiterEmail).toLowerCase()
 

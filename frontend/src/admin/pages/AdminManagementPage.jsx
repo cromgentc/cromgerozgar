@@ -2373,9 +2373,18 @@ function JobGroupActions({ onView }) {
 
 function PostedJobApprovalActions({ onAction }) {
   return (
-    <div className="flex flex-wrap gap-2">
-      {postedJobReviewActions.map((action) => <IconAction action={action.value} key={action.value} label={action.label} onClick={() => onAction(action.value)} />)}
-    </div>
+    <select
+      className="h-10 min-w-36 rounded-[7px] border border-slate-200 bg-white px-3 text-sm font-black text-slate-700 outline-none transition hover:border-blue-300 focus:border-blue-500"
+      defaultValue=""
+      onChange={(event) => {
+        const action = event.target.value
+        if (action) onAction(action)
+        event.target.value = ''
+      }}
+    >
+      <option value="">Choose action</option>
+      {postedJobReviewActions.map((action) => <option key={action.value} value={action.value}>{action.label}</option>)}
+    </select>
   )
 }
 
@@ -2457,10 +2466,10 @@ function RemarkViewerModal({ onClose, remark }) {
 }
 
 const postedJobReviewActions = [
-  { label: 'Approve', value: 'approve' },
-  { label: 'Reject', value: 'reject' },
+  { label: 'Approved', value: 'approve' },
+  { label: 'Rejected', value: 'reject' },
   { label: 'Hold', value: 'hold' },
-  { label: 'Remove', value: 'remove' },
+  { label: 'Removed', value: 'remove' },
 ]
 
 export function RecruiterDetailPage() {
