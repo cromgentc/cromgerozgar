@@ -2208,7 +2208,6 @@ function DocumentViewerModal({ onClose, row }) {
     ['Offer Letter', row.offerLetter],
     ['Aadhar Card', row.aadhaarDocument],
   ].filter(([, value]) => Boolean(value))
-  const primaryDocument = documents[0]?.[1]
 
   return (
     <AdminModal open={Boolean(row)} title="Uploaded recruiter documents" onClose={onClose}>
@@ -2233,20 +2232,13 @@ function DocumentViewerModal({ onClose, row }) {
           <div className="flex items-center justify-between gap-3 rounded-[7px] border border-slate-200 bg-white p-3" key={label}>
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
-              <p className="mt-1 font-bold text-slate-700">{value}</p>
+              <p className="mt-1 font-bold text-slate-700">PDF uploaded</p>
             </div>
             {isDocumentUrl(value) && (
               <a className="rounded-[7px] bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700" href={value} rel="noreferrer" target="_blank">Open PDF</a>
             )}
           </div>
         ))}
-        {primaryDocument && isDocumentUrl(primaryDocument) ? (
-          <iframe className="h-[520px] w-full rounded-[7px] border border-slate-200" src={primaryDocument} title="Recruiter document preview" />
-        ) : (
-          <div className="rounded-[7px] bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-800">
-            PDF preview requires a document URL. Current upload stores file reference/name only.
-          </div>
-        )}
       </div>
     </AdminModal>
   )
