@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
+    "ensure-login-user": "node seeders/ensureLoginUser.js",
     "seed": "node seeders/seed.js",
     "seed:clear": "node seeders/seed.js --clear"
   },
