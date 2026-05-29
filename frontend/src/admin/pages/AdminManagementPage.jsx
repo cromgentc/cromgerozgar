@@ -22,6 +22,7 @@ import { fetchPricingPackages, getPricingPackages, seedDefaultPricingPackages } 
 import { applySiteBrandingMeta, defaultSiteBranding, publishSiteBranding } from '../../utils/siteBranding'
 import { buildStateCountryLocation } from '../../utils/locationDisplay'
 import { getJobsForCategory } from '../../utils/categoryMatching'
+import { showMessageToast } from '../../utils/toast'
 
 const configs = {
   users: {
@@ -694,6 +695,23 @@ function getStoredAdminUser() {
   }
 }
 
+function useToastMessageState() {
+  const [message, setStoredMessage] = useState('')
+
+  const setMessage = (nextMessage) => {
+    const text = typeof nextMessage === 'function' ? nextMessage(message) : nextMessage
+    if (!text) {
+      setStoredMessage('')
+      return
+    }
+
+    showMessageToast(String(text))
+    setStoredMessage('')
+  }
+
+  return [message, setMessage]
+}
+
 export function AdminManagementPage({ fixedFilters = {}, type }) {
   const user = getStoredAdminUser()
   const navigate = useNavigate()
@@ -724,7 +742,7 @@ export function AdminManagementPage({ fixedFilters = {}, type }) {
   const [companyViewer, setCompanyViewer] = useState(null)
   const [selectedRow, setSelectedRow] = useState(null)
   const [form, setForm] = useState({})
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
   const [companyOptions, setCompanyOptions] = useState([])
   const [companyRows, setCompanyRows] = useState([])
 
@@ -1349,7 +1367,7 @@ export function AdminPaymentDetailPage() {
   const [payment, setPayment] = useState(null)
   const [recruiter, setRecruiter] = useState(null)
   const [recruiterUser, setRecruiterUser] = useState(null)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
   const [loading, setLoading] = useState(true)
   const allowedTypes = accessByRole[user?.role] || accessByRole.Admin
 
@@ -1495,7 +1513,7 @@ export function RecruiterDocumentDetailPage() {
   const allowedTypes = accessByRole[user?.role] || accessByRole.Admin
   const [documents, setDocuments] = useState([])
   const [selectedDocument, setSelectedDocument] = useState(null)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
   const [reviewAction, setReviewAction] = useState(null)
   const [reviewRemark, setReviewRemark] = useState('')
   const [documentViewer, setDocumentViewer] = useState(null)
@@ -2053,7 +2071,7 @@ function LiveLocationDashboard() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [adminLocation, setAdminLocation] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
 
   const loadLocations = () => {
     const params = new URLSearchParams()
@@ -2493,7 +2511,7 @@ export function RecruiterDetailPage() {
   const [selectedJob, setSelectedJob] = useState(null)
   const [jobReviewAction, setJobReviewAction] = useState(null)
   const [jobReviewRemark, setJobReviewRemark] = useState('')
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
   const [loading, setLoading] = useState(true)
 
   if (!allowedTypes.includes('employers')) {
@@ -2762,7 +2780,7 @@ export function SupportMessageDetailPage() {
   const [ticket, setTicket] = useState(null)
   const [reply, setReply] = useState('')
   const [status, setStatus] = useState('Open')
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
   const [loading, setLoading] = useState(true)
   const [now, setNow] = useState(Date.now())
 
@@ -4108,7 +4126,7 @@ export function AdminNewsletterSendPage() {
     ctaUrl: 'https://www.cromgenrozgar.in/jobs',
   })
   const [updates, setUpdates] = useState([])
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
   const [sending, setSending] = useState(false)
 
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
@@ -4588,7 +4606,7 @@ const defaultWhatsAppApiConfig = {
 export function AdminWhatsAppApiPage() {
   const [settingId, setSettingId] = useState('')
   const [form, setForm] = useState(defaultWhatsAppApiConfig)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -4745,7 +4763,7 @@ export function AdminWhatsAppApiPage() {
 export function AdminGoogleAuthPage() {
   const [settingId, setSettingId] = useState('')
   const [form, setForm] = useState(defaultGoogleAuthConfig)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -4912,7 +4930,7 @@ export function AdminGoogleAuthPage() {
 export function AdminSupaCloudPage() {
   const [settingId, setSettingId] = useState('')
   const [form, setForm] = useState(defaultSupaCloudConfig)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -5093,7 +5111,7 @@ export function AdminSupaCloudPage() {
 
 export function AdminSEOBrandingPage() {
   const [form, setForm] = useState(defaultSiteBranding)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useToastMessageState()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 

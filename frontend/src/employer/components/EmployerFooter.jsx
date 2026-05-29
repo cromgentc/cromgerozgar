@@ -22,6 +22,7 @@ import { api } from '../../services/api'
 import { getStoredUser } from '../../routes/authRouting'
 import { useSiteBranding } from '../../utils/siteBranding'
 import { useSocialMediaLinks } from '../../utils/socialMediaLinks'
+import { showMessageToast } from '../../utils/toast'
 
 const loggedOutGroups = [
   {
@@ -105,6 +106,11 @@ export function EmployerFooter() {
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  const notify = (text) => {
+    setMessage('')
+    if (text) showMessageToast(text)
+  }
+
   useEffect(() => {
     let mounted = true
 
@@ -135,12 +141,12 @@ export function EmployerFooter() {
 
   const subscribe = async () => {
     if (!email.trim()) {
-      setMessage('Business email required.')
+      notify('Business email required.')
       return
     }
 
     setSubmitting(true)
-    setMessage('')
+    notify('')
     try {
       await api.subscribeNewsletter({
         email,
@@ -148,9 +154,9 @@ export function EmployerFooter() {
         topics: ['Recruiter updates', 'Hiring insights', 'Policy updates'],
       })
       if (!isRecruiterLoggedIn) setEmail('')
-      setMessage('Subscribed to recruiter updates.')
+      notify('Subscribed to recruiter updates.')
     } catch (error) {
-      setMessage(error.message || 'Subscription failed. Please try again.')
+      notify(error.message || 'Subscription failed. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -278,11 +284,7 @@ export function EmployerFooter() {
 function FooterButton({ icon: Icon, label, secondary = false, to }) {
   return (
     <Link
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] px-5 text-sm font-black shadow-sm transition ${
-        secondary
-          ? 'border border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
-          : 'bg-blue-600 text-white shadow-blue-100 hover:bg-blue-700'
-      }`}
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-blue-200 bg-white px-5 text-sm font-black text-blue-700 shadow-sm transition hover:bg-blue-50/60 hover:text-blue-800"
       to={to}
     >
       <Icon size={17} /> {label}
