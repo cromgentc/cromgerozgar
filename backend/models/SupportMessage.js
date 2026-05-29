@@ -10,6 +10,7 @@ const supportMessageSchema = new mongoose.Schema(
     subject: { type: String, default: 'Support chat' },
     message: { type: String, required: true, trim: true },
     packageName: { type: String, default: '', trim: true },
+    candidatesNeeded: { type: String, default: '', trim: true },
     callbackTime: { type: String, default: '', trim: true },
     adminReply: { type: String, default: '', trim: true },
     chatMessages: [

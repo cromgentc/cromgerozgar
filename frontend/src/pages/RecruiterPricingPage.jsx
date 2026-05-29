@@ -489,16 +489,36 @@ function PackagePaymentModal({ activePackage, onClose, onPay, plan, processing }
 
 function EnterpriseCallbackModal({ onClose, onSubmitted, plan, recruiter }) {
   const [form, setForm] = useState({
-    name: recruiter?.name || '',
+    name: recruiter?.name || recruiter?.companyName || recruiter?.company || '',
     email: recruiter?.email || '',
     phone: recruiter?.phone || '',
     company: recruiter?.companyName || recruiter?.company || recruiter?.name || '',
-    teamSize: '',
+    candidatesNeeded: '',
     callbackTime: '',
     notes: '',
   })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!recruiter?.email) return
+
+    api
+      .list('employers', `?businessEmail=${encodeURIComponent(recruiter.email)}&limit=1`)
+      .then((payload) => {
+        const employer = payload.data?.[0]
+        if (!employer) return
+
+        setForm((current) => ({
+          ...current,
+          name: employer.companyName || recruiter.name || current.name,
+          email: employer.businessEmail || recruiter.email || current.email,
+          phone: employer.phone || recruiter.phone || current.phone,
+          company: employer.companyName || recruiter.companyName || recruiter.company || current.company,
+        }))
+      })
+      .catch(() => null)
+  }, [recruiter?.email])
 
   const update = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }))
@@ -509,7 +529,12 @@ function EnterpriseCallbackModal({ onClose, onSubmitted, plan, recruiter }) {
     setError('')
 
     if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.company.trim()) {
-      setError('Name, email, phone, and company are required.')
+      setError('Name, email, phone, and company must be available from recruiter profile.')
+      return
+    }
+
+    if (!form.candidatesNeeded || !form.callbackTime) {
+      setError('Please choose candidates needed and preferred callback time.')
       return
     }
 
@@ -523,13 +548,14 @@ function EnterpriseCallbackModal({ onClose, onSubmitted, plan, recruiter }) {
         role: 'recruiter',
         subject: 'Enterprise Callback Request',
         packageName: plan.name || 'Enterprise',
+        candidatesNeeded: form.candidatesNeeded,
         callbackTime: form.callbackTime,
         source: 'recruiter-enterprise-callback',
         status: 'Open',
         message: [
           `Package: ${plan.name || 'Enterprise'}`,
           `Company: ${form.company.trim()}`,
-          form.teamSize ? `Team size: ${form.teamSize}` : '',
+          form.candidatesNeeded ? `Candidates needed: ${form.candidatesNeeded}` : '',
           form.callbackTime ? `Preferred callback time: ${form.callbackTime}` : '',
           form.notes ? `Notes: ${form.notes.trim()}` : '',
         ].filter(Boolean).join('\n'),
@@ -557,33 +583,42 @@ function EnterpriseCallbackModal({ onClose, onSubmitted, plan, recruiter }) {
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <label>
             <span className="text-xs font-black uppercase tracking-wide text-slate-400">Name</span>
-            <input className="input mt-2" onChange={(event) => update('name', event.target.value)} placeholder="Your name" value={form.name} />
+            <input className="input mt-2 bg-slate-50 text-slate-500" placeholder="Auto fetched" readOnly value={form.name} />
           </label>
           <label>
             <span className="text-xs font-black uppercase tracking-wide text-slate-400">Email</span>
-            <input className="input mt-2" onChange={(event) => update('email', event.target.value)} placeholder="company@email.com" type="email" value={form.email} />
+            <input className="input mt-2 bg-slate-50 text-slate-500" placeholder="Auto fetched" readOnly type="email" value={form.email} />
           </label>
           <label>
             <span className="text-xs font-black uppercase tracking-wide text-slate-400">Phone</span>
-            <input className="input mt-2" onChange={(event) => update('phone', event.target.value)} placeholder="Mobile number" value={form.phone} />
+            <input className="input mt-2 bg-slate-50 text-slate-500" placeholder="Auto fetched" readOnly value={form.phone} />
           </label>
           <label>
             <span className="text-xs font-black uppercase tracking-wide text-slate-400">Company</span>
-            <input className="input mt-2" onChange={(event) => update('company', event.target.value)} placeholder="Company name" value={form.company} />
+            <input className="input mt-2 bg-slate-50 text-slate-500" placeholder="Auto fetched" readOnly value={form.company} />
           </label>
           <label>
-            <span className="text-xs font-black uppercase tracking-wide text-slate-400">Hiring team size</span>
-            <select className="input mt-2" onChange={(event) => update('teamSize', event.target.value)} value={form.teamSize}>
-              <option value="">Select team size</option>
-              <option>1-10</option>
-              <option>11-50</option>
-              <option>51-200</option>
-              <option>200+</option>
+            <span className="text-xs font-black uppercase tracking-wide text-slate-400">How many candidates do you need?</span>
+            <select className="input mt-2" onChange={(event) => update('candidatesNeeded', event.target.value)} value={form.candidatesNeeded}>
+              <option value="">Select candidates needed</option>
+              <option>1-10 candidates</option>
+              <option>11-25 candidates</option>
+              <option>26-50 candidates</option>
+              <option>51-100 candidates</option>
+              <option>100+ candidates</option>
             </select>
           </label>
           <label>
             <span className="text-xs font-black uppercase tracking-wide text-slate-400">Preferred callback time</span>
-            <input className="input mt-2" onChange={(event) => update('callbackTime', event.target.value)} placeholder="Today 4 PM / Tomorrow morning" value={form.callbackTime} />
+            <select className="input mt-2" onChange={(event) => update('callbackTime', event.target.value)} value={form.callbackTime}>
+              <option value="">Select callback time</option>
+              <option>Today morning</option>
+              <option>Today afternoon</option>
+              <option>Today evening</option>
+              <option>Tomorrow morning</option>
+              <option>Tomorrow afternoon</option>
+              <option>Tomorrow evening</option>
+            </select>
           </label>
           <label className="md:col-span-2">
             <span className="text-xs font-black uppercase tracking-wide text-slate-400">Notes</span>
