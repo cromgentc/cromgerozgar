@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, Eye, Plus, Search, Send, Sparkles, X } from 'lucide-react'
+import { BriefcaseBusiness, Check, CheckCircle2, Eye, MapPin, Plus, Search, Send, Sparkles, Wallet, X } from 'lucide-react'
 import { getRecruiterVerificationPath, getRecruiterVerificationStatus, getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
 import { fetchPricingPackages, getPricingPackages } from '../utils/pricingPackages'
@@ -403,17 +403,49 @@ export function PostJobPage() {
     }
   }
 
-  return (
-    <section className="py-10 sm:py-14">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-[7px] border border-[#0057B8]/10 bg-white/95 p-6 shadow-xl shadow-[#0057B8]/10 backdrop-blur sm:p-8">
-          <span className="inline-flex rounded-[7px] bg-[#3E9B28]/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-[#2f7d1f]">Verified recruiter job post</span>
-          <h1 className="mt-4 text-3xl font-black text-slate-950 sm:text-5xl">Post a Premium Job</h1>
-          <p className="mt-3 text-slate-500">Create a structured recruiter job post with location, interview address, skills, dates, and AI-assisted content.</p>
+  const salaryPreview = formatSalaryRange(form.salaryMin, form.salaryMax) || 'Not added'
+  const locationPreview = buildStateCountryLocation(form) || 'Not selected'
+  const activePackageName = activePackage?.packageName || activePackage?.packageSnapshot?.name || 'No active package'
 
-          <form className="mt-8 grid gap-6" onSubmit={submit}>
-            <section className="rounded-[7px] border border-[#0057B8]/10 bg-[#F8FBFF] p-5">
-              <h2 className="mb-4 text-xl font-black text-slate-950">Role Basics</h2>
+  return (
+    <section className="bg-slate-50 py-8 sm:py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-6 overflow-hidden rounded-[7px] border border-blue-100 bg-white shadow-xl shadow-slate-200/70">
+          <div className="border-b border-slate-100 bg-gradient-to-r from-blue-50 via-white to-cyan-50 px-6 py-6 sm:px-8">
+            <span className="inline-flex rounded-[7px] bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-100">Verified recruiter job post</span>
+            <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <h1 className="text-3xl font-black text-slate-950 sm:text-5xl">Post a Premium Job</h1>
+                <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600 sm:text-base">Create a clean job post with role details, interview location, salary range, skills, and approval-ready content.</p>
+              </div>
+              <div className="grid gap-2 text-sm font-bold text-slate-600 sm:grid-cols-3 lg:min-w-[420px]">
+                <div className="rounded-[7px] bg-white p-3 ring-1 ring-slate-200">
+                  <span className="block text-xs font-black uppercase text-slate-400">Package</span>
+                  <span className="mt-1 block truncate text-slate-950">{activePackageName}</span>
+                </div>
+                <div className="rounded-[7px] bg-white p-3 ring-1 ring-slate-200">
+                  <span className="block text-xs font-black uppercase text-slate-400">Salary</span>
+                  <span className="mt-1 block truncate text-slate-950">{salaryPreview}</span>
+                </div>
+                <div className="rounded-[7px] bg-white p-3 ring-1 ring-slate-200">
+                  <span className="block text-xs font-black uppercase text-slate-400">Skills</span>
+                  <span className="mt-1 block text-slate-950">{form.skills.length} selected</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]" onSubmit={submit}>
+          <div className="grid gap-6">
+            <section className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-[7px] bg-blue-50 text-blue-700"><BriefcaseBusiness size={20} /></span>
+                <div>
+                  <h2 className="text-xl font-black text-slate-950">Role Basics</h2>
+                  <p className="text-sm font-semibold text-slate-500">Title, company, department, and experience.</p>
+                </div>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <input className="input" list="job-title-suggestions" onChange={(e) => update('title', e.target.value)} placeholder="Job title" required value={form.title} />
                 <input className="input bg-slate-100 font-bold text-slate-700" list="company-suggestions" onChange={(e) => update('company', e.target.value)} placeholder={companyLoading ? 'Fetching company name...' : 'Company name'} readOnly={user?.role === 'recruiter'} required value={form.company} />
@@ -427,8 +459,14 @@ export function PostJobPage() {
               <datalist id="department-suggestions">{departmentSuggestions.map((item) => <option key={item} value={item} />)}</datalist>
             </section>
 
-            <section className="rounded-[7px] border border-[#0057B8]/10 bg-[#F8FBFF] p-5">
-              <h2 className="mb-4 text-xl font-black text-slate-950">Location & Interview</h2>
+            <section className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-[7px] bg-cyan-50 text-cyan-700"><MapPin size={20} /></span>
+                <div>
+                  <h2 className="text-xl font-black text-slate-950">Location & Interview</h2>
+                  <p className="text-sm font-semibold text-slate-500">City, state, country, and interview address.</p>
+                </div>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <select className="input" onChange={(e) => changeLocationType(e.target.value)} value={form.locationType}>
                   <option>India</option>
@@ -463,10 +501,16 @@ export function PostJobPage() {
               </div>
             </section>
 
-            <section className="rounded-[7px] border border-[#0057B8]/10 bg-[#F8FBFF] p-5">
-              <h2 className="mb-4 text-xl font-black text-slate-950">Compensation, Work & Dates</h2>
+            <section className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-[7px] bg-emerald-50 text-emerald-700"><Wallet size={20} /></span>
+                <div>
+                  <h2 className="text-xl font-black text-slate-950">Compensation, Work & Dates</h2>
+                  <p className="text-sm font-semibold text-slate-500">Salary range, work mode, and timeline.</p>
+                </div>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2 sm:col-span-2 lg:col-span-1">
                   <label className="grid gap-1.5">
                     <span className="text-xs font-black uppercase tracking-wide text-slate-400">Minimum salary</span>
                     <input
@@ -495,7 +539,7 @@ export function PostJobPage() {
               </div>
             </section>
 
-            <section className="rounded-[7px] border border-[#0057B8]/10 bg-[#F8FBFF] p-5">
+            <section className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-6">
               <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <h2 className="text-xl font-black text-slate-950">Skills</h2>
@@ -560,9 +604,15 @@ export function PostJobPage() {
               </div>
             </section>
 
-            <section className="rounded-[7px] border border-[#0057B8]/10 bg-[#F8FBFF] p-5">
+            <section className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-6">
               <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-xl font-black text-slate-950">Job Content</h2>
+                <div className="flex items-center gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-[7px] bg-violet-50 text-violet-700"><Sparkles size={20} /></span>
+                  <div>
+                    <h2 className="text-xl font-black text-slate-950">Job Content</h2>
+                    <p className="text-sm font-semibold text-slate-500">Description, responsibilities, requirements, and benefits.</p>
+                  </div>
+                </div>
                 <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-[#0057B8] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#0057B8]/15" onClick={generateDescription} type="button">
                   <Sparkles size={18} />
                   AI Generate Description
@@ -576,12 +626,42 @@ export function PostJobPage() {
               </div>
             </section>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-3 sm:flex-row xl:hidden">
               <button className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200" onClick={() => setPreviewOpen(true)} type="button"><Eye size={18} /> Preview Job</button>
               <button className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[7px] bg-[#0057B8] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#0057B8]/20 transition hover:-translate-y-0.5 hover:bg-[#004694]" type="submit"><Send size={18} /> Submit Job</button>
             </div>
-          </form>
-        </div>
+          </div>
+
+          <aside className="h-fit rounded-[7px] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 xl:sticky xl:top-24">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+              <span className="grid h-10 w-10 place-items-center rounded-[7px] bg-blue-600 text-white"><CheckCircle2 size={19} /></span>
+              <div>
+                <h3 className="font-black text-slate-950">Post Summary</h3>
+                <p className="text-xs font-bold text-slate-500">Review before submitting</p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3">
+              <SummaryLine label="Title" value={form.title || 'Job title not added'} />
+              <SummaryLine label="Company" value={form.company || 'Company not added'} />
+              <SummaryLine label="Location" value={locationPreview} />
+              <SummaryLine label="Salary" value={salaryPreview} />
+              <SummaryLine label="Work" value={`${form.type} / ${form.workMode}`} />
+              <SummaryLine label="Deadline" value={form.deadline || 'Not selected'} />
+            </div>
+            <div className="mt-5 rounded-[7px] bg-slate-50 p-4">
+              <p className="text-xs font-black uppercase tracking-wide text-slate-400">Selected skills</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {form.skills.length ? form.skills.slice(0, 8).map((skill) => (
+                  <span className="rounded-[7px] bg-white px-2.5 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100" key={skill}>{skill}</span>
+                )) : <span className="text-sm font-semibold text-slate-500">No skills selected</span>}
+              </div>
+            </div>
+            <div className="mt-5 grid gap-2">
+              <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 hover:bg-slate-50" onClick={() => setPreviewOpen(true)} type="button"><Eye size={17} /> Preview</button>
+              <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-blue-600 px-4 text-sm font-black text-white shadow-lg shadow-blue-100 hover:bg-blue-700" type="submit"><Send size={17} /> Submit for Approval</button>
+            </div>
+          </aside>
+        </form>
       </div>
       {previewOpen && <JobPreviewModal form={form} onClose={() => setPreviewOpen(false)} />}
       {packageOpen && <PackageSelectionModal activePackage={activePackage} onChoose={choosePackageAndSubmit} onClose={() => setPackageOpen(false)} packages={packages} />}
@@ -613,6 +693,15 @@ function JobPreviewModal({ form, onClose }) {
           <p className="whitespace-pre-line"><strong>Description:</strong><br />{form.description || 'Not added'}</p>
         </div>
       </div>
+    </div>
+  )
+}
+
+function SummaryLine({ label, value }) {
+  return (
+    <div className="rounded-[7px] border border-slate-100 bg-white p-3">
+      <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-1 break-words text-sm font-black text-slate-800">{value}</p>
     </div>
   )
 }
