@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Eye, Plus, Send, Sparkles, X } from 'lucide-react'
+import { Check, Eye, Plus, Search, Send, Sparkles, X } from 'lucide-react'
 import { getRecruiterVerificationPath, getRecruiterVerificationStatus, getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
 import { fetchPricingPackages, getPricingPackages } from '../utils/pricingPackages'
@@ -21,10 +21,12 @@ const departmentSuggestions = [
 ]
 
 const skillSuggestions = [
-  'React', 'TypeScript', 'JavaScript', 'Tailwind', 'Node.js', 'Express', 'MongoDB', 'Python', 'Java', 'SQL', 'AWS', 'Docker',
-  'REST API', 'CRM', 'Communication', 'Retention', 'Google Ads', 'Meta Ads', 'Analytics', 'SEO', 'Excel', 'Research', 'Reporting',
-  'Field Sales', 'Lead Generation', 'Telecalling', 'B2B Sales', 'Customer Support', 'MS Office', 'Data Entry', 'Operations',
-  'Recruitment', 'Payroll', 'Accounting', 'Tally', 'Graphic Design', 'Figma', 'Video Editing', 'Content Writing', 'Social Media',
+  'JavaScript', 'React', 'Node.js', 'Python', 'Java', 'SQL', 'HTML', 'CSS', 'TypeScript', 'AWS', 'Docker', 'MongoDB',
+  'Express', 'REST API', 'Next.js', 'Tailwind CSS', 'PHP', 'Laravel', 'MySQL', 'PostgreSQL', 'Git', 'DevOps', 'Linux',
+  'Excel', 'MS Office', 'Data Entry', 'Tally', 'Accounting', 'Payroll', 'CRM', 'Communication', 'Customer Support',
+  'Field Sales', 'B2B Sales', 'Lead Generation', 'Telecalling', 'Business Development', 'Recruitment', 'HR Operations',
+  'Google Ads', 'Meta Ads', 'SEO', 'Analytics', 'Social Media', 'Content Writing', 'Graphic Design', 'Figma', 'Video Editing',
+  'Research', 'Reporting', 'Operations', 'Retention', 'Team Management', 'Problem Solving',
 ]
 
 const experienceOptions = ['Fresher', '0-1 years', '1-3 years', '3-5 years', '5-8 years', '8-12 years', '12+ years']
@@ -68,6 +70,21 @@ function isEnterprisePlan(plan) {
 
 function getPlanValidityDays(plan) {
   return isFreeTrialPlan(plan) ? 3 : Number(plan?.validityDays || 30)
+}
+
+function formatSalaryNumber(value) {
+  const digits = String(value || '').replace(/[^\d]/g, '')
+  if (!digits) return ''
+  return Number(digits).toLocaleString('en-IN')
+}
+
+function formatSalaryRange(min, max) {
+  const minSalary = formatSalaryNumber(min)
+  const maxSalary = formatSalaryNumber(max)
+  if (minSalary && maxSalary) return `${minSalary} - ${maxSalary}`
+  if (minSalary) return `${minSalary}+`
+  if (maxSalary) return `Up to ${maxSalary}`
+  return ''
 }
 
 const indiaLocations = {
@@ -149,6 +166,8 @@ const initialForm = {
   interviewSameAsOffice: true,
   interviewAddress: '',
   salary: '',
+  salaryMin: '',
+  salaryMax: '',
   experience: '1-3 years',
   type: 'Full Time',
   workMode: 'Hybrid',
@@ -234,10 +253,18 @@ export function PostJobPage() {
   const fullAddressOpen = Boolean(form.city)
   const filteredSkillSuggestions = useMemo(() => {
     const query = form.skillInput.trim().toLowerCase()
+    const selected = form.skills.map((skill) => skill.toLowerCase())
     return skillSuggestions
-      .filter((skill) => !form.skills.includes(skill))
+      .filter((skill) => !selected.includes(skill.toLowerCase()))
       .filter((skill) => !query || skill.toLowerCase().includes(query))
-      .slice(0, 10)
+      .sort((first, second) => {
+        if (!query) return 0
+        const firstStarts = first.toLowerCase().startsWith(query)
+        const secondStarts = second.toLowerCase().startsWith(query)
+        if (firstStarts === secondStarts) return first.localeCompare(second)
+        return firstStarts ? -1 : 1
+      })
+      .slice(0, 8)
   }, [form.skillInput, form.skills])
 
   const update = (key, value) => {
@@ -264,7 +291,7 @@ export function PostJobPage() {
 
   const addSkill = (skill = form.skillInput) => {
     const nextSkill = skill.trim()
-    if (!nextSkill || form.skills.includes(nextSkill)) return
+    if (!nextSkill || form.skills.some((item) => item.toLowerCase() === nextSkill.toLowerCase())) return
     setForm((current) => ({ ...current, skills: [...current.skills, nextSkill], skillInput: '' }))
   }
 
@@ -290,6 +317,7 @@ export function PostJobPage() {
   const buildJobPayload = () => {
     const location = buildStateCountryLocation(form)
     const interviewAddress = form.interviewSameAsOffice ? form.officeAddress : form.interviewAddress
+    const salary = formatSalaryRange(form.salaryMin, form.salaryMax) || form.salary
 
     return {
       ...form,
@@ -299,6 +327,7 @@ export function PostJobPage() {
       fullAddress: form.officeAddress,
       officeAddress: form.officeAddress,
       interviewAddress,
+      salary,
       companyLogo: form.company.slice(0, 2).toUpperCase(),
       skills: form.skills,
       responsibilities: form.responsibilities.split('\n').filter(Boolean),
@@ -437,7 +466,28 @@ export function PostJobPage() {
             <section className="rounded-[7px] border border-[#0057B8]/10 bg-[#F8FBFF] p-5">
               <h2 className="mb-4 text-xl font-black text-slate-950">Compensation, Work & Dates</h2>
               <div className="grid gap-4 sm:grid-cols-2">
-                <input className="input" onChange={(e) => update('salary', e.target.value)} placeholder="Salary range" value={form.salary} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-black uppercase tracking-wide text-slate-400">Minimum salary</span>
+                    <input
+                      className="input"
+                      inputMode="numeric"
+                      onChange={(e) => update('salaryMin', e.target.value.replace(/[^\d]/g, ''))}
+                      placeholder="10,000"
+                      value={formatSalaryNumber(form.salaryMin)}
+                    />
+                  </label>
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-black uppercase tracking-wide text-slate-400">Maximum salary</span>
+                    <input
+                      className="input"
+                      inputMode="numeric"
+                      onChange={(e) => update('salaryMax', e.target.value.replace(/[^\d]/g, ''))}
+                      placeholder="15,000"
+                      value={formatSalaryNumber(form.salaryMax)}
+                    />
+                  </label>
+                </div>
                 <select className="input" onChange={(e) => update('type', e.target.value)} value={form.type}><option>Full Time</option><option>Part Time</option><option>Contract</option><option>Freelance</option></select>
                 <select className="input" onChange={(e) => update('workMode', e.target.value)} value={form.workMode}><option>Hybrid</option><option>Remote</option><option>On-site</option></select>
                 <input className="input" onChange={(e) => update('postedDate', e.target.value)} type="date" value={form.postedDate} />
@@ -446,11 +496,29 @@ export function PostJobPage() {
             </section>
 
             <section className="rounded-[7px] border border-[#0057B8]/10 bg-[#F8FBFF] p-5">
-              <h2 className="mb-4 text-xl font-black text-slate-950">Skills</h2>
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-slate-950">Skills</h2>
+                  <p className="mt-1 text-sm font-semibold text-slate-500">Search and select multiple skills for better candidate matching.</p>
+                </div>
+                <span className="w-fit rounded-[7px] bg-white px-3 py-1.5 text-xs font-black text-blue-700 ring-1 ring-blue-100">{form.skills.length} selected</span>
+              </div>
+              {form.skills.length > 0 && (
+                <div className="mb-4 flex flex-wrap gap-2 rounded-[7px] border border-slate-200 bg-white p-3">
+                  {form.skills.map((skill) => (
+                    <button className="inline-flex items-center gap-2 rounded-[7px] bg-blue-50 px-3 py-1.5 text-sm font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100" key={skill} onClick={() => removeSkill(skill)} type="button">
+                      <Check size={14} />
+                      {skill}
+                      <X size={14} />
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex flex-col gap-3 lg:flex-row">
                 <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-slate-400" size={18} />
                   <input
-                    className="input"
+                    className="input pl-11"
                     onBlur={() => window.setTimeout(() => setSkillSuggestionsOpen(false), 120)}
                     onChange={(e) => {
                       update('skillInput', e.target.value)
@@ -464,14 +532,15 @@ export function PostJobPage() {
                         setSkillSuggestionsOpen(false)
                       }
                     }}
-                    placeholder="Search or type skill"
+                    placeholder="Search skills like JavaScript, Excel, Sales..."
                     value={form.skillInput}
                   />
                   {skillSuggestionsOpen && filteredSkillSuggestions.length > 0 && (
-                    <div className="absolute left-0 right-0 top-[calc(100%+0.4rem)] z-20 max-h-64 overflow-y-auto rounded-[7px] border border-blue-100 bg-white p-2 shadow-xl shadow-blue-100">
+                    <div className="absolute left-0 right-0 top-[calc(100%+0.45rem)] z-20 max-h-72 overflow-y-auto rounded-[7px] border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-200">
+                      <p className="px-3 pb-2 pt-1 text-[11px] font-black uppercase tracking-wide text-slate-400">Suggestions</p>
                       {filteredSkillSuggestions.map((skill) => (
                         <button
-                          className="flex w-full items-center justify-between rounded-[7px] px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:bg-blue-50 hover:text-blue-700"
+                          className="flex w-full items-center justify-between rounded-[7px] px-3 py-2.5 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-50 hover:text-blue-700"
                           key={skill}
                           onMouseDown={(event) => {
                             event.preventDefault()
@@ -480,22 +549,14 @@ export function PostJobPage() {
                           }}
                           type="button"
                         >
-                          {skill}
-                          <Plus size={15} />
+                          <span>{skill}</span>
+                          <span className="grid h-6 w-6 place-items-center rounded-full bg-blue-50 text-blue-700"><Plus size={14} /></span>
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
                 <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-[#0057B8] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#0057B8]/15 hover:bg-[#004694]" onClick={() => addSkill()} type="button"><Plus size={18} /> Add Skill</button>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {form.skills.map((skill) => (
-                  <button className="inline-flex items-center gap-2 rounded-[7px] bg-white px-3 py-1.5 text-sm font-black text-slate-700 ring-1 ring-slate-200" key={skill} onClick={() => removeSkill(skill)} type="button">
-                    {skill}
-                    <X size={14} />
-                  </button>
-                ))}
               </div>
             </section>
 
@@ -529,6 +590,8 @@ export function PostJobPage() {
 }
 
 function JobPreviewModal({ form, onClose }) {
+  const salaryRange = formatSalaryRange(form.salaryMin, form.salaryMax) || form.salary
+
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
       <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[7px] bg-white p-6 shadow-2xl">
@@ -542,7 +605,7 @@ function JobPreviewModal({ form, onClose }) {
         </div>
         <div className="mt-6 grid gap-4 text-sm font-semibold text-slate-600">
           <p><strong>Department:</strong> {form.department || 'Not added'}</p>
-          <p><strong>Salary:</strong> {form.salary || 'Not disclosed'}</p>
+          <p><strong>Salary:</strong> {salaryRange || 'Not disclosed'}</p>
           <p><strong>Experience:</strong> {form.experience}</p>
           <p><strong>Work:</strong> {form.type} / {form.workMode}</p>
           <p><strong>Deadline:</strong> {form.deadline || 'Not added'}</p>
