@@ -1,6 +1,6 @@
 const express = require('express')
 const multer = require('multer')
-const { uploadBrandAsset, uploadRecruiterDocumentFile, uploadResume, viewResume } = require('../controllers/resumeUploadController')
+const { uploadBrandAsset, uploadRecruiterDocumentFile, uploadRecruiterProfileImage, uploadResume, viewResume } = require('../controllers/resumeUploadController')
 const { authorize, protect } = require('../middleware/authMiddleware')
 
 const router = express.Router()
@@ -44,6 +44,7 @@ const imageUpload = multer({
 
 router.post('/supa-cloud', protect, authorize('Admin', 'hiring', 'recruiter', 'users'), upload.single('resume'), uploadResume)
 router.post('/recruiter-document', protect, authorize('Admin', 'account team', 'recruiter'), documentUpload.single('document'), uploadRecruiterDocumentFile)
+router.post('/recruiter-profile-image', protect, authorize('Admin', 'account team', 'recruiter'), imageUpload.single('image'), uploadRecruiterProfileImage)
 router.post('/brand-asset', protect, authorize('Admin'), imageUpload.single('asset'), uploadBrandAsset)
 router.get('/:id/view', protect, authorize('Admin', 'hiring', 'recruiter', 'account team'), viewResume)
 

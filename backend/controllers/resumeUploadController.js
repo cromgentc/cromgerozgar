@@ -55,6 +55,8 @@ async function getSupaCloudConfig() {
     resumeFolder: value.resumeFolder || value.folder || 'hiring-team',
     documentBucket: value.documentBucket || 'documents',
     documentFolder: value.documentFolder || 'recruiter-documents',
+    recruiterProfileBucket: value.recruiterProfileBucket || 'recruiter-profiles',
+    recruiterProfileFolder: value.recruiterProfileFolder || 'logos',
     brandingBucket: value.brandingBucket || 'branding',
     brandingFolder: value.brandingFolder || 'site-assets',
     publicBucket: value.publicBucket !== false,
@@ -328,6 +330,51 @@ async function uploadBrandAsset(req, res) {
   })
 }
 
+async function uploadRecruiterProfileImage(req, res) {
+  if (!req.file) {
+    res.status(400)
+    throw new Error('Recruiter profile image is required.')
+  }
+
+  if (!String(req.file.mimetype || '').startsWith('image/')) {
+    res.status(400)
+    throw new Error('Only image upload is allowed for recruiter profile.')
+  }
+
+  const config = await getSupaCloudConfig()
+  const recruiterEmail = req.body.recruiterEmail || req.user?.email || 'recruiter'
+  const field = cleanSegment(req.body.field || 'profile-logo')
+  const upload = await uploadToSupaCloud({
+    buffer: req.file.buffer,
+    config: {
+      ...config,
+      bucket: config.recruiterProfileBucket,
+      folder: `${config.recruiterProfileFolder}/${cleanSegment(recruiterEmail)}`,
+    },
+    contentType: req.file.mimetype || 'application/octet-stream',
+    fileName: req.file.originalname || `${field}.png`,
+  })
+
+  const previousObject = parseSupaCloudObjectUrl(req.body.previousFileUrl || req.body.previousUrl)
+  if (previousObject && previousObject.bucket === config.recruiterProfileBucket) {
+    await removeSupaCloudObject(previousObject, 'Supa Cloud old recruiter profile image')
+  }
+
+  res.status(201).json({
+    success: true,
+    data: {
+      url: upload.publicUrl,
+      storageProvider: 'supa-cloud',
+      storageBucket: config.recruiterProfileBucket,
+      storagePath: upload.storagePath,
+      originalFileName: req.file.originalname || '',
+      mimeType: req.file.mimetype || '',
+      fileSize: req.file.size,
+      field,
+    },
+  })
+}
+
 async function viewResume(req, res) {
   const resume = await Resume.findById(req.params.id)
   if (!resume) {
@@ -368,4 +415,4 @@ async function viewResume(req, res) {
   res.send(Buffer.from(arrayBuffer))
 }
 
-module.exports = { uploadBrandAsset, uploadRecruiterDocumentFile, uploadResume, viewResume }
+module.exports = { uploadBrandAsset, uploadRecruiterDocumentFile, uploadRecruiterProfileImage, uploadResume, viewResume }

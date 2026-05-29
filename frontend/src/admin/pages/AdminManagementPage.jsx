@@ -4251,6 +4251,8 @@ const defaultSupaCloudConfig = {
   resumeFolder: 'hiring-team',
   documentBucket: 'documents',
   documentFolder: 'recruiter-documents',
+  recruiterProfileBucket: 'recruiter-profiles',
+  recruiterProfileFolder: 'logos',
   brandingBucket: 'branding',
   brandingFolder: 'site-assets',
   publicBucket: true,
@@ -4616,6 +4618,8 @@ export function AdminSupaCloudPage() {
           resumeFolder: value.resumeFolder || value.folder || 'hiring-team',
           documentBucket: value.documentBucket || 'documents',
           documentFolder: value.documentFolder || 'recruiter-documents',
+          recruiterProfileBucket: value.recruiterProfileBucket || 'recruiter-profiles',
+          recruiterProfileFolder: value.recruiterProfileFolder || 'logos',
           brandingBucket: value.brandingBucket || 'branding',
           brandingFolder: value.brandingFolder || 'site-assets',
           publicBucket: value.publicBucket !== false,
@@ -4647,6 +4651,8 @@ export function AdminSupaCloudPage() {
         resumeFolder: form.resumeFolder.trim() || 'hiring-team',
         documentBucket: form.documentBucket.trim() || 'documents',
         documentFolder: form.documentFolder.trim() || 'recruiter-documents',
+        recruiterProfileBucket: form.recruiterProfileBucket.trim() || 'recruiter-profiles',
+        recruiterProfileFolder: form.recruiterProfileFolder.trim() || 'logos',
         brandingBucket: form.brandingBucket.trim() || 'branding',
         brandingFolder: form.brandingFolder.trim() || 'site-assets',
         publicBucket: Boolean(form.publicBucket),
@@ -4654,9 +4660,9 @@ export function AdminSupaCloudPage() {
       },
     }
 
-    if (!payload.value.supabaseUrl || !payload.value.serviceRoleKey || !payload.value.resumeBucket || !payload.value.documentBucket || !payload.value.brandingBucket) {
+    if (!payload.value.supabaseUrl || !payload.value.serviceRoleKey || !payload.value.resumeBucket || !payload.value.documentBucket || !payload.value.recruiterProfileBucket || !payload.value.brandingBucket) {
       setSaving(false)
-      setMessage('Supa Cloud URL, service role key, resume bucket, document bucket, and branding bucket are required.')
+      setMessage('Supa Cloud URL, service role key, resume bucket, document bucket, recruiter profile bucket, and branding bucket are required.')
       return
     }
 
@@ -4667,7 +4673,7 @@ export function AdminSupaCloudPage() {
         const created = await api.create('settings', payload)
         setSettingId(created.data?._id || '')
       }
-      setMessage('Supa Cloud storage saved successfully. Resume, document, and branding uploads will use these paths.')
+      setMessage('Supa Cloud storage saved successfully. Resume, document, recruiter profile, and branding uploads will use these paths.')
     } catch (error) {
       setMessage(error.message || 'Supa Cloud config could not be saved.')
     } finally {
@@ -4683,7 +4689,7 @@ export function AdminSupaCloudPage() {
             <p className="text-sm font-black uppercase tracking-wide text-blue-50">Settings / Storage Configuration</p>
             <h2 className="mt-3 text-3xl font-black sm:text-4xl">Supa Cloud Storage</h2>
             <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-50">
-              Configure Supabase/Supa Cloud storage for resumes, recruiter documents, and website branding assets.
+              Configure Supabase/Supa Cloud storage for resumes, recruiter documents, recruiter profiles, and website branding assets.
             </p>
           </div>
           <StatusBadge status={form.enabled ? 'Active' : 'Inactive'} />
@@ -4718,6 +4724,11 @@ export function AdminSupaCloudPage() {
                 <p className="text-sm font-black uppercase tracking-wide text-blue-600 sm:col-span-2">Recruiter Document Storage</p>
                 <LabeledInput label="Document Bucket" onChange={(value) => update('documentBucket', value)} placeholder="documents" value={form.documentBucket} />
                 <LabeledInput label="Document Folder Path" onChange={(value) => update('documentFolder', value)} placeholder="recruiter-documents" value={form.documentFolder} />
+              </div>
+              <div className="grid gap-4 rounded-[7px] border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+                <p className="text-sm font-black uppercase tracking-wide text-blue-600 sm:col-span-2">Recruiter Profile Storage</p>
+                <LabeledInput label="Recruiter Profile Bucket" onChange={(value) => update('recruiterProfileBucket', value)} placeholder="recruiter-profiles" value={form.recruiterProfileBucket} />
+                <LabeledInput label="Recruiter Profile Folder Path" onChange={(value) => update('recruiterProfileFolder', value)} placeholder="logos" value={form.recruiterProfileFolder} />
               </div>
               <div className="grid gap-4 rounded-[7px] border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
                 <p className="text-sm font-black uppercase tracking-wide text-blue-600 sm:col-span-2">Logo / Branding Storage</p>

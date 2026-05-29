@@ -8,6 +8,7 @@ export function RecruiterProfilePage() {
   const user = getStoredUser()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
   const [message, setMessage] = useState('')
   const [employerId, setEmployerId] = useState('')
   const [profile, setProfile] = useState(() => ({
@@ -113,13 +114,39 @@ export function RecruiterProfilePage() {
     }
   }
 
-  const updateLogo = (event) => {
+  const updateLogo = async (event) => {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = () => update('logo', reader.result || '')
-    reader.readAsDataURL(file)
+    if (!String(file.type || '').startsWith('image/')) {
+      setMessage('Only image upload is allowed for recruiter profile.')
+      return
+    }
+
+    const data = new FormData()
+    data.append('image', file)
+    data.append('field', 'recruiter-logo')
+    data.append('recruiterEmail', user?.email || profile.email || '')
+    if (profile.logo) data.append('previousFileUrl', profile.logo)
+
+    setLogoUploading(true)
+    setMessage('')
+
+    try {
+      const payload = await api.uploadRecruiterProfileImageToSupaCloud(data)
+      const url = payload.data?.url
+      if (!url) {
+        setMessage('Image uploaded, but public URL was not returned. Check Supa Cloud public bucket setting.')
+        return
+      }
+      update('logo', url)
+      setMessage('Profile image uploaded. Click Save to update recruiter profile.')
+    } catch (error) {
+      setMessage(error.message || 'Recruiter profile image upload failed.')
+    } finally {
+      setLogoUploading(false)
+      event.target.value = ''
+    }
   }
 
   return (
@@ -144,14 +171,14 @@ export function RecruiterProfilePage() {
               {editing && (
                 <label className="absolute -bottom-2 -right-2 grid h-10 w-10 cursor-pointer place-items-center rounded-[7px] bg-slate-950 text-white shadow-lg transition hover:bg-blue-600">
                   <Camera size={17} />
-                  <input accept="image/*" className="hidden" onChange={updateLogo} type="file" />
+                  <input accept="image/*" className="hidden" disabled={logoUploading} onChange={updateLogo} type="file" />
                 </label>
               )}
             </div>
             <div>
               <h2 className="text-2xl font-black text-slate-950">{profile.name}</h2>
               <p className="mt-1 text-sm font-semibold text-blue-700">Recruiter</p>
-              {editing && <p className="mt-2 text-xs font-bold text-slate-400">Click camera icon to update company logo</p>}
+              {editing && <p className="mt-2 text-xs font-bold text-slate-400">{logoUploading ? 'Uploading logo...' : 'Click camera icon to upload company logo'}</p>}
             </div>
           </div>
           {message && <p className="mt-5 rounded-[7px] bg-teal-50 p-3 text-sm font-bold text-teal-700">{message}</p>}
