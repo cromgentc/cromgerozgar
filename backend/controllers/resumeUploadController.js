@@ -69,7 +69,25 @@ async function ensureSupaCloudBucket(config) {
   }
   const bucketResponse = await fetch(bucketUrl, { headers })
 
-  if (bucketResponse.ok) return
+  if (bucketResponse.ok) {
+    const bucket = await bucketResponse.json().catch(() => ({}))
+    if (config.publicBucket && bucket.public !== true) {
+      const updateResponse = await fetch(bucketUrl, {
+        method: 'PUT',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ public: true }),
+      })
+
+      if (!updateResponse.ok) {
+        const message = await readSupaCloudError(updateResponse, `Supa Cloud bucket "${config.bucket}" could not be made public.`)
+        throw storageError(`Supa Cloud bucket update failed: ${message}`)
+      }
+    }
+    return
+  }
 
   const bucketMessage = await readSupaCloudError(bucketResponse, 'Supa Cloud bucket could not be verified.')
   const bucketMissing = bucketResponse.status === 404 || bucketMessage.toLowerCase().includes('bucket not found')
