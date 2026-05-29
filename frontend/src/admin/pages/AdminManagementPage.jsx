@@ -1348,6 +1348,7 @@ export function AdminPaymentDetailPage() {
   const { paymentId } = useParams()
   const [payment, setPayment] = useState(null)
   const [recruiter, setRecruiter] = useState(null)
+  const [recruiterUser, setRecruiterUser] = useState(null)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const allowedTypes = accessByRole[user?.role] || accessByRole.Admin
@@ -1367,18 +1368,24 @@ export function AdminPaymentDetailPage() {
         const payload = await api.get('payments', paymentId)
         const nextPayment = payload.data || payload
         let matchedRecruiter = null
+        let matchedUser = null
 
         if (nextPayment?.recruiterEmail) {
-          const recruiterPayload = await api.list('employers', `?search=${encodeURIComponent(nextPayment.recruiterEmail)}`)
+          const [recruiterPayload, usersPayload] = await Promise.all([
+            api.list('employers', `?search=${encodeURIComponent(nextPayment.recruiterEmail)}`).catch(() => ({ data: [] })),
+            api.list('users', `?role=recruiter&search=${encodeURIComponent(nextPayment.recruiterEmail)}`).catch(() => ({ data: [] })),
+          ])
           matchedRecruiter = (recruiterPayload.data || []).find((item) => item.businessEmail?.toLowerCase() === nextPayment.recruiterEmail.toLowerCase()) || null
+          matchedUser = (usersPayload.data || []).find((item) => item.email?.toLowerCase() === nextPayment.recruiterEmail.toLowerCase()) || null
         } else if (nextPayment?.employer) {
-          const recruiterPayload = await api.list('employers', `?search=${encodeURIComponent(nextPayment.employer)}`)
+          const recruiterPayload = await api.list('employers', `?search=${encodeURIComponent(nextPayment.employer)}`).catch(() => ({ data: [] }))
           matchedRecruiter = (recruiterPayload.data || [])[0] || null
         }
 
         if (!mounted) return
         setPayment(nextPayment)
         setRecruiter(matchedRecruiter)
+        setRecruiterUser(matchedUser)
       } catch (error) {
         if (mounted) setMessage(error.message)
       } finally {
@@ -1405,9 +1412,10 @@ export function AdminPaymentDetailPage() {
     return <EmptyAdminState title="Payment record not found" />
   }
 
-  const customerName = recruiter?.contactPerson || payment.employer || 'Not added'
+  const customerName = recruiterUser?.name || recruiter?.contactPerson || 'Not added'
   const companyName = recruiter?.companyName || payment.employer || 'Not added'
   const totalFee = getPaymentTotalFee(payment)
+  const paymentExportRecruiter = { ...(recruiter || {}), contactPerson: customerName }
 
   return (
     <div className="grid gap-5">
@@ -1419,9 +1427,9 @@ export function AdminPaymentDetailPage() {
             <p className="mt-2 text-sm font-semibold text-slate-500">Full customer, recruiter, gateway, and total fee information for this transaction.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="export-btn" onClick={() => downloadPaymentRecord(payment, 'excel', recruiter)} type="button"><FileSpreadsheet size={16} /> Excel</button>
-            <button className="export-btn" onClick={() => downloadPaymentRecord(payment, 'pdf', recruiter)} type="button"><FileText size={16} /> PDF</button>
-            <button className="export-btn" onClick={() => downloadPaymentRecord(payment, 'doc', recruiter)} type="button"><FileText size={16} /> DOC</button>
+            <button className="export-btn" onClick={() => downloadPaymentRecord(payment, 'excel', paymentExportRecruiter)} type="button"><FileSpreadsheet size={16} /> Excel</button>
+            <button className="export-btn" onClick={() => downloadPaymentRecord(payment, 'pdf', paymentExportRecruiter)} type="button"><FileText size={16} /> PDF</button>
+            <button className="export-btn" onClick={() => downloadPaymentRecord(payment, 'doc', paymentExportRecruiter)} type="button"><FileText size={16} /> DOC</button>
           </div>
         </div>
       </AdminCard>
@@ -2505,9 +2513,9 @@ export function RecruiterDetailPage() {
         const email = nextRecruiter?.businessEmail || ''
 
         const [jobsPayload, applicationsPayload, documentsPayload, packagePayload, usersPayload] = await Promise.all([
-          api.list('jobs', `?includeAll=true&recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`),
-          api.list('applications', `?recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`),
-          api.list('recruiter-documents', `?recruiterEmail=${encodeURIComponent(email)}&sort=-updatedAt&limit=100`),
+          api.list('jobs', `?includeAll=true&recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`).catch(() => ({ data: [] })),
+          api.list('applications', `?recruiterEmail=${encodeURIComponent(email)}&sort=-createdAt&limit=100`).catch(() => ({ data: [] })),
+          api.list('recruiter-documents', `?recruiterEmail=${encodeURIComponent(email)}&sort=-updatedAt&limit=100`).catch(() => ({ data: [] })),
           api.currentRecruiterPackage(email).catch(() => ({ data: null })),
           api.list('users', `?role=recruiter&search=${encodeURIComponent(email)}`).catch(() => ({ data: [] })),
         ])
@@ -3053,7 +3061,7 @@ function getPaymentExportRows(payment = {}, recruiter = {}) {
   return [
     ['Invoice', payment.invoiceNo || 'Not added'],
     ['Recruiter', payment.employer || recruiter.companyName || 'Not added'],
-    ['Contact person', recruiter.contactPerson || payment.employer || 'Not added'],
+    ['Contact person', recruiter.contactPerson || 'Not added'],
     ['Customer email', payment.recruiterEmail || recruiter.businessEmail || 'Not added'],
     ['Phone', recruiter.phone || 'Not added'],
     ['Company', recruiter.companyName || payment.employer || 'Not added'],
