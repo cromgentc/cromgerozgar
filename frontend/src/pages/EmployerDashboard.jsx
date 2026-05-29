@@ -42,7 +42,6 @@ const navItems = [
 
 export function EmployerDashboard() {
   const user = getStoredUser()
-  const [jobModalOpen, setJobModalOpen] = useState(false)
   const [freelancerQuery, setFreelancerQuery] = useState('')
   const { data } = useApiResource(() => api.employerDashboard(user?.email), { metrics: {}, jobs: [], applications: [], shortlistedApplications: [] }, [user?.email])
   const { data: freelancerData } = useApiResource(() => api.freelancerProfiles(), { data: [] }, [])
@@ -93,10 +92,6 @@ export function EmployerDashboard() {
                 <p className="mt-3 max-w-3xl text-sm font-semibold leading-7 text-slate-500">
                   Enterprise workspace for active jobs, candidate pipelines, freelancer discovery, interviews, milestones, invoices, and company profile management.
                 </p>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <Button onClick={() => setJobModalOpen(true)}><FilePlus2 size={18} /> Post New Job</Button>
-                  <a className="job-card-details-link px-5" href="#freelancers"><Search size={17} /> Search Freelancers</a>
-                </div>
               </div>
               <div className="rounded-[7px] bg-slate-950 p-5 text-white">
                 <div className="flex items-center justify-between">
@@ -122,10 +117,10 @@ export function EmployerDashboard() {
           </section>
 
           <section className="mt-5 grid gap-5 2xl:grid-cols-[1.25fr_0.75fr]">
-            <Panel action={<Button onClick={() => setJobModalOpen(true)}>Post Job</Button>} title="Dashboard Overview">
+            <Panel title="Dashboard Overview">
               <div className="grid gap-4 lg:grid-cols-2">
                 <RecentActivity activity={activity} />
-                <QuickActions onPost={() => setJobModalOpen(true)} />
+                <QuickActions />
               </div>
             </Panel>
             <Panel title="Performance Snapshot">
@@ -142,7 +137,7 @@ export function EmployerDashboard() {
 
           <section className="mt-5 grid gap-5 2xl:grid-cols-[1.15fr_0.85fr]">
             <Panel title="Job Management">
-              <JobManagement jobs={jobs} onPost={() => setJobModalOpen(true)} />
+              <JobManagement jobs={jobs} />
             </Panel>
             <Panel title="Candidate Management">
               <CandidateManagement applications={applications} />
@@ -186,7 +181,6 @@ export function EmployerDashboard() {
             </Panel>
           </section>
         </div>
-      {jobModalOpen && <PostJobModal onClose={() => setJobModalOpen(false)} />}
     </div>
   )
 }
@@ -291,9 +285,8 @@ function RecentActivity({ activity = [] }) {
   )
 }
 
-function QuickActions({ onPost }) {
+function QuickActions() {
   const items = [
-    { label: 'Post new job', icon: FilePlus2, onClick: onPost },
     { label: 'Review applications', icon: UsersRound },
     { label: 'Open messages', icon: MessageCircle },
     { label: 'Check payments', icon: WalletCards },
@@ -310,7 +303,7 @@ function QuickActions({ onPost }) {
   )
 }
 
-function JobManagement({ jobs, onPost }) {
+function JobManagement({ jobs }) {
   return (
     <div>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -318,7 +311,6 @@ function JobManagement({ jobs, onPost }) {
           <Search className="text-[#0057B8]" size={17} />
           <input className="w-full bg-transparent text-sm font-semibold outline-none" placeholder="Search and filter jobs" />
         </label>
-        <Button onClick={onPost}>Post Job</Button>
       </div>
       <div className="overflow-x-auto rounded-[7px] border border-slate-200">
         <table className="w-full min-w-[820px] text-left text-sm">
@@ -493,33 +485,6 @@ function SettingsPanel() {
         </label>
       ))}
       <Button className="md:col-span-2"><Settings size={18} /> Save Settings</Button>
-    </div>
-  )
-}
-
-function PostJobModal({ onClose }) {
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[7px] bg-white p-6 shadow-2xl">
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-black uppercase tracking-wide text-[#0057B8]">Post / Edit Job</p>
-            <h2 className="mt-2 text-3xl font-black text-slate-950">Create a hiring brief</h2>
-          </div>
-          <button className="grid h-10 w-10 place-items-center rounded-[7px] bg-slate-100" onClick={onClose} type="button"><X size={18} /></button>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <input className="input" placeholder="Job title" />
-          <input className="input" placeholder="Category" />
-          <input className="input" placeholder="Budget" />
-          <input className="input" placeholder="Experience" />
-          <textarea className="input min-h-32 md:col-span-2" placeholder="Job description" />
-        </div>
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-          <button className="job-card-details-link flex-1" onClick={onClose} type="button">Cancel</button>
-          <Button className="flex-1" onClick={() => { toast('Job draft saved'); onClose() }}>Save Job</Button>
-        </div>
-      </div>
     </div>
   )
 }
