@@ -29,13 +29,17 @@ const skillSuggestions = [
 const experienceOptions = ['Fresher', '0-1 years', '1-3 years', '3-5 years', '5-8 years', '8-12 years', '12+ years']
 
 function buildPackageRequest(user, plan) {
-  return {
+  const payload = {
     recruiterEmail: user.email,
     recruiterName: user.name,
-    packageId: plan._id || plan.id || '',
     packageKey: plan.key || '',
     packageName: plan.name || '',
   }
+  const packageId = plan._id || plan.id
+  if (packageId && /^[a-f\d]{24}$/i.test(String(packageId))) {
+    payload.packageId = packageId
+  }
+  return payload
 }
 
 const indiaLocations = {

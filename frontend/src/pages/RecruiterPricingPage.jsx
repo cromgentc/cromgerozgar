@@ -29,13 +29,17 @@ function getPackageCoins(plan) {
 }
 
 function buildPackageRequest(recruiter, plan) {
-  return {
+  const payload = {
     recruiterEmail: recruiter.email,
     recruiterName: recruiter.name,
-    packageId: plan._id || plan.id || '',
     packageKey: plan.key || '',
     packageName: plan.name || '',
   }
+  const packageId = plan._id || plan.id
+  if (packageId && /^[a-f\d]{24}$/i.test(String(packageId))) {
+    payload.packageId = packageId
+  }
+  return payload
 }
 
 function isCurrentPackage(plan, activePackage) {

@@ -68,10 +68,14 @@ function normalizePackageKey(value) {
     .replace(/^-|-$/g, '')
 }
 
+function isObjectId(value) {
+  return Boolean(value && /^[a-f\d]{24}$/i.test(String(value)))
+}
+
 async function resolvePricingPackage({ packageId, packageKey, packageName }) {
   let selectedPackage = null
 
-  if (packageId && /^[a-f\d]{24}$/i.test(String(packageId))) {
+  if (isObjectId(packageId)) {
     selectedPackage = await PricingPackage.findById(packageId)
   }
 
@@ -467,7 +471,9 @@ exports.verifyRazorpayPayment = asyncHandler(async (req, res) => {
 
   let subscription = null
   if (payment.purpose === 'package') {
-    const selectedPackage = await PricingPackage.findById(payment.packageId)
+    const selectedPackage = isObjectId(payment.packageId)
+      ? await PricingPackage.findById(payment.packageId)
+      : await resolvePricingPackage({ packageName: payment.plan })
     if (!selectedPackage) {
       res.status(404)
       throw new Error('Paid package was not found.')
