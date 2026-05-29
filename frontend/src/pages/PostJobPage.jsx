@@ -509,33 +509,43 @@ export function PostJobPage() {
                   <p className="text-sm font-semibold text-slate-500">Salary range, work mode, and timeline.</p>
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-4 sm:grid-cols-2 sm:col-span-2 lg:col-span-1">
-                  <label className="grid gap-1.5">
-                    <span className="text-xs font-black uppercase tracking-wide text-slate-400">Minimum salary</span>
-                    <input
-                      className="input"
-                      inputMode="numeric"
-                      onChange={(e) => update('salaryMin', e.target.value.replace(/[^\d]/g, ''))}
-                      placeholder="10,000"
-                      value={formatSalaryNumber(form.salaryMin)}
-                    />
-                  </label>
-                  <label className="grid gap-1.5">
-                    <span className="text-xs font-black uppercase tracking-wide text-slate-400">Maximum salary</span>
-                    <input
-                      className="input"
-                      inputMode="numeric"
-                      onChange={(e) => update('salaryMax', e.target.value.replace(/[^\d]/g, ''))}
-                      placeholder="15,000"
-                      value={formatSalaryNumber(form.salaryMax)}
-                    />
-                  </label>
-                </div>
-                <select className="input" onChange={(e) => update('type', e.target.value)} value={form.type}><option>Full Time</option><option>Part Time</option><option>Contract</option><option>Freelance</option></select>
-                <select className="input" onChange={(e) => update('workMode', e.target.value)} value={form.workMode}><option>Hybrid</option><option>Remote</option><option>On-site</option></select>
-                <input className="input" onChange={(e) => update('postedDate', e.target.value)} type="date" value={form.postedDate} />
-                <input className="input sm:col-span-2" onChange={(e) => update('deadline', e.target.value)} required type="date" value={form.deadline} />
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-400">Minimum salary</span>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    onChange={(e) => update('salaryMin', e.target.value.replace(/[^\d]/g, ''))}
+                    placeholder="10,000"
+                    value={formatSalaryNumber(form.salaryMin)}
+                  />
+                </label>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-400">Maximum salary</span>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    onChange={(e) => update('salaryMax', e.target.value.replace(/[^\d]/g, ''))}
+                    placeholder="15,000"
+                    value={formatSalaryNumber(form.salaryMax)}
+                  />
+                </label>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-400">Job type</span>
+                  <select className="input" onChange={(e) => update('type', e.target.value)} value={form.type}><option>Full Time</option><option>Part Time</option><option>Contract</option><option>Freelance</option></select>
+                </label>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-400">Work mode</span>
+                  <select className="input" onChange={(e) => update('workMode', e.target.value)} value={form.workMode}><option>Hybrid</option><option>Remote</option><option>On-site</option></select>
+                </label>
+                <label className="grid gap-1.5 sm:col-span-1 xl:col-span-2">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-400">Posted date</span>
+                  <input className="input" onChange={(e) => update('postedDate', e.target.value)} type="date" value={form.postedDate} />
+                </label>
+                <label className="grid gap-1.5 sm:col-span-1 xl:col-span-2">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-400">Application deadline</span>
+                  <input className="input" onChange={(e) => update('deadline', e.target.value)} required type="date" value={form.deadline} />
+                </label>
               </div>
             </section>
 
