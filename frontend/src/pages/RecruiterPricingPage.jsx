@@ -31,13 +31,18 @@ function getPackageCoins(plan) {
 function isCurrentPackage(plan, activePackage) {
   if (!activePackage || !plan) return false
 
+  const hasActivePackage = Boolean(activePackage.packageId || activePackage.packageSnapshot?.name)
+  if (!hasActivePackage) return false
+
   const activeId = activePackage.packageId ? String(activePackage.packageId) : ''
   const planId = plan._id ? String(plan._id) : ''
   if (activeId && planId) return activeId === planId
 
   const activeName = String(activePackage.packageSnapshot?.name || '').trim().toLowerCase()
   const planName = String(plan.name || '').trim().toLowerCase()
+  const planKey = String(plan.key || '').trim().toLowerCase()
   return Boolean(activeName && planName && activeName === planName)
+    || Boolean(activeName && planKey && activeName.replace(/[^a-z0-9]+/g, '-') === planKey)
 }
 
 function loadRazorpayCheckout() {
@@ -256,7 +261,7 @@ export function RecruiterPricingPage() {
     <DashboardShell title="Recruiter Pricing" subtitle="Choose a hiring plan for posting jobs, reviewing candidates, and scaling your recruitment workflow.">
       {message && <p className="mb-5 rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
       <PaymentDetails details={paymentDetails} />
-      {activePackage && (
+      {(activePackage?.packageId || activePackage?.packageSnapshot?.name) && (
         <div className="mb-5 rounded-[7px] border border-teal-200 bg-teal-50 p-5">
           <p className="text-xs font-black uppercase tracking-wide text-teal-700">Current Active Package</p>
           <p className="mt-2 text-2xl font-black text-slate-950">{activePackage.packageSnapshot?.name}</p>

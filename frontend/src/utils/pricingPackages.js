@@ -4,6 +4,7 @@ export const PRICING_PACKAGES_KEY = 'rozgarPricingPackages'
 
 export const defaultPricingPackages = [
   {
+    key: 'starter',
     name: 'Starter',
     badge: '',
     description: 'For new recruiters getting started',
@@ -18,6 +19,7 @@ export const defaultPricingPackages = [
     features: ['1 active job', 'Basic candidate visibility', 'Recruiter profile', 'Email support'],
   },
   {
+    key: 'growth',
     name: 'Growth',
     badge: 'Popular',
     description: 'For growing hiring teams',
@@ -32,6 +34,7 @@ export const defaultPricingPackages = [
     features: ['10 active jobs', 'Candidate shortlisting', 'Hiring analytics', 'Priority support'],
   },
   {
+    key: 'enterprise',
     name: 'Enterprise',
     badge: '',
     description: 'For high-volume hiring workflows',
@@ -47,8 +50,17 @@ export const defaultPricingPackages = [
   },
 ]
 
+function packageKey(plan = {}) {
+  return String(plan.key || plan.name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
 function normalizePackages(value) {
-  return Array.isArray(value) && value.length ? value : defaultPricingPackages
+  const packages = Array.isArray(value) && value.length ? value : defaultPricingPackages
+  return packages.map((plan) => ({ ...plan, key: plan.key || packageKey(plan) }))
 }
 
 export function getPricingPackages() {
