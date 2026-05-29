@@ -13,7 +13,7 @@ VITE_API_URL=http://localhost:5050
 Production build uses:
 
 ```env
-VITE_API_URL=https://www.cromgenrozgar.in
+VITE_API_URL=https://cromgerozgar.onrender.com
 ```
 
 Run local frontend:
@@ -39,5 +39,5 @@ POST http://localhost:5050/api/auth/login
 Postman live API:
 
 ```text
-POST https://www.cromgenrozgar.in/api?path=auth%2Flogin
+POST https://cromgerozgar.onrender.com/api/auth/login
 ```

@@ -1,11 +1,11 @@
-const LIVE_API_BASE_URL = 'https://www.cromgenrozgar.in'
+const LIVE_API_BASE_URL = 'https://cromgerozgar.onrender.com'
 
 const API_BASE_URL = getApiBaseUrl()
 
 function getApiBaseUrl() {
   const configuredUrl = import.meta.env.VITE_API_URL || ''
 
-  if (configuredUrl) {
+  if (configuredUrl && !isFrontendDomain(configuredUrl)) {
     return configuredUrl
   }
 
@@ -14,6 +14,15 @@ function getApiBaseUrl() {
   }
 
   return LIVE_API_BASE_URL
+}
+
+function isFrontendDomain(url) {
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, '')
+    return hostname === 'cromgenrozgar.in'
+  } catch {
+    return false
+  }
 }
 
 function apiUrl(path) {
