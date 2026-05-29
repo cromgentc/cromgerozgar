@@ -27,11 +27,23 @@ function getPackageKey(plan) {
 
 function isFreeTrialPlan(plan) {
   const key = getPackageKey(plan)
-  return getPackageAmount(plan) <= 0 || key === 'starter' || key === 'free-trial'
+  return key === 'starter' || key === 'free-trial'
+}
+
+function isEnterprisePlan(plan) {
+  const key = getPackageKey(plan)
+  return key === 'enterprise' || String(plan?.price || '').trim().toLowerCase() === 'custom'
 }
 
 function getPlanValidityDays(plan) {
   return isFreeTrialPlan(plan) ? 3 : Number(plan?.validityDays || 30)
+}
+
+function getPlanButtonLabel(plan) {
+  if (getPackageAmount(plan) > 0) return 'Pay & Activate'
+  if (isEnterprisePlan(plan)) return 'Request Callback'
+  if (isFreeTrialPlan(plan)) return 'Start Free Trial'
+  return plan?.buttonLabel || 'Start Hiring'
 }
 
 function getPackageCoins(plan) {
@@ -116,6 +128,7 @@ export function RecruiterPricingPage() {
   const [paymentProcessing, setPaymentProcessing] = useState(false)
   const [coinQuantity, setCoinQuantity] = useState(50)
   const [coinBuying, setCoinBuying] = useState(false)
+  const [callbackPlan, setCallbackPlan] = useState(null)
 
   useEffect(() => {
     const syncPlans = () => {
@@ -248,6 +261,12 @@ export function RecruiterPricingPage() {
   }
 
   const choosePackage = (plan) => {
+    if (isEnterprisePlan(plan)) {
+      setCallbackPlan(plan)
+      setMessage('')
+      return
+    }
+
     if (getPackageAmount(plan) > 0) {
       setPaymentPlan(plan)
       return
@@ -327,12 +346,23 @@ export function RecruiterPricingPage() {
               onClick={() => choosePackage(plan)}
               type="button"
             >
-              {isActive ? 'Current Package' : getPackageAmount(plan) > 0 ? 'Pay & Activate' : isFreeTrialPlan(plan) ? 'Start Free Trial' : plan.buttonLabel || 'Start Hiring'}
+              {isActive ? 'Current Package' : getPlanButtonLabel(plan)}
             </button>
           </article>
           )
         })}
       </div>
+      {callbackPlan && (
+        <EnterpriseCallbackModal
+          onClose={() => setCallbackPlan(null)}
+          onSubmitted={() => {
+            setCallbackPlan(null)
+            setMessage('Enterprise callback request sent successfully. Our team will contact you soon.')
+          }}
+          plan={callbackPlan}
+          recruiter={recruiter}
+        />
+      )}
       {paymentPlan && (
         <PackagePaymentModal
           activePackage={activePackage}
@@ -453,6 +483,123 @@ function PackagePaymentModal({ activePackage, onClose, onPay, plan, processing }
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function EnterpriseCallbackModal({ onClose, onSubmitted, plan, recruiter }) {
+  const [form, setForm] = useState({
+    name: recruiter?.name || '',
+    email: recruiter?.email || '',
+    phone: recruiter?.phone || '',
+    company: recruiter?.companyName || recruiter?.company || recruiter?.name || '',
+    teamSize: '',
+    callbackTime: '',
+    notes: '',
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  const update = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }))
+  }
+
+  const submit = async (event) => {
+    event.preventDefault()
+    setError('')
+
+    if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.company.trim()) {
+      setError('Name, email, phone, and company are required.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      await api.create('support-messages', {
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone.trim(),
+        company: form.company.trim(),
+        role: 'recruiter',
+        subject: 'Enterprise Callback Request',
+        packageName: plan.name || 'Enterprise',
+        callbackTime: form.callbackTime,
+        source: 'recruiter-enterprise-callback',
+        status: 'Open',
+        message: [
+          `Package: ${plan.name || 'Enterprise'}`,
+          `Company: ${form.company.trim()}`,
+          form.teamSize ? `Team size: ${form.teamSize}` : '',
+          form.callbackTime ? `Preferred callback time: ${form.callbackTime}` : '',
+          form.notes ? `Notes: ${form.notes.trim()}` : '',
+        ].filter(Boolean).join('\n'),
+      })
+      onSubmitted()
+    } catch (submitError) {
+      setError(submitError.message || 'Callback request failed.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
+      <form className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[7px] bg-white p-6 shadow-2xl" onSubmit={submit}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-blue-600">Enterprise callback</p>
+            <h2 className="mt-2 text-3xl font-black text-slate-950">Request a callback</h2>
+            <p className="mt-2 text-sm font-bold text-slate-500">Share your details and the admin team will follow up for the Enterprise package.</p>
+          </div>
+          <button className="grid h-10 w-10 place-items-center rounded-[7px] bg-slate-100 text-slate-600" onClick={onClose} type="button">x</button>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <label>
+            <span className="text-xs font-black uppercase tracking-wide text-slate-400">Name</span>
+            <input className="input mt-2" onChange={(event) => update('name', event.target.value)} placeholder="Your name" value={form.name} />
+          </label>
+          <label>
+            <span className="text-xs font-black uppercase tracking-wide text-slate-400">Email</span>
+            <input className="input mt-2" onChange={(event) => update('email', event.target.value)} placeholder="company@email.com" type="email" value={form.email} />
+          </label>
+          <label>
+            <span className="text-xs font-black uppercase tracking-wide text-slate-400">Phone</span>
+            <input className="input mt-2" onChange={(event) => update('phone', event.target.value)} placeholder="Mobile number" value={form.phone} />
+          </label>
+          <label>
+            <span className="text-xs font-black uppercase tracking-wide text-slate-400">Company</span>
+            <input className="input mt-2" onChange={(event) => update('company', event.target.value)} placeholder="Company name" value={form.company} />
+          </label>
+          <label>
+            <span className="text-xs font-black uppercase tracking-wide text-slate-400">Hiring team size</span>
+            <select className="input mt-2" onChange={(event) => update('teamSize', event.target.value)} value={form.teamSize}>
+              <option value="">Select team size</option>
+              <option>1-10</option>
+              <option>11-50</option>
+              <option>51-200</option>
+              <option>200+</option>
+            </select>
+          </label>
+          <label>
+            <span className="text-xs font-black uppercase tracking-wide text-slate-400">Preferred callback time</span>
+            <input className="input mt-2" onChange={(event) => update('callbackTime', event.target.value)} placeholder="Today 4 PM / Tomorrow morning" value={form.callbackTime} />
+          </label>
+          <label className="md:col-span-2">
+            <span className="text-xs font-black uppercase tracking-wide text-slate-400">Notes</span>
+            <textarea className="input mt-2 min-h-28" onChange={(event) => update('notes', event.target.value)} placeholder="Hiring requirement, locations, number of jobs..." value={form.notes} />
+          </label>
+        </div>
+
+        {error && <p className="mt-4 rounded-[7px] bg-rose-50 p-3 text-sm font-bold text-rose-700">{error}</p>}
+
+        <div className="mt-6 flex flex-col justify-end gap-2 sm:flex-row">
+          <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={onClose} type="button">Cancel</button>
+          <button className="rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-bold text-white disabled:bg-slate-300" disabled={submitting} type="submit">
+            {submitting ? 'Sending...' : 'Send Callback Request'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }

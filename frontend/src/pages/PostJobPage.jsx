@@ -55,11 +55,18 @@ function getPackageKey(plan) {
     .replace(/^-|-$/g, '')
 }
 
-function getPlanValidityDays(plan) {
+function isFreeTrialPlan(plan) {
   const key = getPackageKey(plan)
-  return getPackageAmount(plan) <= 0 || key === 'starter' || key === 'free-trial'
-    ? 3
-    : Number(plan?.validityDays || 30)
+  return key === 'starter' || key === 'free-trial'
+}
+
+function isEnterprisePlan(plan) {
+  const key = getPackageKey(plan)
+  return key === 'enterprise' || String(plan?.price || '').trim().toLowerCase() === 'custom'
+}
+
+function getPlanValidityDays(plan) {
+  return isFreeTrialPlan(plan) ? 3 : Number(plan?.validityDays || 30)
 }
 
 const indiaLocations = {
@@ -568,7 +575,14 @@ function PackageSelectionModal({ activePackage, onChoose, onClose, packages }) {
                   <span className="rounded-[7px] bg-white px-3 py-2">Card / Net Banking</span>
                 </div>
               )}
-              <button className="mt-5 w-full rounded-[7px] bg-blue-600 px-4 py-3 text-sm font-black text-white" onClick={() => onChoose(plan)} type="button">{getPackageAmount(plan) > 0 ? 'Pay & Activate' : 'Activate Free Package'}</button>
+              <button
+                className="mt-5 w-full rounded-[7px] bg-blue-600 px-4 py-3 text-sm font-black text-white disabled:bg-slate-300"
+                disabled={isEnterprisePlan(plan)}
+                onClick={() => onChoose(plan)}
+                type="button"
+              >
+                {isEnterprisePlan(plan) ? 'Request Callback from Pricing' : getPackageAmount(plan) > 0 ? 'Pay & Activate' : 'Activate Free Package'}
+              </button>
             </div>
           ))}
         </div>
