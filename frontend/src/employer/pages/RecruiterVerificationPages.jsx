@@ -4,6 +4,8 @@ import { CheckCircle2, Clock3, FileCheck2, FileText, ShieldCheck, Upload } from 
 import { getRecruiterVerificationRemark, getRecruiterVerificationStatus, getStoredUser, updateStoredRecruiterVerificationStatus } from '../../routes/authRouting'
 import { api } from '../../services/api'
 
+const allowedDocumentTypes = new Set(['application/pdf', 'image/jpeg', 'image/png'])
+
 const gstStateCodes = {
   '01': 'Jammu and Kashmir',
   '02': 'Himachal Pradesh',
@@ -144,8 +146,8 @@ export function RecruiterDocumentsPage() {
   const uploadDocument = async (key, file) => {
     if (!file) return
 
-    if (file.type !== 'application/pdf') {
-      setMessage('Only PDF document upload is allowed.')
+    if (!allowedDocumentTypes.has(file.type)) {
+      setMessage('Only JPEG, PNG, and PDF document upload is allowed.')
       return
     }
 
@@ -488,8 +490,8 @@ function DocumentField({ label, loading = false, onChange, required = false, val
   return (
     <label className="rounded-[7px] border border-dashed border-blue-200 bg-blue-50 p-4">
       <span className="flex items-center gap-2 text-sm font-black text-blue-700"><Upload size={17} /> {label}</span>
-      <input accept="application/pdf" className="mt-3 w-full rounded-[7px] border border-blue-100 bg-white px-4 py-3 text-sm font-semibold outline-none" disabled={loading} onChange={(event) => onChange(event.target.files?.[0] || null)} required={required && !value} type="file" />
-      <span className="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-500"><FileText size={14} /> {loading ? 'Uploading...' : value ? 'PDF uploaded' : 'Choose PDF to upload'}</span>
+      <input accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" className="mt-3 w-full rounded-[7px] border border-blue-100 bg-white px-4 py-3 text-sm font-semibold outline-none" disabled={loading} onChange={(event) => onChange(event.target.files?.[0] || null)} required={required && !value} type="file" />
+      <span className="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-500"><FileText size={14} /> {loading ? 'Uploading...' : value ? 'Document uploaded' : 'Choose JPEG, PNG, or PDF to upload'}</span>
     </label>
   )
 }

@@ -16,6 +16,19 @@ const upload = multer({
   },
 })
 
+const documentUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter(req, file, callback) {
+    const allowedTypes = new Set(['application/pdf', 'image/jpeg', 'image/png'])
+    if (!allowedTypes.has(file.mimetype)) {
+      callback(new Error('Only JPEG, PNG, and PDF document upload is allowed.'))
+      return
+    }
+    callback(null, true)
+  },
+})
+
 const imageUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 4 * 1024 * 1024 },
@@ -30,7 +43,7 @@ const imageUpload = multer({
 })
 
 router.post('/supa-cloud', protect, authorize('Admin', 'hiring', 'recruiter', 'users'), upload.single('resume'), uploadResume)
-router.post('/recruiter-document', protect, authorize('Admin', 'account team', 'recruiter'), upload.single('document'), uploadRecruiterDocumentFile)
+router.post('/recruiter-document', protect, authorize('Admin', 'account team', 'recruiter'), documentUpload.single('document'), uploadRecruiterDocumentFile)
 router.post('/brand-asset', protect, authorize('Admin'), imageUpload.single('asset'), uploadBrandAsset)
 router.get('/:id/view', protect, authorize('Admin', 'hiring', 'recruiter', 'account team'), viewResume)
 

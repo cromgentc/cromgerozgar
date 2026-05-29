@@ -233,18 +233,19 @@ async function uploadResume(req, res) {
 async function uploadRecruiterDocumentFile(req, res) {
   if (!req.file) {
     res.status(400)
-    throw new Error('Recruiter document PDF is required.')
+    throw new Error('Recruiter document file is required.')
   }
 
-  if (req.file.mimetype !== 'application/pdf') {
+  const allowedDocumentTypes = new Set(['application/pdf', 'image/jpeg', 'image/png'])
+  if (!allowedDocumentTypes.has(req.file.mimetype)) {
     res.status(400)
-    throw new Error('Only PDF document upload is allowed.')
+    throw new Error('Only JPEG, PNG, and PDF document upload is allowed.')
   }
 
   const config = await getSupaCloudConfig()
   const recruiterEmail = req.body.recruiterEmail || req.user?.email || 'recruiter'
   const field = cleanSegment(req.body.field || 'document')
-  const originalFileName = req.file.originalname || `${field}.pdf`
+  const originalFileName = req.file.originalname || `${field}${getDocumentExtension(req.file.mimetype)}`
   const upload = await uploadToSupaCloud({
     buffer: req.file.buffer,
     config: {
@@ -274,6 +275,12 @@ async function uploadRecruiterDocumentFile(req, res) {
       field,
     },
   })
+}
+
+function getDocumentExtension(mimeType = '') {
+  if (mimeType === 'image/jpeg') return '.jpg'
+  if (mimeType === 'image/png') return '.png'
+  return '.pdf'
 }
 
 async function uploadBrandAsset(req, res) {
