@@ -249,6 +249,7 @@ export const api = {
   verifyWhatsappOtp: (data) => apiRequest('/auth/forgot/whatsapp/verify-otp', { method: 'POST', body: JSON.stringify(data) }),
   whatsappLoginOtp: (data) => apiRequest('/auth/forgot/whatsapp/request-otp', { method: 'POST', body: JSON.stringify(data) }),
   whatsappLoginVerify: (data) => apiRequest('/auth/forgot/whatsapp/verify-otp', { method: 'POST', body: JSON.stringify(data) }),
+  sendWhatsappAppLink: (data) => apiRequest('/auth/app-link/whatsapp', { method: 'POST', body: JSON.stringify(data) }),
   googleAuthConfig: () => apiRequest('/auth/google-config'),
   googleAuth: (data) => apiRequest('/auth/google', { method: 'POST', body: JSON.stringify(data) }),
   publicSiteBranding: () => apiRequest('/settings/public/site-branding'),

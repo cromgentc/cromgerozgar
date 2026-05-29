@@ -11,6 +11,8 @@ const defaultWhatsAppApiConfig = {
   otpTemplateName: '',
   languageCode: 'en_US',
   defaultCountryCode: '+91',
+  appLink: 'https://www.cromgenrozgar.in',
+  appLinkMessage: 'Cromgen Rozgar application link: {link}',
   notes: '',
 }
 
@@ -40,6 +42,8 @@ export function AdminWhatsAppApiPage() {
           otpTemplateName: value.otpTemplateName || '',
           languageCode: value.languageCode || 'en_US',
           defaultCountryCode: value.defaultCountryCode || '+91',
+          appLink: value.appLink || defaultWhatsAppApiConfig.appLink,
+          appLinkMessage: value.appLinkMessage || defaultWhatsAppApiConfig.appLinkMessage,
           notes: value.notes || '',
         })
       })
@@ -69,6 +73,8 @@ export function AdminWhatsAppApiPage() {
         otpTemplateName: form.otpTemplateName.trim(),
         languageCode: form.languageCode.trim() || 'en_US',
         defaultCountryCode: form.defaultCountryCode.trim() || '+91',
+        appLink: form.appLink.trim() || defaultWhatsAppApiConfig.appLink,
+        appLinkMessage: form.appLinkMessage.trim() || defaultWhatsAppApiConfig.appLinkMessage,
         notes: form.notes.trim(),
       },
     }
@@ -102,7 +108,7 @@ export function AdminWhatsAppApiPage() {
             <p className="text-sm font-black uppercase tracking-wide text-blue-50">Settings / Auth API</p>
             <h2 className="mt-3 text-3xl font-black sm:text-4xl">WhatsApp API</h2>
             <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-50">
-              Configure WhatsApp OTP login provider details for mobile number login and forgot access flows.
+              Configure WhatsApp OTP login provider details and the homepage application link message.
             </p>
           </div>
           <StatusBadge status={form.enabled ? 'Active' : 'Inactive'} />
@@ -133,7 +139,12 @@ export function AdminWhatsAppApiPage() {
                 <LabeledInput label="Business Account ID" onChange={(value) => update('businessAccountId', value)} placeholder="WhatsApp business account ID" value={form.businessAccountId} />
                 <LabeledInput label="OTP Template Name" onChange={(value) => update('otpTemplateName', value)} placeholder="login_otp" value={form.otpTemplateName} />
                 <LabeledInput label="Language Code" onChange={(value) => update('languageCode', value)} placeholder="en_US, en, en_IN" value={form.languageCode} />
+                <LabeledInput className="sm:col-span-2" label="Application Link" onChange={(value) => update('appLink', value)} placeholder="https://www.cromgenrozgar.in/app" value={form.appLink} />
               </div>
+              <label className="grid gap-1">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">Application Link Message</span>
+                <textarea className="input min-h-20" onChange={(event) => update('appLinkMessage', event.target.value)} placeholder="Use {link} where the app link should appear" value={form.appLinkMessage} />
+              </label>
               <label className="grid gap-1">
                 <span className="text-xs font-black uppercase tracking-wide text-slate-400">Access Token</span>
                 <textarea className="input min-h-24" onChange={(event) => update('accessToken', event.target.value)} placeholder="Paste WhatsApp Cloud API access token" value={form.accessToken} />
@@ -160,6 +171,7 @@ export function AdminWhatsAppApiPage() {
               <p>1. User clicks WhatsApp login on the login page.</p>
               <p>2. Registered mobile number receives OTP.</p>
               <p>3. After OTP verification, the user is logged in directly.</p>
+              <p>4. Homepage Get link sends the configured application link on WhatsApp.</p>
             </div>
           </AdminCard>
           <AdminCard>

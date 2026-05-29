@@ -113,6 +113,36 @@ export function HomePage({ onApply }) {
 }
 
 function AppDownloadPromo() {
+  const [phone, setPhone] = useState('')
+  const [message, setMessage] = useState('')
+  const [sending, setSending] = useState(false)
+  const [messageType, setMessageType] = useState('info')
+
+  const submitAppLink = async (event) => {
+    event.preventDefault()
+    const mobile = phone.replace(/\D/g, '')
+
+    if (mobile.length !== 10) {
+      setMessageType('error')
+      setMessage('Enter a valid 10 digit mobile number.')
+      return
+    }
+
+    setSending(true)
+    setMessage('')
+
+    try {
+      const payload = await api.sendWhatsappAppLink({ phone: mobile })
+      setMessageType('success')
+      setMessage(payload.message || 'Application link sent on WhatsApp.')
+    } catch (error) {
+      setMessageType('error')
+      setMessage(error.message || 'Application link could not be sent.')
+    } finally {
+      setSending(false)
+    }
+  }
+
   return (
     <section className="bg-white px-2 py-4 sm:px-6 sm:py-8 lg:px-8">
       <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[20px] border border-blue-100 bg-[#F5F4FF] shadow-sm sm:rounded-[24px] lg:grid-cols-[0.9fr_0.55fr_1.35fr] lg:items-center">
@@ -122,13 +152,28 @@ function AppDownloadPromo() {
           </h2>
           <p className="mt-3 text-sm font-semibold text-slate-600">Get real-time job updates & more!</p>
 
-          <form className="mt-6 flex min-h-12 max-w-sm items-center overflow-hidden rounded-full border border-[#1F5BFF] bg-white shadow-sm" onSubmit={(event) => event.preventDefault()}>
+          <form className="mt-6 flex min-h-12 max-w-sm items-center overflow-hidden rounded-full border border-[#1F5BFF] bg-white shadow-sm" onSubmit={submitAppLink}>
             <span className="border-r border-slate-200 px-4 text-sm font-bold text-slate-950">+91</span>
-            <input className="min-w-0 flex-1 px-3 text-sm font-semibold outline-none" inputMode="tel" aria-label="Mobile number" />
-            <button className="mr-1 inline-flex min-h-10 items-center rounded-full bg-[#1F5BFF] px-5 text-sm font-black text-white" type="submit">
-              Get link
+            <input
+              className="min-w-0 flex-1 px-3 text-sm font-semibold outline-none"
+              inputMode="tel"
+              aria-label="Mobile number"
+              maxLength={10}
+              onChange={(event) => {
+                setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))
+                if (message) setMessage('')
+              }}
+              value={phone}
+            />
+            <button className="mr-1 inline-flex min-h-10 items-center rounded-full bg-[#1F5BFF] px-5 text-sm font-black text-white disabled:opacity-60" disabled={sending} type="submit">
+              {sending ? 'Sending' : 'Get link'}
             </button>
           </form>
+          {message && (
+            <p className={`mt-3 max-w-sm rounded-[7px] px-3 py-2 text-xs font-bold ${messageType === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+              {message}
+            </p>
+          )}
 
           <div className="mt-6 flex flex-wrap gap-2">
             <StoreBadge label="GET IT ON" name="Google Play" />

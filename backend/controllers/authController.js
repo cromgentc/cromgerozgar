@@ -226,19 +226,19 @@ const requestWhatsappOtp = asyncHandler(async (req, res) => {
   })
 })
 
-async function getWhatsAppApiConfig() {
+async function getWhatsAppApiConfig({ requireOtpTemplate = true } = {}) {
   const setting = await Setting.findOne({ key: 'whatsappLoginApi' }).lean().catch(() => null)
   const value = setting?.value || {}
 
   if (!setting || value.enabled === false) {
-    throw new Error(value.enabled === false ? 'WhatsApp API is disabled in settings.' : 'WhatsApp API settings are required before sending OTP.')
+    throw new Error(value.enabled === false ? 'WhatsApp API is disabled in settings.' : 'WhatsApp API settings are required before sending WhatsApp messages.')
   }
 
   if (!value.phoneNumberId || !value.accessToken) {
     throw new Error('WhatsApp Phone Number ID and Access Token are required in settings.')
   }
 
-  if (!value.otpTemplateName) {
+  if (requireOtpTemplate && !value.otpTemplateName) {
     throw new Error('WhatsApp OTP Template Name is required in settings.')
   }
 
@@ -292,6 +292,70 @@ async function sendWhatsappOtpMessage({ otp, phone }) {
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}))
     const message = payload.error?.message || payload.message || 'WhatsApp OTP could not be sent.'
+    throw new Error(message)
+  }
+}
+
+const sendWhatsappAppLink = asyncHandler(async (req, res) => {
+  const phone = normalizePhone(req.body.phone)
+
+  if (!phone || phone.length < 10) {
+    res.status(400)
+    throw new Error('Valid WhatsApp mobile number is required.')
+  }
+
+  const config = await getWhatsAppApiConfig({ requireOtpTemplate: false })
+  const appLink = String(config.appLink || process.env.APP_DOWNLOAD_LINK || process.env.CLIENT_URL || 'https://www.cromgenrozgar.in').trim()
+
+  if (!appLink) {
+    res.status(400)
+    throw new Error('Application link is not configured in admin WhatsApp settings.')
+  }
+
+  await sendWhatsappTextMessage({
+    body: buildAppLinkMessage(config.appLinkMessage, appLink),
+    config,
+    phone,
+  })
+
+  res.json({
+    success: true,
+    message: 'Application link sent on WhatsApp.',
+  })
+})
+
+function buildAppLinkMessage(template, appLink) {
+  const defaultMessage = 'Cromgen Rozgar application link: {link}'
+  const message = String(template || defaultMessage).trim() || defaultMessage
+
+  return message.includes('{link}') ? message.replaceAll('{link}', appLink) : `${message}\n${appLink}`
+}
+
+async function sendWhatsappTextMessage({ body, config, phone }) {
+  const to = formatWhatsAppPhone(phone, config.defaultCountryCode)
+  const apiVersion = config.apiVersion || 'v20.0'
+  const url = `https://graph.facebook.com/${apiVersion}/${config.phoneNumberId}/messages`
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to,
+      type: 'text',
+      text: {
+        preview_url: true,
+        body,
+      },
+    }),
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}))
+    const message = payload.error?.message || payload.message || 'Application link could not be sent on WhatsApp.'
     throw new Error(message)
   }
 }
@@ -574,4 +638,4 @@ const updateRecruiterStatus = asyncHandler(async (req, res) => {
   res.json({ success: true, data: authPayload(user) })
 })
 
-module.exports = { googleAuth, googleConfig, login, register, requestEmailReset, requestWhatsappOtp, resetPassword, updateRecruiterStatus, verifyWhatsappOtp }
+module.exports = { googleAuth, googleConfig, login, register, requestEmailReset, requestWhatsappOtp, resetPassword, sendWhatsappAppLink, updateRecruiterStatus, verifyWhatsappOtp }
