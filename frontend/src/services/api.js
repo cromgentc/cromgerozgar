@@ -3,7 +3,7 @@ const LIVE_API_BASE_URL = 'https://www.cromgenrozgar.in'
 const API_BASE_URL = getApiBaseUrl()
 
 function getApiBaseUrl() {
-  const configuredUrl = import.meta.env.DEV ? import.meta.env.VITE_API_URL : ''
+  const configuredUrl = import.meta.env.VITE_API_URL || ''
 
   if (configuredUrl) {
     return configuredUrl
