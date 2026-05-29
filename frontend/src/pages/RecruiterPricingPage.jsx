@@ -28,6 +28,16 @@ function getPackageCoins(plan) {
   return Math.max(amountCoins, coinPerJob, jobLimit * coinPerJob)
 }
 
+function buildPackageRequest(recruiter, plan) {
+  return {
+    recruiterEmail: recruiter.email,
+    recruiterName: recruiter.name,
+    packageId: plan._id || plan.id || '',
+    packageKey: plan.key || '',
+    packageName: plan.name || '',
+  }
+}
+
 function isCurrentPackage(plan, activePackage) {
   if (!activePackage || !plan) return false
 
@@ -145,9 +155,7 @@ export function RecruiterPricingPage() {
 
     try {
       const payload = await api.activateRecruiterPackage({
-        recruiterEmail: recruiter.email,
-        recruiterName: recruiter.name,
-        packageId: plan._id,
+        ...buildPackageRequest(recruiter, plan),
       })
       setActivePackage(payload.data)
       window.dispatchEvent(new Event('recruiter-wallet-updated'))
@@ -316,10 +324,8 @@ export function RecruiterPricingPage() {
               description: `${plan.name} recruiter package`,
               name: plan.name,
               orderPayload: {
-                recruiterEmail: recruiter.email,
-                recruiterName: recruiter.name,
+                ...buildPackageRequest(recruiter, plan),
                 purpose: 'package',
-                packageId: plan._id,
               },
               onSuccess: async (payload) => {
                 setActivePackage(payload.data?.subscription || null)

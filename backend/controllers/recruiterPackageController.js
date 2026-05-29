@@ -7,10 +7,97 @@ const RecruiterPackageSubscription = require('../models/RecruiterPackageSubscrip
 const Setting = require('../models/Setting')
 
 const RAZORPAY_SETTING_KEY = 'razorpayPaymentGateway'
+const DEFAULT_PRICING_PACKAGES = [
+  {
+    key: 'starter',
+    name: 'Starter',
+    badge: '',
+    description: 'For new recruiters getting started',
+    price: 'INR 0',
+    buttonLabel: 'Start Hiring',
+    status: 'Active',
+    sortOrder: 1,
+    jobLimit: 1,
+    validityDays: 30,
+    discountPercent: 0,
+    coinPerJob: 10,
+    features: ['1 active job', 'Basic candidate visibility', 'Recruiter profile', 'Email support'],
+  },
+  {
+    key: 'growth',
+    name: 'Growth',
+    badge: 'Popular',
+    description: 'For growing hiring teams',
+    price: 'INR 4,999',
+    buttonLabel: 'Start Hiring',
+    status: 'Active',
+    sortOrder: 2,
+    jobLimit: 10,
+    validityDays: 30,
+    discountPercent: 0,
+    coinPerJob: 10,
+    features: ['10 active jobs', 'Candidate shortlisting', 'Hiring analytics', 'Priority support'],
+  },
+  {
+    key: 'enterprise',
+    name: 'Enterprise',
+    badge: '',
+    description: 'For high-volume hiring workflows',
+    price: 'Custom',
+    buttonLabel: 'Start Hiring',
+    status: 'Active',
+    sortOrder: 3,
+    jobLimit: 9999,
+    validityDays: 365,
+    discountPercent: 0,
+    coinPerJob: 10,
+    features: ['Unlimited jobs', 'Resume database access', 'Team collaboration', 'Dedicated success support'],
+  },
+]
 
 function getPackageAmount(price) {
   const amount = Number(String(price || '').replace(/[^\d.]/g, ''))
   return Number.isFinite(amount) ? amount : 0
+}
+
+function normalizePackageKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+async function resolvePricingPackage({ packageId, packageKey, packageName }) {
+  let selectedPackage = null
+
+  if (packageId && /^[a-f\d]{24}$/i.test(String(packageId))) {
+    selectedPackage = await PricingPackage.findById(packageId)
+  }
+
+  const key = normalizePackageKey(packageKey || packageName)
+  if (!selectedPackage && key) {
+    selectedPackage = await PricingPackage.findOne({ key })
+  }
+
+  const name = String(packageName || '').trim()
+  if (!selectedPackage && name) {
+    selectedPackage = await PricingPackage.findOne({ name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') })
+  }
+
+  const defaultPackage = DEFAULT_PRICING_PACKAGES.find((plan) => plan.key === key || normalizePackageKey(plan.name) === key)
+  if (!selectedPackage && defaultPackage) {
+    selectedPackage = await PricingPackage.findOneAndUpdate(
+      { key: defaultPackage.key },
+      { $setOnInsert: defaultPackage },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    )
+  } else if (selectedPackage && key && !selectedPackage.key) {
+    selectedPackage.key = key
+    await selectedPackage.save()
+  }
+
+  return selectedPackage
 }
 
 function getCoinCredit(selectedPackage) {
@@ -204,14 +291,16 @@ exports.activate = asyncHandler(async (req, res) => {
   const recruiterEmail = String(req.body.recruiterEmail || '').toLowerCase()
   const recruiterName = req.body.recruiterName || ''
   const packageId = req.body.packageId
+  const packageKey = req.body.packageKey
+  const packageName = req.body.packageName
 
-  if (!recruiterEmail || !packageId) {
+  if (!recruiterEmail || (!packageId && !packageKey && !packageName)) {
     res.status(400)
-    throw new Error('Recruiter email and package id are required')
+    throw new Error('Recruiter email and package are required')
   }
   assertRecruiterOwner(req, res, recruiterEmail)
 
-  const selectedPackage = await PricingPackage.findById(packageId)
+  const selectedPackage = await resolvePricingPackage({ packageId, packageKey, packageName })
   if (!selectedPackage || selectedPackage.status === 'Inactive') {
     res.status(404)
     throw new Error('Package is not available')
@@ -244,7 +333,11 @@ exports.createRazorpayOrder = asyncHandler(async (req, res) => {
   let coins = 0
 
   if (purpose === 'package') {
-    const selectedPackage = await PricingPackage.findById(req.body.packageId)
+    const selectedPackage = await resolvePricingPackage({
+      packageId: req.body.packageId,
+      packageKey: req.body.packageKey,
+      packageName: req.body.packageName,
+    })
     if (!selectedPackage || selectedPackage.status === 'Inactive') {
       res.status(404)
       throw new Error('Package is not available')

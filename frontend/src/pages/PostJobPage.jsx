@@ -28,6 +28,16 @@ const skillSuggestions = [
 
 const experienceOptions = ['Fresher', '0-1 years', '1-3 years', '3-5 years', '5-8 years', '8-12 years', '12+ years']
 
+function buildPackageRequest(user, plan) {
+  return {
+    recruiterEmail: user.email,
+    recruiterName: user.name,
+    packageId: plan._id || plan.id || '',
+    packageKey: plan.key || '',
+    packageName: plan.name || '',
+  }
+}
+
 const indiaLocations = {
   'Andaman and Nicobar Islands': ['Port Blair'],
   'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Nellore', 'Kurnool', 'Kakinada', 'Rajahmundry', 'Anantapur', 'Kadapa', 'Eluru', 'Ongole', 'Srikakulam', 'Vizianagaram'],
@@ -317,9 +327,7 @@ export function PostJobPage() {
     try {
       setMessage('Processing payment and activating package...')
       const payload = await api.activateRecruiterPackage({
-        recruiterEmail: user.email,
-        recruiterName: user.name,
-        packageId: plan._id,
+        ...buildPackageRequest(user, plan),
       })
       setActivePackage(payload.data)
       window.dispatchEvent(new Event('recruiter-wallet-updated'))

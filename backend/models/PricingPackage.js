@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 
 const pricingPackageSchema = new mongoose.Schema(
   {
+    key: { type: String, default: '', trim: true, lowercase: true, index: true },
     name: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
     price: { type: String, required: true, trim: true },
