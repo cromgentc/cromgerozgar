@@ -72,7 +72,10 @@ export async function fetchPricingPackages(options = {}) {
   const params = new URLSearchParams({ sort: 'sortOrder', limit: '100' })
   const payload = await api.list('pricing-packages', `?${params.toString()}`)
   const packages = payload.data || []
-  if (options.activeOnly) return packages.filter((plan) => plan.status !== 'Inactive')
+  if (options.activeOnly) {
+    const activePackages = packages.filter((plan) => plan.status !== 'Inactive')
+    return activePackages.length ? cachePricingPackages(activePackages) : cachePricingPackages(defaultPricingPackages)
+  }
   return cachePricingPackages(packages.length ? packages : defaultPricingPackages)
 }
 

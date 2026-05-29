@@ -28,6 +28,18 @@ function getPackageCoins(plan) {
   return Math.max(amountCoins, coinPerJob, jobLimit * coinPerJob)
 }
 
+function isCurrentPackage(plan, activePackage) {
+  if (!activePackage || !plan) return false
+
+  const activeId = activePackage.packageId ? String(activePackage.packageId) : ''
+  const planId = plan._id ? String(plan._id) : ''
+  if (activeId && planId) return activeId === planId
+
+  const activeName = String(activePackage.packageSnapshot?.name || '').trim().toLowerCase()
+  const planName = String(plan.name || '').trim().toLowerCase()
+  return Boolean(activeName && planName && activeName === planName)
+}
+
 function loadRazorpayCheckout() {
   if (window.Razorpay) return Promise.resolve(true)
 
@@ -253,7 +265,7 @@ export function RecruiterPricingPage() {
       )}
       <div className="grid gap-5 lg:grid-cols-3">
         {plans.map((plan) => {
-          const isActive = String(activePackage?.packageId || '') === String(plan._id || '')
+          const isActive = isCurrentPackage(plan, activePackage)
 
           return (
           <article className={`rounded-[7px] border bg-white p-6 shadow-sm ${isActive ? 'border-teal-300 shadow-xl shadow-teal-100' : plan.badge ? 'border-blue-200 shadow-xl shadow-blue-100' : 'border-slate-200'}`} key={plan._id || plan.name}>

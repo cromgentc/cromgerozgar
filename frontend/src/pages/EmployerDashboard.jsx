@@ -43,7 +43,6 @@ const navItems = [
 export function EmployerDashboard() {
   const user = getStoredUser()
   const [jobModalOpen, setJobModalOpen] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [freelancerQuery, setFreelancerQuery] = useState('')
   const { data } = useApiResource(() => api.employerDashboard(user?.email), { metrics: {}, jobs: [], applications: [], shortlistedApplications: [] }, [user?.email])
   const { data: freelancerData } = useApiResource(() => api.freelancerProfiles(), { data: [] }, [])
@@ -80,22 +79,8 @@ export function EmployerDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#EEF3FA] text-slate-950">
-      <div className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-slate-200 bg-white xl:block">
-        <RecruiterSidebar />
-      </div>
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 xl:hidden">
-          <button className="absolute inset-0 bg-slate-950/50" onClick={() => setSidebarOpen(false)} type="button" />
-          <div className="relative h-full w-72 bg-white shadow-2xl">
-            <RecruiterSidebar onClose={() => setSidebarOpen(false)} />
-          </div>
-        </div>
-      )}
-
-      <main className="xl:pl-72">
-        <RecruiterTopbar onMenu={() => setSidebarOpen(true)} user={user} />
-        <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
+    <div className="text-slate-950">
+      <div className="mx-auto max-w-[1500px]">
           <section className="rounded-[7px] border border-white bg-white p-5 shadow-sm shadow-slate-200/80 lg:p-6">
             <div className="grid gap-5 xl:grid-cols-[1fr_420px] xl:items-center">
               <div>
@@ -201,7 +186,6 @@ export function EmployerDashboard() {
             </Panel>
           </section>
         </div>
-      </main>
       {jobModalOpen && <PostJobModal onClose={() => setJobModalOpen(false)} />}
     </div>
   )
