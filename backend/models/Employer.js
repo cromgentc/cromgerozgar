@@ -4,6 +4,7 @@ const employerSchema = new mongoose.Schema(
   {
     companyName: { type: String, required: true },
     businessEmail: { type: String, required: true, unique: true, lowercase: true },
+    contactPerson: { type: String, default: '' },
     phone: { type: String, default: '' },
     industry: { type: String, default: '' },
     companySize: { type: String, default: '' },

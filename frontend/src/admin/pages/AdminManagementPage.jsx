@@ -160,13 +160,14 @@ const configs = {
     columns: [
       { key: 'recruiterId', label: 'Recruiter ID' },
       { key: 'companyName', label: 'Recruiter' },
+      { key: 'contactPerson', label: 'Contact Person' },
       { key: 'businessEmail', label: 'Business Email' },
       { key: 'industry', label: 'Industry' },
       { key: 'location', label: 'Location' },
       { key: 'status', label: 'Status', badge: true },
       { key: 'accountAuthorizedByName', label: 'Authorised By', render: renderRecruiterAccountAuthorisedBy },
     ],
-    fields: [['companyName', 'Recruiter name'], ['businessEmail', 'Business email'], ['phone', 'Phone'], ['industry', 'Industry'], ['companySize', 'Company size'], ['website', 'Website'], ['location', 'Location'], ['status', 'Status']],
+    fields: [['companyName', 'Recruiter name'], ['contactPerson', 'Contact person name'], ['businessEmail', 'Business email'], ['phone', 'Phone'], ['industry', 'Industry'], ['companySize', 'Company size'], ['website', 'Website'], ['location', 'Location'], ['status', 'Status']],
   },
   candidates: {
     resource: 'candidates',

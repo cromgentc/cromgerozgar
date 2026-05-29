@@ -489,7 +489,7 @@ function PackagePaymentModal({ activePackage, onClose, onPay, plan, processing }
 
 function EnterpriseCallbackModal({ onClose, onSubmitted, plan, recruiter }) {
   const [form, setForm] = useState({
-    name: recruiter?.name || '',
+    name: recruiter?.contactPerson || recruiter?.name || '',
     email: recruiter?.email || '',
     phone: recruiter?.phone || '',
     company: recruiter?.companyName || recruiter?.company || recruiter?.name || '',
@@ -516,7 +516,7 @@ function EnterpriseCallbackModal({ onClose, onSubmitted, plan, recruiter }) {
 
         setForm((current) => ({
           ...current,
-          name: authUser?.name || recruiter.name || current.name,
+          name: employer?.contactPerson || recruiter.contactPerson || authUser?.name || recruiter.name || current.name,
           email: authUser?.email || employer?.businessEmail || recruiter.email || current.email,
           phone: authUser?.phone || employer?.phone || recruiter.phone || current.phone,
           company: employer?.companyName || recruiter.companyName || recruiter.company || current.company,

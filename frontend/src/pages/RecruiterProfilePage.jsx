@@ -13,6 +13,7 @@ export function RecruiterProfilePage() {
   const [employerId, setEmployerId] = useState('')
   const [profile, setProfile] = useState(() => ({
     name: user?.name || 'Recruiter',
+    contactPerson: user?.name || '',
     email: user?.email || 'recruiter@cromgen.test',
     phone: '',
     location: 'India',
@@ -45,6 +46,7 @@ export function RecruiterProfilePage() {
         setEmployerId(employer._id || '')
         setProfile({
           name: employer.companyName || user.name || 'Recruiter',
+          contactPerson: employer.contactPerson || user.name || '',
           email: employer.businessEmail || user.email,
           phone: employer.phone || user.phone || '',
           location: employer.location || 'India',
@@ -67,6 +69,7 @@ export function RecruiterProfilePage() {
     try {
       const body = {
         companyName: profile.name,
+        contactPerson: profile.contactPerson,
         businessEmail: profile.email,
         phone: profile.phone,
         industry: profile.industry,
@@ -85,6 +88,7 @@ export function RecruiterProfilePage() {
       setEmployerId(employer._id || employerId)
       setProfile({
         name: employer.companyName || profile.name,
+        contactPerson: employer.contactPerson || profile.contactPerson,
         email: employer.businessEmail || profile.email,
         phone: employer.phone || profile.phone,
         location: employer.location || profile.location,
@@ -101,6 +105,7 @@ export function RecruiterProfilePage() {
           email: employer.businessEmail || profile.email,
           phone: employer.phone || profile.phone,
           companyName: employer.companyName || profile.name,
+          contactPerson: employer.contactPerson || profile.contactPerson,
         }))
       }
 
@@ -178,6 +183,7 @@ export function RecruiterProfilePage() {
             <div>
               <h2 className="text-2xl font-black text-slate-950">{profile.name}</h2>
               <p className="mt-1 text-sm font-semibold text-blue-700">Recruiter</p>
+              <p className="mt-1 text-sm font-bold text-slate-500">{profile.contactPerson || 'Contact person not added'}</p>
               {editing && <p className="mt-2 text-xs font-bold text-slate-400">{logoUploading ? 'Uploading logo...' : 'Click camera icon to upload company logo'}</p>}
             </div>
           </div>
@@ -203,6 +209,7 @@ export function RecruiterProfilePage() {
             {editing ? (
               <div className="grid gap-4 md:grid-cols-2">
                 <ProfileField label="Company name" onChange={(value) => update('name', value)} value={profile.name} />
+                <ProfileField label="Contact person name" onChange={(value) => update('contactPerson', value)} value={profile.contactPerson} />
                 <ProfileField label="Business email" onChange={(value) => update('email', value)} type="email" value={profile.email} />
                 <ProfileField label="Phone" onChange={(value) => update('phone', value)} value={profile.phone} />
                 <ProfileField label="Industry" onChange={(value) => update('industry', value)} value={profile.industry} />
@@ -213,6 +220,7 @@ export function RecruiterProfilePage() {
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 <InfoItem label="Company name" value={profile.name} />
+                <InfoItem label="Contact person" value={profile.contactPerson || 'Not added'} />
                 <InfoItem label="Industry" value={profile.industry} />
                 <InfoItem label="Company size" value={profile.companySize || 'Not added'} />
                 <InfoItem label="Website" value={profile.website || 'Not added'} />
