@@ -22,6 +22,8 @@ const departmentSuggestions = [
 const skillSuggestions = [
   'React', 'TypeScript', 'JavaScript', 'Tailwind', 'Node.js', 'Express', 'MongoDB', 'Python', 'Java', 'SQL', 'AWS', 'Docker',
   'REST API', 'CRM', 'Communication', 'Retention', 'Google Ads', 'Meta Ads', 'Analytics', 'SEO', 'Excel', 'Research', 'Reporting',
+  'Field Sales', 'Lead Generation', 'Telecalling', 'B2B Sales', 'Customer Support', 'MS Office', 'Data Entry', 'Operations',
+  'Recruitment', 'Payroll', 'Accounting', 'Tally', 'Graphic Design', 'Figma', 'Video Editing', 'Content Writing', 'Social Media',
 ]
 
 const experienceOptions = ['Fresher', '0-1 years', '1-3 years', '3-5 years', '5-8 years', '8-12 years', '12+ years']
@@ -128,6 +130,7 @@ export function PostJobPage() {
   const [packages, setPackages] = useState(() => getPricingPackages())
   const [activePackage, setActivePackage] = useState(null)
   const [pendingJobPayload, setPendingJobPayload] = useState(null)
+  const [companyLoading, setCompanyLoading] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('authToken')
@@ -154,6 +157,25 @@ export function PostJobPage() {
       api.currentRecruiterPackage(user.email).then((payload) => setActivePackage(payload.data || null)).catch(() => setActivePackage(null))
     }
   }, [user?.email])
+
+  useEffect(() => {
+    if (!user?.email || user.role !== 'recruiter') return
+
+    setCompanyLoading(true)
+    api
+      .list('employers', `?businessEmail=${encodeURIComponent(user.email)}&limit=1`)
+      .then((payload) => {
+        const employer = payload.data?.[0]
+        const companyName = employer?.companyName || user.name || ''
+        if (companyName) {
+          setForm((current) => ({ ...current, company: companyName }))
+        }
+      })
+      .catch(() => {
+        if (user.name) setForm((current) => ({ ...current, company: user.name }))
+      })
+      .finally(() => setCompanyLoading(false))
+  }, [user?.email, user?.name, user?.role])
 
   const stateOptions = useMemo(() => {
     if (form.locationType === 'India') return Object.keys(indiaLocations)
@@ -189,6 +211,17 @@ export function PostJobPage() {
     const nextSkill = skill.trim()
     if (!nextSkill || form.skills.includes(nextSkill)) return
     setForm((current) => ({ ...current, skills: [...current.skills, nextSkill], skillInput: '' }))
+  }
+
+  const toggleSkill = (skill) => {
+    setForm((current) => ({
+      ...current,
+      skills: current.skills.includes(skill)
+        ? current.skills.filter((item) => item !== skill)
+        : [...current.skills, skill],
+      skillInput: '',
+    }))
+    setMessage('')
   }
 
   const removeSkill = (skill) => {
@@ -253,7 +286,7 @@ export function PostJobPage() {
       const result = await api.submitRecruiterJob(payload)
       setActivePackage(result.subscription || activePackage)
       window.dispatchEvent(new Event('recruiter-wallet-updated'))
-      setForm(initialForm)
+      setForm({ ...initialForm, company: form.company })
       setPackageOpen(false)
       setPendingJobPayload(null)
       setMessage('Job submitted to Account Department for verification. It will go live after approval.')
@@ -312,7 +345,7 @@ export function PostJobPage() {
               <h2 className="mb-4 text-xl font-black text-slate-950">Role Basics</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <input className="input" list="job-title-suggestions" onChange={(e) => update('title', e.target.value)} placeholder="Job title" required value={form.title} />
-                <input className="input" list="company-suggestions" onChange={(e) => update('company', e.target.value)} placeholder="Company name" required value={form.company} />
+                <input className="input bg-slate-100 font-bold text-slate-700" list="company-suggestions" onChange={(e) => update('company', e.target.value)} placeholder={companyLoading ? 'Fetching company name...' : 'Company name'} readOnly={user?.role === 'recruiter'} required value={form.company} />
                 <input className="input" list="department-suggestions" onChange={(e) => update('department', e.target.value)} placeholder="Department" value={form.department} />
                 <select className="input" onChange={(e) => update('experience', e.target.value)} value={form.experience}>
                   {experienceOptions.map((item) => <option key={item}>{item}</option>)}
@@ -372,6 +405,21 @@ export function PostJobPage() {
 
             <section className="rounded-[7px] border border-[#0057B8]/10 bg-[#F8FBFF] p-5">
               <h2 className="mb-4 text-xl font-black text-slate-950">Skills</h2>
+              <div className="mb-4 flex flex-wrap gap-2">
+                {skillSuggestions.map((skill) => {
+                  const selected = form.skills.includes(skill)
+                  return (
+                    <button
+                      className={`rounded-[7px] px-3 py-2 text-xs font-black ring-1 transition ${selected ? 'bg-blue-600 text-white ring-blue-600' : 'bg-white text-slate-600 ring-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200'}`}
+                      key={skill}
+                      onClick={() => toggleSkill(skill)}
+                      type="button"
+                    >
+                      {skill}
+                    </button>
+                  )
+                })}
+              </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <input className="input flex-1" list="skill-suggestions" onChange={(e) => update('skillInput', e.target.value)} onKeyDown={(e) => {
                   if (e.key === 'Enter') {
