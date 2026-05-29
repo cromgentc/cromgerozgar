@@ -8,6 +8,7 @@
     "start": "node server.js",
     "ensure-login-user": "node seeders/ensureLoginUser.js",
     "seed": "node seeders/seed.js",
+    "seed:pricing": "node seeders/seedPricingPackages.js",
     "seed:clear": "node seeders/seed.js --clear"
   },
   "keywords": [],
