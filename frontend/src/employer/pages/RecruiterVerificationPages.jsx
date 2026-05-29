@@ -489,7 +489,7 @@ function DocumentField({ label, loading = false, onChange, required = false, val
     <label className="rounded-[7px] border border-dashed border-blue-200 bg-blue-50 p-4">
       <span className="flex items-center gap-2 text-sm font-black text-blue-700"><Upload size={17} /> {label}</span>
       <input accept="application/pdf" className="mt-3 w-full rounded-[7px] border border-blue-100 bg-white px-4 py-3 text-sm font-semibold outline-none" disabled={loading} onChange={(event) => onChange(event.target.files?.[0] || null)} required={required && !value} type="file" />
-      <span className="mt-2 flex items-center gap-2 break-all text-xs font-semibold text-slate-500"><FileText size={14} /> {loading ? 'Uploading to Supa Cloud...' : value || 'Choose PDF to upload'}</span>
+      <span className="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-500"><FileText size={14} /> {loading ? 'Uploading...' : value ? 'PDF uploaded' : 'Choose PDF to upload'}</span>
     </label>
   )
 }
