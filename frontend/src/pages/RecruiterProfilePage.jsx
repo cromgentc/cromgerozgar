@@ -3,6 +3,7 @@ import { Camera, Mail, MapPin, Phone } from 'lucide-react'
 import { getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
 import { DashboardShell, Panel } from './CandidateDashboard'
+import { showMessageToast, showToast } from '../utils/toast'
 
 export function RecruiterProfilePage() {
   const user = getStoredUser()
@@ -34,6 +35,11 @@ export function RecruiterProfilePage() {
     setMessage('')
   }
 
+  const notify = (text, type) => {
+    setMessage('')
+    if (text) showMessageToast(text, type ? { type } : {})
+  }
+
   useEffect(() => {
     if (!user?.email) return
 
@@ -61,7 +67,7 @@ export function RecruiterProfilePage() {
 
   const save = async () => {
     if (!profile.name.trim() || !profile.email.trim()) {
-      setMessage('Company name and business email are required.')
+      notify('Company name and business email are required.', 'error')
       return
     }
 
@@ -110,10 +116,9 @@ export function RecruiterProfilePage() {
       }
 
       setEditing(false)
-      setMessage('Recruiter profile saved successfully.')
-      window.setTimeout(() => setMessage(''), 3000)
+      notify('Recruiter profile saved successfully.', 'success')
     } catch (error) {
-      setMessage(error.message || 'Recruiter profile save failed.')
+      notify(error.message || 'Recruiter profile save failed.', 'error')
     } finally {
       setSaving(false)
     }
@@ -124,7 +129,7 @@ export function RecruiterProfilePage() {
     if (!file) return
 
     if (!String(file.type || '').startsWith('image/')) {
-      setMessage('Only image upload is allowed for recruiter profile.')
+      notify('Only image upload is allowed for recruiter profile.', 'error')
       return
     }
 
@@ -141,13 +146,13 @@ export function RecruiterProfilePage() {
       const payload = await api.uploadRecruiterProfileImageToSupaCloud(data)
       const url = payload.data?.url
       if (!url) {
-        setMessage('Image uploaded, but public URL was not returned. Check Supa Cloud public bucket setting.')
+        notify('Image uploaded, but public URL was not returned. Check Supa Cloud public bucket setting.', 'error')
         return
       }
       update('logo', url)
-      setMessage('Profile image uploaded. Click Save to update recruiter profile.')
+      showToast('Profile image uploaded. Click Save to update recruiter profile.', 'success')
     } catch (error) {
-      setMessage(error.message || 'Recruiter profile image upload failed.')
+      notify(error.message || 'Recruiter profile image upload failed.', 'error')
     } finally {
       setLogoUploading(false)
       event.target.value = ''
@@ -187,7 +192,6 @@ export function RecruiterProfilePage() {
               {editing && <p className="mt-2 text-xs font-bold text-slate-400">{logoUploading ? 'Uploading logo...' : 'Click camera icon to upload company logo'}</p>}
             </div>
           </div>
-          {message && <p className="mt-5 rounded-[7px] bg-teal-50 p-3 text-sm font-bold text-teal-700">{message}</p>}
           <div className="mt-6 grid gap-3 text-sm font-semibold text-slate-600">
             <p className="flex items-center gap-3 rounded-[7px] bg-slate-50 p-4">
               <Mail className="text-blue-600" size={18} />

@@ -3,6 +3,7 @@ import { CheckCircle2, CreditCard, ShieldCheck, Sparkles } from 'lucide-react'
 import { api } from '../services/api'
 import { DashboardShell, Panel } from './CandidateDashboard'
 import { fetchPricingPackages, getPricingPackages, PRICING_PACKAGES_KEY } from '../utils/pricingPackages'
+import { showMessageToast, showToast } from '../utils/toast'
 
 function getStoredRecruiter() {
   try {
@@ -130,6 +131,11 @@ export function RecruiterPricingPage() {
   const [coinBuying, setCoinBuying] = useState(false)
   const [callbackPlan, setCallbackPlan] = useState(null)
 
+  const notify = (text, type) => {
+    setMessage('')
+    if (text) showMessageToast(text, type ? { type } : {})
+  }
+
   useEffect(() => {
     const syncPlans = () => {
       fetchPricingPackages({ activeOnly: true })
@@ -183,7 +189,7 @@ export function RecruiterPricingPage() {
 
   const activatePackage = async (plan) => {
     if (!recruiter?.email) {
-      setMessage('Please login as recruiter to activate a package.')
+      notify('Please login as recruiter to activate a package.', 'error')
       return
     }
 
@@ -193,15 +199,14 @@ export function RecruiterPricingPage() {
       })
       setActivePackage(payload.data)
       window.dispatchEvent(new Event('recruiter-wallet-updated'))
-      setMessage(`${plan.name} package activated successfully.`)
+      notify(`${plan.name} package activated successfully.`, 'success')
     } catch (error) {
-      setMessage(error.message)
+      notify(error.message, 'error')
     }
   }
 
   const startRazorpayPayment = async ({ amount, description, name, onSuccess, orderPayload }) => {
     setPaymentProcessing(true)
-    setMessage('')
 
     try {
       const checkoutLoaded = await loadRazorpayCheckout()
@@ -240,7 +245,7 @@ export function RecruiterPricingPage() {
                 razorpayPaymentId: response.razorpay_payment_id,
                 payment: verified.data?.payment,
               })
-              setMessage(verified.message || 'Payment successful.')
+              notify(verified.message || 'Payment successful.', 'success')
               resolve()
             } catch (error) {
               reject(error)
@@ -254,7 +259,7 @@ export function RecruiterPricingPage() {
         checkout.open()
       })
     } catch (error) {
-      setMessage(error.message || 'Payment failed.')
+      notify(error.message || 'Payment failed.', 'error')
     } finally {
       setPaymentProcessing(false)
     }
@@ -263,7 +268,6 @@ export function RecruiterPricingPage() {
   const choosePackage = (plan) => {
     if (isEnterprisePlan(plan)) {
       setCallbackPlan(plan)
-      setMessage('')
       return
     }
 
@@ -277,12 +281,12 @@ export function RecruiterPricingPage() {
 
   const buyCoins = async () => {
     if (!recruiter?.email) {
-      setMessage('Please login as recruiter to buy coins.')
+      notify('Please login as recruiter to buy coins.', 'error')
       return
     }
 
     if (!activePackage) {
-      setMessage('Please activate a recruiter package before buying coins.')
+      notify('Please activate a recruiter package before buying coins.', 'error')
       return
     }
 
@@ -307,7 +311,6 @@ export function RecruiterPricingPage() {
 
   return (
     <DashboardShell title="Recruiter Pricing" subtitle="Choose a hiring plan for posting jobs, reviewing candidates, and scaling your recruitment workflow.">
-      {message && <p className="mb-5 rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
       <PaymentDetails details={paymentDetails} />
       {(activePackage?.packageId || activePackage?.packageSnapshot?.name) && (
         <div className="mb-5 rounded-[7px] border border-teal-200 bg-teal-50 p-5">
@@ -357,7 +360,7 @@ export function RecruiterPricingPage() {
           onClose={() => setCallbackPlan(null)}
           onSubmitted={() => {
             setCallbackPlan(null)
-            setMessage('Enterprise callback request sent successfully. Our team will contact you soon.')
+            notify('Enterprise callback request sent successfully. Our team will contact you soon.', 'success')
           }}
           plan={callbackPlan}
           recruiter={recruiter}
@@ -529,12 +532,16 @@ function EnterpriseCallbackModal({ onClose, onSubmitted, plan, recruiter }) {
     setError('')
 
     if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.company.trim()) {
-      setError('Name, email, phone, and company must be available from recruiter profile.')
+      const message = 'Name, email, phone, and company must be available from recruiter profile.'
+      setError(message)
+      showToast(message, 'error')
       return
     }
 
     if (!form.candidatesNeeded || Number(form.candidatesNeeded) <= 0 || !form.callbackTime) {
-      setError('Please enter candidates needed and choose preferred callback date and time.')
+      const message = 'Please enter candidates needed and choose preferred callback date and time.'
+      setError(message)
+      showToast(message, 'error')
       return
     }
 
@@ -562,7 +569,9 @@ function EnterpriseCallbackModal({ onClose, onSubmitted, plan, recruiter }) {
       })
       onSubmitted()
     } catch (submitError) {
-      setError(submitError.message || 'Callback request failed.')
+      const message = submitError.message || 'Callback request failed.'
+      setError(message)
+      showToast(message, 'error')
     } finally {
       setSubmitting(false)
     }
@@ -610,8 +619,6 @@ function EnterpriseCallbackModal({ onClose, onSubmitted, plan, recruiter }) {
             <textarea className="input mt-2 min-h-28" onChange={(event) => update('notes', event.target.value)} placeholder="Hiring requirement, locations, number of jobs..." value={form.notes} />
           </label>
         </div>
-
-        {error && <p className="mt-4 rounded-[7px] bg-rose-50 p-3 text-sm font-bold text-rose-700">{error}</p>}
 
         <div className="mt-6 flex flex-col justify-end gap-2 sm:flex-row">
           <button className="rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700" onClick={onClose} type="button">Cancel</button>

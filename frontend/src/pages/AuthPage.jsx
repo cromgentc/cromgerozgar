@@ -4,6 +4,7 @@ import { Eye, EyeOff, Lock, Mail, MessageCircle, Phone, UserRound } from 'lucide
 import { GoogleAuthButton } from '../components/GoogleAuthButton'
 import { getDashboardPath, normalizeRole } from '../routes/authRouting'
 import { api } from '../services/api'
+import { showMessageToast } from '../utils/toast'
 
 const initialForm = {
   name: '',
@@ -79,6 +80,10 @@ export function AuthPage({ defaultMode = 'login', defaultRole = 'Candidate', loc
 
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
   const updateForgot = (key, value) => setForgotForm((current) => ({ ...current, [key]: value }))
+  const notify = (text, type) => {
+    setMessage('')
+    if (text) showMessageToast(text, type ? { type } : {})
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -107,10 +112,10 @@ export function AuthPage({ defaultMode = 'login', defaultRole = 'Candidate', loc
         : await api.register({ name: form.name, email: form.email, phone: form.phone, password: form.password, role })
 
       saveSession(payload)
-      setMessage(`${getRoleLabel(payload.data.role)} login successful. Redirecting...`)
+      notify(`${getRoleLabel(payload.data.role)} login successful. Redirecting...`, 'success')
       navigate(getDashboardPath(payload.data.role))
     } catch (error) {
-      setMessage(getAuthErrorMessage(error))
+      notify(getAuthErrorMessage(error), 'error')
     } finally {
       setLoading(false)
     }
@@ -126,9 +131,9 @@ export function AuthPage({ defaultMode = 'login', defaultRole = 'Candidate', loc
         ? await api.whatsappLoginOtp({ phone: forgotForm.phone })
         : await api.requestWhatsappOtp({ phone: forgotForm.phone })
       setOtpSent(true)
-      setMessage(payload.message || 'OTP sent successfully.')
+      notify(payload.message || 'OTP sent successfully.', 'success')
     } catch (error) {
-      setMessage(getAuthErrorMessage(error))
+      notify(getAuthErrorMessage(error), 'error')
     } finally {
       setLoading(false)
     }
@@ -144,10 +149,10 @@ export function AuthPage({ defaultMode = 'login', defaultRole = 'Candidate', loc
         ? await api.whatsappLoginVerify({ phone: forgotForm.phone, otp: forgotForm.otp })
         : await api.verifyWhatsappOtp({ phone: forgotForm.phone, otp: forgotForm.otp })
       saveSession(payload)
-      setMessage('OTP verified. Redirecting...')
+      notify('OTP verified. Redirecting...', 'success')
       navigate(getDashboardPath(payload.data.role))
     } catch (error) {
-      setMessage(error.message)
+      notify(error.message, 'error')
     } finally {
       setLoading(false)
     }
@@ -159,9 +164,9 @@ export function AuthPage({ defaultMode = 'login', defaultRole = 'Candidate', loc
 
     try {
       const payload = await api.forgotEmail({ email: forgotForm.email })
-      setMessage(payload.message || 'Gmail reset request submitted.')
+      notify(payload.message || 'Gmail reset request submitted.', 'success')
     } catch (error) {
-      setMessage(error.message)
+      notify(error.message, 'error')
     } finally {
       setLoading(false)
     }
@@ -173,12 +178,12 @@ export function AuthPage({ defaultMode = 'login', defaultRole = 'Candidate', loc
 
     try {
       const payload = await api.resetPassword({ token: resetToken, password: resetPasswordValue })
-      setMessage(payload.message || 'Password reset successfully. Please login.')
+      notify(payload.message || 'Password reset successfully. Please login.', 'success')
       setForgotMode('')
       setResetPasswordValue('')
       window.history.replaceState({}, '', '/auth')
     } catch (error) {
-      setMessage(error.message)
+      notify(error.message, 'error')
     } finally {
       setLoading(false)
     }
@@ -198,10 +203,10 @@ export function AuthPage({ defaultMode = 'login', defaultRole = 'Candidate', loc
     try {
       const payload = await api.googleAuth({ credential, mode, role })
       saveSession(payload)
-      setMessage(`${getRoleLabel(payload.data.role)} Google login successful. Redirecting...`)
+      notify(`${getRoleLabel(payload.data.role)} Google login successful. Redirecting...`, 'success')
       navigate(getDashboardPath(payload.data.role))
     } catch (error) {
-      setMessage(error.message)
+      notify(error.message, 'error')
     } finally {
       setLoading(false)
     }

@@ -5,6 +5,7 @@ import { getRecruiterVerificationPath, getRecruiterVerificationStatus, getStored
 import { api } from '../services/api'
 import { fetchPricingPackages, getPricingPackages } from '../utils/pricingPackages'
 import { buildStateCountryLocation } from '../utils/locationDisplay'
+import { showMessageToast } from '../utils/toast'
 
 const jobTitleSuggestions = [
   'Senior React Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'Node.js Developer', 'Python Developer',
@@ -244,6 +245,11 @@ export function PostJobPage() {
     setMessage('')
   }
 
+  const notify = (text, type) => {
+    setMessage('')
+    if (text) showMessageToast(text, type ? { type } : {})
+  }
+
   const changeLocationType = (value) => {
     setForm((current) => ({
       ...current,
@@ -318,7 +324,7 @@ export function PostJobPage() {
   }
 
   const postJobWithPackage = async (payload) => {
-    setMessage('Submitting...')
+    notify('Submitting...', 'info')
 
     try {
       const result = await api.submitRecruiterJob(payload)
@@ -327,14 +333,14 @@ export function PostJobPage() {
       setForm({ ...initialForm, company: form.company })
       setPackageOpen(false)
       setPendingJobPayload(null)
-      setMessage('Job submitted to Account Department for verification. It will go live after approval.')
+      notify('Job submitted to Account Department for verification. It will go live after approval.', 'success')
     } catch (error) {
       if (error.message.toLowerCase().includes('package') || error.message.toLowerCase().includes('payment') || error.message.toLowerCase().includes('limit')) {
         setPendingJobPayload(payload)
         setPackageOpen(true)
-        setMessage(error.message)
+        notify(error.message, 'error')
       } else {
-        setMessage(`Backend unavailable: ${error.message}`)
+        notify(`Backend unavailable: ${error.message}`, 'error')
       }
     }
   }
@@ -347,7 +353,7 @@ export function PostJobPage() {
     if (!activePackage) {
       setPendingJobPayload(payload)
       setPackageOpen(true)
-      setMessage('Please choose a package and complete payment to submit this job.')
+      notify('Please choose a package and complete payment to submit this job.', 'error')
       return
     }
 
@@ -356,7 +362,7 @@ export function PostJobPage() {
 
   const choosePackageAndSubmit = async (plan) => {
     try {
-      setMessage('Processing payment and activating package...')
+      notify('Processing payment and activating package...', 'info')
       const payload = await api.activateRecruiterPackage({
         ...buildPackageRequest(user, plan),
       })
@@ -364,7 +370,7 @@ export function PostJobPage() {
       window.dispatchEvent(new Event('recruiter-wallet-updated'))
       await postJobWithPackage(pendingJobPayload || buildJobPayload())
     } catch (error) {
-      setMessage(error.message)
+      notify(error.message, 'error')
     }
   }
 
@@ -509,7 +515,6 @@ export function PostJobPage() {
               </div>
             </section>
 
-            {message && <p className="rounded-[7px] bg-blue-50 p-4 text-sm font-bold text-blue-700">{message}</p>}
             <div className="flex flex-col gap-3 sm:flex-row">
               <button className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[7px] bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200" onClick={() => setPreviewOpen(true)} type="button"><Eye size={18} /> Preview Job</button>
               <button className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[7px] bg-[#0057B8] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#0057B8]/20 transition hover:-translate-y-0.5 hover:bg-[#004694]" type="submit"><Send size={18} /> Submit Job</button>
