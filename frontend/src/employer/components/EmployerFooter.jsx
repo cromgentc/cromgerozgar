@@ -284,7 +284,7 @@ export function EmployerFooter() {
 function FooterButton({ icon: Icon, label, secondary = false, to }) {
   return (
     <Link
-      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-blue-200 bg-white px-5 text-sm font-black text-blue-700 shadow-sm transition hover:bg-blue-50/60 hover:text-blue-800"
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-[#ff8a00] bg-white px-5 text-sm font-black text-black shadow-sm transition hover:bg-[#fff4e6] hover:text-black"
       to={to}
     >
       <Icon size={17} /> {label}

@@ -79,28 +79,23 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
   }
 
   return (
-    <article className={`group min-w-0 overflow-hidden rounded-[7px] border border-slate-200 bg-white/90 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/70 ${denseMobile ? 'p-3 sm:p-5' : 'p-5'} ${featured ? 'lg:p-6' : ''}`}>
-      <div className={`${denseMobile ? 'mb-3 sm:mb-4' : 'mb-4'} flex flex-wrap gap-2`}>
-        {job.featured && <span className="inline-flex items-center gap-1 rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700"><Sparkles size={13} /> Featured</span>}
-        {job.urgent && <span className="inline-flex items-center gap-1 rounded-[7px] bg-rose-50 px-3 py-1 text-xs font-black text-rose-700"><Flame size={13} /> Urgent hiring</span>}
-        <span className="rounded-[7px] bg-teal-50 px-3 py-1 text-xs font-black text-teal-700">{job.workMode}</span>
-      </div>
+    <article className={`group min-w-0 overflow-hidden rounded-[7px] border border-slate-200 bg-white shadow-sm transition hover:shadow-md ${denseMobile ? 'p-4' : 'p-5'} ${featured ? 'lg:p-6' : ''}`}>
       <div className="flex items-start justify-between gap-2 sm:gap-4">
         <div className="flex min-w-0 gap-3 sm:gap-4">
-          <div className={`${denseMobile ? 'hidden sm:grid' : 'grid'} h-14 w-14 shrink-0 place-items-center rounded-[7px] bg-gradient-to-br from-blue-50 to-teal-50 text-lg font-bold text-blue-700`}>
+          <div className={`${denseMobile ? 'hidden sm:grid' : 'grid'} h-12 w-12 shrink-0 place-items-center rounded-[7px] border border-slate-100 bg-slate-50 text-sm font-black text-slate-700`}>
             {job.companyLogo || String(job.title || 'JR').slice(0, 2)}
           </div>
           <div className="min-w-0">
-            <Link className={`${denseMobile ? 'line-clamp-2 text-sm sm:text-lg' : 'text-lg'} font-bold text-slate-950 hover:text-blue-600`} to={jobDetailPath}>
+            <Link className={`${denseMobile ? 'line-clamp-2 text-base' : 'text-lg'} font-black text-slate-800 hover:text-[#008bdc]`} to={jobDetailPath}>
               {job.title}
             </Link>
-            <p className="mt-1 truncate text-xs font-bold text-slate-500 sm:text-sm">{job.company || 'Cromgen Rozgar partner'}</p>
+            <p className="mt-1 truncate text-sm font-bold text-slate-500">{job.company || 'Cromgen Rozgar partner'}</p>
           </div>
         </div>
         <button
           aria-label={saved ? 'Remove saved job' : 'Save job'}
-          className={`grid shrink-0 place-items-center rounded-[7px] border transition ${denseMobile ? 'h-9 w-9 sm:h-11 sm:w-11' : 'h-11 w-11'} ${
-            saved ? 'border-red-200 bg-red-500/10 text-red-600 shadow-sm' : 'border-red-100 bg-red-500/5 text-red-500 hover:border-red-200 hover:bg-red-500/10 hover:text-red-600'
+          className={`grid shrink-0 place-items-center rounded-[7px] border transition ${denseMobile ? 'h-9 w-9' : 'h-11 w-11'} ${
+            saved ? 'border-red-200 bg-red-500/10 text-red-600 shadow-sm' : 'border-slate-200 text-red-500 hover:border-red-200 hover:text-red-600'
           }`}
           onClick={saveJob}
           type="button"
@@ -109,25 +104,31 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
         </button>
       </div>
 
-      <div className={`${denseMobile ? 'mt-3 gap-2 text-xs sm:mt-5 sm:gap-3 sm:text-sm' : 'mt-5 gap-3 text-sm'} grid text-slate-500 sm:grid-cols-2`}>
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-slate-500">
         <span className="flex min-w-0 items-center gap-2"><MapPin className="shrink-0" size={16} /><span className="truncate">{displayLocation}</span></span>
         <span className="flex min-w-0 items-center gap-2"><Wallet className="shrink-0" size={16} /><span className="truncate">{job.salary}</span></span>
         <span className="flex items-center gap-2"><Briefcase className="shrink-0" size={16} /><span className="truncate">{job.experience}</span></span>
-        <span className="flex items-center gap-2"><Clock className="shrink-0" size={16} /><span className="truncate">{job.posted}</span></span>
       </div>
 
-      <div className={`${denseMobile ? 'mt-4 sm:mt-5' : 'mt-5'} flex max-h-16 flex-wrap gap-2 overflow-hidden`}>
-        {job.skills.map((skill) => (
-          <span className="rounded-[7px] bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600" key={skill}>
+      <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-500">{job.description}</p>
+
+      <div className="mt-4 flex max-h-7 flex-wrap gap-2 overflow-hidden">
+        {job.skills.slice(0, 4).map((skill) => (
+          <span className="text-xs font-semibold text-slate-500" key={skill}>
             {skill}
           </span>
         ))}
       </div>
 
-      <p className={`${denseMobile ? 'mt-4 sm:mt-5' : 'mt-5'} line-clamp-2 text-sm leading-6 text-slate-500`}>{job.description}</p>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center gap-1 rounded-[7px] bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-500"><Clock size={14} /> {job.posted}</span>
+        {job.featured && <span className="inline-flex items-center gap-1 rounded-[7px] bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700"><Sparkles size={13} /> Featured</span>}
+        {job.urgent && <span className="inline-flex items-center gap-1 rounded-[7px] bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700"><Flame size={13} /> Urgent</span>}
+        <span className="rounded-[7px] bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700">{job.workMode}</span>
+      </div>
 
-      <div className={`${denseMobile ? 'mt-4' : 'mt-6'} flex flex-col gap-3 sm:flex-row`}>
-        <Button className={`${denseMobile ? 'min-h-10 w-full min-w-0 px-3 text-sm sm:min-h-11 sm:px-5' : ''} flex-1`} onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <Button className="min-h-10 flex-1 px-4 text-sm" onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}>
           {alreadyApplied ? 'Already Applied' : 'Apply Now'}
         </Button>
         <div className="flex flex-1">

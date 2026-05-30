@@ -17,6 +17,7 @@ const recruiterJobRoutes = require('./recruiterJobRoutes')
 const resumeUploadRoutes = require('./resumeUploadRoutes')
 const settingsRoutes = require('./settingsRoutes')
 const testimonialRoutes = require('./testimonialRoutes')
+const videoTestimonialRoutes = require('./videoTestimonialRoutes')
 const userRoutes = require('./userRoutes')
 const userLocationRoutes = require('./userLocationRoutes')
 const { authorize, protect } = require('../middleware/authMiddleware')
@@ -80,5 +81,6 @@ router.use('/support-messages', crudRoutes.protected(controllers.supportMessages
   updateRoles: accountRoles,
 }))
 router.use('/testimonials', testimonialRoutes)
+router.use('/video-testimonials', videoTestimonialRoutes)
 
 module.exports = router

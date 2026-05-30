@@ -117,7 +117,7 @@ function ShowcaseCard({ item, index }) {
             </div>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Button className="w-full sm:w-auto" to={item.to}>{item.cta}</Button>
+              <Button className="w-full bg-[#ff8a00] shadow-[#ff8a00]/20 hover:bg-[#e87900] focus:ring-orange-100 sm:w-auto" to={item.to}>{item.cta}</Button>
               <div className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[7px] bg-teal-50 px-4 py-2 text-center text-sm font-bold text-teal-700 sm:flex-none">
                 <CheckCircle2 size={18} /> Verified premium workflow
               </div>

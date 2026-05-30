@@ -4,17 +4,21 @@ const Employer = require('../models/Employer')
 const Job = require('../models/Job')
 const RecruiterDocument = require('../models/RecruiterDocument')
 const Testimonial = require('../models/Testimonial')
+const VideoTestimonial = require('../models/VideoTestimonial')
 const { ensureDefaultTestimonials } = require('./testimonialDefaults')
+const { ensureDefaultVideoTestimonials } = require('./videoTestimonialController')
 
 const getRecruiterPage = asyncHandler(async (req, res) => {
   await ensureDefaultTestimonials(Testimonial)
+  await ensureDefaultVideoTestimonials()
 
-  const [recruiters, jobs, documents, applicationsCount, testimonials] = await Promise.all([
+  const [recruiters, jobs, documents, applicationsCount, testimonials, videoTestimonials] = await Promise.all([
     Employer.find().sort('-createdAt').limit(100),
     Job.find().sort('-createdAt').limit(100),
     RecruiterDocument.find().sort('-updatedAt').limit(100),
     Application.countDocuments(),
     Testimonial.find({ status: 'Active' }).sort('-featured -createdAt'),
+    VideoTestimonial.find({ status: 'Active' }).sort('sortOrder -featured -createdAt').limit(24),
   ])
 
   const activeJobs = jobs.filter((job) => job.accountDepartmentStatus === 'Active' || job.approval === 'Approved')
@@ -34,6 +38,7 @@ const getRecruiterPage = asyncHandler(async (req, res) => {
       jobs,
       documents,
       testimonials,
+      videoTestimonials,
     },
   })
 })

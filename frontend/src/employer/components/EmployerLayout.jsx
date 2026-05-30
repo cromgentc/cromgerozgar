@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BriefcaseBusiness, Building2, ChevronDown, LayoutDashboard, LogOut, Menu, UserRound, X } from 'lucide-react'
+import { AuthModal } from '../../components/AuthModal'
 import { Button } from '../../components/Button'
 import { getStoredUser } from '../../routes/authRouting'
 import { useSiteBranding } from '../../utils/siteBranding'
@@ -18,9 +19,11 @@ const recruiterProfilePath = '/recruiter-profile'
 export function EmployerLayout() {
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [authModalMode, setAuthModalMode] = useState('')
+  const [user, setUser] = useState(() => getStoredUser())
   const navigate = useNavigate()
+  const location = useLocation()
   const branding = useSiteBranding()
-  const user = getStoredUser()
   const isLoggedIn = Boolean(user?.email)
   const isRecruiterAccount = user?.role === 'recruiter'
   const navItems = employerNav.map(([label, to]) => (isRecruiterAccount ? [label, recruiterDashboardPath] : [label, to]))
@@ -32,11 +35,22 @@ export function EmployerLayout() {
     navigate('/recruiter-login')
   }
 
+  useEffect(() => {
+    setUser(getStoredUser())
+    setOpen(false)
+    setProfileOpen(false)
+  }, [location.pathname])
+
+  const openAuthModal = (mode) => {
+    setAuthModalMode(mode)
+    setOpen(false)
+  }
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
-      <header className="sticky top-0 z-50 border-b border-[#0057B8]/10 bg-white/92 shadow-sm shadow-[#0057B8]/10 backdrop-blur-xl">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <Link className="site-logo-lockup flex min-w-0 items-center font-black text-slate-950" to="/recruiter">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
+        <nav className="mx-auto flex h-20 max-w-7xl items-center justify-start gap-6 px-4 sm:px-6 lg:px-8">
+          <Link className="site-logo-lockup flex min-w-0 items-center font-bold text-slate-950" to="/recruiter">
             {branding.logoUrl ? (
               <span className="site-logo-frame">
                 <img className="site-logo-img" src={branding.logoUrl} alt={branding.recruiterName || 'Rozgar Recruiter'} />
@@ -49,28 +63,44 @@ export function EmployerLayout() {
             )}
           </Link>
 
-          <div className="hidden items-center gap-1 lg:flex">
+          <div className="hidden items-center gap-8 lg:flex">
             {navItems.map(([label, to]) => (
-              <NavLink className="group relative rounded-[7px] px-3 py-2 text-sm font-bold text-slate-600 transition hover:text-blue-700" key={label} to={to}>
-                {label}
-                <span className="absolute inset-x-3 -bottom-0.5 h-0.5 scale-x-0 rounded-[7px] bg-blue-600 transition group-hover:scale-x-100" />
+              <NavLink
+                className={({ isActive }) =>
+                  `group relative inline-flex items-center gap-1 py-7 text-sm font-bold transition ${
+                    isActive ? 'text-slate-950' : 'text-slate-700 hover:text-slate-950'
+                  }`
+                }
+                key={label}
+                to={to}
+              >
+                <span>{label}</span>
+                <span className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 rounded-[7px] bg-[#00A5E0] transition group-hover:scale-x-100" />
               </NavLink>
             ))}
           </div>
 
-          <div className="hidden items-center gap-2 lg:flex">
+          <div className="ml-auto hidden items-center gap-4 border-l border-slate-100 pl-6 lg:flex">
             {isRecruiterAccount ? (
               <CompanyMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
             ) : (
               <>
-              <Link className="nav-transparent-btn" to="/recruiter-login">Recruiter Login</Link>
-              {!isLoggedIn && <Button to="/recruiter-register" variant="secondary">Register Recruiter</Button>}
-                <Button to="/post-job">Post a Job</Button>
+                <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] px-5 text-sm font-black text-[#ff8a00] transition hover:border-[#e87500] hover:text-[#e87500]" onClick={() => openAuthModal('recruiter-login')} type="button">
+                  Recruiter Login
+                </button>
+                {!isLoggedIn && (
+                  <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] bg-[#ff8a00] px-5 text-sm font-black text-white shadow-sm transition hover:bg-[#e87500]" onClick={() => openAuthModal('recruiter-register')} type="button">
+                    Recruiter Register
+                  </button>
+                )}
+                <Link className="inline-flex min-h-10 items-center gap-1 whitespace-nowrap px-2 text-sm font-black text-slate-950" to="/post-job">
+                  Post a Job <ChevronDown className="-rotate-90" size={15} />
+                </Link>
               </>
             )}
           </div>
 
-          <button className="grid h-11 w-11 place-items-center rounded-[7px] border border-slate-200 bg-white text-slate-700 lg:hidden" onClick={() => setOpen((value) => !value)} type="button" aria-label="Open menu">
+          <button className="ml-auto grid h-11 w-11 place-items-center rounded-[7px] border border-slate-200 bg-white text-[#0057B8] shadow-sm lg:hidden" onClick={() => setOpen((value) => !value)} type="button" aria-label="Open menu">
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
         </nav>
@@ -100,8 +130,8 @@ export function EmployerLayout() {
                 </div>
               ) : (
                 <div className="grid gap-2 pt-2 sm:grid-cols-3">
-                  <Link className="nav-transparent-btn" onClick={() => setOpen(false)} to="/recruiter-login">Login</Link>
-                  {!isLoggedIn && <Button onClick={() => setOpen(false)} to="/recruiter-register" variant="secondary">Register</Button>}
+                  <button className="inline-flex min-h-10 items-center justify-center rounded-[3px] border border-[#ff8a00] px-4 text-sm font-black text-[#ff8a00]" onClick={() => openAuthModal('recruiter-login')} type="button">Recruiter Login</button>
+                  {!isLoggedIn && <button className="inline-flex min-h-10 items-center justify-center rounded-[3px] bg-[#ff8a00] px-4 text-sm font-black text-white" onClick={() => openAuthModal('recruiter-register')} type="button">Recruiter Register</button>}
                   <Button onClick={() => setOpen(false)} to="/post-job">Post Job</Button>
                 </div>
               )}
@@ -115,6 +145,12 @@ export function EmployerLayout() {
       </main>
 
       <EmployerFooter />
+      <AuthModal
+        initialMode={authModalMode || 'recruiter-login'}
+        onClose={() => setAuthModalMode('')}
+        onSuccess={() => setUser(getStoredUser())}
+        open={Boolean(authModalMode)}
+      />
     </div>
   )
 }

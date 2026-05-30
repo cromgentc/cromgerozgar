@@ -240,6 +240,7 @@ export const api = {
   adminDashboard: () => apiRequest('/dashboard/admin', { authRequired: true }),
   recruiterPage: () => apiRequest('/recruiter-page'),
   employerDashboard: (email = '') => apiRequest(`/dashboard/employer${email ? `?recruiterEmail=${encodeURIComponent(email)}` : ''}`, { authRequired: true }),
+  videoTestimonials: () => apiRequest('/video-testimonials'),
   createJob: (data) => apiRequest('/jobs', { method: 'POST', body: JSON.stringify(data) }),
   createApplication: (data) => apiRequest('/applications', { method: 'POST', body: JSON.stringify(data) }),
   login: (data) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(data) }),

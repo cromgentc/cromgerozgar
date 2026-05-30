@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CheckCircle2, Clock3, MapPin, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
+import { Clock3, MapPin, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { JobCard } from '../components/JobCard'
 import { SearchBar } from '../components/SearchBar'
@@ -151,112 +151,91 @@ export function JobsPage({ onApply }) {
   }
 
   const salaryBandCounts = useMemo(() => buildSalaryBandCounts(normalizedJobs), [normalizedJobs])
-  const featuredCount = normalizedJobs.filter((job) => job.featured).length
-  const remoteCount = normalizedJobs.filter((job) => job.workMode === 'Remote').length
   const urgentCount = normalizedJobs.filter((job) => job.urgent).length
   const activeChips = buildActiveChips(selectedFilters, selectedSalaryBands, selectedExperienceMax)
 
   return (
-    <section className="w-full max-w-full overflow-x-hidden bg-slate-50 py-3 sm:py-10">
-      <div className="w-full max-w-full px-0 sm:mx-auto sm:max-w-7xl sm:px-6 lg:px-8">
-        <div className="relative w-full max-w-full overflow-hidden border-y border-[#0057B8]/10 bg-white px-3 py-5 shadow-sm sm:rounded-[7px] sm:border sm:px-8 sm:py-8">
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-[7px] bg-blue-50 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-[#0057B8]">
-                <CheckCircle2 size={15} /> Verified job search
-              </div>
-              <h1 className="mt-4 max-w-3xl text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
-                Find jobs that match your skills, location, and growth plan.
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-500 sm:text-base">
-                Search trusted openings, compare salary and experience quickly, then apply without losing your place.
-              </p>
-            </div>
-            <div className="grid grid-cols-3 overflow-hidden rounded-[7px] border border-slate-200 bg-slate-50">
-              <HeroStat label="Live jobs" value={normalizedJobs.length} />
-              <HeroStat label="Featured" value={featuredCount} />
-              <HeroStat label="Remote" value={remoteCount} />
-            </div>
-          </div>
-          <div className="mt-5"><SearchBar compact /></div>
+    <section className="w-full max-w-full overflow-x-hidden bg-[#f7f7f7] py-4 sm:py-6">
+      <div className="w-full max-w-full px-0 sm:mx-auto sm:max-w-5xl sm:px-5">
+        <div className="relative w-full max-w-full overflow-hidden border-y border-slate-200 bg-white px-3 py-3 shadow-sm sm:rounded-[7px] sm:border sm:px-4">
+          <SearchBar compact />
         </div>
 
-        <div className="mt-4 grid w-full max-w-full gap-3 sm:mt-6 sm:gap-6 lg:grid-cols-[310px_minmax(0,1fr)]">
-          <aside className="hidden h-fit rounded-[7px] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 lg:sticky lg:top-24 lg:block">
-            <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-4">
-              <span className="grid h-10 w-10 place-items-center rounded-[7px] bg-blue-600 text-white">
-                <SlidersHorizontal size={19} />
-              </span>
-              <div>
-                <h2 className="font-black text-slate-950">Advanced Filters</h2>
-                <p className="mt-1 text-xs font-bold text-slate-500">{activeFilterCount} active filters</p>
+        <div className="mt-3 grid w-full max-w-full gap-5 lg:grid-cols-[310px_minmax(0,1fr)]">
+          <aside className="hidden h-fit rounded-[7px] border border-slate-200 bg-white shadow-sm lg:sticky lg:top-20 lg:block">
+            <div className="border-b border-slate-100 p-5 text-center">
+              <div className="inline-flex items-center justify-center gap-2 text-base font-black text-slate-950">
+                <SlidersHorizontal className="text-[#008bdc]" size={20} />
+                Filters
               </div>
+              <p className="mt-1 text-xs font-bold text-slate-500">{activeFilterCount} active filters</p>
             </div>
-            {activeFilterCount > 0 && (
-              <button className="mb-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[7px] bg-slate-100 px-4 text-sm font-black text-slate-600 hover:bg-blue-50 hover:text-blue-700" onClick={clearFilters} type="button">
-                <X size={16} /> Clear filters
-              </button>
-            )}
-            <div className="grid gap-5">
-              <RangeFilter
-                label="Experience"
-                max={30}
-                minLabel="0 Yrs"
-                onChange={(value) => setSingleFilter('experienceMax', value ? String(value) : '')}
-                step={1}
-                suffix="Yrs"
-                value={selectedExperienceMax || 0}
-              />
-              <SalaryFilter
-                counts={salaryBandCounts}
-                onViewMore={openSalaryModal}
-                selectedValues={selectedSalaryBands}
-              />
-              <ModalOnlyFilter
-                allLabel="All locations"
-                filter={dynamicFilters.find((item) => item.key === 'location') || { key: 'location', label: 'Location', values: [], counts: {} }}
-                onViewMore={openLocationModal}
-                selectedValues={selectedFilters.location || []}
-              />
-              <ExpandedFilter
-                allLabel="All skills"
-                filter={dynamicFilters.find((item) => item.key === 'skills') || { key: 'skills', label: 'Skills', values: [], counts: {} }}
-                onChange={(value) => setSingleFilter('skills', value)}
-                onViewMore={openSkillsModal}
-                value={selectedFilters.skills?.[0] || ''}
-              />
-              <DepartmentFilter
-                filter={departmentFilter}
-                onChange={(value) => setSingleFilter('department', value)}
-                onViewMore={openDepartmentModal}
-                value={selectedFilters.department?.[0] || ''}
-              />
-              {['workMode', 'typeFilter'].map((key) => {
-                const filter = dynamicFilters.find((item) => item.key === key) || { key, label: key, values: [] }
-                return (
-                  <FilterSelect
-                    allLabel={key === 'workMode' ? 'All mode' : 'All type'}
-                    key={key}
-                    filter={filter}
-                    onChange={(value) => setSingleFilter(key, value)}
-                    value={selectedFilters[key]?.[0] || ''}
-                  />
-                )
-              })}
+            <div className="grid gap-0 p-4">
+              {activeFilterCount > 0 && (
+                <button className="mb-2 ml-auto inline-flex min-h-8 items-center justify-center gap-1 rounded-[7px] px-2 text-sm font-bold text-[#008bdc] shadow-none transition hover:text-[#006fac]" onClick={clearFilters} type="button">
+                  <X size={16} /> Clear all filters
+                </button>
+              )}
+              <div className="grid gap-0">
+                <RangeFilter
+                  label="Experience"
+                  max={30}
+                  minLabel="0 Yrs"
+                  onChange={(value) => setSingleFilter('experienceMax', value ? String(value) : '')}
+                  step={1}
+                  suffix="Yrs"
+                  value={selectedExperienceMax || 0}
+                />
+                <SalaryFilter
+                  counts={salaryBandCounts}
+                  onViewMore={openSalaryModal}
+                  selectedValues={selectedSalaryBands}
+                />
+                <ModalOnlyFilter
+                  allLabel="All locations"
+                  filter={dynamicFilters.find((item) => item.key === 'location') || { key: 'location', label: 'Location', values: [], counts: {} }}
+                  onViewMore={openLocationModal}
+                  selectedValues={selectedFilters.location || []}
+                />
+                <ExpandedFilter
+                  allLabel="All skills"
+                  filter={dynamicFilters.find((item) => item.key === 'skills') || { key: 'skills', label: 'Skills', values: [], counts: {} }}
+                  onChange={(value) => setSingleFilter('skills', value)}
+                  onViewMore={openSkillsModal}
+                  value={selectedFilters.skills?.[0] || ''}
+                />
+                <DepartmentFilter
+                  filter={departmentFilter}
+                  onChange={(value) => setSingleFilter('department', value)}
+                  onViewMore={openDepartmentModal}
+                  value={selectedFilters.department?.[0] || ''}
+                />
+                {['workMode', 'typeFilter'].map((key) => {
+                  const filter = dynamicFilters.find((item) => item.key === key) || { key, label: key, values: [] }
+                  return (
+                    <FilterSelect
+                      allLabel={key === 'workMode' ? 'All mode' : 'All type'}
+                      key={key}
+                      filter={filter}
+                      onChange={(value) => setSingleFilter(key, value)}
+                      value={selectedFilters[key]?.[0] || ''}
+                    />
+                  )
+                })}
+              </div>
 
             </div>
           </aside>
 
           <div className="min-w-0">
-            <div className="mb-3 rounded-none border-y border-slate-200 bg-white p-3 shadow-sm sm:mb-5 sm:rounded-[7px] sm:border sm:p-4">
+            <div className="mb-3 rounded-none border-y border-slate-200 bg-white p-3 shadow-sm sm:rounded-[7px] sm:border sm:p-4">
               <div className="flex w-full max-w-full items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-black uppercase tracking-wide text-blue-600">Recommended openings</p>
-                  <p className="mt-1 min-w-0 truncate text-sm font-black text-slate-950 sm:text-lg">
-                    Showing {list.length} premium jobs{hasSearch ? ' for your search' : ''}
+                  <p className="min-w-0 truncate text-base font-black text-slate-950 sm:text-lg">
+                    {list.length} jobs found{hasSearch ? ' for your search' : ''}
                   </p>
                 </div>
-                <select className="w-36 shrink-0 rounded-[7px] border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 outline-none focus:border-blue-500 sm:w-auto sm:px-4 sm:text-sm">
+                <select className="w-36 shrink-0 rounded-[7px] border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white sm:w-auto sm:px-4 sm:text-sm">
                   <option>Sort by relevance</option>
                   <option>Sort by newest</option>
                   <option>Sort by salary</option>
@@ -281,7 +260,7 @@ export function JobsPage({ onApply }) {
               </div>
             </div>
             {list.length ? (
-              <div className="grid w-full max-w-full grid-cols-1 gap-3 px-2 sm:px-0 sm:gap-5">
+              <div className="grid w-full max-w-full grid-cols-1 gap-3 px-2 sm:px-0">
                 {list.map((job, index) => <JobCard denseMobile index={index + 1} job={job} key={job._id || job.id} onApply={onApply} />)}
               </div>
             ) : (
@@ -380,10 +359,10 @@ export function JobsPage({ onApply }) {
 
 function FilterSelect({ allLabel, filter, onChange, value }) {
   return (
-    <label className="grid gap-2">
-      <span className="text-sm font-black text-slate-800">{filter.label}</span>
+    <label className="grid gap-2 border-b border-slate-100 px-2 py-3 last:border-b-0">
+      <span className="text-sm font-black text-slate-900">{filter.label}</span>
       <select
-        className="min-h-11 rounded-[7px] border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 outline-none focus:border-blue-500"
+        className="min-h-10 rounded-[7px] border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >
@@ -393,15 +372,6 @@ function FilterSelect({ allLabel, filter, onChange, value }) {
         ))}
       </select>
     </label>
-  )
-}
-
-function HeroStat({ label, value }) {
-  return (
-    <div className="border-r border-slate-200 px-3 py-4 last:border-r-0 sm:px-4">
-      <p className="text-2xl font-black text-slate-950">{value}</p>
-      <p className="mt-1 text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p>
-    </div>
   )
 }
 
@@ -427,20 +397,22 @@ function CheckboxFilter({ filter, onChange, selectedValue }) {
 
 function RangeFilter({ label, max, minLabel, onChange, step, suffix, value }) {
   return (
-    <div className="grid gap-4 border-t border-slate-100 pt-4">
+    <div className="grid gap-3 border-b border-slate-100 px-2 py-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-black text-slate-800">{label}</span>
-        <span className="rounded-[7px] bg-slate-950 px-2 py-1 text-xs font-black text-white">{value || max}</span>
+        <span className="text-sm font-black text-slate-900">{label}</span>
+        <span className="rounded-[7px] bg-blue-50 px-2.5 py-1 text-xs font-black text-[#0057B8] ring-1 ring-blue-100">{value || max} {suffix}</span>
       </div>
-      <input
-        className="w-full accent-slate-950"
-        max={max}
-        min="0"
-        onChange={(event) => onChange(Number(event.target.value))}
-        step={step}
-        type="range"
-        value={value || max}
-      />
+      <div className="rounded-[7px] bg-slate-50 px-3 py-3 ring-1 ring-slate-100">
+        <input
+          className="w-full cursor-pointer accent-[#0057B8]"
+          max={max}
+          min="0"
+          onChange={(event) => onChange(Number(event.target.value))}
+          step={step}
+          type="range"
+          value={value || max}
+        />
+      </div>
       <div className="flex items-center justify-between text-xs font-bold text-slate-500">
         <span>{minLabel}</span>
         <span>{value || max} {suffix}</span>
@@ -451,10 +423,10 @@ function RangeFilter({ label, max, minLabel, onChange, step, suffix, value }) {
 
 function SalaryFilter({ counts, onViewMore, selectedValues }) {
   return (
-    <div className="grid gap-2 border-t border-slate-100 pt-4">
+    <div className="grid gap-3 border-b border-slate-100 px-2 py-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-black text-slate-800">Salary</span>
-        <button className="text-xs font-black text-blue-600 hover:text-blue-700" onClick={onViewMore} type="button">
+        <span className="text-sm font-black text-slate-900">Salary</span>
+        <button className="rounded-[7px] px-2 py-1 text-xs font-black text-blue-600 transition hover:text-blue-700" onClick={onViewMore} type="button">
           View More
         </button>
       </div>
@@ -473,10 +445,10 @@ function SalaryFilter({ counts, onViewMore, selectedValues }) {
 
 function ModalOnlyFilter({ allLabel, filter, onViewMore, selectedValues }) {
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-3 border-b border-slate-100 px-2 py-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-black text-slate-800">{filter.label}</span>
-        <button className="text-xs font-black text-blue-600 hover:text-blue-700" onClick={onViewMore} type="button">
+        <span className="text-sm font-black text-slate-900">{filter.label}</span>
+        <button className="rounded-[7px] px-2 py-1 text-xs font-black text-blue-600 transition hover:text-blue-700" onClick={onViewMore} type="button">
           View More
         </button>
       </div>
@@ -490,15 +462,15 @@ function ModalOnlyFilter({ allLabel, filter, onViewMore, selectedValues }) {
 
 function ExpandedFilter({ allLabel, filter, onChange, onViewMore, value }) {
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-3 border-b border-slate-100 px-2 py-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-black text-slate-800">{filter.label}</span>
-        <button className="text-xs font-black text-blue-600 hover:text-blue-700" onClick={onViewMore} type="button">
+        <span className="text-sm font-black text-slate-900">{filter.label}</span>
+        <button className="rounded-[7px] px-2 py-1 text-xs font-black text-blue-600 transition hover:text-blue-700" onClick={onViewMore} type="button">
           View More
         </button>
       </div>
       <select
-        className="min-h-11 rounded-[7px] border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 outline-none focus:border-blue-500"
+        className="min-h-10 rounded-[7px] border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >

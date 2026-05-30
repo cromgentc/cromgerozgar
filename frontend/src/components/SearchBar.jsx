@@ -20,7 +20,7 @@ export function SearchBar({ compact = false }) {
   }
 
   return (
-    <form className="w-full max-w-full overflow-hidden rounded-[7px] border border-slate-200 bg-white p-1.5 shadow-lg shadow-blue-100/60 ring-1 ring-white/70 sm:p-2 sm:shadow-2xl" onSubmit={submit}>
+    <form className={`w-full max-w-full overflow-hidden rounded-[7px] border border-slate-200 bg-white p-1.5 ring-1 ring-white/70 sm:p-2 ${compact ? 'shadow-sm' : 'shadow-lg shadow-blue-100/60 sm:shadow-2xl'}`} onSubmit={submit}>
       <div className={`grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-1 ${compact ? 'md:grid-cols-[minmax(0,1fr)_190px_190px_auto]' : 'md:grid-cols-[minmax(0,1fr)_180px_190px_auto]'}`}>
         <label className="col-span-2 flex min-h-11 min-w-0 items-center gap-2 rounded-[7px] bg-slate-50 px-3 text-slate-500 ring-1 ring-transparent transition focus-within:bg-white focus-within:ring-blue-200 sm:col-span-1 sm:min-h-14 sm:gap-3 sm:px-4">
           <span className="hidden h-9 w-9 shrink-0 place-items-center rounded-[7px] bg-white text-blue-600 shadow-sm ring-1 ring-slate-100 sm:grid">

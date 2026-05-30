@@ -15,11 +15,14 @@ import {
   Rocket,
   Sparkles,
   UsersRound,
+  X,
 } from 'lucide-react'
 import { Button } from '../../components/Button'
+import { FeatureShowcase } from '../../components/FeatureShowcase'
 import { api } from '../../services/api'
 import { getStoredUser } from '../../routes/authRouting'
 import heroImage from '../../assets/enterprise-hiring-banner.png'
+import femaleRecruiterImage from '../../assets/recruiter-female-single.png'
 
 const slides = [
   {
@@ -81,8 +84,7 @@ export function EmployerLandingPage() {
   const [recruiters, setRecruiters] = useState([])
   const [jobs, setJobs] = useState([])
   const [documents, setDocuments] = useState([])
-  const [recruiterTestimonials, setRecruiterTestimonials] = useState([])
-  const [testimonialsLoading, setTestimonialsLoading] = useState(true)
+  const [videoTestimonials, setVideoTestimonials] = useState([])
 
   useEffect(() => {
     const timer = window.setInterval(() => setActive((value) => (value + 1) % slides.length), 4500)
@@ -100,17 +102,14 @@ export function EmployerLandingPage() {
         setRecruiters(Array.isArray(data.recruiters) ? data.recruiters : [])
         setJobs(Array.isArray(data.jobs) ? data.jobs : [])
         setDocuments(Array.isArray(data.documents) ? data.documents : [])
-        setRecruiterTestimonials(Array.isArray(data.testimonials) ? data.testimonials.filter((item) => item.name && item.text) : [])
+        setVideoTestimonials(Array.isArray(data.videoTestimonials) ? data.videoTestimonials : [])
       })
       .catch(() => {
         if (!mounted) return
         setRecruiters([])
         setJobs([])
         setDocuments([])
-        setRecruiterTestimonials([])
-      })
-      .finally(() => {
-        if (mounted) setTestimonialsLoading(false)
+        setVideoTestimonials([])
       })
 
     return () => {
@@ -128,7 +127,79 @@ export function EmployerLandingPage() {
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-[#0057B8]/10 bg-[linear-gradient(135deg,#FFFFFF_0%,#F8FBFF_48%,#FFF7ED_100%)]">
+      <section className="relative overflow-hidden border-b border-[#b7ecf4] bg-[#e8fbff]">
+        <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_1px_1px,#7bd3e8_1px,transparent_0)] [background-size:24px_24px]" />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[1fr_0.62fr_0.68fr] lg:px-8 lg:py-0">
+          <div className="py-2 lg:py-4">
+            <h1 className="max-w-2xl text-2xl font-semibold leading-tight text-[#17466f] lg:text-[28px]">
+              Recruit Right Candidate For Right Job
+            </h1>
+            <div className="mt-3 grid gap-1.5 text-sm font-medium text-slate-900">
+              {[
+                'Register and Post Jobs for Free Now!',
+                'Over 2.5 Millions Verified Resume Database',
+                'Unlimited Job Post & Hire Applicants Faster',
+                'Search Professional CVs at Your Fingertips',
+              ].map((item) => (
+                <p className="flex items-center gap-3" key={item}>
+                  <CheckCircle2 className="shrink-0 fill-[#1bc600] text-white" size={17} />
+                  {item}
+                </p>
+              ))}
+            </div>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <Button className="border border-[#ff8a00] bg-white !text-black shadow-none hover:bg-[#fff4e6] focus:ring-orange-100" to="/post-job">
+                Post Jobs for Free
+              </Button>
+              <Button
+                className="border border-[#ff8a00] bg-white !text-black shadow-none hover:bg-[#fff4e6] focus:ring-orange-100"
+                to="/recruiter-find-resume"
+                variant="secondary"
+              >
+                Search Resume
+              </Button>
+            </div>
+          </div>
+
+          <div className="relative hidden h-[410px] overflow-hidden lg:block">
+            <img
+              alt="Female recruiter using laptop"
+              className="absolute bottom-0 left-1/2 h-[430px] w-[430px] max-w-none -translate-x-[46%] object-cover object-left-bottom drop-shadow-[0_18px_28px_rgba(23,70,111,0.18)]"
+              src={femaleRecruiterImage}
+              style={{
+                WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%)',
+                maskImage: 'linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%)',
+              }}
+            />
+          </div>
+
+          <div className="rounded-[7px] border border-slate-200 bg-white p-2.5 shadow-xl shadow-cyan-900/10 lg:my-3">
+            <h2 className="border-b border-slate-200 pb-1.5 text-center text-sm font-black text-[#17466f]">Get a Call Back</h2>
+            <div className="mt-2.5 grid gap-2">
+              <input className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[#4b74d7]" placeholder="Name" />
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-700">
+                <span>Hiring For :</span>
+                <label className="inline-flex items-center gap-2"><input name="hiringFor" type="radio" /> Your Company</label>
+                <label className="inline-flex items-center gap-2"><input name="hiringFor" type="radio" /> Your Consultancy</label>
+              </div>
+              <input className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[#4b74d7]" placeholder="Company Name" />
+              <input className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[#4b74d7]" placeholder="Email ID" />
+              <div className="grid grid-cols-[92px_1fr]">
+                <select className="rounded-l-[5px] border border-r-0 border-slate-200 px-2 py-1.5 text-sm outline-none focus:border-[#4b74d7]">
+                  <option>IN (+91)</option>
+                </select>
+                <input className="rounded-r-[5px] border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[#4b74d7]" placeholder="Mobile Number" />
+              </div>
+              <input className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[#4b74d7]" placeholder="Your Location" />
+              <button className="rounded-[5px] bg-[#ff8a00] px-4 py-2 text-sm font-black text-white transition hover:bg-[#e87900] focus:outline-none focus:ring-4 focus:ring-orange-100" type="button">
+                Get a Call Back
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="hidden">
         <div className="absolute inset-y-0 right-0 hidden w-[58%] lg:block">
           <img className="h-full w-full object-cover object-left opacity-95" src={heroImage} alt="" aria-hidden="true" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,#FFFFFF_0%,rgba(255,255,255,0.82)_24%,rgba(255,255,255,0.2)_58%,rgba(255,247,237,0.74)_100%)]" />
@@ -205,16 +276,7 @@ export function EmployerLandingPage() {
         </div>
       </section>
 
-      <section className="bg-white py-16">
-        <div className="mx-auto grid max-w-7xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-          {networkStats.map(([value, label]) => (
-            <div className="rounded-[7px] border border-slate-200 bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-100" key={label}>
-              <p className="text-3xl font-black text-slate-950">{value}</p>
-              <p className="mt-2 text-sm font-bold text-slate-500">{label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <FeatureShowcase />
 
       <section className="bg-slate-50 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -231,7 +293,7 @@ export function EmployerLandingPage() {
         </div>
       </section>
 
-      <EmployerTestimonials loading={testimonialsLoading} testimonials={recruiterTestimonials} />
+      <EmployerTestimonials testimonials={videoTestimonials} />
       <EmployerCTA isLoggedIn={isLoggedIn} isRecruiterAccount={isRecruiterAccount} />
     </>
   )
@@ -265,125 +327,139 @@ function FeatureCard({ Icon, title, text }) {
   )
 }
 
-function EmployerTestimonials({ loading, testimonials = [] }) {
-  const [activeTestimonial, setActiveTestimonial] = useState(0)
-  const visibleTestimonials = testimonials.slice(0, 10)
-  const activeItem = visibleTestimonials[activeTestimonial] || visibleTestimonials[0]
-  const averageRating = testimonials.length
-    ? (testimonials.reduce((total, testimonial) => total + Number(testimonial.rating || 5), 0) / testimonials.length).toFixed(1)
-    : '0.0'
-
-  useEffect(() => {
-    if (visibleTestimonials.length <= 1) return undefined
-    const timer = window.setInterval(() => {
-      setActiveTestimonial((current) => (current + 1) % visibleTestimonials.length)
-    }, 4500)
-    return () => window.clearInterval(timer)
-  }, [visibleTestimonials.length])
-
-  useEffect(() => {
-    if (activeTestimonial >= visibleTestimonials.length) setActiveTestimonial(0)
-  }, [activeTestimonial, visibleTestimonials.length])
+function EmployerTestimonials({ testimonials = [] }) {
+  const [activeVideo, setActiveVideo] = useState(null)
+  const videoTestimonials = testimonials.filter((item) => item.companyName).slice(0, 3)
+  const visibleVideos = videoTestimonials.length ? videoTestimonials : [
+    {
+      companyName: 'K9HR Solutions',
+      location: '150 Feet Ring Road, Rajkot, India',
+      logoText: 'K9HR',
+      tone: 'blue',
+    },
+    {
+      companyName: 'Jobsahihai Manpower Solution',
+      location: 'Sector 73, Noida, India',
+      logoText: 'JS',
+      tone: 'stone',
+    },
+  ]
 
   return (
-    <section className="bg-slate-50 py-16">
+    <section className="bg-gradient-to-b from-[#dff4f5] to-[#fff5ee] py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-10 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">Recruiter testimonials</p>
-            <h2 className="mt-3 max-w-3xl text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Recruiter reviews and success stories</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">Published recruiter and company feedback from MongoDB, curated for hiring teams evaluating the platform.</p>
-          </div>
-          <div className="grid grid-cols-3 gap-2 sm:w-[420px]">
-            <TestimonialMetric label="Stories" value={testimonials.length} />
-            <TestimonialMetric label="Featured" value={testimonials.filter((item) => item.featured).length} />
-            <TestimonialMetric label="Rating" value={averageRating} />
+        <div className="mb-8 flex items-center justify-center sm:relative">
+          <h2 className="text-center text-2xl font-semibold text-[#1f3d68] sm:text-[28px]">
+            Why Companies Choose Us
+          </h2>
+          <div className="absolute right-4 hidden items-center gap-3 sm:flex lg:right-8">
+            <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-300 bg-white/60 text-slate-500 transition hover:border-[#ff8a00] hover:text-[#ff8a00]" type="button" aria-label="Previous video testimonial">
+              <ArrowLeft size={16} />
+            </button>
+            <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-500 bg-white text-slate-700 transition hover:border-[#ff8a00] hover:text-[#ff8a00]" type="button" aria-label="Next video testimonial">
+              <ArrowRight size={16} />
+            </button>
           </div>
         </div>
 
-        {loading ? (
-          <div className="grid gap-5 md:grid-cols-3">
-            {[1, 2, 3].map((item) => <div className="h-64 animate-pulse rounded-[7px] bg-white ring-1 ring-slate-200" key={item} />)}
-          </div>
-        ) : visibleTestimonials.length ? (
-          <div className="overflow-hidden rounded-[7px] border border-slate-200 bg-white p-5 shadow-xl shadow-blue-100">
-            <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:items-stretch">
-              <AnimatePresence mode="wait">
-                <motion.article
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex min-h-[340px] flex-col rounded-[7px] bg-gradient-to-br from-blue-50 via-white to-teal-50 p-6"
-                  exit={{ opacity: 0, x: -24 }}
-                  initial={{ opacity: 0, x: 24 }}
-                  key={activeItem._id || activeItem.name}
-                  transition={{ duration: 0.32 }}
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="grid h-14 w-14 place-items-center rounded-[7px] bg-gradient-to-br from-blue-600 to-teal-400 text-base font-black text-white shadow-lg shadow-blue-100">
-                        {getRecruiterInitials(activeItem.name)}
-                      </span>
-                      <div>
-                        <p className="text-xl font-black text-slate-950">{activeItem.name}</p>
-                        <p className="text-sm font-semibold text-slate-500">{activeItem.role || activeItem.company || 'Recruiter'}</p>
-                      </div>
-                    </div>
-                    {activeItem.featured && <span className="rounded-[7px] bg-teal-50 px-3 py-1 text-xs font-black text-teal-700">Featured</span>}
-                  </div>
-                  <div className="mt-7 flex gap-1">
-                    {Array.from({ length: 5 }, (_, index) => (
-                      <span className={`text-xl ${index < Number(activeItem.rating || 5) ? 'text-amber-400' : 'text-slate-200'}`} key={index}>?</span>
-                    ))}
-                  </div>
-                  <p className="mt-6 flex-1 text-lg font-semibold leading-8 text-slate-700">{activeItem.text}</p>
-                  <div className="mt-6 rounded-[7px] bg-white/80 p-4 ring-1 ring-slate-200">
-                    <p className="text-xs font-black uppercase tracking-wide text-slate-400">Company</p>
-                    <p className="mt-1 font-black text-slate-800">{activeItem.company || 'Cromgen Rozgar recruiter network'}</p>
-                  </div>
-                </motion.article>
-              </AnimatePresence>
-
-              <div className="flex flex-col justify-between rounded-[7px] bg-slate-50 p-4">
-                <div className="grid gap-3">
-                  {visibleTestimonials.slice(0, 5).map((item, index) => (
-                    <button
-                      className={`rounded-[7px] p-4 text-left transition ${activeTestimonial === index ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-blue-50'}`}
-                      key={item._id || item.name}
-                      onClick={() => setActiveTestimonial(index)}
-                      type="button"
-                    >
-                      <p className="font-black">{item.name}</p>
-                      <p className={`mt-1 text-xs font-semibold ${activeTestimonial === index ? 'text-blue-100' : 'text-slate-500'}`}>{item.company || item.role || 'Recruiter feedback'}</p>
-                    </button>
-                  ))}
+        <div className={`grid gap-5 ${visibleVideos.length === 2 ? 'md:grid-cols-2 md:px-28' : 'md:grid-cols-3'}`}>
+          {visibleVideos.map((item, index) => (
+            <article className="overflow-hidden rounded-[6px] bg-white shadow-md shadow-slate-300/60" key={item._id || item.companyName}>
+              <button className={`relative block h-[300px] w-full overflow-hidden bg-gradient-to-br ${getVideoToneClass(item.tone)} md:h-[300px]`} onClick={() => setActiveVideo(item)} type="button">
+                {item.thumbnailUrl ? (
+                  <img className="h-full w-full object-cover" src={item.thumbnailUrl} alt={`${item.companyName} video testimonial`} />
+                ) : (
+                  <>
+                    <div className="absolute inset-x-0 top-0 mx-auto h-full w-[56%] bg-white/10" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.38),transparent_30%)]" />
+                  </>
+                )}
+                <div className="absolute left-1/2 top-1/2 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white shadow-lg">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-[#ff0033] text-white">
+                    <span className="ml-0.5 h-0 w-0 border-y-[7px] border-l-[11px] border-y-transparent border-l-white" />
+                  </span>
                 </div>
-                <div className="mt-5 flex items-center justify-between">
-                  <button className="grid h-11 w-11 place-items-center rounded-[7px] bg-white text-slate-700 ring-1 ring-slate-200" onClick={() => setActiveTestimonial((activeTestimonial + visibleTestimonials.length - 1) % visibleTestimonials.length)} type="button"><ArrowLeft size={18} /></button>
-                  <div className="flex gap-2">
-                    {visibleTestimonials.map((item, index) => <button className={`h-2.5 rounded-[7px] transition-all ${activeTestimonial === index ? 'w-8 bg-blue-600' : 'w-2.5 bg-slate-300'}`} key={item._id || item.name} onClick={() => setActiveTestimonial(index)} type="button" />)}
-                  </div>
-                  <button className="grid h-11 w-11 place-items-center rounded-[7px] bg-white text-slate-700 ring-1 ring-slate-200" onClick={() => setActiveTestimonial((activeTestimonial + 1) % visibleTestimonials.length)} type="button"><ArrowRight size={18} /></button>
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 rounded-[4px] bg-white/90 px-5 py-3 text-center shadow-sm">
+                  <p className="text-3xl font-black tracking-tight text-[#1d7fbf]">{item.logoText || getRecruiterInitials(item.companyName)}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Solutions</p>
                 </div>
+                {index === 1 && <div className="absolute inset-y-0 left-0 w-28 bg-black/45" />}
+              </button>
+              <div className="bg-white px-4 py-4 text-center">
+                <h3 className="text-lg font-normal text-[#333]">{item.companyName}</h3>
+                <p className="mt-2 text-sm font-normal text-[#e33113]">{item.location}</p>
               </div>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-[7px] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
-            <CheckCircle2 className="mx-auto text-teal-500" size={38} />
-            <h3 className="mt-4 text-xl font-black text-slate-950">No recruiter testimonials published yet</h3>
-            <p className="mt-2 text-sm text-slate-500">When admin adds Recruiter or Company testimonials in MongoDB, they will appear automatically in this professional carousel.</p>
-          </div>
-        )}
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <Button
+            className="min-h-11 border border-blue-600 bg-white px-8 !text-blue-600 shadow-none hover:bg-blue-50"
+            to="/recruiter-testimonials"
+            variant="secondary"
+          >
+            View All Video Testimonials
+          </Button>
+        </div>
       </div>
+      {activeVideo && <VideoTestimonialModal item={activeVideo} onClose={() => setActiveVideo(null)} />}
     </section>
   )
 }
-function TestimonialMetric({ label, value }) {
+
+function getVideoToneClass(tone = 'blue') {
+  const tones = {
+    amber: 'from-zinc-900 via-amber-950 to-zinc-800',
+    blue: 'from-slate-900 via-slate-700 to-slate-950',
+    slate: 'from-slate-950 via-slate-800 to-blue-950',
+    stone: 'from-stone-950 via-stone-700 to-stone-900',
+  }
+  return tones[tone] || tones.blue
+}
+
+function VideoTestimonialModal({ item, onClose }) {
   return (
-    <div className="rounded-[7px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
-      <p className="text-2xl font-black text-slate-950">{value}</p>
-      <p className="mt-1 text-[11px] font-black uppercase tracking-wide text-slate-400">{label}</p>
+    <div className="fixed inset-0 z-[120] grid place-items-center bg-slate-950/70 px-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-3xl overflow-hidden rounded-[8px] bg-white shadow-2xl">
+        <button className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-white text-slate-600 shadow ring-1 ring-slate-200 hover:text-[#ff8a00]" onClick={onClose} type="button" aria-label="Close video testimonial">
+          <X size={20} />
+        </button>
+        <div className="aspect-video bg-slate-950">
+          {item.videoUrl ? (
+            <iframe
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="h-full w-full"
+              src={normalizeVideoEmbedUrl(item.videoUrl)}
+              title={`${item.companyName} video testimonial`}
+            />
+          ) : (
+            <div className="grid h-full place-items-center p-8 text-center text-white">
+              <div>
+                <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#ff0033]">
+                  <span className="ml-1 h-0 w-0 border-y-[10px] border-l-[16px] border-y-transparent border-l-white" />
+                </div>
+                <h3 className="mt-5 text-2xl font-black">{item.companyName}</h3>
+                <p className="mt-2 text-sm text-slate-300">Video URL backend mein add karte hi yahan play hoga.</p>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="p-5 text-center">
+          <h3 className="text-xl font-semibold text-slate-900">{item.companyName}</h3>
+          <p className="mt-1 text-sm text-[#e33113]">{item.location}</p>
+        </div>
+      </div>
     </div>
   )
+}
+
+function normalizeVideoEmbedUrl(url = '') {
+  if (url.includes('youtube.com/embed/')) return url
+  const youtubeMatch = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&?/]+)/)
+  if (youtubeMatch?.[1]) return `https://www.youtube.com/embed/${youtubeMatch[1]}`
+  return url
 }
 
 function getRecruiterSlideAction(slide, user) {

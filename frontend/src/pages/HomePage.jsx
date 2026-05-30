@@ -3,8 +3,6 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { Building2, ClipboardCheck, Download, FileText, SearchCheck, Send, ShieldCheck, Smartphone } from 'lucide-react'
 import { Button } from '../components/Button'
-import { FAQSection } from '../components/FAQSection'
-import { FeatureShowcase } from '../components/FeatureShowcase'
 import { HeroBanner } from '../components/HeroBanner'
 import { JobCard } from '../components/JobCard'
 import { ReviewCard } from '../components/ReviewCard'
@@ -69,8 +67,6 @@ export function HomePage({ onApply }) {
     <>
       <HeroBanner />
 
-      <AppDownloadPromo />
-
       <MobileHomeJobs jobs={latestJobs} onApply={onApply} />
 
       {liveCompanies.length >= 50 && (
@@ -78,10 +74,6 @@ export function HomePage({ onApply }) {
           <CompanyGrid companies={liveCompanies} compactMobile />
         </Section>
       )}
-
-      <div className="md:hidden">
-        <CareerLanes categories={categories} compactMobile categoryCounts={categoryCounts} />
-      </div>
 
       <div className="hidden md:block">
         <CareerFocusBand />
@@ -96,17 +88,8 @@ export function HomePage({ onApply }) {
           <LatestJobsGrid hasMore jobs={latestJobs} onApply={onApply} />
         </Section>
 
-        <Section className="bg-white" title="How It Works">
-          <ProcessGrid isCandidate={isCandidate} isRecruiter={isRecruiter} jobsCount={liveJobs.length} user={user} />
-        </Section>
-
-        <CareerLanes categories={categories} categoryCounts={categoryCounts} />
-
-        {!isCandidate && <FeatureShowcase />}
-
         <TrustedByCandidates />
 
-        <FAQSection />
       </div>
     </>
   )
@@ -273,6 +256,7 @@ function MobileHomeJobs({ jobs = [], onApply }) {
 function TrustedByCandidates() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [activeIndex, setActiveIndex] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -295,7 +279,21 @@ function TrustedByCandidates() {
     }
   }, [])
 
-  const visibleItems = items.slice(0, 3)
+  useEffect(() => {
+    if (items.length <= 1) return undefined
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % items.length)
+    }, 3500)
+    return () => window.clearInterval(timer)
+  }, [items.length])
+
+  useEffect(() => {
+    if (activeIndex >= items.length) setActiveIndex(0)
+  }, [activeIndex, items.length])
+
+  const visibleItems = items.length
+    ? [0, 1, 2].map((offset) => items[(activeIndex + offset) % items.length]).filter(Boolean)
+    : []
 
   return (
     <section className="bg-white py-14 sm:py-18">
@@ -311,7 +309,22 @@ function TrustedByCandidates() {
         ) : items.length ? (
           <>
             <div className="mt-8 grid gap-5 text-left md:grid-cols-3">
-              {visibleItems.map((item) => <ReviewCard item={item} key={item._id || item.name} />)}
+              {visibleItems.map((item, index) => (
+                <div className={index === 0 ? '' : 'hidden md:block'} key={`${item._id || item.name}-${activeIndex}-${index}`}>
+                  <ReviewCard item={item} />
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 flex justify-center gap-2">
+              {items.slice(0, Math.min(items.length, 8)).map((item, index) => (
+                <button
+                  aria-label={`Show review ${index + 1}`}
+                  className={`h-2.5 rounded-full transition-all ${activeIndex === index ? 'w-8 bg-[#ff8a00]' : 'w-2.5 bg-slate-300 hover:bg-slate-400'}`}
+                  key={item._id || item.name || index}
+                  onClick={() => setActiveIndex(index)}
+                  type="button"
+                />
+              ))}
             </div>
             {items.length > 3 && (
               <Button className="mt-8" to="/candidate-reviews" variant="secondary">

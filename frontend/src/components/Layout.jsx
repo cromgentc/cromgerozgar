@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Bell, BriefcaseBusiness, CalendarDays, ChevronDown, ClipboardList, CreditCard, LogOut, Mail, MapPin, Menu, MessageCircle, Phone, Send, Share2, ShieldCheck, Sparkles, UserRound, Users, Wallet, X } from 'lucide-react'
+import { Bell, BriefcaseBusiness, CalendarDays, ChevronDown, ClipboardList, CreditCard, Download, LogOut, Mail, MapPin, Menu, MessageCircle, Phone, Send, Share2, ShieldCheck, Sparkles, Star, UserRound, Users, Wallet, X } from 'lucide-react'
+import { AuthModal } from './AuthModal'
 import { Button } from './Button'
 import { getStoredUser } from '../routes/authRouting'
 import { EmployerFooter } from '../employer/components/EmployerFooter'
@@ -18,6 +19,12 @@ const navItems = [
   { label: 'Candidates', to: '/candidate-dashboard' },
 ]
 
+const publicNavItems = [
+  { label: 'Jobs', to: '/jobs' },
+  { label: 'Freelancer', to: '/freelancer' },
+  { label: 'Courses', to: '/jobs', offer: true },
+]
+
 const recruiterDashboardPath = '/recruiter-dashboard'
 const recruiterProfilePath = '/recruiter-profile'
 const liveLocationRoles = ['Candidate', 'users', 'recruiter']
@@ -33,6 +40,8 @@ export function Layout() {
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [newsletterStatus, setNewsletterStatus] = useState({ type: '', message: '' })
   const [newsletterLoading, setNewsletterLoading] = useState(false)
+  const [appBannerOpen, setAppBannerOpen] = useState(true)
+  const [authModalMode, setAuthModalMode] = useState('')
   const branding = useSiteBranding()
   const socialLinks = useSocialMediaLinks()
   const location = useLocation()
@@ -183,10 +192,15 @@ export function Layout() {
     }
   }
 
+  const openAuthModal = (mode) => {
+    setAuthModalMode(mode)
+    setOpen(false)
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/96 shadow-sm shadow-slate-200/60 backdrop-blur-xl">
-        <nav className="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
+        <nav className="mx-auto flex h-20 max-w-7xl items-center justify-start gap-6 px-4 sm:px-6 lg:px-8">
           <Link className="site-logo-lockup flex min-w-0 items-center font-bold text-slate-950" to="/">
             {branding.logoUrl ? (
               <span className="site-logo-frame">
@@ -200,19 +214,21 @@ export function Layout() {
             )}
           </Link>
 
-          <div className="hidden items-center gap-7 lg:flex">
-            {visibleNavItems.map((item) => (
+          <div className="hidden items-center gap-8 lg:flex">
+            {(user ? visibleNavItems : publicNavItems).map((item) => (
               <NavLink
                 className={({ isActive }) =>
-                  `group relative py-2 text-sm font-bold transition ${
-                    isActive ? 'text-[#0057B8]' : 'text-slate-650 hover:text-[#0057B8]'
+                  `group relative inline-flex items-center gap-1 py-7 text-sm font-bold transition ${
+                    isActive ? 'text-slate-950' : 'text-slate-700 hover:text-slate-950'
                   }`
                 }
                 key={item.label}
                 to={item.to}
               >
                 <span>{item.label}</span>
-                <span className="absolute inset-x-0 -bottom-1 h-0.5 origin-left scale-x-0 rounded-[7px] bg-[#0057B8] transition group-hover:scale-x-100" />
+                {item.offer && <span className="rounded-[4px] bg-[#ff8a00] px-1.5 py-0.5 text-[11px] font-black text-white">OFFER</span>}
+                {item.dropdown && <ChevronDown size={15} />}
+                <span className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 rounded-[7px] bg-[#00A5E0] transition group-hover:scale-x-100" />
                 {item.label === 'Recruiter' && (
                   <span className="recruiter-offer-badge absolute -right-9 -top-3 whitespace-nowrap rounded-[7px] bg-rose-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white shadow-lg shadow-rose-100">
                     New Recruiter Offer
@@ -222,7 +238,7 @@ export function Layout() {
             ))}
           </div>
 
-          <div className="hidden items-center gap-2 border-l border-slate-200 pl-5 lg:flex">
+          <div className="ml-auto hidden items-center gap-4 border-l border-slate-100 pl-6 lg:flex">
             {isUserAccount ? (
               <>
                 <RoleNotificationBell loading={notificationsLoading} notifications={notifications} onClear={clearNotifications} open={notificationsOpen} setOpen={setNotificationsOpen} setProfileOpen={setProfileOpen} user={user} />
@@ -235,13 +251,15 @@ export function Layout() {
               </>
             ) : (
               <>
-                <Link className="nav-transparent-btn" to="/auth">
+                <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] px-5 text-sm font-black text-[#ff8a00] transition hover:border-[#e87500] hover:text-[#e87500]" onClick={() => openAuthModal('login')} type="button">
                   Login
+                </button>
+                <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] bg-[#ff8a00] px-5 text-sm font-black text-white shadow-sm transition hover:bg-[#e87500]" onClick={() => openAuthModal('register')} type="button">
+                  Register
+                </button>
+                <Link className="inline-flex min-h-10 items-center gap-1 whitespace-nowrap px-2 text-sm font-black text-[#0077bd]" to="/recruiter">
+                  Employer sign up <ChevronDown className="-rotate-90" size={15} />
                 </Link>
-                <Link className="nav-transparent-btn" to="/recruiter">
-                  Recruiter
-                </Link>
-                <Button className="nav-post-job-btn" to="/post-job">Post Job</Button>
               </>
             )}
           </div>
@@ -308,7 +326,8 @@ export function Layout() {
               ) : (
                 <>
                   <div className="grid gap-2 pt-2">
-                    <Link className="nav-transparent-btn" onClick={() => setOpen(false)} to="/auth">Login</Link>
+                    <button className="nav-transparent-btn" onClick={() => openAuthModal('login')} type="button">Login</button>
+                    <button className="inline-flex min-h-10 items-center justify-center rounded-[3px] bg-[#ff8a00] px-4 text-sm font-black text-white" onClick={() => openAuthModal('register')} type="button">Register</button>
                   </div>
                   <Button className="nav-post-job-btn" onClick={() => setOpen(false)} to="/post-job" variant="teal">Post Job</Button>
                 </>
@@ -338,7 +357,6 @@ export function Layout() {
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button to="/jobs">Find Jobs</Button>
-                {!isUserAccount && <Button to="/post-job" variant="secondary">Post a Job</Button>}
               </div>
             </div>
           </div>
@@ -450,6 +468,13 @@ export function Layout() {
         </div>
       </footer>}
       </div>
+      <AuthModal
+        initialMode={authModalMode || 'login'}
+        onClose={() => setAuthModalMode('')}
+        onSuccess={() => setUser(getStoredUser())}
+        open={Boolean(authModalMode)}
+      />
+      {appBannerOpen && <FloatingAppBanner onClose={() => setAppBannerOpen(false)} />}
     </div>
   )
 }
@@ -808,6 +833,66 @@ function FooterColumn({ title, links }) {
             {label}
           </Link>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function FloatingAppBanner({ onClose }) {
+  const qrCells = [
+    1, 1, 1, 0, 1, 0, 1, 1, 1,
+    1, 0, 1, 0, 0, 1, 0, 0, 1,
+    1, 1, 1, 1, 0, 1, 1, 0, 1,
+    0, 1, 0, 0, 1, 0, 1, 1, 0,
+    1, 0, 1, 1, 1, 0, 0, 1, 1,
+    0, 1, 0, 1, 0, 1, 1, 0, 0,
+    1, 0, 1, 0, 1, 1, 0, 1, 1,
+    1, 1, 0, 1, 0, 0, 1, 0, 1,
+    1, 0, 1, 1, 1, 0, 1, 1, 1,
+  ]
+
+  return (
+    <div className="fixed bottom-4 left-3 right-3 z-50 max-w-[430px] overflow-hidden rounded-[12px] bg-white shadow-2xl shadow-slate-950/25 ring-1 ring-slate-200 sm:left-6 sm:right-auto">
+      <div className="inline-flex rounded-br-[8px] bg-gradient-to-r from-[#ff4f62] to-[#ff2b91] px-4 py-2 text-sm font-black text-white">
+        Download the App!
+      </div>
+      <button
+        aria-label="Close app download banner"
+        className="absolute right-3 top-11 grid h-8 w-8 place-items-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+        onClick={onClose}
+        type="button"
+      >
+        <X size={18} />
+      </button>
+      <div className="grid grid-cols-[112px_1fr] gap-4 px-4 pb-4 pt-4 sm:px-5">
+        <div className="border-r border-slate-200 pr-4">
+          <div className="mx-auto grid h-[78px] w-[78px] grid-cols-9 gap-[2px] rounded-[5px] bg-white p-1.5 ring-1 ring-slate-200">
+            {qrCells.map((filled, index) => (
+              <span className={filled ? 'bg-black' : 'bg-white'} key={index} />
+            ))}
+          </div>
+          <p className="mt-2 text-center text-xs font-semibold text-slate-600">Scan the QR</p>
+        </div>
+        <div className="min-w-0 pr-8">
+          <div className="grid grid-cols-2 divide-x divide-slate-200 text-center">
+            <div className="px-2">
+              <p className="inline-flex items-center gap-1 text-base font-black text-slate-800">4.4 <Star className="fill-[#ffb000] text-[#ffb000]" size={15} /></p>
+              <p className="mt-1 text-xs font-semibold text-slate-500">42K Reviews</p>
+            </div>
+            <div className="px-2">
+              <p className="inline-flex items-center gap-1 text-base font-black text-slate-800">50L+ <Download size={14} /></p>
+              <p className="mt-1 text-xs font-semibold text-slate-500">Downloads</p>
+            </div>
+          </div>
+          <div className="mt-4 border-t border-slate-200 pt-3 text-center">
+            <p className="text-xs font-semibold text-slate-500">Available on</p>
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <span className="inline-flex h-7 items-center rounded-[5px] bg-slate-950 px-2 text-[10px] font-black leading-none text-white">Google Play</span>
+              <span className="text-lg font-black text-slate-500"></span>
+              <span className="h-0 w-0 border-y-[8px] border-l-[13px] border-y-transparent border-l-[#30b85a]" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
