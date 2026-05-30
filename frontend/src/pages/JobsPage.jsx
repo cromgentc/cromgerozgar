@@ -182,13 +182,15 @@ export function JobsPage({ onApply }) {
         </div>
 
         <div className="mt-4 grid w-full max-w-full gap-3 sm:mt-6 sm:gap-6 lg:grid-cols-[310px_minmax(0,1fr)]">
-          <aside className="hidden max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24 lg:block">
-            <div className="mb-5 flex items-center justify-between gap-3">
+          <aside className="hidden h-fit rounded-[7px] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 lg:sticky lg:top-24 lg:block">
+            <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-4">
+              <span className="grid h-10 w-10 place-items-center rounded-[7px] bg-blue-600 text-white">
+                <SlidersHorizontal size={19} />
+              </span>
               <div>
                 <h2 className="font-black text-slate-950">Advanced Filters</h2>
-                <p className="mt-1 text-xs font-semibold text-slate-500">{activeFilterCount} active filters</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">{activeFilterCount} active filters</p>
               </div>
-              <SlidersHorizontal className="text-[#0057B8]" size={19} />
             </div>
             {activeFilterCount > 0 && (
               <button className="mb-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[7px] bg-slate-100 px-4 text-sm font-black text-slate-600 hover:bg-blue-50 hover:text-blue-700" onClick={clearFilters} type="button">
