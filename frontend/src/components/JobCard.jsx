@@ -80,7 +80,7 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
 
   return (
     <article className={`group min-w-0 overflow-hidden rounded-[7px] border border-slate-200 bg-white/90 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/70 ${denseMobile ? 'p-3 sm:p-5' : 'p-5'} ${featured ? 'lg:p-6' : ''}`}>
-      <div className={`${denseMobile ? 'hidden sm:flex' : 'flex'} mb-4 flex-wrap gap-2`}>
+      <div className={`${denseMobile ? 'mb-3 sm:mb-4' : 'mb-4'} flex flex-wrap gap-2`}>
         {job.featured && <span className="inline-flex items-center gap-1 rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700"><Sparkles size={13} /> Featured</span>}
         {job.urgent && <span className="inline-flex items-center gap-1 rounded-[7px] bg-rose-50 px-3 py-1 text-xs font-black text-rose-700"><Flame size={13} /> Urgent hiring</span>}
         <span className="rounded-[7px] bg-teal-50 px-3 py-1 text-xs font-black text-teal-700">{job.workMode}</span>
@@ -94,6 +94,7 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
             <Link className={`${denseMobile ? 'line-clamp-2 text-sm sm:text-lg' : 'text-lg'} font-bold text-slate-950 hover:text-blue-600`} to={jobDetailPath}>
               {job.title}
             </Link>
+            <p className="mt-1 truncate text-xs font-bold text-slate-500 sm:text-sm">{job.company || 'Cromgen Rozgar partner'}</p>
           </div>
         </div>
         <button
@@ -111,11 +112,11 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
       <div className={`${denseMobile ? 'mt-3 gap-2 text-xs sm:mt-5 sm:gap-3 sm:text-sm' : 'mt-5 gap-3 text-sm'} grid text-slate-500 sm:grid-cols-2`}>
         <span className="flex min-w-0 items-center gap-2"><MapPin className="shrink-0" size={16} /><span className="truncate">{displayLocation}</span></span>
         <span className="flex min-w-0 items-center gap-2"><Wallet className="shrink-0" size={16} /><span className="truncate">{job.salary}</span></span>
-        <span className={`${denseMobile ? 'hidden sm:flex' : 'flex'} items-center gap-2`}><Briefcase size={16} />{job.experience}</span>
-        <span className={`${denseMobile ? 'hidden sm:flex' : 'flex'} items-center gap-2`}><Clock size={16} />{job.posted}</span>
+        <span className="flex items-center gap-2"><Briefcase className="shrink-0" size={16} /><span className="truncate">{job.experience}</span></span>
+        <span className="flex items-center gap-2"><Clock className="shrink-0" size={16} /><span className="truncate">{job.posted}</span></span>
       </div>
 
-      <div className={`${denseMobile ? 'hidden sm:flex' : 'flex'} mt-5 flex-wrap gap-2`}>
+      <div className={`${denseMobile ? 'mt-4 sm:mt-5' : 'mt-5'} flex max-h-16 flex-wrap gap-2 overflow-hidden`}>
         {job.skills.map((skill) => (
           <span className="rounded-[7px] bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600" key={skill}>
             {skill}
@@ -123,13 +124,13 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
         ))}
       </div>
 
-      <p className={`${denseMobile ? 'hidden sm:line-clamp-2' : 'line-clamp-2'} mt-5 text-sm leading-6 text-slate-500`}>{job.description}</p>
+      <p className={`${denseMobile ? 'mt-4 sm:mt-5' : 'mt-5'} line-clamp-2 text-sm leading-6 text-slate-500`}>{job.description}</p>
 
       <div className={`${denseMobile ? 'mt-4' : 'mt-6'} flex flex-col gap-3 sm:flex-row`}>
-        <Button className={`${denseMobile ? 'min-h-10 w-full min-w-0 px-2 text-xs sm:min-h-11 sm:px-5 sm:text-sm' : ''} flex-1`} onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}>
+        <Button className={`${denseMobile ? 'min-h-10 w-full min-w-0 px-3 text-sm sm:min-h-11 sm:px-5' : ''} flex-1`} onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}>
           {alreadyApplied ? 'Already Applied' : 'Apply Now'}
         </Button>
-        <div className={denseMobile ? 'hidden sm:flex sm:flex-1' : 'flex flex-1'}>
+        <div className="flex flex-1">
           <Link className="job-card-details-link w-full" to={jobDetailPath}>View Details</Link>
         </div>
       </div>

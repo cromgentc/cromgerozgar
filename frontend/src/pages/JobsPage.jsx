@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { CheckCircle2, Clock3, MapPin, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { JobCard } from '../components/JobCard'
 import { SearchBar } from '../components/SearchBar'
@@ -151,21 +151,38 @@ export function JobsPage({ onApply }) {
   }
 
   const salaryBandCounts = useMemo(() => buildSalaryBandCounts(normalizedJobs), [normalizedJobs])
+  const featuredCount = normalizedJobs.filter((job) => job.featured).length
+  const remoteCount = normalizedJobs.filter((job) => job.workMode === 'Remote').length
+  const urgentCount = normalizedJobs.filter((job) => job.urgent).length
+  const activeChips = buildActiveChips(selectedFilters, selectedSalaryBands, selectedExperienceMax)
 
   return (
-    <section className="w-full max-w-full overflow-x-hidden py-3 sm:py-14">
+    <section className="w-full max-w-full overflow-x-hidden bg-slate-50 py-3 sm:py-10">
       <div className="w-full max-w-full px-0 sm:mx-auto sm:max-w-7xl sm:px-6 lg:px-8">
-        <div className="w-full max-w-full overflow-hidden rounded-none border-y border-[#0057B8]/10 bg-white p-2 shadow-sm sm:rounded-[7px] sm:border sm:p-8">
-          <div className="hidden sm:block">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-[#0057B8]">Verified job search</p>
-            <h1 className="mt-3 text-3xl font-black text-slate-950 sm:text-5xl">Explore roles matched to your ambition</h1>
-            <p className="mt-3 text-slate-500">Search, filter, save, and apply to trusted opportunities across India.</p>
+        <div className="relative w-full max-w-full overflow-hidden border-y border-[#0057B8]/10 bg-white px-3 py-5 shadow-sm sm:rounded-[7px] sm:border sm:px-8 sm:py-8">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-[7px] bg-blue-50 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-[#0057B8]">
+                <CheckCircle2 size={15} /> Verified job search
+              </div>
+              <h1 className="mt-4 max-w-3xl text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
+                Find jobs that match your skills, location, and growth plan.
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-500 sm:text-base">
+                Search trusted openings, compare salary and experience quickly, then apply without losing your place.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 overflow-hidden rounded-[7px] border border-slate-200 bg-slate-50">
+              <HeroStat label="Live jobs" value={normalizedJobs.length} />
+              <HeroStat label="Featured" value={featuredCount} />
+              <HeroStat label="Remote" value={remoteCount} />
+            </div>
           </div>
-          <div className="sm:mt-6"><SearchBar compact /></div>
+          <div className="mt-5"><SearchBar compact /></div>
         </div>
 
-        <div className="mt-4 grid w-full max-w-full gap-3 sm:mt-8 sm:gap-6 lg:grid-cols-[310px_minmax(0,1fr)]">
-          <aside className="hidden max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[7px] border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur lg:sticky lg:top-24 lg:block">
+        <div className="mt-4 grid w-full max-w-full gap-3 sm:mt-6 sm:gap-6 lg:grid-cols-[310px_minmax(0,1fr)]">
+          <aside className="hidden max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24 lg:block">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <h2 className="font-black text-slate-950">Advanced Filters</h2>
@@ -229,17 +246,40 @@ export function JobsPage({ onApply }) {
           </aside>
 
           <div className="min-w-0">
-            <div className="mb-3 flex w-full max-w-full items-center justify-between gap-2 rounded-none border-y border-slate-200 bg-white p-2 sm:mb-5 sm:rounded-[7px] sm:border sm:p-4">
-              <p className="min-w-0 truncate text-xs font-semibold text-slate-600 sm:text-sm">Showing {list.length} premium jobs{hasSearch ? ' for your search' : ''}</p>
-              <select className="w-28 shrink-0 rounded-[7px] border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 outline-none sm:w-auto sm:px-4 sm:text-sm">
-                <option>Sort by relevance</option>
-                <option>Sort by newest</option>
-                <option>Sort by salary</option>
-                <option>Sort by featured</option>
-              </select>
+            <div className="mb-3 rounded-none border-y border-slate-200 bg-white p-3 shadow-sm sm:mb-5 sm:rounded-[7px] sm:border sm:p-4">
+              <div className="flex w-full max-w-full items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-black uppercase tracking-wide text-blue-600">Recommended openings</p>
+                  <p className="mt-1 min-w-0 truncate text-sm font-black text-slate-950 sm:text-lg">
+                    Showing {list.length} premium jobs{hasSearch ? ' for your search' : ''}
+                  </p>
+                </div>
+                <select className="w-36 shrink-0 rounded-[7px] border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 outline-none focus:border-blue-500 sm:w-auto sm:px-4 sm:text-sm">
+                  <option>Sort by relevance</option>
+                  <option>Sort by newest</option>
+                  <option>Sort by salary</option>
+                  <option>Sort by featured</option>
+                </select>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {activeChips.length ? activeChips.map((chip) => (
+                  <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100" key={chip}>{chip}</span>
+                )) : (
+                  <>
+                    <span className="inline-flex items-center gap-1 rounded-[7px] bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100"><Sparkles size={13} /> {urgentCount} urgent</span>
+                    <span className="inline-flex items-center gap-1 rounded-[7px] bg-orange-50 px-3 py-1 text-xs font-black text-orange-700 ring-1 ring-orange-100"><Clock3 size={13} /> Fresh listings</span>
+                    <span className="inline-flex items-center gap-1 rounded-[7px] bg-slate-100 px-3 py-1 text-xs font-black text-slate-600"><MapPin size={13} /> Pan India</span>
+                  </>
+                )}
+                {activeFilterCount > 0 && (
+                  <button className="rounded-[7px] bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 hover:bg-blue-50 hover:text-blue-700 lg:hidden" onClick={clearFilters} type="button">
+                    Clear filters
+                  </button>
+                )}
+              </div>
             </div>
             {list.length ? (
-              <div className="grid w-full max-w-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 px-1 sm:grid-cols-1 sm:px-0 sm:gap-5">
+              <div className="grid w-full max-w-full grid-cols-1 gap-3 px-2 sm:px-0 sm:gap-5">
                 {list.map((job, index) => <JobCard denseMobile index={index + 1} job={job} key={job._id || job.id} onApply={onApply} />)}
               </div>
             ) : (
@@ -351,6 +391,15 @@ function FilterSelect({ allLabel, filter, onChange, value }) {
         ))}
       </select>
     </label>
+  )
+}
+
+function HeroStat({ label, value }) {
+  return (
+    <div className="border-r border-slate-200 px-3 py-4 last:border-r-0 sm:px-4">
+      <p className="text-2xl font-black text-slate-950">{value}</p>
+      <p className="mt-1 text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p>
+    </div>
   )
 }
 
@@ -653,6 +702,19 @@ function getSelectedFilters(params, departments = []) {
     selected[filter.key] = getParamList(params, filter.key)
     return selected
   }, {})
+}
+
+function buildActiveChips(selectedFilters, selectedSalaryBands, selectedExperienceMax) {
+  const filterLabels = Object.entries(selectedFilters).flatMap(([key, values]) => (
+    values.map((value) => {
+      const config = filterConfig.find((item) => item.key === key)
+      return `${config?.label || key}: ${value}`
+    })
+  ))
+  const salaryLabels = selectedSalaryBands.map((value) => `Salary: ${value}`)
+  const experienceLabel = selectedExperienceMax ? [`Experience: 0-${selectedExperienceMax} Yrs`] : []
+
+  return [...filterLabels, ...salaryLabels, ...experienceLabel]
 }
 
 function matchesAdvancedFilters(job, selectedFilters) {
