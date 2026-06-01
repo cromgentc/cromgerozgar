@@ -201,10 +201,12 @@ export function EmployerFooter() {
             </div>
 
             <div className="mt-6 grid gap-3 text-sm font-semibold text-slate-500">
-              <p className="flex items-center gap-3"><Mail className="text-blue-600" size={18} /> recruiter@cromgenrozgar.com</p>
+              <p className="flex items-center gap-3"><Mail className="text-blue-600" size={18} /> {branding.recruiterEmail || 'recruiter@cromgenrozgar.com'}</p>
               <p className="flex items-center gap-3"><Phone className="text-blue-600" size={18} /> {branding.tollFreeNumber || '+91 98765 43210'}</p>
               <p className="flex items-center gap-3"><MessageCircle className="text-blue-600" size={18} /> Hiring support and account desk</p>
-              <p className="flex items-center gap-3"><MapPin className="text-blue-600" size={18} /> New Delhi, India</p>
+              {branding.showRecruiterFooterLocation !== false && (
+                <p className="flex items-center gap-3"><MapPin className="text-blue-600" size={18} /> {branding.recruiterFooterLocation || 'New Delhi, India'}</p>
+              )}
             </div>
             <SocialLinks links={socialLinks} />
           </div>
@@ -284,7 +286,7 @@ export function EmployerFooter() {
 function FooterButton({ icon: Icon, label, secondary = false, to }) {
   return (
     <Link
-      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-[#ff8a00] bg-white px-5 text-sm font-black text-black shadow-sm transition hover:bg-[#fff4e6] hover:text-black"
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-[#ff8a00] bg-[white] px-5 text-sm font-black text-black shadow-sm transition hover:border-[#ff8a00] hover:bg-[#fff4e6] hover:text-black"
       to={to}
     >
       <Icon size={17} /> {label}

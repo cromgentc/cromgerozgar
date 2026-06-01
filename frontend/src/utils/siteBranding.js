@@ -11,6 +11,9 @@ export const defaultSiteBranding = {
   logoUrl: '/cromgen-rozgar-logo.png',
   faviconUrl: '/cromgen-rozgar-favicon.png',
   tollFreeNumber: '+91 98765 43210',
+  recruiterEmail: 'recruiter@cromgenrozgar.com',
+  recruiterFooterLocation: 'New Delhi, India',
+  showRecruiterFooterLocation: true,
   seoTitle: 'Cromgen Rozgar',
   seoDescription: 'A modern enterprise job portal for candidates, recruiters, HR teams, and growing companies.',
   seoKeywords: 'jobs, recruiter, hiring, candidates, cromgen rozgar',
@@ -81,7 +84,7 @@ export function useSiteBranding() {
         if (!mounted) return
         const setting = payload.data
         const saved = setting?.value || {}
-        const next = normalizeSiteBranding(saved)
+        const next = normalizeSiteBranding({ ...getCachedBranding(), ...saved })
         localStorage.setItem(BRANDING_STORAGE_KEY, JSON.stringify(next))
         setBranding(next)
         applySiteBrandingMeta(next)

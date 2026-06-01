@@ -85,7 +85,7 @@ export function EmployerLayout() {
               <CompanyMenu logout={logout} open={profileOpen} setOpen={setProfileOpen} user={user} />
             ) : (
               <>
-                <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] px-5 text-sm font-black text-[#ff8a00] transition hover:border-[#e87500] hover:text-[#e87500]" onClick={() => openAuthModal('recruiter-login')} type="button">
+                <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] bg-[white] px-5 text-sm font-black text-black transition hover:border-[#e87500] hover:bg-[#fff4e6]" onClick={() => openAuthModal('recruiter-login')} type="button">
                   Recruiter Login
                 </button>
                 {!isLoggedIn && (
@@ -159,15 +159,12 @@ function CompanyMenu({ logout, open, setOpen, user }) {
   return (
     <div className="relative">
       <button
-        className="inline-flex min-h-11 items-center gap-3 rounded-[7px] bg-blue-600 px-3 py-2 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700"
+        className="inline-flex min-h-8 items-center justify-center gap-2 rounded-[3px] border border-[#ff8a00] bg-[white] px-5 text-sm font-black text-black transition hover:border-[#e87500] hover:bg-[#fff4e6]"
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
-        <span className="grid h-8 w-8 place-items-center rounded-[7px] bg-white/15 text-white">
-          <Building2 size={16} />
-        </span>
+        <Building2 className="text-black" size={16} />
         {user?.name || 'Company'}
-        <ChevronDown size={16} />
       </button>
 
       {open && (

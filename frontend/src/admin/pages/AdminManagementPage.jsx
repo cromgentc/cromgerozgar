@@ -5180,6 +5180,9 @@ export function AdminSEOBrandingPage() {
       logoUrl: form.logoUrl.trim(),
       faviconUrl: form.faviconUrl.trim(),
       tollFreeNumber: form.tollFreeNumber.trim(),
+      recruiterEmail: form.recruiterEmail.trim() || defaultSiteBranding.recruiterEmail,
+      recruiterFooterLocation: form.recruiterFooterLocation.trim() || defaultSiteBranding.recruiterFooterLocation,
+      showRecruiterFooterLocation: form.showRecruiterFooterLocation !== false,
       seoTitle: form.seoTitle.trim() || form.siteName.trim() || defaultSiteBranding.seoTitle,
       seoDescription: form.seoDescription.trim(),
       seoKeywords: form.seoKeywords.trim(),
@@ -5188,7 +5191,7 @@ export function AdminSEOBrandingPage() {
     try {
       const saved = await api.updateSiteBranding(payload)
       const savedSetting = saved.data || {}
-      const nextBranding = publishSiteBranding(savedSetting.value || payload)
+      const nextBranding = publishSiteBranding({ ...(savedSetting.value || {}), ...payload })
       setForm(nextBranding)
       setMessage('SEO, logo, and favicon saved successfully.')
     } catch (error) {
@@ -5225,7 +5228,22 @@ export function AdminSEOBrandingPage() {
                   <LabeledInput label="Admin Name" onChange={(value) => update('adminName', value)} placeholder="Rozgar Admin" value={form.adminName} />
                   <LabeledInput label="Recruiter Name" onChange={(value) => update('recruiterName', value)} placeholder="Rozgar Recruiter" value={form.recruiterName} />
                 </div>
-                <LabeledInput label="Toll-Free Number" onChange={(value) => update('tollFreeNumber', value)} placeholder="1800 000 0000" type="tel" value={form.tollFreeNumber} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <LabeledInput label="Toll-Free Number" onChange={(value) => update('tollFreeNumber', value)} placeholder="1800 000 0000" type="tel" value={form.tollFreeNumber} />
+                  <LabeledInput label="Recruiter Email" onChange={(value) => update('recruiterEmail', value)} placeholder="recruiter@cromgenrozgar.com" type="email" value={form.recruiterEmail} />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <LabeledInput label="Recruiter Footer Location" onChange={(value) => update('recruiterFooterLocation', value)} placeholder="New Delhi, India" value={form.recruiterFooterLocation} />
+                  <label className="inline-flex min-h-11 items-center gap-3 rounded-[7px] border border-slate-200 bg-slate-50 px-4 text-sm font-black text-slate-700">
+                    <input
+                      checked={form.showRecruiterFooterLocation !== false}
+                      className="h-4 w-4 accent-[#ff8a00]"
+                      onChange={(event) => update('showRecruiterFooterLocation', event.target.checked)}
+                      type="checkbox"
+                    />
+                    Show location
+                  </label>
+                </div>
                 <div className="grid gap-4 lg:grid-cols-2">
                   <BrandAssetUpload
                     accept="image/*"
@@ -5283,6 +5301,10 @@ export function AdminSEOBrandingPage() {
             </div>
             <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">{form.seoDescription || defaultSiteBranding.seoDescription}</p>
             <p className="mt-3 text-sm font-black text-slate-800">Toll-Free: {form.tollFreeNumber || defaultSiteBranding.tollFreeNumber}</p>
+            <p className="mt-2 text-sm font-black text-slate-800">Recruiter Email: {form.recruiterEmail || defaultSiteBranding.recruiterEmail}</p>
+            {form.showRecruiterFooterLocation !== false && (
+              <p className="mt-2 text-sm font-black text-slate-800">Location: {form.recruiterFooterLocation || defaultSiteBranding.recruiterFooterLocation}</p>
+            )}
             <p className="mt-3 break-words text-xs font-bold text-blue-600">{form.seoKeywords || defaultSiteBranding.seoKeywords}</p>
           </div>
         </AdminCard>

@@ -251,7 +251,7 @@ export function Layout() {
               </>
             ) : (
               <>
-                <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] bg-white px-5 text-sm font-black text-[#ff8a00] transition hover:border-[#e87500] hover:text-[#e87500]" onClick={() => openAuthModal('login')} type="button">
+                <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] bg-[white] px-5 text-sm font-black text-black transition hover:border-[#e87500] hover:bg-[#fff4e6]" onClick={() => openAuthModal('login')} type="button">
                   Login
                 </button>
                 <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] bg-[#ff8a00] px-5 text-sm font-black text-white shadow-sm transition hover:bg-[#e87500]" onClick={() => openAuthModal('register')} type="button">
@@ -425,10 +425,12 @@ export function Layout() {
             <div className="min-w-0">
               <h3 className="text-[11px] font-black uppercase leading-4 tracking-wide text-slate-950 sm:text-sm">Contact & Updates</h3>
               <div className="mt-3 grid gap-2 text-[10px] leading-4 text-slate-500 sm:mt-4 sm:gap-3 sm:text-sm">
-                <p className="min-w-0 break-words sm:flex sm:items-center sm:gap-3"><Mail className="hidden text-blue-600 sm:block" size={18} /> support@cromgenrozgar.com</p>
+                <p className="min-w-0 break-words sm:flex sm:items-center sm:gap-3"><Mail className="hidden text-blue-600 sm:block" size={18} /> {branding.recruiterEmail || 'support@cromgenrozgar.com'}</p>
                 <p className="min-w-0 break-words sm:flex sm:items-center sm:gap-3"><Phone className="hidden text-blue-600 sm:block" size={18} /> {branding.tollFreeNumber || '+91 98765 43210'}</p>
                 <p className="min-w-0 break-words sm:flex sm:items-center sm:gap-3"><MessageCircle className="hidden text-blue-600 sm:block" size={18} /> Chat with our support team</p>
-                <p className="min-w-0 break-words sm:flex sm:items-center sm:gap-3"><MapPin className="hidden text-blue-600 sm:block" size={18} /> New Delhi, India</p>
+                {branding.showRecruiterFooterLocation !== false && (
+                  <p className="min-w-0 break-words sm:flex sm:items-center sm:gap-3"><MapPin className="hidden text-blue-600 sm:block" size={18} /> {branding.recruiterFooterLocation || 'New Delhi, India'}</p>
+                )}
               </div>
               <div className="mt-5 hidden rounded-[7px] border border-slate-200 bg-slate-50 p-3 sm:block">
                 <p className="mb-3 text-sm font-bold text-slate-800">Get hiring insights</p>
@@ -760,7 +762,7 @@ function CompanyProfileMenu({ logout, open, setOpen, user }) {
   return (
     <div className="relative">
       <button
-        className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] bg-white px-5 text-sm font-black text-[#ff8a00] transition hover:border-[#e87500] hover:text-[#e87500]"
+        className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] bg-[white] px-5 text-sm font-black text-black transition hover:border-[#e87500] hover:bg-[#fff4e6]"
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
@@ -792,7 +794,7 @@ function CandidateProfileMenu({ logout, open, setOpen, user }) {
   return (
     <div className="relative">
       <button
-        className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] bg-white px-5 text-sm font-black text-[#ff8a00] transition hover:border-[#e87500] hover:text-[#e87500]"
+        className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] bg-[white] px-5 text-sm font-black text-black transition hover:border-[#e87500] hover:bg-[#fff4e6]"
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
