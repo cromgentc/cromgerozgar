@@ -840,7 +840,12 @@ function MainFooter({ branding, newsletterEmail, newsletterLoading, newsletterSt
                   <p className="mt-1 text-xs font-semibold leading-5 text-blue-50">Discover opportunities from top companies.</p>
                 </div>
               </div>
-              <Link className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-[8px] border border-[#ff8a00] bg-[white] px-5 text-sm font-black text-black shadow-lg shadow-blue-950/20 transition hover:-translate-y-0.5 hover:bg-[#fff4e6]" onClick={handleFooterLinkClick} to="/jobs">
+              <Link
+                className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-[8px] border px-5 text-sm font-black shadow-none transition hover:-translate-y-0.5"
+                onClick={handleFooterLinkClick}
+                style={{ backgroundColor: 'transparent', borderColor: '#ff8a00', color: '#000000' }}
+                to="/jobs"
+              >
                 Find Jobs <ArrowRight size={17} />
               </Link>
             </div>

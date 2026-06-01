@@ -247,7 +247,7 @@ function TrendingChipRow({ accent = 'blue', icon: Icon, items, subtitle, title, 
 
 function getCategoryTone(tone) {
   const tones = {
-    blue: { soft: 'bg-blue-50 text-blue-600', text: 'text-blue-600' },
+    blue: { soft: 'bg-slate-50 text-slate-700', text: 'text-slate-700' },
     orange: { soft: 'bg-orange-50 text-[#ff8a00]', text: 'text-[#ff8a00]' },
     purple: { soft: 'bg-violet-50 text-violet-600', text: 'text-violet-600' },
     green: { soft: 'bg-emerald-50 text-emerald-600', text: 'text-emerald-600' },
