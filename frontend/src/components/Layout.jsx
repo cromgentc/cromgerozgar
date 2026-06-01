@@ -201,7 +201,7 @@ export function Layout() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
         <nav className="mx-auto flex h-20 max-w-7xl items-center justify-start gap-6 px-4 sm:px-6 lg:px-8">
-          <Link className="site-logo-lockup flex min-w-0 items-center font-bold text-slate-950" to="/">
+          <Link className="site-logo-lockup flex min-w-0 items-center font-bold text-[#ff8a00]" to="/">
             {branding.logoUrl ? (
               <span className="site-logo-frame">
                 <img className="site-logo-img" src={branding.logoUrl} alt={branding.siteName || 'Cromgen Rozgar'} />
@@ -209,7 +209,7 @@ export function Layout() {
             ) : (
               <>
                 <span className="grid h-11 w-11 place-items-center rounded-[7px] bg-[#0057B8] text-white"><BriefcaseBusiness size={22} /></span>
-                <span className="ml-3 text-xl">{branding.siteName || 'Cromgen Rozgar'}</span>
+                <span className="ml-3 text-xl text-[#ff8a00]">{branding.siteName || 'Cromgen Rozgar'}</span>
               </>
             )}
           </Link>
@@ -251,7 +251,7 @@ export function Layout() {
               </>
             ) : (
               <>
-                <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] px-5 text-sm font-black text-[#ff8a00] transition hover:border-[#e87500] hover:text-[#e87500]" onClick={() => openAuthModal('login')} type="button">
+                <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] bg-white px-5 text-sm font-black text-[#ff8a00] transition hover:border-[#e87500] hover:text-[#e87500]" onClick={() => openAuthModal('login')} type="button">
                   Login
                 </button>
                 <button className="inline-flex min-h-8 items-center justify-center rounded-[3px] bg-[#ff8a00] px-5 text-sm font-black text-white shadow-sm transition hover:bg-[#e87500]" onClick={() => openAuthModal('register')} type="button">
@@ -369,7 +369,7 @@ export function Layout() {
                 ) : (
                   <>
                     <span className="grid h-10 w-10 place-items-center sm:h-12 sm:w-12"><BriefcaseBusiness size={23} /></span>
-                    <span className="text-lg sm:text-xl">{branding.siteName || 'Cromgen Rozgar'}</span>
+                    <span className="text-lg text-[#ff8a00] sm:text-xl">{branding.siteName || 'Cromgen Rozgar'}</span>
                   </>
                 )}
               </Link>
@@ -683,16 +683,16 @@ function RoleNotificationBell({ loading, notifications, onClear, open, setOpen, 
   return (
     <div className="relative">
       <button
-        className="relative grid h-11 w-11 place-items-center rounded-[7px] border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+        className="relative grid h-8 w-10 place-items-center rounded-[3px] border border-[#ff8a00] bg-[#ff8a00] text-white transition hover:bg-[#e87500]"
         onClick={() => {
           setOpen((value) => !value)
           setProfileOpen(false)
         }}
         type="button"
       >
-        <Bell size={19} />
+        <Bell size={17} />
         {notifications.length > 0 && (
-          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-[7px] bg-teal-500 px-1 text-[10px] font-black text-white ring-2 ring-white">
+          <span className="absolute -right-1.5 -top-2 grid h-5 min-w-5 place-items-center rounded-[7px] bg-white px-1 text-[10px] font-black text-teal-700 ring-2 ring-[#ff8a00]">
             {notifications.length}
           </span>
         )}
@@ -760,15 +760,11 @@ function CompanyProfileMenu({ logout, open, setOpen, user }) {
   return (
     <div className="relative">
       <button
-        className="inline-flex min-h-11 items-center gap-3 rounded-[7px] bg-blue-600 px-3 py-2 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700"
+        className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] bg-white px-5 text-sm font-black text-[#ff8a00] transition hover:border-[#e87500] hover:text-[#e87500]"
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
-        <span className="grid h-8 w-8 place-items-center rounded-[7px] bg-white/15 text-white">
-          <UserRound size={16} />
-        </span>
         {user.name || 'Company'}
-        <ChevronDown size={16} />
       </button>
 
       {open && (
@@ -796,15 +792,11 @@ function CandidateProfileMenu({ logout, open, setOpen, user }) {
   return (
     <div className="relative">
       <button
-        className="inline-flex min-h-11 items-center gap-3 rounded-[7px] bg-blue-600 px-3 py-2 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700"
+        className="inline-flex min-h-8 items-center justify-center rounded-[3px] border border-[#ff8a00] bg-white px-5 text-sm font-black text-[#ff8a00] transition hover:border-[#e87500] hover:text-[#e87500]"
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
-        <span className="grid h-8 w-8 place-items-center rounded-[7px] bg-white/15 text-white">
-          <UserRound size={16} />
-        </span>
         {user.name || 'Candidate'}
-        <ChevronDown size={16} />
       </button>
 
       {open && (

@@ -20,8 +20,10 @@ import { Layout } from './components/Layout'
 import { EmployerLayout } from './employer/components/EmployerLayout'
 import { EmployerLoginPage, EmployerRegisterPage } from './employer/pages/EmployerAuthPages'
 import { EmployerLandingPage } from './employer/pages/EmployerLandingPage'
+import { RecruiterTestimonialsPage } from './employer/pages/RecruiterTestimonialsPage'
 import { RecruiterDocumentReviewPage, RecruiterDocumentsPage, RecruiterVerificationPage } from './employer/pages/RecruiterVerificationPages'
 import { AuthPage } from './pages/AuthPage'
+import { AuthModalPage } from './pages/AuthModalPage'
 import { CandidateAppliedJobsPage, CandidateDashboard, CandidateInterviewInvitesPage, CandidateJobAlertsPage, CandidateSavedJobsPage } from './pages/CandidateDashboard'
 import { CandidateProfilePage } from './pages/CandidateProfilePage'
 import { CandidateReviewsPage } from './pages/CandidateReviewsPage'
@@ -63,7 +65,7 @@ function App() {
         { path: '/companies/:companySlug', element: <CompanyDetailsPage onApply={setSelectedJob} /> },
         { path: '/jobs/:jobId', element: <JobDetailsPage onApply={setSelectedJob} /> },
         { path: '/:jobSlug', element: <JobDetailsPage onApply={setSelectedJob} /> },
-        { path: '/auth', element: <AuthPage /> },
+        { path: '/auth', element: <AuthModalPage /> },
         {
           path: '/candidate-dashboard',
           element: (
@@ -380,6 +382,7 @@ function App() {
         { path: '/recruiter', element: <EmployerLandingPage /> },
         { path: '/employers', element: <EmployerLandingPage /> },
         { path: '/recruiter-solutions', element: <EmployerLandingPage /> },
+        { path: '/recruiter-testimonials', element: <RecruiterTestimonialsPage /> },
         { path: '/recruiter/privacy', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-privacy" /> },
         { path: '/recruiter/terms', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-terms" /> },
         { path: '/recruiter/support', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-support" /> },
