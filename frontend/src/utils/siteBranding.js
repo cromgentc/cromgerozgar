@@ -3,6 +3,7 @@ import { api } from '../services/api'
 
 const BRANDING_STORAGE_KEY = 'siteBranding'
 const BRANDING_EVENT = 'siteBrandingChanged'
+export const defaultHeroBrands = ['OYO', 'paytm', 'Nestle', 'HCL', 'bookmyshow', 'NYKAA']
 
 export const defaultSiteBranding = {
   siteName: 'Cromgen Rozgar',
@@ -14,6 +15,7 @@ export const defaultSiteBranding = {
   recruiterEmail: 'recruiter@cromgenrozgar.com',
   recruiterFooterLocation: 'New Delhi, India',
   showRecruiterFooterLocation: true,
+  heroBrandNames: defaultHeroBrands,
   seoTitle: 'Cromgen Rozgar',
   seoDescription: 'A modern enterprise job portal for candidates, recruiters, HR teams, and growing companies.',
   seoKeywords: 'jobs, recruiter, hiring, candidates, cromgen rozgar',
@@ -44,6 +46,7 @@ export function normalizeSiteBranding(branding = {}) {
     ...branding,
     logoUrl: branding.logoUrl || defaultSiteBranding.logoUrl,
     faviconUrl: branding.faviconUrl || defaultSiteBranding.faviconUrl,
+    heroBrandNames: normalizeHeroBrands(branding.heroBrandNames),
   }
 }
 
@@ -109,6 +112,17 @@ function getCachedBranding() {
   } catch {
     return defaultSiteBranding
   }
+}
+
+function normalizeHeroBrands(value) {
+  const list = Array.isArray(value)
+    ? value
+    : String(value || '')
+      .split(/\r?\n|,/)
+      .map((item) => item.trim())
+
+  const cleaned = [...new Set(list.map((item) => String(item || '').trim()).filter(Boolean))]
+  return cleaned.length ? cleaned : defaultHeroBrands
 }
 
 function setMeta(name, content) {

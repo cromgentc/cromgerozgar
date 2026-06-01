@@ -5,6 +5,11 @@ const PUBLIC_BRANDING_KEY = 'siteSeoBranding'
 const PUBLIC_SOCIAL_LINKS_KEY = 'socialMediaLinks'
 
 function normalizeSiteBrandingValue(body = {}) {
+  const heroBrandNames = Array.isArray(body.heroBrandNames)
+    ? body.heroBrandNames
+    : String(body.heroBrandNames || '')
+      .split(/\r?\n|,/)
+
   return {
     siteName: String(body.siteName || 'Cromgen Rozgar').trim() || 'Cromgen Rozgar',
     adminName: String(body.adminName || 'Rozgar Admin').trim() || 'Rozgar Admin',
@@ -15,6 +20,7 @@ function normalizeSiteBrandingValue(body = {}) {
     recruiterEmail: String(body.recruiterEmail || 'recruiter@cromgenrozgar.com').trim() || 'recruiter@cromgenrozgar.com',
     recruiterFooterLocation: String(body.recruiterFooterLocation || 'New Delhi, India').trim() || 'New Delhi, India',
     showRecruiterFooterLocation: body.showRecruiterFooterLocation !== false,
+    heroBrandNames: [...new Set(heroBrandNames.map((item) => String(item || '').trim()).filter(Boolean))],
     seoTitle: String(body.seoTitle || body.siteName || 'Cromgen Rozgar').trim() || 'Cromgen Rozgar',
     seoDescription: String(body.seoDescription || '').trim(),
     seoKeywords: String(body.seoKeywords || '').trim(),

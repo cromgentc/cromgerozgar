@@ -5183,6 +5183,9 @@ export function AdminSEOBrandingPage() {
       recruiterEmail: form.recruiterEmail.trim() || defaultSiteBranding.recruiterEmail,
       recruiterFooterLocation: form.recruiterFooterLocation.trim() || defaultSiteBranding.recruiterFooterLocation,
       showRecruiterFooterLocation: form.showRecruiterFooterLocation !== false,
+      heroBrandNames: Array.isArray(form.heroBrandNames)
+        ? form.heroBrandNames.map((item) => String(item || '').trim()).filter(Boolean)
+        : String(form.heroBrandNames || '').split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean),
       seoTitle: form.seoTitle.trim() || form.siteName.trim() || defaultSiteBranding.seoTitle,
       seoDescription: form.seoDescription.trim(),
       seoKeywords: form.seoKeywords.trim(),
@@ -5264,6 +5267,16 @@ export function AdminSEOBrandingPage() {
                 </div>
                 <LabeledInput label="SEO Title" onChange={(value) => update('seoTitle', value)} placeholder="Cromgen Rozgar - Jobs and Hiring" value={form.seoTitle} />
                 <label className="grid gap-1">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-400">Brand Names</span>
+                  <textarea
+                    className="input min-h-24"
+                    onChange={(event) => update('heroBrandNames', event.target.value)}
+                    placeholder="OYO&#10;paytm&#10;Nestle&#10;HCL&#10;bookmyshow&#10;NYKAA"
+                    value={Array.isArray(form.heroBrandNames) ? form.heroBrandNames.join('\n') : (form.heroBrandNames || '')}
+                  />
+                  <span className="text-xs font-semibold text-slate-500">Home page moving brand bar mein ye names show honge. Ek line mein ek brand name add karein.</span>
+                </label>
+                <label className="grid gap-1">
                   <span className="text-xs font-black uppercase tracking-wide text-slate-400">SEO Description</span>
                   <textarea className="input min-h-24" onChange={(event) => update('seoDescription', event.target.value)} placeholder="Search engine description..." value={form.seoDescription} />
                 </label>
@@ -5305,6 +5318,14 @@ export function AdminSEOBrandingPage() {
             {form.showRecruiterFooterLocation !== false && (
               <p className="mt-2 text-sm font-black text-slate-800">Location: {form.recruiterFooterLocation || defaultSiteBranding.recruiterFooterLocation}</p>
             )}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(Array.isArray(form.heroBrandNames) ? form.heroBrandNames : String(form.heroBrandNames || '').split(/\r?\n|,/))
+                .map((item) => String(item || '').trim())
+                .filter(Boolean)
+                .map((brand) => (
+                  <span className="rounded-[7px] bg-orange-50 px-3 py-1 text-xs font-black text-[#b85f00] ring-1 ring-orange-100" key={brand}>{brand}</span>
+                ))}
+            </div>
             <p className="mt-3 break-words text-xs font-bold text-blue-600">{form.seoKeywords || defaultSiteBranding.seoKeywords}</p>
           </div>
         </AdminCard>

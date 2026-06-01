@@ -32,7 +32,7 @@ import { CompaniesPage, CompanyDetailsPage } from './pages/CompaniesPage'
 import { ContactPage } from './pages/ContactPage'
 import { ContentPage } from './pages/ContentPage'
 import { EmployerDashboard } from './pages/EmployerDashboard'
-import { FreelancerPage } from './pages/FreelancerPage'
+import { FreelancerPage, FreelancerRegisterPage } from './pages/FreelancerPage'
 import { FreelancerProjectDetailsPage, FreelancerProjectsPage } from './pages/FreelancerProjectsPage'
 import { HomePage } from './pages/HomePage'
 import { IndustriesPage } from './pages/IndustriesPage'
@@ -373,7 +373,7 @@ function App() {
         { path: '/freelance-project-listings-:projectSlug', element: <FreelancerProjectDetailsPage /> },
         { path: '/freelancer/projects/:projectSlug', element: <FreelancerProjectDetailsPage /> },
         { path: '/freelancer-login', element: <AuthPage defaultRole="freelancer" lockRole /> },
-        { path: '/freelancer-register', element: <AuthPage defaultMode="register" defaultRole="freelancer" lockRole /> },
+        { path: '/freelancer-register', element: <FreelancerRegisterPage /> },
       ],
     },
     {

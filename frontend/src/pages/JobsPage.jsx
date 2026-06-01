@@ -7,6 +7,7 @@ import { EmptyState } from '../components/PortalUI'
 import { useApiResource } from '../hooks/useApiResource'
 import { api } from '../services/api'
 import { formatStateCountryLocation } from '../utils/locationDisplay'
+import jobsHeroCandidateImage from '../assets/jobs-hero-candidate-clean.png'
 
 const filterConfig = [
   { key: 'location', label: 'Location', field: 'locationState' },
@@ -155,17 +156,43 @@ export function JobsPage({ onApply }) {
   const activeChips = buildActiveChips(selectedFilters, selectedSalaryBands, selectedExperienceMax)
 
   return (
-    <section className="w-full max-w-full overflow-x-hidden bg-[#f7f7f7] py-4 sm:py-6">
-      <div className="w-full max-w-full px-0 sm:mx-auto sm:max-w-5xl sm:px-5">
-        <div className="relative w-full max-w-full overflow-hidden border-y border-slate-200 bg-white px-3 py-3 shadow-sm sm:rounded-[7px] sm:border sm:px-4">
-          <SearchBar compact />
+    <section className="w-full max-w-full overflow-x-hidden bg-[#f6f9fc] py-6 sm:py-10">
+      <div className="w-full max-w-full px-4 sm:mx-auto sm:max-w-7xl sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[7px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef7ff_58%,#fff4e8_100%)] shadow-sm">
+          <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-center">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff8a00]">Verified jobs network</p>
+              <h1 className="mt-3 max-w-3xl text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
+                Find trusted jobs from active recruiters.
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600 sm:text-base">
+                Search fresh openings, compare salary and location, and apply with your candidate profile.
+              </p>
+              <div className="mt-6 overflow-hidden rounded-[7px] border border-slate-200 bg-[white] p-3 shadow-sm">
+                <SearchBar compact />
+              </div>
+            </div>
+            <div className="relative min-h-[270px] overflow-hidden rounded-[7px]">
+              <img
+                alt="Candidate searching jobs on laptop"
+                className="absolute inset-0 h-full w-full object-cover object-center"
+                src={jobsHeroCandidateImage}
+                style={{
+                  WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%)',
+                  WebkitMaskComposite: 'source-in',
+                  maskComposite: 'intersect',
+                  maskImage: 'linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%)',
+                }}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="mt-3 grid w-full max-w-full gap-5 lg:grid-cols-[310px_minmax(0,1fr)]">
-          <aside className="hidden h-fit rounded-[7px] border border-slate-200 bg-white shadow-sm lg:sticky lg:top-20 lg:block">
-            <div className="border-b border-slate-100 p-5 text-center">
+        <div className="mt-6 grid w-full max-w-full gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
+          <aside className="hidden h-fit rounded-[7px] border border-slate-200 bg-[white] shadow-sm lg:sticky lg:top-20 lg:block">
+            <div className="border-b border-slate-100 p-5">
               <div className="inline-flex items-center justify-center gap-2 text-base font-black text-slate-950">
-                <SlidersHorizontal className="text-[#008bdc]" size={20} />
+                <SlidersHorizontal className="text-[#ff8a00]" size={20} />
                 Filters
               </div>
               <p className="mt-1 text-xs font-bold text-slate-500">{activeFilterCount} active filters</p>
@@ -228,14 +255,15 @@ export function JobsPage({ onApply }) {
           </aside>
 
           <div className="min-w-0">
-            <div className="mb-3 rounded-none border-y border-slate-200 bg-white p-3 shadow-sm sm:rounded-[7px] sm:border sm:p-4">
+            <div className="mb-4 rounded-[7px] border border-slate-200 bg-[white] p-4 shadow-sm">
               <div className="flex w-full max-w-full items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="min-w-0 truncate text-base font-black text-slate-950 sm:text-lg">
+                  <p className="text-sm font-black text-slate-950 sm:text-base">Recommended Jobs</p>
+                  <p className="mt-1 min-w-0 truncate text-xs font-semibold text-slate-500">
                     {list.length} jobs found{hasSearch ? ' for your search' : ''}
                   </p>
                 </div>
-                <select className="w-36 shrink-0 rounded-[7px] border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white sm:w-auto sm:px-4 sm:text-sm">
+                <select className="w-36 shrink-0 rounded-[7px] border border-slate-200 bg-[white] px-2 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-[#ff8a00] sm:w-auto sm:px-4 sm:text-sm">
                   <option>Sort by relevance</option>
                   <option>Sort by newest</option>
                   <option>Sort by salary</option>
@@ -260,8 +288,8 @@ export function JobsPage({ onApply }) {
               </div>
             </div>
             {list.length ? (
-              <div className="grid w-full max-w-full grid-cols-1 gap-3 px-2 sm:px-0">
-                {list.map((job, index) => <JobCard denseMobile index={index + 1} job={job} key={job._id || job.id} onApply={onApply} />)}
+              <div className="grid w-full max-w-full grid-cols-1 gap-4">
+                {list.map((job, index) => <JobCard denseMobile index={index + 1} job={job} key={job._id || job.id} onApply={onApply} premiumList />)}
               </div>
             ) : (
               <div className="mt-8"><EmptyState /></div>

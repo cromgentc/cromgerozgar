@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Building2, ClipboardCheck, Download, FileText, SearchCheck, Send, ShieldCheck, Smartphone } from 'lucide-react'
+import { ArrowRight, Bookmark, BriefcaseBusiness, Building2, ClipboardCheck, Code2, Download, FileText, Quote, SearchCheck, Send, ShieldCheck, Star, Target, ThumbsUp, TrendingUp, UserRoundCheck, UsersRound } from 'lucide-react'
 import { Button } from '../components/Button'
 import { HeroBanner } from '../components/HeroBanner'
 import { JobCard } from '../components/JobCard'
-import { ReviewCard } from '../components/ReviewCard'
 import { Section } from '../components/Section'
 import { getStoredUser } from '../routes/authRouting'
 import { api } from '../services/api'
@@ -254,126 +253,201 @@ function MobileHomeJobs({ jobs = [], onApply }) {
 }
 
 function TrustedByCandidates() {
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [activeIndex, setActiveIndex] = useState(0)
+  const testimonials = [
+    {
+      name: 'Komal Singh',
+      role: 'Sales Executive',
+      quote: 'The candidate dashboard is easy to use and keeps everything organized. I never miss any updates now.',
+      avatar: 'KS',
+      accent: 'blue',
+      Icon: BriefcaseBusiness,
+    },
+    {
+      name: 'Sonia Dutta',
+      role: 'Digital Marketing Executive',
+      quote: 'I created my profile once and started applying to better matched roles quickly. The experience is smooth and time-saving.',
+      avatar: 'SD',
+      accent: 'green',
+      Icon: TrendingUp,
+    },
+    {
+      name: 'Mohit Chawla',
+      role: 'Backend Developer',
+      quote: 'Recruiter updates and clean job details helped me stay confident during the hiring process. Highly recommended!',
+      avatar: 'MC',
+      accent: 'orange',
+      Icon: Code2,
+    },
+  ]
 
-  useEffect(() => {
-    let active = true
-
-    api.listAll('testimonials', '?status=Active&sort=-featured%20-createdAt')
-      .then((payload) => {
-        if (!active) return
-        const testimonials = Array.isArray(payload.data) ? payload.data : []
-        setItems(testimonials.filter((item) => item.name && item.text))
-      })
-      .catch(() => {
-        if (active) setItems([])
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
-
-  useEffect(() => {
-    if (items.length <= 1) return undefined
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % items.length)
-    }, 3500)
-    return () => window.clearInterval(timer)
-  }, [items.length])
-
-  useEffect(() => {
-    if (activeIndex >= items.length) setActiveIndex(0)
-  }, [activeIndex, items.length])
-
-  const visibleItems = items.length
-    ? [0, 1, 2].map((offset) => items[(activeIndex + offset) % items.length]).filter(Boolean)
-    : []
+  const stats = [
+    [UsersRound, '10,000+', 'Happy Candidates', 'blue'],
+    [ShieldCheck, '95%', 'Success Rate', 'green'],
+    [BriefcaseBusiness, '500+', 'Top Companies', 'orange'],
+    [ThumbsUp, '4.8/5', 'Average Rating', 'purple'],
+  ]
 
   return (
-    <section className="bg-white py-14 sm:py-18">
-      <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Trusted By Candidates</h2>
-        <p className="mx-auto mt-4 max-w-2xl text-base font-semibold leading-7 text-slate-500">
-          Candidate feedback, success stories, and platform experiences shared by professionals using CromGen Rozgar.
+    <section className="relative overflow-hidden bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_52%,#fff4e6_100%)] py-10 sm:py-12">
+      <div className="absolute -left-5 top-3 text-[96px] font-black leading-none text-blue-100/60">“</div>
+      <div className="absolute right-12 top-8 hidden grid-cols-6 gap-2 opacity-40 lg:grid">
+        {Array.from({ length: 24 }).map((_, index) => <span className="h-1 w-1 rounded-full bg-blue-200" key={index} />)}
+      </div>
+      <div className="absolute -right-24 bottom-6 h-48 w-48 rounded-full bg-orange-100/60" />
+
+      <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
+        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-blue-600">Testimonials</p>
+        <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-4xl">Trusted by Candidates</h2>
+        <span className="mx-auto mt-3 block h-1 w-16 rounded-full bg-[#ff8a00]" />
+        <p className="mx-auto mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500 sm:text-base">
+          Real feedback, success stories, and platform experiences shared by professionals using <span className="font-black text-blue-600">Cromgen Rozgar.</span>
         </p>
-        {loading ? (
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {[1, 2, 3].map((item) => <div className="h-44 animate-pulse rounded-[7px] bg-slate-100" key={item} />)}
-          </div>
-        ) : items.length ? (
-          <>
-            <div className="mt-8 grid gap-5 text-left md:grid-cols-3">
-              {visibleItems.map((item, index) => (
-                <div className={index === 0 ? '' : 'hidden md:block'} key={`${item._id || item.name}-${activeIndex}-${index}`}>
-                  <ReviewCard item={item} />
+
+        <div className="mt-6 grid gap-4 text-left lg:grid-cols-3">
+          {testimonials.map(({ Icon, accent, avatar, name, quote, role }) => (
+            <article className="rounded-[12px] border border-blue-100 bg-white/90 p-4 shadow-lg shadow-blue-100/50 backdrop-blur" key={name}>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className={`grid h-14 w-14 place-items-center rounded-full text-base font-black ${getCandidateAccentClasses(accent).avatar}`}>
+                  {avatar}
                 </div>
-              ))}
-            </div>
-            <div className="mt-5 flex justify-center gap-2">
-              {items.slice(0, Math.min(items.length, 8)).map((item, index) => (
-                <button
-                  aria-label={`Show review ${index + 1}`}
-                  className={`h-2.5 rounded-full transition-all ${activeIndex === index ? 'w-8 bg-[#ff8a00]' : 'w-2.5 bg-slate-300 hover:bg-slate-400'}`}
-                  key={item._id || item.name || index}
-                  onClick={() => setActiveIndex(index)}
-                  type="button"
-                />
-              ))}
-            </div>
-            {items.length > 3 && (
-              <Button className="mt-8" to="/candidate-reviews" variant="secondary">
-                More Reviews
-              </Button>
-            )}
-          </>
-        ) : (
-          <p className="mx-auto mt-4 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
-            When admin adds candidate testimonials, they will appear here automatically.
-          </p>
-        )}
+                <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">
+                  <ShieldCheck size={15} /> Verified Candidate
+                </span>
+              </div>
+              <div className="mt-4 flex items-center gap-1 text-[#ffb000]">
+                {Array.from({ length: 5 }).map((_, index) => <Star className="fill-current" key={index} size={15} />)}
+                <span className="ml-2 text-sm font-black text-slate-800">5.0</span>
+                <Quote className="ml-auto text-blue-100" size={24} />
+              </div>
+              <p className="mt-4 min-h-[72px] text-sm font-semibold leading-6 text-slate-700">{quote}</p>
+              <div className="mt-4 border-t border-slate-200 pt-4">
+                <div className="flex items-center gap-3">
+                  <span className={`grid h-11 w-11 place-items-center rounded-[12px] ${getCandidateAccentClasses(accent).icon}`}>
+                    <Icon size={20} />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-black text-slate-950">{name}</h3>
+                    <p className="text-xs font-bold text-slate-500">{role}</p>
+                    <p className="mt-0.5 text-xs font-black text-blue-600">Cromgen Rozgar Candidate</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-6 rounded-[12px] border border-blue-100 bg-white/90 p-3 shadow-lg shadow-blue-100/50 backdrop-blur">
+          <div className="grid gap-3 md:grid-cols-4">
+            {stats.map(([Icon, value, label, accent]) => (
+              <div className="flex items-center justify-center gap-3 border-slate-200 md:border-r md:last:border-r-0" key={label}>
+                <span className={`grid h-11 w-11 place-items-center rounded-full ${getCandidateAccentClasses(accent).icon}`}>
+                  <Icon size={20} />
+                </span>
+                <div className="text-left">
+                  <p className="text-xl font-black text-slate-950">{value}</p>
+                  <p className="text-xs font-bold text-slate-500">{label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-slate-500">
+          <ShieldCheck className="text-blue-600" size={18} />
+          Your career journey is important. We're here to help you succeed.
+        </p>
       </div>
     </section>
   )
 }
 
+function getCandidateAccentClasses(accent) {
+  const accents = {
+    blue: {
+      avatar: 'bg-blue-100 text-blue-700',
+      icon: 'bg-blue-100 text-blue-700',
+    },
+    green: {
+      avatar: 'bg-emerald-100 text-emerald-700',
+      icon: 'bg-emerald-100 text-emerald-700',
+    },
+    orange: {
+      avatar: 'bg-orange-100 text-[#ff8a00]',
+      icon: 'bg-orange-100 text-[#ff8a00]',
+    },
+    purple: {
+      avatar: 'bg-violet-100 text-violet-700',
+      icon: 'bg-violet-100 text-violet-700',
+    },
+  }
+  return accents[accent] || accents.blue
+}
+
 function CareerFocusBand() {
   return (
-    <section className="bg-white py-10">
+    <section className="bg-[#f7fbff] py-8 sm:py-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[7px] border border-[#0057B8]/10 bg-[#0057B8] p-7 text-white shadow-xl shadow-[#0057B8]/15 sm:p-9">
-            <div className="flex items-start gap-4">
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[7px] bg-white/15"><Smartphone size={22} /></span>
-              <div>
-                <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-100">Career workspace</p>
-                <h2 className="mt-1 text-3xl font-black">One place for jobs, profiles, saves, and applications</h2>
-                <p className="mt-4 max-w-2xl text-sm font-semibold leading-7 text-blue-50">
-                  Build your candidate profile once, then use it to apply faster, track status, and stay ready for recruiter shortlisting.
-                </p>
+        <div className="grid gap-4 lg:grid-cols-[0.88fr_1.45fr]">
+          <div className="relative overflow-hidden rounded-[7px] bg-[#0057B8] p-5 text-white shadow-xl shadow-blue-100 sm:p-6">
+            <div className="absolute -right-10 top-16 h-28 w-28 rounded-full border-[18px] border-white/10" />
+            <div className="absolute bottom-8 left-10 grid grid-cols-6 gap-2 opacity-20">
+              {Array.from({ length: 24 }).map((_, index) => <span className="h-1.5 w-1.5 rounded-full bg-white" key={index} />)}
+            </div>
+            <span className="grid h-12 w-12 place-items-center rounded-[14px] bg-white/15 ring-1 ring-white/15"><BriefcaseBusiness size={24} /></span>
+            <p className="mt-4 text-xs font-black uppercase tracking-[0.22em] text-blue-100">Career workspace</p>
+            <h2 className="mt-3 max-w-lg text-2xl font-black leading-tight sm:text-3xl">One place for jobs, profiles, saves, and applications</h2>
+            <span className="mt-4 block h-0.5 w-12 rounded-full bg-[#ff8a00]" />
+            <p className="mt-4 max-w-lg text-sm font-semibold leading-6 text-blue-50">
+              Build your candidate profile once, then use it to apply faster, track status, and stay ready for recruiter shortlisting.
+            </p>
+            <div className="relative mt-6 rounded-[7px] border border-white/20 bg-white p-3 text-slate-900 shadow-xl shadow-blue-950/20">
+              <div className="grid gap-3 sm:grid-cols-[90px_1fr_120px]">
+                <div className="rounded-[7px] bg-[#0057B8] p-2 text-[11px] font-bold text-white">
+                  {['Overview', 'Applied Jobs', 'Saved Jobs', 'Applications', 'Profile'].map((item) => <p className="py-1" key={item}>{item}</p>)}
+                </div>
+                <div className="rounded-[7px] bg-slate-50 p-3">
+                  <p className="text-xs font-black">Welcome back, Rahul</p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-[7px] bg-white p-2 shadow-sm">
+                      <p className="text-xs font-bold text-slate-500">Profile Strength</p>
+                      <p className="mt-1 text-xl font-black text-emerald-600">85%</p>
+                    </div>
+                    <div className="rounded-[7px] bg-white p-2 shadow-sm">
+                      <p className="text-xs font-bold text-slate-500">Recent Applications</p>
+                      <p className="mt-1 text-xl font-black text-[#0057B8]">12</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="hidden rounded-[7px] bg-slate-50 p-2 text-[11px] font-bold text-slate-600 sm:block">
+                  <p className="font-black text-slate-950">Recommended Jobs</p>
+                  {['UX Designer', 'Frontend Developer', 'Product Manager'].map((item) => <p className="mt-2 rounded-[7px] bg-white px-2 py-1.5 shadow-sm" key={item}>{item}</p>)}
+                </div>
               </div>
             </div>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
               {['Profile-led matching', 'Saved jobs', 'Application tracking'].map((item) => (
-                <span className="rounded-[7px] bg-white/14 px-4 py-2 text-sm font-black text-white" key={item}>{item}</span>
+                <span className="rounded-[7px] bg-white/14 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10" key={item}>{item}</span>
               ))}
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {[
-              ['Verified Recruiters', 'Connect with companies using structured hiring workflows.'],
-              ['Flexible Work Modes', 'Find remote, hybrid, full-time, contract, and freelance jobs.'],
-            ].map(([title, text]) => (
-              <div className="rounded-[7px] border border-slate-200 bg-white p-6 shadow-sm" key={title}>
-                <Download className="text-[#0057B8]" size={24} />
-                <h3 className="mt-4 font-black text-slate-950">{title}</h3>
-                <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{text}</p>
-              </div>
+              [ShieldCheck, 'Verified Recruiters', 'Connect with trusted companies and genuine hiring teams.', 'bg-blue-50 text-[#0057B8]'],
+              [BriefcaseBusiness, 'Flexible Work Modes', 'Find full-time, part-time, remote, hybrid, contract, and freelance jobs that fit your lifestyle.', 'bg-green-50 text-[#21a943]'],
+              [Send, 'Fast Apply', 'Apply faster using your saved profile and resume with one click.', 'bg-orange-50 text-[#ff8a00]'],
+              [Bookmark, 'Saved Jobs', 'Bookmark jobs that interest you and apply when you are ready.', 'bg-violet-50 text-[#6d37dc]'],
+              [TrendingUp, 'Application Tracking', 'Track your applications and get real-time updates at every step.', 'bg-cyan-50 text-cyan-600'],
+              [Target, 'Smart Matching', 'Get job recommendations based on your skills, experience and preferences.', 'bg-pink-50 text-pink-600'],
+            ].map(([Icon, title, text, tone]) => (
+              <article className="rounded-[7px] border border-slate-200 bg-white p-4 shadow-lg shadow-blue-100/40 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-100" key={title}>
+                <span className={`grid h-12 w-12 place-items-center rounded-[13px] ${tone}`}>
+                  <Icon size={24} strokeWidth={1.9} />
+                </span>
+                <h3 className="mt-4 text-lg font-black text-slate-950">{title}</h3>
+                <span className={`mt-3 block h-0.5 w-10 rounded-full ${title.includes('Recruiters') ? 'bg-[#0057B8]' : title.includes('Modes') ? 'bg-[#21a943]' : title.includes('Apply') ? 'bg-[#ff8a00]' : title.includes('Saved') ? 'bg-[#6d37dc]' : title.includes('Tracking') ? 'bg-cyan-500' : 'bg-pink-500'}`} />
+                <p className="mt-3 text-xs font-semibold leading-5 text-slate-500">{text}</p>
+              </article>
             ))}
           </div>
         </div>

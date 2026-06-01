@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, CheckCircle2, Clock3, FileText, IndianRupee, Laptop, MapPin, SearchCheck, ShieldCheck, Sparkles, UserRoundCheck, WalletCards } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, Building2, Clock3, Eye, FileText, IndianRupee, Laptop, Lock, Mail, MapPin, Phone, SearchCheck, ShieldCheck, Sparkles, UserRound, UserRoundCheck, UsersRound, WalletCards, X } from 'lucide-react'
 import { Button } from '../components/Button'
 import { Section } from '../components/Section'
+import { getDashboardPath, normalizeRole } from '../routes/authRouting'
+import { api } from '../services/api'
+import freelancerHomeHeroImage from '../assets/freelancer-home-hero.png'
+import freelancerProjectsHeroImage from '../assets/freelancer-projects-photo.png'
 
 const heroSlides = [
   {
@@ -79,6 +84,11 @@ const freelancerSteps = [
     title: 'Apply with confidence',
     text: 'Share a clear proposal and track responses through your candidate workspace.',
   },
+  {
+    icon: WalletCards,
+    title: 'Work & get paid',
+    text: 'Collaborate, deliver quality work, and manage secure project payments.',
+  },
 ]
 
 const freelancerBenefits = [
@@ -93,95 +103,173 @@ export function FreelancerPage() {
     <>
       <FreelancerHeroSlider />
 
-      <Section className="bg-[#F6F9FD] !py-7 sm:!py-20" eyebrow="How it works" title="Start freelancing through Cromgen Rozgar" subtitle="A focused workspace for profile setup, project discovery, and proposal tracking.">
-        <div className="relative grid gap-3 md:grid-cols-3 md:gap-5">
-          <div className="absolute left-[16%] right-[16%] top-12 hidden h-0.5 bg-gradient-to-r from-[#0057B8] via-[#3E9B28] to-[#FF8A00] md:block" />
+      <Section className="relative overflow-hidden bg-[#F7FBFF] !py-10 sm:!py-20" eyebrow="How it works" title="Start freelancing through Cromgen Rozgar" subtitle="A simple and transparent process to help you find the right projects and grow your freelance career.">
+        <div className="pointer-events-none absolute left-6 top-10 hidden grid-cols-4 gap-3 opacity-50 lg:grid">
+          {Array.from({ length: 24 }).map((_, index) => <span className="h-1.5 w-1.5 rounded-full bg-blue-300" key={index} />)}
+        </div>
+        <div className="pointer-events-none absolute -right-16 top-0 hidden h-44 w-44 rounded-full border-[34px] border-blue-100/70 lg:block" />
+        <div className="relative grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {freelancerSteps.map((step, index) => {
             const Icon = step.icon
             const tones = [
-              'bg-[#0057B8] text-white shadow-[#0057B8]/20',
-              'bg-[#3E9B28] text-white shadow-[#3E9B28]/20',
-              'bg-[#FF8A00] text-white shadow-[#FF8A00]/20',
+              {
+                badge: 'bg-[#0057B8]',
+                ring: 'border-blue-300 bg-blue-50',
+                icon: 'text-[#0057B8]',
+                line: 'bg-[#0057B8]',
+              },
+              {
+                badge: 'bg-[#21a943]',
+                ring: 'border-green-300 bg-green-50',
+                icon: 'text-[#21a943]',
+                line: 'bg-[#21a943]',
+              },
+              {
+                badge: 'bg-[#ff8a00]',
+                ring: 'border-orange-300 bg-orange-50',
+                icon: 'text-[#ff8a00]',
+                line: 'bg-[#ff8a00]',
+              },
+              {
+                badge: 'bg-[#6d37dc]',
+                ring: 'border-violet-300 bg-violet-50',
+                icon: 'text-[#6d37dc]',
+                line: 'bg-[#6d37dc]',
+              },
             ]
+            const tone = tones[index]
             return (
-              <div className="relative rounded-[7px] border border-slate-200 bg-white p-4 shadow-lg shadow-slate-200/60 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-100 sm:p-6" key={step.title}>
-                <div className="flex items-center justify-between">
-                  <span className={`grid h-11 w-11 place-items-center rounded-[7px] shadow-lg sm:h-14 sm:w-14 ${tones[index]}`}>
-                    <Icon size={21} />
+              <article className="relative rounded-[7px] border border-slate-200 bg-white px-5 pb-6 pt-9 text-center shadow-xl shadow-blue-100/50 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-100" key={step.title}>
+                {index < freelancerSteps.length - 1 && (
+                  <div className="absolute left-[calc(100%_-_12px)] top-28 z-10 hidden w-10 items-center xl:flex">
+                    <span className="h-px flex-1 border-t border-dashed border-slate-300" />
+                    <span className={`grid h-7 w-7 place-items-center rounded-full ${tone.badge} text-white`}>
+                      <ArrowRight size={15} />
+                    </span>
+                  </div>
+                )}
+                <span className={`absolute left-1/2 top-0 grid h-10 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full ${tone.badge} text-sm font-black text-white shadow-lg`}>
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <div className={`mx-auto grid h-36 w-36 place-items-center rounded-full border ${tone.ring}`}>
+                  <span className="grid h-24 w-24 place-items-center rounded-full bg-white/65">
+                    <Icon className={tone.icon} size={46} strokeWidth={1.9} />
                   </span>
-                  <span className="rounded-[7px] bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">Step {index + 1}</span>
                 </div>
-                <h3 className="mt-4 text-lg font-black text-slate-950 sm:mt-5 sm:text-xl">{step.title}</h3>
-                <p className="mt-2 text-xs font-semibold leading-5 text-slate-500 sm:mt-3 sm:min-h-16 sm:text-sm sm:leading-6">{step.text}</p>
-                <div className="mt-5 h-1.5 rounded-[7px] bg-slate-100">
-                  <div className={`h-full rounded-[7px] ${index === 0 ? 'w-1/3 bg-[#0057B8]' : index === 1 ? 'w-2/3 bg-[#3E9B28]' : 'w-full bg-[#FF8A00]'}`} />
+                <h3 className="mt-6 text-xl font-black capitalize text-slate-950">{step.title}</h3>
+                <span className={`mx-auto mt-3 block h-0.5 w-12 rounded-full ${tone.line}`} />
+                <p className="mx-auto mt-5 min-h-20 max-w-[220px] text-sm font-semibold leading-6 text-slate-500">{step.text}</p>
+                <div className="mt-6 flex items-center justify-center gap-3 opacity-50">
+                  <span className="h-1 w-1 rounded-full bg-slate-300" />
+                  <span className="h-1 w-1 rounded-full bg-slate-300" />
+                  <span className="h-1 w-1 rounded-full bg-slate-300" />
                 </div>
-              </div>
+              </article>
             )
           })}
         </div>
       </Section>
 
-      <Section className="bg-white !py-7 sm:!py-20" eyebrow="Benefits" title="Built for flexible professionals" subtitle="Everything is arranged for quick scanning, shortlisting, and repeat project work.">
-        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
-          <div className="rounded-[7px] bg-[#07111F] p-4 text-white shadow-2xl shadow-slate-200 sm:p-7">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#68D391] sm:text-sm sm:tracking-[0.18em]">Freelancer console</p>
-            <h3 className="mt-3 text-xl font-black leading-tight sm:mt-4 sm:text-3xl">One place for profile, matching, and project status.</h3>
-            <p className="mt-3 text-xs font-semibold leading-5 text-slate-300 sm:mt-4 sm:text-sm sm:leading-7">
-              Freelancers can see verified opportunities, prepare proposals, and keep project communication organized without moving through noisy menus.
-            </p>
-            <div className="mt-5 grid gap-2 sm:mt-7 sm:gap-3">
-              {[
-                ['86%', 'Profile strength'],
-                ['24h', 'Fast review cycle'],
-                ['4.8', 'Average client rating'],
-              ].map(([value, label]) => (
-                <div className="flex items-center justify-between rounded-[7px] bg-white/10 px-3 py-2 sm:px-4 sm:py-3" key={label}>
-                  <span className="text-xs font-bold text-slate-300 sm:text-sm">{label}</span>
-                  <span className="text-lg font-black text-white sm:text-xl">{value}</span>
-                </div>
-              ))}
+      <Section className="relative overflow-hidden bg-[#F7FBFF] !py-10 sm:!py-20" eyebrow="Benefits" title="Why Freelancers Choose Cromgen Rozgar" subtitle="Discover verified projects, connect with trusted clients, manage proposals, and grow your freelance career from one powerful platform.">
+        <div className="pointer-events-none absolute -left-20 top-0 hidden h-44 w-44 rounded-full bg-blue-100/70 lg:block" />
+        <div className="pointer-events-none absolute right-10 top-16 hidden text-blue-500 lg:block">
+          <ArrowRight size={44} className="-rotate-45" />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            [UsersRound, '10,000+', 'Active Freelancers', 'bg-blue-50 text-[#0057B8]'],
+            [BriefcaseBusiness, '2,500+', 'Live Projects', 'bg-green-50 text-[#21a943]'],
+            [Building2, '500+', 'Hiring Companies', 'bg-orange-50 text-[#ff8a00]'],
+            [ShieldCheck, '95%', 'Success Rate', 'bg-violet-50 text-[#6d37dc]'],
+          ].map(([Icon, value, label, tone]) => (
+            <div className="flex items-center gap-5 rounded-[7px] border border-slate-200 bg-white p-5 shadow-xl shadow-blue-100/50" key={label}>
+              <span className={`grid h-20 w-20 shrink-0 place-items-center rounded-full ${tone}`}>
+                <Icon size={34} />
+              </span>
+              <div>
+                <p className={`text-4xl font-black ${String(tone).split(' ').at(-1)}`}>{value}</p>
+                <p className="mt-1 text-sm font-black text-slate-950">{label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
+          <div className="relative min-h-[380px] overflow-hidden rounded-[7px]">
+            <img
+              alt="Freelancer managing proposals"
+              className="absolute inset-0 h-full w-full object-cover object-center"
+              src={freelancerProjectsHeroImage}
+              style={{
+                WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%)',
+                WebkitMaskComposite: 'source-in',
+                maskComposite: 'intersect',
+                maskImage: 'linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%)',
+              }}
+            />
+            <div className="absolute left-4 top-20 rounded-[7px] bg-white/95 p-3 shadow-xl shadow-blue-100">
+              <p className="text-xs font-black text-slate-950">New Project</p>
+              <p className="mt-1 text-[11px] font-semibold text-slate-500">Notification</p>
+            </div>
+            <div className="absolute right-5 top-48 rounded-[7px] bg-white/95 p-3 shadow-xl shadow-blue-100">
+              <p className="text-xs font-black text-slate-950">Proposal</p>
+              <p className="mt-1 text-[11px] font-semibold text-emerald-600">Accepted</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-2">
-            {freelancerBenefits.map(([title, text], index) => (
-              <div className="rounded-[7px] border border-slate-200 bg-[#F8FBFF] p-3 shadow-sm transition hover:-translate-y-1 hover:border-blue-100 hover:bg-white hover:shadow-xl hover:shadow-blue-100/70 sm:flex sm:gap-4 sm:p-5" key={title}>
-                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[7px] ring-1 sm:h-11 sm:w-11 ${index % 2 === 0 ? 'bg-[#0057B8]/10 text-[#0057B8] ring-[#0057B8]/10' : 'bg-[#3E9B28]/10 text-[#3E9B28] ring-[#3E9B28]/10'}`}>
-                  <CheckCircle2 size={18} />
-                </span>
-              <div className="mt-3 sm:mt-0">
-                <h3 className="text-sm font-black text-slate-950 sm:text-base">{title}</h3>
-                <p className="mt-1 line-clamp-3 text-xs font-semibold leading-5 text-slate-500 sm:text-sm sm:leading-6">{text}</p>
-              </div>
-              </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              [UserRoundCheck, 'Profile & Portfolio', 'Create a professional profile, showcase your skills, experience and past work.', 'text-[#0057B8] bg-blue-50'],
+              [SearchCheck, 'Smart Project Matching', 'Get projects matched to your skills and preferences from verified companies.', 'text-[#21a943] bg-green-50'],
+              [ArrowRight, 'Proposal Management', 'Send proposals, track responses and communicate with clients in one place.', 'text-[#ff8a00] bg-orange-50'],
+              [Lock, 'Secure Payments', 'Work confidently with verified clients and get paid through secure transactions.', 'text-[#6d37dc] bg-violet-50'],
+            ].map(([Icon, title, text, tone]) => (
+              <article className="rounded-[7px] border border-slate-200 bg-white p-6 shadow-xl shadow-blue-100/50 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-100" key={title}>
+                <div className="flex gap-5">
+                  <span className={`grid h-20 w-20 shrink-0 place-items-center rounded-[18px] ${tone}`}>
+                    <Icon size={36} strokeWidth={1.9} />
+                  </span>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-950">{title}</h3>
+                    <p className="mt-3 text-sm font-semibold leading-6 text-slate-500">{text}</p>
+                    <span className={`mt-5 block h-0.5 w-12 rounded-full ${title.includes('Matching') ? 'bg-[#21a943]' : title.includes('Proposal') ? 'bg-[#ff8a00]' : title.includes('Payments') ? 'bg-[#6d37dc]' : 'bg-[#0057B8]'}`} />
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-[7px] border border-blue-100 bg-[linear-gradient(110deg,#EAF3FF_0%,#FFFFFF_52%,#ECFDF3_100%)] p-4 shadow-lg shadow-blue-100/60 sm:mt-10 sm:p-6">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div className="flex gap-4">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[7px] bg-[#0057B8] text-white sm:h-12 sm:w-12">
-                <Sparkles size={20} />
-              </span>
-              <div>
-                <h3 className="text-lg font-black text-slate-950 sm:text-2xl">Ready for your next project?</h3>
-                <p className="mt-2 max-w-2xl text-xs font-semibold leading-5 text-slate-500 sm:text-sm sm:leading-6">
-                  Register as a freelancer, complete your profile, and start applying to verified project work.
-                </p>
-              </div>
-            </div>
-            <Button className="w-full shrink-0 sm:w-auto" to="/freelancer-register">Get Started</Button>
+        <div className="relative mx-auto mt-9 flex max-w-5xl flex-col gap-4 rounded-full border border-slate-200 bg-white p-4 shadow-xl shadow-blue-100/50 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex items-center gap-4">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-blue-50 text-[#0057B8]">
+              <Sparkles size={22} />
+            </span>
+            <p className="text-sm font-semibold text-slate-600 sm:text-base">Join thousands of freelancers already building their career with Cromgen Rozgar.</p>
           </div>
+          <Link className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-[7px] bg-[#0057B8] px-8 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:-translate-y-0.5 hover:bg-[#004694]" to="/freelancer-register">
+            Join Now <ArrowRight size={18} />
+          </Link>
         </div>
       </Section>
     </>
   )
 }
 
+export function FreelancerRegisterPage() {
+  const navigate = useNavigate()
+
+  return (
+    <div className="min-h-[calc(100vh-76px)] bg-[#eef8ff]">
+      <FreelancerRegisterModal onClose={() => navigate('/freelancer')} />
+    </div>
+  )
+}
+
 function FreelancerHeroSlider() {
   const [active, setActive] = useState(0)
+  const [registerOpen, setRegisterOpen] = useState(false)
   const slide = heroSlides[active]
 
   useEffect(() => {
@@ -196,145 +284,190 @@ function FreelancerHeroSlider() {
   const nextSlide = () => setActive((active + 1) % heroSlides.length)
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-[#0057B8]/10 bg-white">
-      <div className="absolute inset-x-0 top-0 h-1 bg-[#0057B8]" />
-      <div className="absolute inset-x-0 top-1 h-28 bg-[linear-gradient(180deg,#F3F8FF_0%,rgba(243,248,255,0)_100%)]" />
-
-      <div className="relative mx-auto grid max-w-7xl gap-5 px-2 py-5 sm:min-h-[calc(100vh-5.5rem)] sm:gap-10 sm:px-6 sm:py-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-8">
-        <div className="min-w-0">
-          <div className="flex w-max max-w-full items-center gap-2 rounded-[7px] border border-[#0057B8]/15 bg-[#0057B8]/5 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-[#0057B8] sm:text-xs sm:tracking-[0.16em]">
-            <Sparkles size={15} />
-            {slide.badge}
-          </div>
-          <h1 className="mt-4 max-w-4xl text-2xl font-black leading-tight tracking-tight text-slate-950 sm:mt-6 sm:text-5xl sm:leading-[1.02] lg:text-6xl">
-            {slide.heading}
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600 sm:mt-5 sm:text-lg sm:leading-8">
-            {slide.subtitle}
-          </p>
-
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-8 sm:flex sm:flex-row sm:gap-3">
-            <Button to={slide.primaryTo}>{slide.primary}</Button>
-            <Button to={slide.secondaryTo} variant="secondary">{slide.secondary}</Button>
-          </div>
-
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-9 sm:gap-3">
-            {slide.proof.map((item, index) => (
-              <div className="flex min-w-0 items-center gap-2 rounded-[7px] border border-slate-200 bg-white p-2 shadow-sm sm:gap-3 sm:p-3" key={item}>
-                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-[7px] sm:h-9 sm:w-9 ${index === 2 ? 'bg-[#3E9B28]/10 text-[#3E9B28]' : index === 1 ? 'bg-[#FF8A00]/10 text-[#FF8A00]' : 'bg-[#0057B8]/10 text-[#0057B8]'}`}>
-                  <CheckCircle2 size={15} />
-                </span>
-                <span className="min-w-0 text-[11px] font-black leading-4 text-slate-800 sm:text-sm">{item}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-5 flex flex-wrap items-center gap-2 sm:mt-8 sm:gap-3">
-            <button className="hidden h-11 w-11 place-items-center rounded-[7px] bg-[#0057B8] text-white shadow-lg shadow-[#0057B8]/20 transition hover:-translate-y-0.5 hover:bg-[#004694] sm:grid" onClick={previousSlide} type="button" aria-label="Previous freelancer slide">
-              <ArrowLeft size={18} />
-            </button>
-            <button className="hidden h-11 w-11 place-items-center rounded-[7px] bg-[#0057B8] text-white shadow-lg shadow-[#0057B8]/20 transition hover:-translate-y-0.5 hover:bg-[#004694] sm:grid" onClick={nextSlide} type="button" aria-label="Next freelancer slide">
-              <ArrowRight size={18} />
-            </button>
-            <div className="flex items-center gap-2 rounded-[7px] border border-slate-200 bg-white px-3 py-2 shadow-sm">
-              {heroSlides.map((item, index) => (
-                <button
-                  aria-label={`Show ${item.badge}`}
-                  className={`h-2.5 rounded-[7px] transition-all ${active === index ? 'w-9 bg-[#0057B8]' : 'w-2.5 bg-slate-300 hover:bg-slate-400'}`}
-                  key={item.badge}
-                  onClick={() => setActive(index)}
-                  type="button"
-                />
-              ))}
+    <>
+    <section className="relative isolate overflow-hidden bg-[#eef8ff]">
+      <div className="relative mx-auto grid max-w-[1536px] gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid overflow-hidden bg-[linear-gradient(120deg,#eef8ff_0%,#ffffff_50%,#fff4e6_100%)] md:min-h-[430px] md:grid-cols-[0.46fr_0.54fr] lg:min-h-[460px]">
+          <div className="relative z-10 flex flex-col justify-center px-4 py-6 sm:px-8 lg:px-12">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ff8a00]">{slide.badge}</p>
+            <h1 className="mt-3 max-w-xl text-3xl font-black leading-tight text-[#0057b8] sm:text-5xl lg:mt-4 lg:text-[46px]">
+              {active === 0 ? 'Start Freelancing From Home' : slide.heading}
+            </h1>
+            <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-slate-600 sm:text-base sm:leading-7 lg:mt-4">
+              {active === 0 ? 'Work with trusted projects, earn online, and grow your skills with Cromgen Rozgar.' : slide.subtitle}
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-3 sm:mt-7">
+              <button
+                className="inline-flex min-h-10 items-center justify-center rounded-[7px] bg-[#ff8a00] px-6 text-sm font-black text-white transition hover:bg-[#e87500]"
+                onClick={() => setRegisterOpen(true)}
+                type="button"
+              >
+                Register New
+              </button>
+              {slide.primaryTo !== '/freelancer-register' && (
+                <Link className="inline-flex min-h-10 items-center justify-center rounded-[7px] border border-[#ff8a00] bg-[white] px-5 text-sm font-black text-black transition hover:bg-[#fff4e6]" to={slide.primaryTo}>
+                  {slide.primary}
+                </Link>
+              )}
             </div>
+
+            <div className="mt-5 flex items-center gap-3 sm:mt-7">
+              <button className="grid h-8 w-8 place-items-center rounded-full border border-[#ff8a00] bg-[white] text-[#ff8a00]" onClick={previousSlide} type="button" aria-label="Previous freelancer slide">
+                <ArrowLeft size={15} />
+              </button>
+              <div className="flex items-center gap-2">
+                {heroSlides.map((item, index) => (
+                  <button
+                    aria-label={`Show ${item.badge}`}
+                    className={`h-2 rounded-full transition-all ${active === index ? 'w-8 bg-[#ff8a00]' : 'w-2 bg-[#ffd7ad] hover:bg-[#ffbf80]'}`}
+                    key={item.badge}
+                    onClick={() => setActive(index)}
+                    type="button"
+                  />
+                ))}
+              </div>
+              <button className="grid h-8 w-8 place-items-center rounded-full border border-[#ff8a00] bg-[white] text-[#ff8a00]" onClick={nextSlide} type="button" aria-label="Next freelancer slide">
+                <ArrowRight size={15} />
+              </button>
+            </div>
+          </div>
+
+          <div className="relative min-h-[230px] overflow-hidden bg-[#fff4e6] sm:min-h-[300px] md:min-h-full">
+            <img
+              alt="Start freelancing from home"
+              className="absolute inset-0 h-full w-full scale-[1.08] object-cover object-[76%_50%] sm:scale-[1.16] sm:object-[80%_50%]"
+              src={freelancerHomeHeroImage}
+            />
+            <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-white via-white/85 to-transparent" />
+            <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#fff4e6] to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#eef8ff]/80 to-transparent md:hidden" />
           </div>
         </div>
 
-        <div className="relative min-w-0 lg:pl-4">
-          <div className="relative mx-auto max-w-2xl">
-            <div className="absolute -right-4 top-8 hidden w-40 rounded-[7px] border border-[#3E9B28]/20 bg-white p-4 shadow-xl shadow-slate-200 md:block">
-              <p className="text-xs font-black uppercase tracking-wide text-[#3E9B28]">Verified</p>
-              <p className="mt-2 text-2xl font-black text-slate-950">98%</p>
-              <p className="text-xs font-bold text-slate-500">client trust score</p>
+        <div className="relative hidden min-h-[380px] place-items-center bg-[#f6fbff] px-5 py-8 sm:min-h-[460px] lg:grid lg:px-6">
+          <div className="w-full max-w-[340px] rounded-[7px] bg-white shadow-lg shadow-slate-400/25">
+            <div className="grid grid-cols-2 border-b border-slate-200 text-center text-sm">
+              <Link className="border-b-4 border-[#ff8a00] py-4 font-semibold text-[#0057b8]" to="/freelancer-login">Login/Sign up</Link>
+              <button className="border-l border-slate-200 py-4 font-semibold text-slate-950" onClick={() => setRegisterOpen(true)} type="button">Register</button>
             </div>
-            <div className="absolute -left-3 bottom-16 hidden w-48 rounded-[7px] border border-[#FF8A00]/20 bg-white p-4 shadow-xl shadow-slate-200 md:block">
-              <p className="text-xs font-black uppercase tracking-wide text-[#FF8A00]">Proposal queue</p>
-              <p className="mt-2 text-sm font-bold text-slate-600">12 profiles shortlisted this week</p>
-            </div>
-
-            <div className="overflow-hidden rounded-[7px] border border-[#0057B8]/10 bg-white shadow-2xl shadow-[#0057B8]/15">
-              <div className="flex items-center justify-between border-b border-slate-100 bg-[#F8FBFF] px-3 py-3 sm:px-5 sm:py-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-wide text-[#0057B8] sm:text-xs sm:tracking-[0.16em]">CromGen freelance workspace</p>
-                  <p className="mt-1 text-xs font-bold text-slate-500 sm:text-sm">{slide.visualTitle}</p>
-                </div>
-                <span className="grid h-9 w-9 place-items-center rounded-[7px] bg-[#0057B8] text-white sm:h-11 sm:w-11">
-                  <BriefcaseBusiness size={18} />
+            <div className="px-9 pb-5 pt-4">
+              <label className="grid gap-1 text-xs font-medium text-slate-950">
+                Username
+                <input className="h-10 rounded-[7px] border border-slate-300 px-3 text-sm font-semibold outline-none focus:border-[#ff8a00]" placeholder="Enter Username" />
+              </label>
+              <label className="mt-3 grid gap-1 text-xs font-medium text-slate-950">
+                Password
+                <span className="relative">
+                  <input className="h-10 w-full rounded-[7px] border border-slate-300 px-3 pr-10 text-sm font-semibold outline-none focus:border-[#ff8a00]" placeholder="Enter your password" type="password" />
+                  <Eye className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                 </span>
-              </div>
-
-              <div className="grid gap-0 lg:grid-cols-[15rem_1fr]">
-                <aside className="grid grid-cols-2 gap-2 border-b border-slate-100 bg-white p-3 sm:p-4 lg:block lg:border-b-0 lg:border-r">
-                  {['Matched Projects', 'Proposals', 'Client Chat', 'Payments'].map((item, index) => (
-                    <div className={`rounded-[7px] px-2 py-2 text-xs font-black lg:mb-2 lg:px-3 lg:py-3 lg:text-sm ${index === active ? 'bg-[#0057B8] text-white' : 'bg-slate-50 text-slate-600'}`} key={item}>
-                      {item}
-                    </div>
-                  ))}
-                  <div className="col-span-2 mt-1 rounded-[7px] bg-[#3E9B28]/10 p-3 lg:mt-4">
-                    <p className="text-xs font-black uppercase text-[#3E9B28]">Profile strength</p>
-                    <div className="mt-3 h-2 rounded-[7px] bg-white">
-                      <div className="h-full w-[86%] rounded-[7px] bg-[#3E9B28]" />
-                    </div>
-                  </div>
-                </aside>
-
-                <div className="p-3 sm:p-5">
-                  <div className="rounded-[7px] border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-black uppercase tracking-wide text-[#FF8A00]">Featured project</p>
-                        <h2 className="mt-2 text-lg font-black text-slate-950 sm:text-2xl">{slide.cardTitle}</h2>
-                        <p className="mt-1 text-xs font-bold text-slate-500 sm:mt-2 sm:text-sm">{slide.cardMeta}</p>
-                      </div>
-                      <span className="rounded-[7px] bg-[#3E9B28]/10 px-3 py-1 text-xs font-black text-[#3E9B28]">Open</span>
-                    </div>
-
-                    <div className="mt-4 grid gap-2 sm:mt-5 sm:gap-3">
-                      {slide.details.map(([Icon, text]) => (
-                        <div className="flex items-center gap-2 rounded-[7px] bg-[#F8FBFF] p-2 text-xs font-black text-slate-700 sm:gap-3 sm:p-3 sm:text-sm" key={text}>
-                          <span className="grid h-8 w-8 place-items-center rounded-[7px] bg-[#0057B8]/10 text-[#0057B8] sm:h-9 sm:w-9">
-                            <Icon size={17} />
-                          </span>
-                          {text}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2 sm:mt-5">
-                      {slide.tags.map((skill) => (
-                        <span className="rounded-[7px] bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-700" key={skill}>{skill}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-4 sm:gap-3">
-                    {[
-                      ['92%', 'Match'],
-                      ['24h', 'Review'],
-                      ['4.8', 'Rating'],
-                    ].map(([value, label]) => (
-                      <div className="rounded-[7px] border border-slate-200 bg-[#F8FBFF] p-2 text-center sm:p-3" key={label}>
-                        <p className="text-base font-black text-[#0057B8] sm:text-xl">{value}</p>
-                        <p className="mt-1 text-[11px] font-black uppercase text-slate-500">{label}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              </label>
+              <Link className="mt-3 block text-right text-sm font-semibold text-[#0057b8]" to="/freelancer-login">Forgot Password?</Link>
+              <Link className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-[7px] bg-[#ff8a00] text-sm font-black text-white transition hover:bg-[#e87500]" to="/freelancer-login">
+                Login
+              </Link>
+              <div className="mt-4 border-t border-slate-200 pt-5 text-center text-sm text-slate-950">
+                New User? <button className="font-black text-[#0057b8]" onClick={() => setRegisterOpen(true)} type="button">Sign Up</button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </section>
+    {registerOpen && <FreelancerRegisterModal onClose={() => setRegisterOpen(false)} />}
+    </>
+  )
+}
+
+function FreelancerRegisterModal({ onClose }) {
+  const navigate = useNavigate()
+  const [form, setForm] = useState({ name: '', phone: '', meta: '', email: '', password: '' })
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+
+  const submit = async (event) => {
+    event.preventDefault()
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const payload = await api.register({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+        role: 'freelancer',
+      })
+      localStorage.setItem('authToken', payload.token)
+      localStorage.setItem('authUser', JSON.stringify({ ...payload.data, role: normalizeRole(payload.data.role) }))
+      onClose()
+      navigate(getDashboardPath(payload.data.role))
+    } catch (error) {
+      setMessage(error.message || 'Freelancer registration failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[9999] grid place-items-center bg-slate-950/60 px-4 py-5 backdrop-blur-sm">
+      <div className="relative w-full max-w-[760px] overflow-hidden rounded-[8px] bg-white shadow-2xl shadow-slate-950/30">
+        <button
+          aria-label="Close freelancer register"
+          className="absolute right-4 top-4 z-20 grid h-10 w-10 place-items-center rounded-full bg-white text-slate-600 shadow ring-1 ring-slate-200 transition hover:text-[#ff8a00]"
+          onClick={onClose}
+          type="button"
+        >
+          <X size={20} />
+        </button>
+        <div className="grid lg:grid-cols-[0.78fr_1fr]">
+          <div className="hidden bg-gradient-to-br from-[#0057b8] via-[#0d72c8] to-[#ff8a00] p-6 text-white lg:block">
+            <div className="grid h-11 w-11 place-items-center rounded-[7px] bg-white/15">
+              <BriefcaseBusiness size={22} />
+            </div>
+            <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-white/80">Freelancer Access</p>
+            <h2 className="mt-3 text-3xl font-black leading-tight">Create your freelancer account.</h2>
+            <div className="mt-6 grid gap-2 text-sm font-semibold">
+              {['Verified projects', 'Proposal tracking', 'Client discovery'].map((item) => (
+                <p className="rounded-[7px] bg-white/15 px-3 py-2.5 ring-1 ring-white/15" key={item}>{item}</p>
+              ))}
+            </div>
+          </div>
+
+          <div className="max-h-[88vh] overflow-y-auto p-5 sm:p-6">
+            <div className="pr-12">
+              <h2 className="text-xl font-black text-slate-950">Register</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Freelancer access portal.</p>
+            </div>
+
+            <form className="mt-5 grid gap-3" onSubmit={submit}>
+              <FreelancerModalField icon={UserRound} label="Full Name" onChange={(event) => update('name', event.target.value)} placeholder="Your full name" required value={form.name} />
+              <FreelancerModalField icon={Phone} label="Phone" onChange={(event) => update('phone', event.target.value)} placeholder="Phone number" value={form.phone} />
+              <FreelancerModalField icon={UserRoundCheck} label="Primary Skill" onChange={(event) => update('meta', event.target.value)} placeholder="React developer, designer, writer" value={form.meta} />
+              <FreelancerModalField icon={Mail} label="Email" onChange={(event) => update('email', event.target.value)} placeholder="you@example.com" required type="email" value={form.email} />
+              <FreelancerModalField icon={Lock} label="Password" onChange={(event) => update('password', event.target.value)} placeholder="Password" required type="password" value={form.password} />
+              {message && <p className="rounded-[7px] bg-orange-50 p-3 text-sm font-bold text-[#bd5f00]">{message}</p>}
+              <button className="inline-flex min-h-10 items-center justify-center rounded-[7px] bg-[#ff8a00] px-5 py-2 text-sm font-black text-white shadow-lg shadow-[#ff8a00]/20 transition hover:-translate-y-0.5 hover:bg-[#e87500] disabled:cursor-not-allowed disabled:opacity-60" disabled={loading} type="submit">
+                {loading ? 'Please wait...' : 'Create Freelancer Account'}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FreelancerModalField({ icon: Icon, label, ...props }) {
+  return (
+    <label>
+      <span className="text-xs font-bold text-slate-700">{label}</span>
+      <div className="mt-1.5 flex items-center gap-3 rounded-[7px] border border-slate-200 px-3 py-2.5 focus-within:border-[#ff8a00] focus-within:ring-4 focus-within:ring-orange-100">
+        <Icon className="text-[#0057b8]" size={17} />
+        <input className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400" {...props} />
+      </div>
+    </label>
   )
 }

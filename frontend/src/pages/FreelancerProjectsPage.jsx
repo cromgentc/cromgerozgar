@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BriefcaseBusiness, ChevronDown, Clock3, Eye, Filter, IndianRupee, Laptop, MapPin, Pencil, Plus, Search, SearchCheck, Trash2, UsersRound } from 'lucide-react'
+import { BriefcaseBusiness, ChevronDown, Clock3, Eye, Filter, IndianRupee, Laptop, MapPin, Pencil, Plus, Search, SearchCheck, Trash2, UsersRound, X } from 'lucide-react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../services/api'
 import { getStoredUser } from '../routes/authRouting'
+import freelancerProjectsHeroImage from '../assets/freelancer-projects-photo.png'
 
 const projects = [
   {
@@ -77,6 +78,7 @@ export function FreelancerProjectsPage() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [reviewMessage, setReviewMessage] = useState('')
   const [page, setPage] = useState(1)
+  const [filterModalOpen, setFilterModalOpen] = useState(false)
   const searchParams = new URLSearchParams(locationPath.search)
   const adminView = searchParams.get('view') === 'applications' ? 'applications' : 'projects'
   const freelancerView = searchParams.get('freelancerView') || 'all'
@@ -149,6 +151,13 @@ export function FreelancerProjectsPage() {
     setPage(1)
   }
 
+  const clearPublicFilters = () => {
+    setCategory('All')
+    setMode('All')
+    setStatus('All statuses')
+    setPage(1)
+  }
+
   const addBlankProject = () => {
     setProjectRows((current) => [
       {
@@ -194,46 +203,86 @@ export function FreelancerProjectsPage() {
 
   if (!isAdminPanel) {
     return (
-      <section className="py-4 sm:py-14">
-        <div className="mx-auto w-full max-w-none px-2 sm:px-6 lg:px-8">
-          <div className="rounded-[7px] border border-[#0057B8]/10 bg-white p-4 shadow-sm sm:p-8">
-            <p className="text-[11px] font-black uppercase tracking-wide text-[#0057B8] sm:text-sm sm:tracking-[0.18em]">Verified freelance projects</p>
-            <h1 className="mt-2 text-2xl font-black text-slate-950 sm:mt-3 sm:text-5xl">Explore projects matched to your skills</h1>
-            <p className="mt-2 max-w-3xl text-xs font-semibold leading-5 text-slate-500 sm:mt-3 sm:text-base sm:font-normal sm:leading-6">Search, filter, read details, and apply to trusted freelance opportunities across India.</p>
-            <label className="mt-4 flex min-h-11 max-w-3xl items-center gap-2 rounded-[7px] border border-slate-200 bg-slate-50 px-3 sm:mt-6 sm:min-h-12 sm:gap-3 sm:px-4">
-              <Search className="text-[#0057B8]" size={18} />
-              <input className="w-full bg-transparent text-sm font-semibold outline-none" onChange={(event) => updateFilter(setQuery)(event.target.value)} placeholder="Search projects, skills, companies" value={query} />
-            </label>
+      <section className="bg-[#f6f9fc] py-8 sm:py-12">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="overflow-hidden rounded-[7px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef7ff_58%,#fff4e8_100%)] shadow-sm">
+            <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff8a00]">Verified freelance projects</p>
+                <h1 className="mt-3 max-w-3xl text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
+                  Find project work that fits your skills.
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600 sm:text-base">
+                  Browse trusted freelance opportunities, compare budget and work mode, then apply from one clean workspace.
+                </p>
+                <label className="mt-6 flex min-h-12 max-w-3xl items-center gap-3 rounded-[7px] border border-slate-200 bg-[white] px-4 shadow-sm focus-within:border-[#ff8a00] focus-within:ring-4 focus-within:ring-orange-100">
+                  <Search className="text-[#ff8a00]" size={19} />
+                  <input className="w-full bg-transparent text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400" onChange={(event) => updateFilter(setQuery)(event.target.value)} placeholder="Search projects, skills, companies" value={query} />
+                </label>
+              </div>
+              <div className="relative min-h-[260px] overflow-hidden rounded-[7px]">
+                <img
+                  alt="Freelancer working on project"
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                  src={freelancerProjectsHeroImage}
+                  style={{
+                    WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%)',
+                    WebkitMaskComposite: 'source-in',
+                    maskComposite: 'intersect',
+                    maskImage: 'linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%)',
+                  }}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:mt-8 lg:grid-cols-[310px_1fr] lg:gap-6">
-            <aside className="h-max rounded-[7px] border border-slate-200 bg-white/90 p-3 shadow-sm backdrop-blur sm:p-5 lg:sticky lg:top-24">
-              <div className="mb-3 flex items-center justify-between gap-3 sm:mb-5">
+          <div className="mt-6 grid gap-5 lg:grid-cols-[286px_1fr] lg:gap-6">
+            <aside className="h-max rounded-[7px] border border-slate-200 bg-[white] p-5 shadow-sm lg:sticky lg:top-24">
+              <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-sm font-black text-slate-950 sm:text-base">Advanced Filters</h2>
-                  <p className="mt-1 text-xs font-semibold text-slate-500">{visibleProjects.length} matching projects</p>
+                  <h2 className="text-base font-black text-slate-950">Advanced Filters</h2>
+                  <p className="mt-1 text-xs font-semibold text-slate-500">Refine projects by role, mode, and status.</p>
                 </div>
-                <Filter className="text-[#0057B8]" size={19} />
+                <span className="grid h-10 w-10 place-items-center rounded-[7px] bg-orange-50 text-[#ff8a00]">
+                  <Filter size={18} />
+                </span>
               </div>
-              <div className="grid grid-cols-3 gap-2 lg:block">
-                <ProjectFilter title="Category" options={categories} value={category} onChange={updateFilter(setCategory)} />
-                <ProjectFilter title="Work Mode" options={modes} value={mode} onChange={updateFilter(setMode)} />
-                <ProjectFilter title="Status" options={statuses} value={status} onChange={updateFilter(setStatus)} />
+              <div className="mt-5 rounded-[7px] bg-slate-50 p-3">
+                <p className="text-2xl font-black text-slate-950">{visibleProjects.length}</p>
+                <p className="text-xs font-bold text-slate-500">matching projects</p>
               </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {category !== 'All' && <span className="rounded-[7px] bg-orange-50 px-3 py-1 text-xs font-black text-[#b85f00] ring-1 ring-orange-100">{category}</span>}
+                {mode !== 'All' && <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100">{mode}</span>}
+                {status !== 'All statuses' && <span className="rounded-[7px] bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">{status}</span>}
+                {category === 'All' && mode === 'All' && status === 'All statuses' && (
+                  <span className="rounded-[7px] bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">No filters selected</span>
+                )}
+              </div>
+              <button className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[7px] border border-[#ff8a00] bg-[white] px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-orange-50" onClick={() => setFilterModalOpen(true)} type="button">
+                <Filter size={16} /> View More
+              </button>
             </aside>
 
             <div>
-              <div className="mb-3 flex items-center justify-between gap-2 rounded-[7px] border border-slate-200 bg-white p-3 sm:mb-5 sm:p-4">
-                <p className="text-xs font-semibold text-slate-600 sm:text-sm">Showing {visibleProjects.length} premium projects</p>
-                <select className="max-w-[145px] rounded-[7px] border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 outline-none sm:max-w-none sm:px-4 sm:text-sm">
-                  <option>Sort by relevance</option>
-                  <option>Sort by newest</option>
-                  <option>Sort by budget</option>
-                </select>
+              <div className="mb-4 flex flex-col gap-3 rounded-[7px] border border-slate-200 bg-[white] p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-black text-slate-950">Recommended Projects</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-500">
+                    Showing {visibleProjects.length} premium projects / {category}, {mode}, {status}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <select className="rounded-[7px] border border-slate-200 bg-[white] px-3 py-2 text-sm font-semibold text-slate-600 outline-none focus:border-[#ff8a00]">
+                    <option>Sort by relevance</option>
+                    <option>Sort by newest</option>
+                    <option>Sort by budget</option>
+                  </select>
+                </div>
               </div>
 
               {visibleProjects.length ? (
-                <div className="grid grid-cols-2 gap-2 sm:gap-5 xl:grid-cols-2">
+                <div className="grid gap-4 xl:grid-cols-2">
                   {visibleProjects.map((project, index) => (
                     <ProjectCard key={`${project.title}-${index}`} project={project} />
                   ))}
@@ -244,6 +293,19 @@ export function FreelancerProjectsPage() {
             </div>
           </div>
         </div>
+        {filterModalOpen && (
+          <ProjectFiltersModal
+            category={category}
+            clearFilters={clearPublicFilters}
+            mode={mode}
+            onCategoryChange={updateFilter(setCategory)}
+            onClose={() => setFilterModalOpen(false)}
+            onModeChange={updateFilter(setMode)}
+            onStatusChange={updateFilter(setStatus)}
+            status={status}
+            visibleCount={visibleProjects.length}
+          />
+        )}
       </section>
     )
   }
@@ -708,31 +770,79 @@ function FreelancerMetric({ href, icon: Icon, label, tone, value }) {
   )
 }
 
-function ProjectFilter({ onChange, options, title, value }) {
-  const [open, setOpen] = useState(true)
-
+function ProjectFiltersModal({
+  category,
+  clearFilters,
+  mode,
+  onCategoryChange,
+  onClose,
+  onModeChange,
+  onStatusChange,
+  status,
+  visibleCount,
+}) {
   return (
-    <div className="mb-0 overflow-hidden rounded-[7px] border border-slate-200 bg-white lg:mb-3">
-      <button className="flex min-h-11 w-full items-center justify-between gap-2 px-2 text-left sm:px-4 lg:min-h-12" onClick={() => setOpen((value) => !value)} type="button">
-        <span>
-          <span className="block text-[11px] font-black text-slate-800 sm:text-sm">{title}</span>
-          <span className="mt-0.5 block truncate text-[10px] font-bold text-slate-500 sm:text-xs">{value}</span>
-        </span>
-        <ChevronDown className={`shrink-0 text-slate-400 transition ${open ? 'rotate-180' : ''}`} size={15} />
-      </button>
-      {open && (
-        <div className="grid gap-1 border-t border-slate-100 p-2 sm:gap-2 sm:p-3">
-          {options.map((option) => {
-            const checked = option === value
-            return (
-              <button className={`flex items-center justify-between rounded-[7px] px-2 py-1.5 text-left text-[11px] font-semibold transition sm:px-3 sm:py-2 sm:text-sm ${checked ? 'bg-transparent text-slate-900 ring-1 ring-slate-200' : 'text-slate-500 hover:bg-slate-50'}`} key={option} onClick={() => onChange(option)} type="button">
-                <span className="truncate">{option}</span>
-                {checked && <span className="h-2 w-2 rounded-full bg-slate-400" />}
-              </button>
-            )
-          })}
+    <div className="fixed inset-0 z-[130] grid place-items-center bg-slate-950/55 px-4 py-6 backdrop-blur-sm">
+      <div className="w-full max-w-md overflow-hidden rounded-[8px] bg-[white] shadow-2xl">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff8a00]">Advanced Filters</p>
+            <h2 className="mt-1 text-xl font-black text-slate-950">Select filters</h2>
+          </div>
+          <button className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-[white] text-slate-600 transition hover:border-[#ff8a00] hover:text-[#ff8a00]" onClick={onClose} type="button" aria-label="Close filters">
+            <X size={20} />
+          </button>
         </div>
-      )}
+
+        <div className="grid gap-4 p-4">
+          <ProjectFilter title="Category" options={categories} value={category} onChange={onCategoryChange} />
+          <ProjectFilter title="Work Mode" options={modes} value={mode} onChange={onModeChange} />
+          <ProjectFilter title="Status" options={statuses} value={status} onChange={onStatusChange} />
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-bold text-slate-600">{visibleCount} projects matching</p>
+          <div className="flex gap-2">
+            <button className="min-h-10 rounded-[7px] border border-[#ff8a00] bg-[white] px-4 text-sm font-black text-slate-950 hover:bg-orange-50" onClick={clearFilters} type="button">
+              Clear
+            </button>
+            <button className="min-h-10 rounded-[7px] border border-[#ff8a00] px-5 text-sm font-black text-white shadow-lg shadow-orange-100" style={{ backgroundColor: '#ff8a00' }} onClick={onClose} type="button">
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ProjectFilter({ onChange, options, title, value }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-sm font-black text-slate-900">{title}</p>
+        <p className="truncate text-xs font-bold text-slate-500">{value}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const checked = option === value
+          return (
+            <button
+              className="min-h-9 rounded-[7px] border px-3 text-sm font-bold transition"
+              key={option}
+              onClick={() => onChange(option)}
+              style={{
+                backgroundColor: checked ? '#fff7ed' : '#ffffff',
+                borderColor: checked ? '#ff8a00' : '#e2e8f0',
+                color: checked ? '#0f172a' : '#475569',
+              }}
+              type="button"
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -741,43 +851,43 @@ function ProjectCard({ project }) {
   const detailsPath = getProjectDetailPath(project)
 
   return (
-    <article className="group min-w-0 rounded-[7px] border border-slate-200 bg-white/90 p-3 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/70 sm:p-5">
-      <div className="mb-3 flex flex-wrap gap-1.5 sm:mb-4 sm:gap-2">
-        <span className="rounded-[7px] bg-teal-50 px-2 py-1 text-[10px] font-black text-teal-700 sm:px-3 sm:text-xs">{project.mode}</span>
+    <article className="group min-w-0 rounded-[7px] border border-slate-200 bg-[white] p-5 shadow-sm transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-100/60">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">{project.mode}</span>
         <span className={getProjectStatusClass(project.status)}>{project.status}</span>
       </div>
-      <div className="flex items-start justify-between gap-2 sm:gap-4">
-        <div className="flex min-w-0 gap-2 sm:gap-4">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[7px] bg-gradient-to-br from-blue-50 to-teal-50 text-sm font-black text-blue-700 sm:h-14 sm:w-14 sm:text-lg">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 gap-4">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[7px] bg-[linear-gradient(135deg,#eaf4ff,#fff2e1)] text-lg font-black text-[#0057B8] ring-1 ring-slate-200">
             {String(project.company || 'PR').slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <Link className="line-clamp-2 text-left text-sm font-black leading-5 text-slate-950 hover:text-blue-600 sm:text-lg sm:leading-6" rel="noreferrer" target="_blank" to={detailsPath}>
+            <Link className="line-clamp-2 text-left text-lg font-black leading-6 text-slate-950 hover:text-[#0057B8]" rel="noreferrer" target="_blank" to={detailsPath}>
               {project.title || 'Untitled Project'}
             </Link>
-            <p className="mt-1 truncate text-[11px] font-medium text-slate-500 sm:text-sm">{project.company} / {project.category}</p>
+            <p className="mt-1 truncate text-sm font-semibold text-slate-500">{project.company} / {project.category}</p>
           </div>
         </div>
       </div>
 
-      <div className="mt-3 grid gap-1.5 text-[11px] text-slate-500 sm:mt-5 sm:gap-3 sm:text-sm sm:grid-cols-2">
-        <span className="flex min-w-0 items-center gap-1.5 truncate"><MapPin className="shrink-0" size={14} />{project.mode}</span>
-        <span className="flex min-w-0 items-center gap-1.5 truncate"><IndianRupee className="shrink-0" size={14} />{project.budget}</span>
-        <span className="flex min-w-0 items-center gap-1.5 truncate"><BriefcaseBusiness className="shrink-0" size={14} />{project.experience}</span>
-        <span className="flex min-w-0 items-center gap-1.5 truncate"><Clock3 className="shrink-0" size={14} />{project.duration}</span>
+      <div className="mt-5 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
+        <span className="flex min-w-0 items-center gap-2 truncate rounded-[7px] bg-slate-50 px-3 py-2"><MapPin className="shrink-0 text-[#0057B8]" size={15} />{project.mode}</span>
+        <span className="flex min-w-0 items-center gap-2 truncate rounded-[7px] bg-slate-50 px-3 py-2"><IndianRupee className="shrink-0 text-[#ff8a00]" size={15} />{project.budget}</span>
+        <span className="flex min-w-0 items-center gap-2 truncate rounded-[7px] bg-slate-50 px-3 py-2"><BriefcaseBusiness className="shrink-0 text-[#0057B8]" size={15} />{project.experience}</span>
+        <span className="flex min-w-0 items-center gap-2 truncate rounded-[7px] bg-slate-50 px-3 py-2"><Clock3 className="shrink-0 text-[#ff8a00]" size={15} />{project.duration}</span>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-1.5 sm:mt-5 sm:gap-2">
+      <div className="mt-5 flex flex-wrap gap-2">
         {project.skills.map((skill) => (
-          <span className="rounded-[7px] bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600 sm:px-3 sm:text-xs" key={skill}>{skill}</span>
+          <span className="rounded-[7px] border border-slate-200 bg-[white] px-3 py-1 text-xs font-bold text-slate-600" key={skill}>{skill}</span>
         ))}
       </div>
 
-      <p className="mt-5 hidden line-clamp-2 text-sm leading-6 text-slate-500 sm:block">{getProjectDescription(project)}</p>
+      <p className="mt-5 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{getProjectDescription(project)}</p>
 
-      <div className="mt-4 grid gap-2 sm:mt-6 sm:flex sm:flex-row sm:gap-3">
+      <div className="mt-6 grid gap-3 sm:flex sm:flex-row">
         <ProjectApplyButton project={project} />
-        <Link className="job-card-details-link flex-1" rel="noreferrer" target="_blank" to={detailsPath}>View Details</Link>
+        <Link className="inline-flex min-h-11 flex-1 items-center justify-center rounded-[7px] border border-[#ff8a00] bg-[white] px-5 py-2.5 text-sm font-black text-slate-950 transition hover:-translate-y-0.5 hover:bg-orange-50" rel="noreferrer" target="_blank" to={detailsPath}>View Details</Link>
       </div>
     </article>
   )
@@ -829,7 +939,7 @@ function ProjectApplyButton({ project }) {
   return (
     <div className="flex-1">
       <button
-        className="inline-flex min-h-9 w-full items-center justify-center rounded-[7px] bg-[#0057B8] px-3 py-2 text-xs font-black text-white shadow-lg shadow-blue-100 hover:bg-[#004694] disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-[7px] bg-[#ff8a00] px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-orange-100 transition hover:bg-[#e87900] disabled:cursor-not-allowed disabled:opacity-70"
         disabled={status === 'loading' || status === 'success'}
         onClick={applyToProject}
         type="button"

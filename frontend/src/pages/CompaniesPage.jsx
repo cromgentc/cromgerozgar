@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useParams } from 'react-router-dom'
-import { ArrowLeft, Building2, Globe2, MapPin, SearchCheck, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Building2, Globe2, MapPin, Search, SearchCheck, ShieldCheck, Sparkles } from 'lucide-react'
 import { Button } from '../components/Button'
 import { JobCard } from '../components/JobCard'
 import { api } from '../services/api'
@@ -8,26 +9,64 @@ import { createCompanyDetailPath, getCompanyBySlug } from '../utils/companyProfi
 
 export function CompaniesPage() {
   const { companies, loading } = useCompanyProfiles()
+  const [query, setQuery] = useState('')
+  const visibleCompanies = companies.filter((company) => {
+    const term = query.trim().toLowerCase()
+    if (!term) return true
+    return [company.name, company.industry, company.location, company.status].filter(Boolean).join(' ').toLowerCase().includes(term)
+  })
 
   return (
-    <section className="py-4 sm:py-14">
-      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-        <div className="rounded-[7px] bg-gradient-to-br from-blue-50 via-white to-teal-50 p-4 shadow-sm ring-1 ring-blue-100 sm:p-8">
-          <div className="grid h-10 w-10 place-items-center rounded-[7px] bg-blue-600 text-white sm:h-14 sm:w-14"><Building2 size={22} /></div>
-          <h1 className="mt-4 text-2xl font-black text-slate-950 sm:mt-5 sm:text-5xl">Top Companies Hiring</h1>
-          <p className="mt-2 max-w-2xl text-xs font-semibold leading-5 text-slate-500 sm:mt-3 sm:text-base sm:font-normal sm:leading-6">Verified company profiles generated from active jobs, recruiter records, and live MongoDB company data.</p>
+    <section className="bg-[#f6f9fc] py-8 sm:py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[7px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef7ff_58%,#fff4e8_100%)] shadow-sm">
+          <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff8a00]">Verified company network</p>
+              <h1 className="mt-3 max-w-3xl text-3xl font-black leading-tight text-slate-950 sm:text-5xl">Explore trusted hiring companies.</h1>
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600 sm:text-base">
+                Browse verified company profiles, active openings, recruiter-backed teams, and hiring locations in one clean directory.
+              </p>
+              <label className="mt-6 flex min-h-12 max-w-2xl items-center gap-3 rounded-[7px] border border-slate-200 bg-[white] px-4 shadow-sm focus-within:border-[#ff8a00] focus-within:ring-4 focus-within:ring-orange-100">
+                <Search className="text-[#ff8a00]" size={19} />
+                <input className="w-full bg-transparent text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400" onChange={(event) => setQuery(event.target.value)} placeholder="Search companies, industries, locations" value={query} />
+              </label>
+            </div>
+            <div className="rounded-[7px] border border-white/80 bg-[white]/85 p-5 shadow-lg shadow-blue-100/50">
+              <span className="grid h-12 w-12 place-items-center rounded-[7px] bg-orange-50 text-[#ff8a00]">
+                <Building2 size={22} />
+              </span>
+              <p className="mt-5 text-4xl font-black text-slate-950">{companies.length}</p>
+              <p className="text-sm font-bold text-slate-500">verified company profiles</p>
+              <div className="mt-5 grid gap-2">
+                {['Active hiring teams', 'Company job pages', 'Trusted recruiter records'].map((item) => (
+                  <span className="inline-flex items-center gap-2 rounded-[7px] bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700" key={item}>
+                    <Sparkles className="text-[#ff8a00]" size={14} /> {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-6 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 flex flex-col gap-3 rounded-[7px] border border-slate-200 bg-[white] p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-black text-slate-950">Company Directory</p>
+            <p className="mt-1 text-xs font-semibold text-slate-500">{visibleCompanies.length} companies found</p>
+          </div>
+          <span className="rounded-[7px] bg-orange-50 px-3 py-1 text-xs font-black text-[#b85f00] ring-1 ring-orange-100">Verified profiles only</span>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {loading ? (
             [1, 2, 3, 4, 5, 6].map((item) => <div className="h-48 animate-pulse rounded-[7px] bg-white ring-1 ring-slate-200 sm:h-72" key={item} />)
-          ) : companies.length ? (
-            companies.map((company) => <CompanyCard company={company} key={company.name} />)
+          ) : visibleCompanies.length ? (
+            visibleCompanies.map((company) => <CompanyCard company={company} key={company.name} />)
           ) : (
-            <div className="col-span-2 rounded-[7px] border border-dashed border-slate-300 bg-white p-8 text-center md:col-span-2 lg:col-span-3">
-              <Building2 className="mx-auto text-blue-500" size={34} />
-              <h2 className="mt-4 text-2xl font-black text-slate-950">No active companies yet</h2>
-              <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-500">Approved jobs will automatically create company profiles here.</p>
+            <div className="rounded-[7px] border border-dashed border-slate-300 bg-[white] p-8 text-center md:col-span-2 xl:col-span-3">
+              <Building2 className="mx-auto text-[#ff8a00]" size={34} />
+              <h2 className="mt-4 text-2xl font-black text-slate-950">No companies found</h2>
+              <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-500">Approved jobs and complete company records will appear here automatically.</p>
             </div>
           )}
         </div>
@@ -147,19 +186,19 @@ function useCompanyProfiles() {
 
 function CompanyCard({ company }) {
   return (
-    <article className="min-w-0 rounded-[7px] border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100 sm:p-6">
-      <div className="flex items-start justify-between gap-2 sm:gap-4">
-        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-[7px] bg-gradient-to-br ${company.accent} text-sm font-black text-white shadow-lg shadow-blue-100 sm:h-16 sm:w-16 sm:text-xl`}>{company.badge}</div>
-        <span className="rounded-[7px] bg-teal-50 px-2 py-1 text-[10px] font-black text-teal-700 sm:px-3 sm:text-xs">{company.rating} rating</span>
+    <article className="min-w-0 rounded-[7px] border border-slate-200 bg-[white] p-5 shadow-sm transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-100/60">
+      <div className="flex items-start justify-between gap-4">
+        <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-[7px] bg-gradient-to-br ${company.accent} text-lg font-black text-white shadow-lg shadow-blue-100`}>{company.badge}</div>
+        <span className="rounded-[7px] bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">{company.status || 'Active'}</span>
       </div>
-      <h2 className="mt-3 truncate text-sm font-black text-slate-950 sm:mt-5 sm:text-xl">{company.name}</h2>
-      <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500 sm:mt-2 sm:text-sm sm:leading-5">{company.industry} - {company.location || 'Location not added'}</p>
-      <div className="mt-3 grid grid-cols-2 gap-2 text-center sm:mt-5 sm:grid-cols-3 sm:gap-3">
-        <div className="rounded-[7px] bg-slate-50 p-2 sm:p-3"><p className="text-sm font-black text-slate-950 sm:text-base">{company.openJobs}</p><p className="text-[10px] text-slate-500 sm:text-xs">Open jobs</p></div>
-        <div className="rounded-[7px] bg-slate-50 p-2 sm:p-3"><p className="text-sm font-black text-slate-950 sm:text-base">{company.rating}</p><p className="text-[10px] text-slate-500 sm:text-xs">Rating</p></div>
-        <div className="hidden rounded-[7px] bg-slate-50 p-3 sm:block"><p className="truncate font-black text-slate-950">{company.location || 'NA'}</p><p className="text-xs text-slate-500">Location</p></div>
+      <h2 className="mt-5 truncate text-xl font-black text-slate-950">{company.name}</h2>
+      <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-slate-500">{company.industry} / {company.location || 'Location not added'}</p>
+      <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+        <div className="rounded-[7px] bg-slate-50 p-3"><p className="font-black text-slate-950">{company.openJobs}</p><p className="text-xs text-slate-500">Open jobs</p></div>
+        <div className="rounded-[7px] bg-slate-50 p-3"><p className="font-black text-slate-950">{company.rating}</p><p className="text-xs text-slate-500">Rating</p></div>
+        <div className="rounded-[7px] bg-slate-50 p-3"><p className="truncate font-black text-slate-950">{company.location || 'NA'}</p><p className="text-xs text-slate-500">Location</p></div>
       </div>
-      <Button className="mt-3 min-h-9 w-full text-xs sm:mt-5 sm:min-h-11 sm:text-sm" to={createCompanyDetailPath(company)}>View Jobs</Button>
+      <Link className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-[7px] border border-[#ff8a00] bg-[white] px-5 text-sm font-black text-slate-950 transition hover:-translate-y-0.5 hover:bg-orange-50" to={createCompanyDetailPath(company)}>View Jobs</Link>
     </article>
   )
 }

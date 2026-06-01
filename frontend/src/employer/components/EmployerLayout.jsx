@@ -26,7 +26,7 @@ export function EmployerLayout() {
   const branding = useSiteBranding()
   const isLoggedIn = Boolean(user?.email)
   const isRecruiterAccount = user?.role === 'recruiter'
-  const navItems = employerNav.map(([label, to]) => (isRecruiterAccount ? [label, recruiterDashboardPath] : [label, to]))
+  const navItems = employerNav
   const logout = () => {
     localStorage.removeItem('authToken')
     localStorage.removeItem('authUser')
@@ -46,11 +46,16 @@ export function EmployerLayout() {
     setOpen(false)
   }
 
+  const handleNavClick = () => {
+    setOpen(false)
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
+  }
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
         <nav className="mx-auto flex h-20 max-w-7xl items-center justify-start gap-6 px-4 sm:px-6 lg:px-8">
-          <Link className="site-logo-lockup flex min-w-0 items-center font-bold text-slate-950" to="/recruiter">
+          <Link className="site-logo-lockup flex min-w-0 items-center font-bold text-slate-950" onClick={handleNavClick} to={isRecruiterAccount ? recruiterDashboardPath : '/recruiter'}>
             {branding.logoUrl ? (
               <span className="site-logo-frame">
                 <img className="site-logo-img" src={branding.logoUrl} alt={branding.recruiterName || 'Rozgar Recruiter'} />
@@ -72,6 +77,7 @@ export function EmployerLayout() {
                   }`
                 }
                 key={label}
+                onClick={handleNavClick}
                 to={to}
               >
                 <span>{label}</span>
@@ -93,7 +99,7 @@ export function EmployerLayout() {
                     Recruiter Register
                   </button>
                 )}
-                <Link className="inline-flex min-h-10 items-center gap-1 whitespace-nowrap px-2 text-sm font-black text-slate-950" to="/post-job">
+                <Link className="inline-flex min-h-10 items-center gap-1 whitespace-nowrap px-2 text-sm font-black text-slate-950" onClick={handleNavClick} to="/post-job">
                   Post a Job <ChevronDown className="-rotate-90" size={15} />
                 </Link>
               </>
@@ -115,15 +121,15 @@ export function EmployerLayout() {
                 </button>
               </div>
               <div className="grid gap-2">
-              {navItems.map(([label, to]) => <Link className="rounded-[7px] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50" key={label} onClick={() => setOpen(false)} to={to}>{label}</Link>)}
+              {navItems.map(([label, to]) => <Link className="rounded-[7px] px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50" key={label} onClick={handleNavClick} to={to}>{label}</Link>)}
               {isRecruiterAccount ? (
                 <div className="grid gap-2 pt-2">
                   <div className="flex items-center gap-3 rounded-[7px] bg-blue-50 px-4 py-3 text-sm font-black text-slate-950">
                     <span className="grid h-9 w-9 place-items-center rounded-[7px] bg-blue-600 text-white"><Building2 size={17} /></span>
                     {user.name || 'Company'}
                   </div>
-                  <Button onClick={() => setOpen(false)} to={recruiterProfilePath} variant="secondary">Profile</Button>
-                  <Button onClick={() => setOpen(false)} to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
+                  <Button onClick={handleNavClick} to={recruiterProfilePath} variant="secondary">Profile</Button>
+                  <Button onClick={handleNavClick} to={recruiterDashboardPath} variant="secondary">Dashboard</Button>
                   <button className="inline-flex min-h-11 items-center justify-center rounded-[7px] bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100" onClick={logout} type="button">
                     Logout
                   </button>
@@ -132,7 +138,7 @@ export function EmployerLayout() {
                 <div className="grid gap-2 pt-2 sm:grid-cols-3">
                   <button className="inline-flex min-h-10 items-center justify-center rounded-[3px] border border-[#ff8a00] px-4 text-sm font-black text-[#ff8a00]" onClick={() => openAuthModal('recruiter-login')} type="button">Recruiter Login</button>
                   {!isLoggedIn && <button className="inline-flex min-h-10 items-center justify-center rounded-[3px] bg-[#ff8a00] px-4 text-sm font-black text-white" onClick={() => openAuthModal('recruiter-register')} type="button">Recruiter Register</button>}
-                  <Button onClick={() => setOpen(false)} to="/post-job">Post Job</Button>
+                  <Button onClick={handleNavClick} to="/post-job">Post Job</Button>
                 </div>
               )}
               </div>
@@ -156,6 +162,11 @@ export function EmployerLayout() {
 }
 
 function CompanyMenu({ logout, open, setOpen, user }) {
+  const closeMenu = () => {
+    setOpen(false)
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
+  }
+
   return (
     <div className="relative">
       <button
@@ -169,8 +180,8 @@ function CompanyMenu({ logout, open, setOpen, user }) {
 
       {open && (
         <div className="absolute right-0 mt-3 w-56 rounded-[7px] border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
-          <CompanyMenuLink icon={UserRound} label="Profile" setOpen={setOpen} to={recruiterProfilePath} />
-          <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" setOpen={setOpen} to={recruiterDashboardPath} />
+          <CompanyMenuLink icon={UserRound} label="Profile" onClick={closeMenu} to={recruiterProfilePath} />
+          <CompanyMenuLink icon={LayoutDashboard} label="Dashboard" onClick={closeMenu} to={recruiterDashboardPath} />
           <button className="flex w-full items-center gap-3 rounded-[7px] px-3 py-2 text-left text-sm font-bold text-rose-600 hover:bg-rose-50" onClick={logout} type="button">
             <LogOut size={17} />
             Logout
@@ -181,9 +192,9 @@ function CompanyMenu({ logout, open, setOpen, user }) {
   )
 }
 
-function CompanyMenuLink({ icon: Icon, label, setOpen, to }) {
+function CompanyMenuLink({ icon: Icon, label, onClick, to }) {
   return (
-    <Link className="flex items-center gap-3 rounded-[7px] px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50" onClick={() => setOpen(false)} to={to}>
+    <Link className="flex items-center gap-3 rounded-[7px] px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50" onClick={onClick} to={to}>
       <Icon size={17} />
       {label}
     </Link>
