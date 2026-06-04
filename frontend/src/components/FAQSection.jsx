@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, HelpCircle, MessageCircle, Minus, Plus, Search, Send, X } from 'lucide-react'
+import { ArrowLeft, ChevronDown, HelpCircle, MessageCircle, Minus, Plus, Search, Send, ShieldCheck, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../services/api'
 
@@ -52,90 +52,137 @@ export function FAQSection({ fullPage = false }) {
   const visibleFaqs = fullPage ? filteredFaqs : filteredFaqs.slice(0, 8)
 
   return (
-    <section className={`relative overflow-hidden bg-[radial-gradient(circle_at_top_left,#E0F2FE_0,transparent_34%),radial-gradient(circle_at_bottom_right,#F3E8FF_0,transparent_32%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] ${fullPage ? 'min-h-screen py-10 sm:py-14' : 'py-16 sm:py-20'}`}>
-      <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <motion.div className="mx-auto max-w-3xl text-center" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
-          <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">{fullPage ? 'All FAQs' : 'Common Questions'}</h2>
-          <p className="mt-4 text-base leading-7 text-slate-500">
-            {fullPage ? 'Browse all MongoDB FAQs for candidates, recruiters, applications, payments, documents, and support.' : 'Dynamic answers for candidates, recruiters, applications, payments, and platform support.'}
-          </p>
+    <section className={`relative overflow-hidden bg-[#f8fbff] ${fullPage ? 'min-h-screen py-4 sm:py-6' : 'py-12 sm:py-16'}`}>
+      <div className="relative mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+        {fullPage && (
+          <Link
+            className="inline-flex h-9 items-center gap-2 rounded-[7px] px-4 text-xs font-black text-white shadow-md shadow-blue-100 transition hover:-translate-y-0.5"
+            style={{ backgroundColor: '#0057B8' }}
+            to="/"
+          >
+            <ArrowLeft size={15} />
+            Back Home
+          </Link>
+        )}
+
+        <motion.div className={`${fullPage ? 'mt-4' : ''} overflow-hidden rounded-[10px] border border-blue-100 bg-white shadow-sm shadow-blue-100/60`} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
+          <div className="grid items-center gap-5 px-4 py-5 text-center sm:px-7 sm:py-7 lg:grid-cols-[1fr_0.34fr] lg:text-left">
+            <div>
+              <div className="mx-auto grid h-11 w-11 place-items-center rounded-[9px] bg-blue-50 text-blue-600 lg:mx-0">
+                <HelpCircle size={24} />
+              </div>
+              <p className="mt-3 text-xs font-black uppercase tracking-[0.22em] text-[#ff8a00]">Help Center</p>
+              <h2 className="mx-auto mt-2 max-w-3xl text-2xl font-black tracking-tight text-slate-950 sm:text-4xl lg:mx-0">
+                {fullPage ? 'Frequently Asked Questions' : 'Common Questions'}
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500 lg:mx-0">
+                {fullPage ? 'Find quick answers for jobs, applications, recruiters, payments, documents, and account support.' : 'Dynamic answers for candidates, recruiters, applications, payments, and platform support.'}
+              </p>
+              <label className="mx-auto mt-5 flex h-11 max-w-2xl items-center gap-3 rounded-[7px] border border-slate-200 bg-white px-4 text-sm text-slate-500 shadow-sm lg:mx-0">
+                <Search className="shrink-0 text-blue-600" size={18} />
+                <input
+                  className="w-full bg-transparent font-medium text-slate-800 outline-none placeholder:text-slate-400"
+                  onChange={(event) => {
+                    setQuery(event.target.value)
+                    setOpenIndex(0)
+                  }}
+                  placeholder="Search questions, topics, or support"
+                  value={query}
+                />
+              </label>
+            </div>
+            <div className="hidden h-44 lg:block">
+              <div className="relative h-full">
+                <div className="absolute bottom-0 right-0 h-32 w-56 rounded-[14px] bg-gradient-to-br from-blue-50 to-orange-50" />
+                <div className="absolute bottom-4 right-10 grid h-24 w-28 place-items-center rounded-[10px] bg-[#0057B8] text-white shadow-xl shadow-blue-100">
+                  <MessageCircle size={44} />
+                </div>
+                <div className="absolute right-0 top-1 grid h-16 w-16 place-items-center rounded-full bg-white text-[#ff8a00] shadow-lg ring-4 ring-orange-50">
+                  <ShieldCheck size={30} />
+                </div>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
-        <div className="mt-8 rounded-[7px] border border-white bg-white/80 p-4 shadow-xl shadow-blue-100/60 backdrop-blur-xl sm:p-5">
-          <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-            <label className="flex min-h-12 items-center gap-3 rounded-[7px] border border-slate-200 bg-white px-4 text-sm text-slate-500 shadow-sm">
-              <Search className="shrink-0 text-blue-600" size={18} />
-              <input
-                className="w-full bg-transparent font-medium text-slate-800 outline-none placeholder:text-slate-400"
-                onChange={(event) => {
-                  setQuery(event.target.value)
-                  setOpenIndex(0)
-                }}
-                placeholder="Search questions"
-                value={query}
-              />
-            </label>
-            <div className="flex flex-wrap gap-2">
+        <div className="mt-4 grid gap-4 lg:grid-cols-[280px_1fr]">
+          <aside className="rounded-[10px] border border-blue-100 bg-white p-3 shadow-sm shadow-blue-100/60 lg:sticky lg:top-24 lg:self-start">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <p className="text-base font-black text-slate-950">FAQ Categories</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">{filteredFaqs.length} questions found</p>
+              </div>
+              <span className="grid h-9 w-9 place-items-center rounded-[7px] bg-orange-50 text-[#ff8a00]">
+                <HelpCircle size={18} />
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-1">
               {categories.map((category) => (
                 <button
-                  className={`rounded-[7px] px-4 py-2 text-sm font-black transition hover:-translate-y-0.5 ${
-                    activeCategory === category ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:text-blue-600'
-                  }`}
+                  className="flex min-h-10 items-center justify-between rounded-[7px] border px-3 text-left text-xs font-black transition hover:border-[#ff8a00] hover:text-[#ff8a00]"
                   key={category}
                   onClick={() => {
                     setActiveCategory(category)
                     setOpenIndex(0)
                   }}
+                  style={activeCategory === category ? { borderColor: '#ff8a00', backgroundColor: '#fff7ed', color: '#111827' } : { borderColor: '#e2e8f0', backgroundColor: 'transparent', color: '#475569' }}
                   type="button"
                 >
-                  {category}
+                  <span className="truncate">{category}</span>
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: activeCategory === category ? '#ff8a00' : '#cbd5e1' }} />
                 </button>
               ))}
             </div>
-          </div>
-        </div>
+          </aside>
 
-        <div className="mt-6 grid gap-4">
-          <AnimatePresence mode="popLayout">
-            {loading ? (
-              [1, 2, 3].map((item) => <div className="h-24 animate-pulse rounded-[7px] bg-white ring-1 ring-slate-200" key={item} />)
-            ) : filteredFaqs.length > 0 ? (
-              visibleFaqs.map((item, index) => (
-                <FAQCard
-                  isOpen={openIndex === index}
-                  item={item}
-                  key={item._id || `${item.category}-${item.question}`}
-                  onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
-                />
-              ))
-            ) : (
-              <motion.div className="rounded-[7px] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-                <HelpCircle className="mx-auto text-blue-600" size={36} />
-                <h3 className="mt-4 text-xl font-black text-slate-950">{items.length ? 'No questions found' : 'No FAQs published yet'}</h3>
-                <p className="mt-2 text-sm text-slate-500">{items.length ? 'Try another keyword or switch FAQ category.' : 'When admin adds FAQs in MongoDB, they will appear here automatically.'}</p>
-              </motion.div>
+          <div>
+            <div className="grid gap-3">
+              <AnimatePresence mode="popLayout">
+                {loading ? (
+                  [1, 2, 3].map((item) => <div className="h-20 animate-pulse rounded-[10px] bg-white ring-1 ring-slate-200" key={item} />)
+                ) : filteredFaqs.length > 0 ? (
+                  visibleFaqs.map((item, index) => (
+                    <FAQCard
+                      isOpen={openIndex === index}
+                      item={item}
+                      key={item._id || `${item.category}-${item.question}`}
+                      onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
+                    />
+                  ))
+                ) : (
+                  <motion.div className="rounded-[10px] border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
+                    <HelpCircle className="mx-auto text-blue-600" size={34} />
+                    <h3 className="mt-4 text-xl font-black text-slate-950">{items.length ? 'No questions found' : 'No FAQs published yet'}</h3>
+                    <p className="mt-2 text-sm text-slate-500">{items.length ? 'Try another keyword or switch FAQ category.' : 'When admin adds FAQs in MongoDB, they will appear here automatically.'}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {!fullPage && filteredFaqs.length > visibleFaqs.length && (
+              <div className="mt-6 flex justify-center">
+                <Link
+                  className="inline-flex h-10 items-center justify-center rounded-[7px] px-5 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5"
+                  style={{ backgroundColor: '#0057B8' }}
+                  target="_blank"
+                  to="/faqs"
+                >
+                  More FAQ
+                </Link>
+              </div>
             )}
-          </AnimatePresence>
+          </div>
         </div>
 
-        {!fullPage && filteredFaqs.length > visibleFaqs.length && (
-          <div className="mt-7 flex justify-center">
-            <Link
-              className="inline-flex min-h-11 items-center justify-center rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700"
-              target="_blank"
-              to="/faqs"
-            >
-              More FAQ
-            </Link>
+        <motion.div className="mt-5 rounded-[10px] border border-blue-100 bg-white p-4 shadow-sm shadow-blue-100/60 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-5" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
+          <div>
+            <p className="text-lg font-black text-slate-950">Still have questions?</p>
+            <p className="mt-1 text-sm font-semibold text-slate-500">Our support team can help with jobs, applications, recruiters, and account setup.</p>
           </div>
-        )}
-
-        <motion.div className="mt-8 rounded-[7px] border border-blue-100 bg-white/85 p-5 text-center shadow-xl shadow-blue-100/50 backdrop-blur sm:p-6" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
-          <p className="text-lg font-black text-slate-950">Still have questions?</p>
-          <p className="mt-2 text-sm text-slate-500">Our support team can help with jobs, applications, recruiters, and account setup.</p>
           <button
-            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
+            className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-[7px] px-5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-blue-100 sm:mt-0"
             onClick={() => setChatOpen(true)}
+            style={{ backgroundColor: '#0057B8' }}
             type="button"
           >
             <MessageCircle size={18} />
@@ -157,17 +204,20 @@ export function FAQPage() {
 
 function FAQCard({ item, isOpen, onClick }) {
   return (
-    <motion.article className={`rounded-[7px] bg-gradient-to-br p-px shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-100 ${isOpen ? 'from-blue-500 via-teal-400 to-violet-500' : 'from-slate-200 to-slate-200'}`} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.28 }}>
-      <div className="rounded-[7px] bg-white/95 p-4 backdrop-blur sm:p-5">
+    <motion.article className="rounded-[10px] border border-blue-100 bg-white shadow-sm shadow-blue-100/50 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-100" layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.28 }}>
+      <div className="p-3 sm:p-4">
         <button className="flex w-full items-center gap-4 text-left" onClick={onClick} type="button">
-          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-[7px] ${isOpen ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'}`}>
+          <span
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-[7px]"
+            style={isOpen ? { backgroundColor: '#0057B8', color: '#fff' } : { backgroundColor: '#eff6ff', color: '#0057B8' }}
+          >
             {isOpen ? <Minus size={19} /> : <Plus size={19} />}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="mb-1 inline-flex rounded-[7px] bg-slate-100 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-slate-500">{item.category || 'General'}</span>
-            <span className="block text-base font-black text-slate-950 sm:text-lg">{item.question}</span>
+            <span className="mb-1 inline-flex rounded-[6px] bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#ff8a00]">{item.category || 'General'}</span>
+            <span className="block text-sm font-black text-slate-950 sm:text-base">{item.question}</span>
           </span>
-          <motion.span animate={{ rotate: isOpen ? 180 : 0 }} className="grid h-9 w-9 shrink-0 place-items-center rounded-[7px] bg-slate-50 text-slate-500">
+          <motion.span animate={{ rotate: isOpen ? 180 : 0 }} className="grid h-8 w-8 shrink-0 place-items-center rounded-[7px] bg-slate-50 text-slate-500">
             <ChevronDown size={18} />
           </motion.span>
         </button>
@@ -175,7 +225,7 @@ function FAQCard({ item, isOpen, onClick }) {
         <AnimatePresence initial={false}>
           {isOpen && (
             <motion.div initial={{ height: 0, opacity: 0, y: -6 }} animate={{ height: 'auto', opacity: 1, y: 0 }} exit={{ height: 0, opacity: 0, y: -6 }} transition={{ duration: 0.28, ease: 'easeInOut' }} className="overflow-hidden">
-              <p className="mt-4 rounded-[7px] bg-slate-50 p-4 text-sm leading-7 text-slate-600 sm:ml-[60px]">{item.answer}</p>
+              <p className="mt-3 rounded-[7px] bg-slate-50 p-3 text-sm font-medium leading-6 text-slate-600 sm:ml-[56px]">{item.answer}</p>
             </motion.div>
           )}
         </AnimatePresence>
