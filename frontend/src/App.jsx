@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Navigate, createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { Navigate, createBrowserRouter, RouterProvider, useNavigate } from 'react-router-dom'
 import { CookieConsent } from './components/CookieConsent'
+import { AuthModal } from './components/AuthModal'
 import { FAQPage } from './components/FAQSection'
 import { ApplyModal, Toast } from './components/PortalUI'
 import { AdminLayout } from './admin/components/AdminLayout'
@@ -387,9 +388,9 @@ function App() {
         { path: '/recruiter/terms', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-terms" /> },
         { path: '/recruiter/support', element: <ContentPage placement="Recruiter Frontend" slug="recruiter-support" /> },
         { path: '/recruiter/policies/:pageSlug', element: <ContentPage placement="Recruiter Frontend" /> },
-        { path: '/recruiter-login', element: <EmployerLoginPage /> },
+        { path: '/recruiter-login', element: <RecruiterAuthModalPage mode="recruiter-login" /> },
         { path: '/employer-login', element: <EmployerLoginPage /> },
-        { path: '/recruiter-register', element: <EmployerRegisterPage /> },
+        { path: '/recruiter-register', element: <RecruiterAuthModalPage mode="recruiter-register" /> },
         { path: '/employer-register', element: <EmployerRegisterPage /> },
         { path: '/recruiter-verification', element: <RecruiterVerificationPage /> },
         { path: '/recruiter-documents', element: <RecruiterDocumentsPage /> },
@@ -404,6 +405,21 @@ function App() {
       <ApplyModal job={selectedJob} onClose={() => setSelectedJob(null)} />
       <Toast />
       <CookieConsent />
+    </>
+  )
+}
+
+function RecruiterAuthModalPage({ mode }) {
+  const navigate = useNavigate()
+
+  return (
+    <>
+      <EmployerLandingPage />
+      <AuthModal
+        initialMode={mode}
+        onClose={() => navigate('/recruiter')}
+        open
+      />
     </>
   )
 }

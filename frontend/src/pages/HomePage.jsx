@@ -83,9 +83,7 @@ export function HomePage({ onApply }) {
           </Section>
         )}
 
-        <Section className="bg-white" title="Latest Jobs" subtitle="Fresh verified openings from active recruiters, updated as new jobs are approved.">
-          <LatestJobsGrid hasMore jobs={latestJobs} onApply={onApply} />
-        </Section>
+        <LatestJobsSection hasMore jobs={latestJobs} onApply={onApply} />
 
         <TrustedByCandidates />
 
@@ -456,6 +454,23 @@ function CareerFocusBand() {
   )
 }
 
+function LatestJobsSection({ hasMore = false, jobs: latestJobs, onApply }) {
+  return (
+    <section className="bg-[#fbfaf7] py-14 sm:py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto mb-8 max-w-3xl text-center">
+          <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Latest Jobs</h2>
+          <span className="mx-auto mt-2 block h-1 w-14 rounded-full bg-[#178955]" />
+          <p className="mt-4 text-sm font-semibold leading-6 text-slate-500">
+            Fresh verified openings from active recruiters, updated as new jobs are approved.
+          </p>
+        </div>
+        <LatestJobsGrid hasMore={hasMore} jobs={latestJobs} onApply={onApply} />
+      </div>
+    </section>
+  )
+}
+
 function LatestJobsGrid({ hasMore = false, jobs: latestJobs, onApply }) {
   if (!latestJobs.length) {
     return (
@@ -471,12 +486,12 @@ function LatestJobsGrid({ hasMore = false, jobs: latestJobs, onApply }) {
 
   return (
     <>
-      <div className="grid gap-5 lg:grid-cols-2">
-        {latestJobs.map((job) => <JobCard featured job={job} key={job._id || job.id} onApply={onApply} />)}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {latestJobs.slice(0, 2).map((job) => <JobCard homeLatest job={job} key={job._id || job.id} onApply={onApply} />)}
       </div>
       {hasMore && (
         <div className="mt-8 flex justify-center">
-          <Button to="/jobs" variant="primary">More Jobs</Button>
+          <Button className="min-h-10 bg-[#178955] px-5 text-xs font-black shadow-lg shadow-emerald-100 hover:bg-[#126f45]" to="/jobs" variant="primary">More Jobs</Button>
         </div>
       )}
     </>

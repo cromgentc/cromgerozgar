@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { FileText, LifeBuoy, LockKeyhole, Scale, ShieldCheck } from 'lucide-react'
-import { Button } from '../components/Button'
+import { Link, useParams } from 'react-router-dom'
+import { BriefcaseBusiness, ClipboardCheck, CreditCard, Database, FileText, Headphones, LifeBuoy, LockKeyhole, RefreshCw, Scale, ShieldCheck, UserCog, UserRoundCheck } from 'lucide-react'
 import { SupportChatButton } from '../components/SupportChat'
 import { api } from '../services/api'
 
@@ -110,49 +109,66 @@ export function ContentPage({ placement = 'Users Frontend', slug }) {
   }, [resolvedSlug, placement])
 
   const content = page || fallback
-  const Icon = getPageIcon(content.category)
   const sections = useMemo(() => Array.isArray(content.sections) && content.sections.length ? content.sections : fallback.sections, [content.sections, fallback.sections])
+  const theme = getPolicyTheme(content)
 
   return (
-    <section className="py-10 sm:py-14">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-[7px] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-teal-50 p-6 shadow-xl shadow-blue-100/50 sm:p-8">
-          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
-            <div>
-              <div className="grid h-14 w-14 place-items-center rounded-[7px] bg-blue-600 text-white">
-                <Icon size={25} />
-              </div>
-              <p className="mt-5 text-sm font-black uppercase tracking-[0.18em] text-blue-600">{content.category || 'Platform'}</p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">{content.title}</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">{content.subtitle}</p>
+    <section className="bg-white px-3 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl overflow-hidden rounded-[8px] border border-slate-100 bg-white shadow-sm">
+        <div className={`relative overflow-hidden ${theme.heroBg} px-6 py-9 sm:px-10 sm:py-11`}>
+          <div className="absolute right-8 top-8 grid grid-cols-5 gap-2 opacity-30">
+            {Array.from({ length: 25 }).map((_, index) => <span className={`h-1.5 w-1.5 rounded-full ${theme.dotClass}`} key={index} />)}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="relative">
+              <span className={`inline-flex items-center gap-2 rounded-[3px] px-3 py-2 text-xs font-black uppercase text-white ${theme.badgeBg}`}>
+                <theme.BadgeIcon size={15} /> {content.category || 'Platform'}
+              </span>
+              <h1 className="mt-7 text-4xl font-black tracking-tight text-[#071129] sm:text-5xl">{content.title}</h1>
+              <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-[#071129]/75">{content.subtitle}</p>
             </div>
-            <div className="rounded-[7px] bg-white/80 p-4 text-sm font-black text-slate-600 ring-1 ring-white">
-              {loading ? 'Loading latest policy...' : `Updated ${formatDate(content.updatedAt || content.effectiveDate)}`}
+            <div className="relative flex flex-col items-end gap-4">
+              <PolicyIllustration theme={theme} />
+              <span className={`inline-flex items-center gap-2 rounded-[7px] bg-white px-4 py-2 text-xs font-black ${theme.textClass} shadow-sm`}>
+                <RefreshCw size={13} /> {loading ? 'Loading latest policy...' : `Updated ${formatDate(content.updatedAt || content.effectiveDate)}`}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
-          <div className="grid gap-4">
+        <div className="grid gap-5 border-t border-slate-100 p-5 lg:grid-cols-[1fr_300px]">
+          <div className="grid gap-5">
             {sections.map((section, index) => (
-              <article className="rounded-[7px] border border-slate-200 bg-white p-6 shadow-sm" key={`${section.heading}-${index}`}>
-                <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">Section {index + 1}</span>
-                <h2 className="mt-4 text-2xl font-black text-slate-950">{section.heading}</h2>
-                <p className="mt-3 text-sm font-semibold leading-7 text-slate-600">{section.body}</p>
+              <article className="grid gap-5 rounded-[7px] border border-slate-200 bg-white p-6 shadow-sm sm:grid-cols-[90px_1fr] sm:p-7" key={`${section.heading}-${index}`}>
+                <span className={`grid h-20 w-20 place-items-center rounded-[8px] ${theme.iconBg} ${theme.textClass}`}>
+                  <PolicySectionIcon category={content.category} index={index} />
+                </span>
+                <div>
+                  <span className={`rounded-[3px] px-2 py-1 text-xs font-black ${theme.softBg} ${theme.textClass}`}>{String(index + 1).padStart(2, '0')}</span>
+                  <h2 className="mt-3 text-xl font-black text-[#071129]">{section.heading}</h2>
+                  <p className="mt-3 text-sm font-semibold leading-7 text-[#071129]/75">{section.body}</p>
+                </div>
               </article>
             ))}
           </div>
 
-          <aside className="h-max rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-xl font-black text-slate-950">Need Help?</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">For account, privacy, terms, or support questions, contact the Cromgen Rozgar team.</p>
-            <div className="mt-5 grid gap-3">
-              <SupportChatButton />
-              <Button to="/jobs" variant="secondary">Browse Jobs</Button>
+          <aside className="grid h-max gap-5">
+            <div className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm">
+              <span className={`grid h-12 w-12 place-items-center rounded-[7px] ${theme.iconBg} ${theme.textClass}`}>
+                <Headphones size={22} />
+              </span>
+              <h2 className="mt-4 text-lg font-black text-[#071129]">Need Help?</h2>
+              <p className="mt-3 text-sm font-semibold leading-6 text-[#071129]/70">For account, privacy, terms, or support questions, contact the Cromgen Rozgar team.</p>
+              <div className="mt-5 grid gap-3">
+                <SupportChatButton className={`${theme.buttonBg} text-white shadow-lg ${theme.buttonShadow} hover:opacity-95`} />
+                <Link className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border bg-white px-5 py-2.5 text-sm font-black ${theme.borderClass} ${theme.textClass} transition hover:-translate-y-0.5`} to="/jobs">
+                  <BriefcaseBusiness size={16} /> Browse Jobs
+                </Link>
+              </div>
             </div>
-            <div className="mt-5 rounded-[7px] bg-slate-50 p-4">
-              <ShieldCheck className="text-teal-600" size={21} />
-              <p className="mt-3 text-sm font-black text-slate-700">Enterprise policy content is editable from MongoDB through the content page resource.</p>
+            <div className={`rounded-[7px] ${theme.sidebarBg} p-5`}>
+              <ShieldCheck className={theme.textClass} size={22} />
+              <p className="mt-4 text-sm font-semibold leading-7 text-[#071129]">Enterprise policy content is editable from MongoDB through the content page resource.</p>
             </div>
           </aside>
         </div>
@@ -161,11 +177,87 @@ export function ContentPage({ placement = 'Users Frontend', slug }) {
   )
 }
 
-function getPageIcon(category) {
-  if (category === 'Privacy') return LockKeyhole
-  if (category === 'Terms') return Scale
-  if (category === 'Support') return LifeBuoy
-  return FileText
+function PolicyIllustration({ theme }) {
+  const Icon = theme.HeroIcon
+
+  return (
+    <div className={`relative grid h-36 w-36 place-items-center rounded-full ${theme.illustrationBg}`}>
+      <span className={`absolute h-24 w-24 rotate-45 rounded-[7px] ${theme.badgeBg} opacity-20`} />
+      <span className={`relative grid h-24 w-24 place-items-center rounded-[22px] ${theme.badgeBg} text-white shadow-xl ${theme.buttonShadow}`}>
+        <Icon size={48} strokeWidth={1.8} />
+      </span>
+    </div>
+  )
+}
+
+function PolicySectionIcon({ category, index }) {
+  const normalizedCategory = String(category || '').toLowerCase()
+  const icons = normalizedCategory.includes('term')
+    ? [UserRoundCheck, BriefcaseBusiness, CreditCard]
+    : normalizedCategory.includes('support')
+      ? [LifeBuoy, Headphones, ShieldCheck]
+      : [Database, RefreshCw, UserCog]
+  const Icon = icons[index % icons.length] || FileText
+  return <Icon size={32} strokeWidth={1.9} />
+}
+
+function getPolicyTheme(content = {}) {
+  const category = String(content.category || '').toLowerCase()
+  const slug = String(content.slug || '').toLowerCase()
+  const isTerms = category.includes('term') || slug.includes('terms')
+  const isSupport = category.includes('support') || slug.includes('support')
+
+  if (isTerms) {
+    return {
+      BadgeIcon: Scale,
+      HeroIcon: ClipboardCheck,
+      badgeBg: 'bg-[#6d37dc]',
+      borderClass: 'border-[#6d37dc]',
+      buttonBg: '!bg-[#6d37dc]',
+      buttonShadow: 'shadow-violet-100',
+      dotClass: 'bg-[#6d37dc]',
+      heroBg: 'bg-[radial-gradient(circle_at_78%_30%,rgba(109,55,220,0.16),transparent_27%),linear-gradient(135deg,#fbf8ff_0%,#f4edff_100%)]',
+      iconBg: 'bg-violet-50',
+      illustrationBg: 'bg-violet-100/60',
+      sidebarBg: 'bg-violet-50',
+      softBg: 'bg-violet-50',
+      textClass: 'text-[#6d37dc]',
+    }
+  }
+
+  if (isSupport) {
+    return {
+      BadgeIcon: LifeBuoy,
+      HeroIcon: Headphones,
+      badgeBg: 'bg-[#0f9f6e]',
+      borderClass: 'border-[#0f9f6e]',
+      buttonBg: '!bg-[#0f9f6e]',
+      buttonShadow: 'shadow-emerald-100',
+      dotClass: 'bg-[#0f9f6e]',
+      heroBg: 'bg-[radial-gradient(circle_at_78%_30%,rgba(15,159,110,0.16),transparent_27%),linear-gradient(135deg,#f6fffb_0%,#eafff5_100%)]',
+      iconBg: 'bg-emerald-50',
+      illustrationBg: 'bg-emerald-100/60',
+      sidebarBg: 'bg-emerald-50',
+      softBg: 'bg-emerald-50',
+      textClass: 'text-[#0f9f6e]',
+    }
+  }
+
+  return {
+    BadgeIcon: LockKeyhole,
+    HeroIcon: LockKeyhole,
+    badgeBg: 'bg-[#1269f2]',
+    borderClass: 'border-[#1269f2]',
+    buttonBg: '!bg-[#1269f2]',
+    buttonShadow: 'shadow-blue-100',
+    dotClass: 'bg-[#1269f2]',
+    heroBg: 'bg-[radial-gradient(circle_at_78%_30%,rgba(18,105,242,0.14),transparent_27%),linear-gradient(135deg,#f3f9ff_0%,#eaf5ff_100%)]',
+    iconBg: 'bg-blue-50',
+    illustrationBg: 'bg-blue-100/60',
+    sidebarBg: 'bg-blue-50',
+    softBg: 'bg-blue-50',
+    textClass: 'text-[#1269f2]',
+  }
 }
 
 function formatDate(value) {

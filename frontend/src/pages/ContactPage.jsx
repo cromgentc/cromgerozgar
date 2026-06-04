@@ -1,52 +1,219 @@
-import { Mail, MapPin, MessageCircle, Phone, Send, Share2 } from 'lucide-react'
-import { Button } from '../components/Button'
+import { useMemo, useState } from 'react'
+import { ArrowRight, Building2, Headphones, Mail, MapPin, MessageCircle, Phone, Send, Share2, ShieldCheck, UserRound } from 'lucide-react'
 import { SupportChatButton } from '../components/SupportChat'
+import { getStoredUser } from '../routes/authRouting'
+import { api } from '../services/api'
 import { useSiteBranding } from '../utils/siteBranding'
+import { useSocialMediaLinks } from '../utils/socialMediaLinks'
+
+const initialForm = {
+  name: '',
+  email: '',
+  subject: '',
+  message: '',
+}
 
 export function ContactPage() {
   const branding = useSiteBranding()
-  const tollFreeNumber = branding.tollFreeNumber || '+91 98765 43210'
+  const socialLinks = useSocialMediaLinks()
+  const user = getStoredUser()
+  const [form, setForm] = useState(() => ({
+    ...initialForm,
+    name: user?.name || '',
+    email: user?.email || '',
+  }))
+  const [status, setStatus] = useState('')
+  const [statusType, setStatusType] = useState('info')
+  const [sending, setSending] = useState(false)
+
+  const companyInfo = useMemo(() => ({
+    address: branding.recruiterFooterLocation || '21 Career Avenue, New Delhi',
+    phone: branding.tollFreeNumber || '+91 1800-123-4567',
+    email: branding.recruiterEmail || 'support@cromgenrozgar.com',
+  }), [branding.recruiterEmail, branding.recruiterFooterLocation, branding.tollFreeNumber])
+
+  const visibleSocialLinks = useMemo(() => {
+    const dynamicLinks = socialLinks
+      .filter((item) => item?.enabled !== false && item?.url)
+      .slice(0, 4)
+
+    return dynamicLinks.length ? dynamicLinks : [
+      { label: 'Share', platform: 'Share', url: '' },
+      { label: 'Telegram', platform: 'Telegram', url: '' },
+      { label: 'Chat', platform: 'Chat', url: '' },
+      { label: 'LinkedIn', platform: 'LinkedIn', url: '' },
+    ]
+  }, [socialLinks])
+
+  const update = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }))
+    if (status) setStatus('')
+  }
+
+  const submit = async (event) => {
+    event.preventDefault()
+    setSending(true)
+    setStatus('')
+
+    try {
+      await api.create('support-messages', {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        subject: form.subject.trim() || 'Contact page message',
+        message: form.message.trim(),
+        role: user?.role || 'Guest',
+        source: 'contact-page',
+      })
+      setStatusType('success')
+      setStatus('Message sent successfully. Our team will contact you shortly.')
+      setForm({ ...initialForm, name: user?.name || '', email: user?.email || '' })
+    } catch (error) {
+      setStatusType('error')
+      setStatus(error.message || 'Message could not be sent. Please try again.')
+    } finally {
+      setSending(false)
+    }
+  }
 
   return (
-    <section className="py-10 sm:py-14">
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8">
-        <div className="rounded-[7px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h1 className="text-3xl font-black text-slate-950 sm:text-5xl">Contact Us</h1>
-          <p className="mt-3 text-slate-500">Talk to our team about hiring, partnerships, or candidate support.</p>
-          <form className="mt-8 grid gap-4">
-            <input className="input" placeholder="Name" />
-            <input className="input" placeholder="Email" />
-            <input className="input" placeholder="Subject" />
-            <textarea className="input min-h-36" placeholder="Message" />
-            <Button>Send Message</Button>
+    <section className="bg-[#f8fafc] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.98fr_1fr]">
+        <div className="rounded-[8px] border border-slate-200/70 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-9">
+          <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-xs font-black text-[#ff5b00]">
+            <Send size={14} /> Get In Touch
+          </span>
+          <h1 className="mt-5 text-4xl font-black leading-tight text-[#00113d] sm:text-5xl">Contact Us</h1>
+          <span className="mt-4 block h-0.5 w-10 rounded-full bg-[#ff5b00]" />
+          <p className="mt-5 max-w-md text-sm font-semibold leading-7 text-slate-500">
+            We're here to help! Talk to our team about hiring, partnerships, or candidate support.
+          </p>
+
+          <form className="mt-6 grid gap-4" onSubmit={submit}>
+            <ContactField icon={UserRound} onChange={(event) => update('name', event.target.value)} placeholder="Your Full Name" required value={form.name} />
+            <ContactField icon={Mail} onChange={(event) => update('email', event.target.value)} placeholder="Email Address" required type="email" value={form.email} />
+            <ContactField icon={ShieldCheck} onChange={(event) => update('subject', event.target.value)} placeholder="Subject" required value={form.subject} />
+            <ContactField as="textarea" icon={MessageCircle} onChange={(event) => update('message', event.target.value)} placeholder="Your Message" required value={form.message} />
+
+            {status && (
+              <p className={`rounded-[7px] px-4 py-3 text-sm font-bold ${statusType === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}`}>
+                {status}
+              </p>
+            )}
+
+            <button className="inline-flex min-h-14 items-center justify-center gap-3 rounded-[7px] bg-[#ff5b00] px-6 text-sm font-black text-white shadow-xl shadow-orange-100 transition hover:-translate-y-0.5 hover:bg-[#ef5200] disabled:cursor-not-allowed disabled:opacity-70" disabled={sending} type="submit">
+              <Send size={18} /> {sending ? 'Sending...' : 'Send Message'}
+            </button>
           </form>
-        </div>
-        <div className="grid gap-6">
-          <div className="rounded-[7px] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-bold text-slate-950">Company Info</h2>
-            <div className="mt-5 grid gap-4 text-slate-600">
-              <p className="flex gap-3"><MapPin className="text-blue-600" /> 21 Career Avenue, New Delhi</p>
-              <p className="flex gap-3"><Phone className="text-blue-600" /> {tollFreeNumber}</p>
-              <p className="flex gap-3"><Mail className="text-blue-600" /> support@cromgenrozgar.com</p>
-            </div>
-            <div className="mt-6 flex gap-3">
-              {[Share2, Send, MessageCircle].map((Icon, index) => <span className="grid h-11 w-11 place-items-center rounded-[7px] bg-blue-50 text-blue-600" key={index}><Icon size={19} /></span>)}
-            </div>
-          </div>
-          <div className="grid min-h-72 place-items-center rounded-[7px] border border-dashed border-blue-200 bg-gradient-to-br from-blue-50 to-teal-50 p-6 text-center">
+
+          <div className="mt-6 flex items-start gap-4 rounded-[7px] bg-slate-50 p-4">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-orange-50 text-[#ff5b00]">
+              <ShieldCheck size={21} />
+            </span>
             <div>
-              <MapPin className="mx-auto text-blue-600" size={36} />
-              <p className="mt-4 text-xl font-bold text-slate-950">Map Placeholder</p>
-              <p className="mt-2 text-sm text-slate-500">Interactive map can be connected here.</p>
+              <p className="text-sm font-black text-[#00113d]">Your information is safe with us.</p>
+              <p className="mt-1 text-xs font-semibold text-slate-500">We never share your details.</p>
             </div>
           </div>
-          <div className="rounded-[7px] bg-gradient-to-br from-blue-600 to-teal-500 p-6 text-white shadow-xl shadow-blue-100">
-            <h2 className="text-2xl font-black">Need hiring support?</h2>
-            <p className="mt-2 text-blue-50">Our support team can help candidates and recruiters with onboarding, listings, and applications.</p>
-            <SupportChatButton className="mt-5" variant="secondary" />
+        </div>
+
+        <div className="grid gap-6">
+          <div className="rounded-[8px] border border-slate-200/70 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-8">
+            <div className="flex items-start gap-5">
+              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-[8px] bg-orange-50 text-[#ff5b00]">
+                <Building2 size={29} />
+              </span>
+              <div>
+                <h2 className="text-2xl font-black text-[#00113d]">Company Info</h2>
+                <span className="mt-4 block h-0.5 w-12 rounded-full bg-[#ff5b00]" />
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-7 text-sm font-semibold text-[#00113d]">
+              <InfoLine icon={MapPin} value={companyInfo.address} />
+              <InfoLine icon={Phone} value={companyInfo.phone} />
+              <InfoLine icon={Mail} value={companyInfo.email} />
+            </div>
+
+            <div className="mt-8 border-t border-slate-200 pt-7">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-black text-[#00113d]">Connect with us</p>
+                <div className="flex flex-wrap gap-4">
+                  {visibleSocialLinks.map((item, index) => <SocialButton item={item} key={`${item.platform}-${index}`} />)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden rounded-[8px] bg-[#006eea] p-7 text-white shadow-xl shadow-blue-200/70 sm:p-9">
+            <div className="absolute right-8 top-8 grid grid-cols-5 gap-2 opacity-20">
+              {Array.from({ length: 25 }).map((_, index) => <span className="h-1 w-1 rounded-full bg-white" key={index} />)}
+            </div>
+            <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
+              <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full bg-white text-[#006eea] shadow-lg shadow-blue-950/10">
+                <Headphones size={42} />
+              </span>
+              <div>
+                <h2 className="text-2xl font-black">Need hiring support?</h2>
+                <p className="mt-3 max-w-md text-sm font-semibold leading-7 text-blue-50">
+                  Our support team can help candidates and recruiters with onboarding, listings, and applications.
+                </p>
+                <SupportChatButton className="mt-6 !bg-white !text-[#0057B8] shadow-lg shadow-blue-950/10 hover:!bg-blue-50" variant="secondary">
+                  Contact Support <ArrowRight size={17} />
+                </SupportChatButton>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </section>
   )
+}
+
+function ContactField({ as = 'input', icon: Icon, ...props }) {
+  const Input = as
+  return (
+    <label className="flex items-start gap-4 rounded-[7px] border border-slate-200 bg-white px-4 py-4 text-slate-500 transition focus-within:border-blue-200 focus-within:ring-4 focus-within:ring-blue-50">
+      <Icon className="mt-0.5 shrink-0 text-[#53617f]" size={18} />
+      <Input className={`${as === 'textarea' ? 'min-h-28 resize-y' : 'h-6'} w-full bg-transparent text-sm font-semibold text-[#00113d] outline-none placeholder:text-[#53617f]`} {...props} />
+    </label>
+  )
+}
+
+function InfoLine({ icon: Icon, value }) {
+  return (
+    <p className="flex items-center gap-5">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-orange-50 text-[#ff5b00]">
+        <Icon size={18} />
+      </span>
+      <span>{value}</span>
+    </p>
+  )
+}
+
+function SocialButton({ item }) {
+  const Icon = getSocialIcon(item.platform || item.label)
+  const content = Icon ? <Icon size={22} /> : <span className="text-xl font-black lowercase">in</span>
+  const className = 'grid h-14 w-14 place-items-center rounded-[7px] border border-slate-200 bg-white text-[#006eea] shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50'
+
+  if (item.url) {
+    return (
+      <a aria-label={item.label || item.platform || 'Social link'} className={className} href={item.url} rel="noreferrer" target="_blank">
+        {content}
+      </a>
+    )
+  }
+
+  return (
+    <span aria-label={item.label || item.platform || 'Social link'} className={className} role="img">
+      {content}
+    </span>
+  )
+}
+
+function getSocialIcon(platform = '') {
+  const value = platform.toLowerCase()
+  if (value.includes('telegram')) return Send
+  if (value.includes('chat') || value.includes('whatsapp')) return MessageCircle
+  if (value.includes('linkedin')) return null
+  return Share2
 }

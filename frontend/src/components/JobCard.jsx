@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Bookmark, Briefcase, Clock, Flame, MapPin, Sparkles, Wallet } from 'lucide-react'
+import { ArrowRight, Bookmark, Briefcase, Clock, Flame, MapPin, Sparkles, Wallet } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from './Button'
 import { canSaveJobs, isJobSaved, toggleSavedJob } from '../utils/savedJobs'
@@ -9,7 +9,7 @@ import { isSameAppliedJob } from '../utils/candidateActivity'
 import { createJobDetailPath } from '../utils/jobRoutes'
 import { formatStateCountryLocation } from '../utils/locationDisplay'
 
-export function JobCard({ denseMobile = false, index = 1, job, onApply, featured = false, premiumList = false }) {
+export function JobCard({ denseMobile = false, index = 1, job, onApply, featured = false, premiumList = false, homeLatest = false }) {
   const jobDetailPath = createJobDetailPath(job, index)
   const displayLocation = formatStateCountryLocation(job.location)
   const navigate = useNavigate()
@@ -76,6 +76,64 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
 
     const result = toggleSavedJob(job)
     setSaved(result.saved)
+  }
+
+  if (homeLatest) {
+    return (
+      <article className="group min-w-0 overflow-hidden rounded-[7px] border border-emerald-100/80 bg-white p-6 shadow-xl shadow-slate-200/70 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-100/70">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 gap-3">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#d9f4e7] text-sm font-black uppercase text-[#168451]">
+              {job.companyLogo || String(job.company || job.title || 'CR').slice(0, 2)}
+            </div>
+            <div className="min-w-0 pt-0.5">
+              <Link className="line-clamp-1 text-lg font-black leading-6 text-slate-950 hover:text-[#178955]" to={jobDetailPath}>
+                {job.title}
+              </Link>
+              <p className="mt-1 truncate text-sm font-bold text-[#178955]">{job.company || 'Cromgen Technology'}</p>
+            </div>
+          </div>
+          <button
+            aria-label={saved ? 'Remove saved job' : 'Save job'}
+            className={`grid h-10 w-10 shrink-0 place-items-center rounded-[7px] border transition ${
+              saved ? 'border-emerald-200 bg-emerald-50 text-[#178955]' : 'border-emerald-200 bg-white text-[#178955] hover:bg-emerald-50'
+            }`}
+            onClick={saveJob}
+            type="button"
+          >
+            <Bookmark fill={saved ? 'currentColor' : 'none'} size={17} />
+          </button>
+        </div>
+
+        <div className="mt-5 grid gap-3 text-xs font-bold text-slate-500 sm:grid-cols-3">
+          <span className="flex min-w-0 items-center gap-2"><MapPin className="shrink-0 text-[#178955]" size={14} /><span className="truncate">{displayLocation}</span></span>
+          <span className="flex min-w-0 items-center gap-2"><Wallet className="shrink-0 text-[#178955]" size={14} /><span className="truncate">{job.salary}</span></span>
+          <span className="flex min-w-0 items-center gap-2"><Briefcase className="shrink-0 text-[#178955]" size={14} /><span className="truncate">{job.experience}</span></span>
+        </div>
+
+        <p className="mt-5 line-clamp-3 min-h-[4.5rem] text-sm font-semibold leading-6 text-slate-600">{job.description}</p>
+
+        <div className="mt-5 flex max-h-8 flex-wrap gap-2 overflow-hidden">
+          {job.skills.slice(0, 3).map((skill) => (
+            <span className="rounded-[7px] bg-[#eaf7ef] px-3 py-1 text-xs font-black text-[#178955]" key={skill}>
+              {skill}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-[7px] bg-white text-xs font-bold text-slate-500"><Clock size={14} /> {job.posted}</span>
+          <span className="rounded-[7px] bg-[#fff1dd] px-2.5 py-1 text-xs font-black text-[#fb7a00]">{job.workMode}</span>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] bg-[#ff7a00] px-5 text-sm font-black text-white shadow-lg shadow-orange-100 transition hover:-translate-y-0.5 hover:bg-[#eb6f00]" onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))} type="button">
+            {alreadyApplied ? 'Already Applied' : 'Apply Now'} <ArrowRight size={16} />
+          </button>
+          <Link className="inline-flex min-h-11 items-center justify-center rounded-[7px] border border-[#178955] bg-[white] px-5 text-sm font-black text-[#178955] transition hover:-translate-y-0.5 hover:bg-emerald-50" to={jobDetailPath}>View Details</Link>
+        </div>
+      </article>
+    )
   }
 
   if (premiumList) {
