@@ -24,6 +24,12 @@ function normalizeSiteBrandingValue(body = {}) {
     seoTitle: String(body.seoTitle || body.siteName || 'Cromgen Rozgar').trim() || 'Cromgen Rozgar',
     seoDescription: String(body.seoDescription || '').trim(),
     seoKeywords: String(body.seoKeywords || '').trim(),
+    appDownloadTitle: String(body.appDownloadTitle || 'Download the Cromgen Rozgar App').trim() || 'Download the Cromgen Rozgar App',
+    playStoreLink: String(body.playStoreLink || '').trim(),
+    appStoreLink: String(body.appStoreLink || '').trim(),
+    appRating: String(body.appRating || '4.4').trim() || '4.4',
+    appReviews: String(body.appReviews || '42K Reviews').trim() || '42K Reviews',
+    appDownloads: String(body.appDownloads || '50L+').trim() || '50L+',
   }
 }
 

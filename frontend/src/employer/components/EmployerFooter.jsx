@@ -47,6 +47,8 @@ const loggedOutGroups = [
     title: 'Company',
     links: [
       ['Recruiter Website', '/recruiter'],
+      ['About Us', '/about'],
+      ['Press / News', '/press-news'],
       ['Contact', '/contact'],
       ['Resources', '/recruiter-resources'],
       ['Help Center', '/recruiter/support'],

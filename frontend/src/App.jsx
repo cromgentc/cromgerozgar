@@ -25,6 +25,7 @@ import { RecruiterTestimonialsPage } from './employer/pages/RecruiterTestimonial
 import { RecruiterDocumentReviewPage, RecruiterDocumentsPage, RecruiterVerificationPage } from './employer/pages/RecruiterVerificationPages'
 import { AuthPage } from './pages/AuthPage'
 import { AuthModalPage } from './pages/AuthModalPage'
+import { AboutPage } from './pages/AboutPage'
 import { CandidateAppliedJobsPage, CandidateDashboard, CandidateInterviewInvitesPage, CandidateJobAlertsPage, CandidateSavedJobsPage } from './pages/CandidateDashboard'
 import { CandidateProfilePage } from './pages/CandidateProfilePage'
 import { CandidateReviewsPage } from './pages/CandidateReviewsPage'
@@ -41,6 +42,7 @@ import { IndustriesPage } from './pages/IndustriesPage'
 import { JobDetailsPage } from './pages/JobDetailsPage'
 import { JobsPage } from './pages/JobsPage'
 import { PostJobPage } from './pages/PostJobPage'
+import { PressNewsPage } from './pages/PressNewsPage'
 import { RecruiterProfilePage } from './pages/RecruiterProfilePage'
 import { RecruiterFindResumePage } from './pages/RecruiterFindResumePage'
 import { RecruiterJobsPage } from './pages/RecruiterJobsPage'
@@ -66,6 +68,8 @@ function App() {
         { path: '/company-jobs-:companySlug', element: <CompanyDetailsPage onApply={setSelectedJob} /> },
         { path: '/companies/:companySlug', element: <CompanyDetailsPage onApply={setSelectedJob} /> },
         { path: '/jobs/:jobId', element: <JobDetailsPage onApply={setSelectedJob} /> },
+        { path: '/about', element: <AboutPage /> },
+        { path: '/press-news', element: <PressNewsPage /> },
         { path: '/career-resources', element: <CareerResourcesPage /> },
         { path: '/:jobSlug', element: <JobDetailsPage onApply={setSelectedJob} /> },
         { path: '/auth', element: <AuthModalPage /> },

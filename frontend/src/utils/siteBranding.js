@@ -19,6 +19,12 @@ export const defaultSiteBranding = {
   seoTitle: 'Cromgen Rozgar',
   seoDescription: 'A modern enterprise job portal for candidates, recruiters, HR teams, and growing companies.',
   seoKeywords: 'jobs, recruiter, hiring, candidates, cromgen rozgar',
+  appDownloadTitle: 'Download the Cromgen Rozgar App',
+  playStoreLink: 'https://play.google.com/store',
+  appStoreLink: '',
+  appRating: '4.4',
+  appReviews: '42K Reviews',
+  appDownloads: '50L+',
 }
 
 export function applySiteBrandingMeta(branding = {}) {

@@ -19,6 +19,8 @@ export function FreelancerLayout() {
           <p className="leading-5">(c) 2026 Cromgen Rozgar Freelancer Portal. All rights reserved.</p>
           <div className="flex flex-wrap gap-3 sm:gap-4">
             <Link className="hover:text-[#ff8a00]" onClick={handleNavClick} to="/freelancer/projects">Projects</Link>
+            <Link className="hover:text-[#0057B8]" onClick={handleNavClick} to="/about">About Us</Link>
+            <Link className="hover:text-[#0057B8]" onClick={handleNavClick} to="/press-news">Press / News</Link>
             <Link className="hover:text-[#0057B8]" onClick={handleNavClick} to="/freelancer/privacy">Privacy</Link>
             <Link className="hover:text-[#0057B8]" onClick={handleNavClick} to="/freelancer/terms">Terms</Link>
             <Link className="hover:text-[#0057B8]" onClick={handleNavClick} to="/freelancer/support">Support Policy</Link>

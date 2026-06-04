@@ -5346,6 +5346,12 @@ export function AdminSEOBrandingPage() {
       seoTitle: form.seoTitle.trim() || form.siteName.trim() || defaultSiteBranding.seoTitle,
       seoDescription: form.seoDescription.trim(),
       seoKeywords: form.seoKeywords.trim(),
+      appDownloadTitle: form.appDownloadTitle.trim() || defaultSiteBranding.appDownloadTitle,
+      playStoreLink: form.playStoreLink.trim(),
+      appStoreLink: form.appStoreLink.trim(),
+      appRating: form.appRating.trim() || defaultSiteBranding.appRating,
+      appReviews: form.appReviews.trim() || defaultSiteBranding.appReviews,
+      appDownloads: form.appDownloads.trim() || defaultSiteBranding.appDownloads,
     }
 
     try {
@@ -5423,6 +5429,18 @@ export function AdminSEOBrandingPage() {
                   />
                 </div>
                 <LabeledInput label="SEO Title" onChange={(value) => update('seoTitle', value)} placeholder="Cromgen Rozgar - Jobs and Hiring" value={form.seoTitle} />
+                <div className="rounded-[7px] border border-blue-100 bg-blue-50/50 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-blue-700">App Download Popup</p>
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <LabeledInput label="Popup Title" onChange={(value) => update('appDownloadTitle', value)} placeholder="Download the Cromgen Rozgar App" value={form.appDownloadTitle || ''} />
+                    <LabeledInput label="Play Store Link" onChange={(value) => update('playStoreLink', value)} placeholder="https://play.google.com/store/apps/details?id=..." value={form.playStoreLink || ''} />
+                    <LabeledInput label="App Store Link" onChange={(value) => update('appStoreLink', value)} placeholder="https://apps.apple.com/app/..." value={form.appStoreLink || ''} />
+                    <LabeledInput label="Rating" onChange={(value) => update('appRating', value)} placeholder="4.4" value={form.appRating || ''} />
+                    <LabeledInput label="Reviews Text" onChange={(value) => update('appReviews', value)} placeholder="42K Reviews" value={form.appReviews || ''} />
+                    <LabeledInput label="Downloads Text" onChange={(value) => update('appDownloads', value)} placeholder="50L+" value={form.appDownloads || ''} />
+                  </div>
+                  <p className="mt-3 text-xs font-semibold text-slate-500">Play Store link update karte hi frontend popup QR code automatically isi link se generate hoga.</p>
+                </div>
                 <label className="grid gap-1">
                   <span className="text-xs font-black uppercase tracking-wide text-slate-400">Brand Names</span>
                   <textarea
