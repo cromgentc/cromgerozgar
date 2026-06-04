@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import {
+  ArrowRight,
   Bell,
   BriefcaseBusiness,
   ChartNoAxesCombined,
@@ -24,10 +25,10 @@ const showcases = [
     to: '/candidate-dashboard',
     image: candidateImage,
     imageAlt: 'Candidate career dashboard illustration',
-    accent: 'from-blue-500 via-sky-400 to-violet-500',
-    glow: 'bg-blue-300/30',
+    accent: 'blue',
     stat: '86%',
-    statLabel: 'Profile complete',
+    statLabel: 'Profile Completeness',
+    trend: '12% this week',
     features: [
       [FileUp, 'Resume Upload'],
       [SearchCheck, 'Job Recommendations'],
@@ -44,10 +45,10 @@ const showcases = [
     to: '/recruiter/recruiter-dashboard',
     image: employerImage,
     imageAlt: 'Recruiter hiring dashboard illustration',
-    accent: 'from-teal-500 via-blue-500 to-violet-500',
-    glow: 'bg-teal-300/30',
+    accent: 'green',
     stat: '42',
-    statLabel: 'Active openings',
+    statLabel: 'Active Openings',
+    trend: '8% this week',
     features: [
       [BriefcaseBusiness, 'Post Jobs'],
       [ListChecks, 'Manage Applications'],
@@ -61,26 +62,27 @@ const showcases = [
 
 export function FeatureShowcase() {
   return (
-    <section className="relative overflow-hidden bg-slate-50 py-16 sm:py-20">
-      <div className="absolute left-0 top-12 h-72 w-72 rounded-[7px] bg-blue-200/30 blur-3xl" />
-      <div className="absolute bottom-10 right-0 h-72 w-72 rounded-[7px] bg-violet-200/30 blur-3xl" />
+    <section className="relative overflow-hidden bg-[#f8fbff] py-8 sm:py-10">
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          className="mx-auto mb-10 max-w-3xl text-center"
+          className="mx-auto mb-6 max-w-4xl text-center"
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45 }}
         >
-          <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+          <span className="inline-flex items-center gap-2 rounded-full bg-blue-100/70 px-4 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-blue-600">
+            <Star size={15} /> Premium Hiring Experience
+          </span>
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-[#070d24] sm:text-3xl lg:text-4xl">
             Premium career and hiring workspaces
           </h2>
-          <p className="mt-4 text-base leading-7 text-slate-500">
+          <p className="mx-auto mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
             Two focused product experiences designed for candidates and recruiters with clean workflows, modern dashboards, and trusted enterprise UI.
           </p>
         </motion.div>
 
-        <div className="grid items-stretch gap-6 lg:grid-cols-2">
+        <div className="grid items-stretch gap-4 lg:grid-cols-2">
           {showcases.map((item, index) => (
             <ShowcaseCard item={item} index={index} key={item.title} />
           ))}
@@ -91,55 +93,103 @@ export function FeatureShowcase() {
 }
 
 function ShowcaseCard({ item, index }) {
+  const tone = getShowcaseTone(item.accent)
+
   return (
     <motion.article
-      className="group relative h-full rounded-[7px] bg-gradient-to-br p-px shadow-xl shadow-blue-100/60 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-100"
+      className={`group relative h-full overflow-hidden rounded-[8px] border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-2xl ${tone.border} ${tone.shadow}`}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.08 }}
     >
-      <div className={`absolute inset-0 rounded-[7px] bg-gradient-to-br ${item.accent} opacity-50`} />
-      <div className="relative flex h-full flex-col overflow-hidden rounded-[7px] border border-white/80 bg-white/90 p-5 backdrop-blur-xl sm:p-6">
-        <div className={`absolute -right-16 -top-16 h-48 w-48 rounded-[7px] ${item.glow} blur-3xl transition group-hover:scale-110`} />
-        <div className="relative grid flex-1 gap-6 xl:grid-cols-[1fr_0.95fr] xl:items-center">
-          <div className="flex min-w-0 flex-col">
-            <h3 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">{item.title}</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">{item.subtitle}</p>
+      <div className={`absolute inset-0 ${tone.bg}`} />
+      <div className="absolute right-8 top-8 grid grid-cols-6 gap-2 opacity-25">
+        {Array.from({ length: 30 }).map((_, dotIndex) => <span className={`h-1 w-1 rounded-full ${tone.dot}`} key={dotIndex} />)}
+      </div>
+      <div className="relative grid min-h-[340px] gap-4 p-4 sm:p-5 xl:grid-cols-[0.92fr_0.74fr] xl:items-center">
+        <div className="flex min-w-0 flex-col">
+          <span className={`grid h-10 w-10 place-items-center rounded-[7px] text-white shadow-lg ${tone.iconBg} ${tone.iconShadow}`}>
+            {index === 0 ? <BriefcaseBusiness size={18} /> : <UsersRound size={19} />}
+          </span>
+          <h3 className="mt-4 text-2xl font-black leading-tight tracking-tight text-[#070d24] sm:text-[28px]">{item.title}</h3>
+          <span className={`mt-3 block h-1 w-8 rounded-full ${tone.line}`} />
+          <p className="mt-3 max-w-xs text-xs font-semibold leading-5 text-slate-600 sm:text-sm">{item.subtitle}</p>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
               {item.features.map(([Icon, label]) => (
-                <div className="flex min-h-11 items-center gap-2 rounded-[7px] border border-slate-200 bg-white/75 px-3 py-2 text-sm font-bold text-slate-600 shadow-sm" key={label}>
-                  <Icon className="shrink-0 text-blue-600" size={17} />
-                  <span className="min-w-0">{label}</span>
+                <div className="flex min-h-10 min-w-0 items-center gap-2 rounded-[7px] border border-slate-200 bg-white/80 px-2.5 py-2 text-[11px] font-black leading-4 text-[#070d24] shadow-sm" key={label}>
+                  <Icon className={`shrink-0 ${tone.text}`} size={15} />
+                  <span className="min-w-0 whitespace-normal break-words">{label}</span>
                 </div>
               ))}
-            </div>
+          </div>
 
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Button className="w-full bg-[#ff8a00] shadow-[#ff8a00]/20 hover:bg-[#e87900] focus:ring-orange-100 sm:w-auto" to={item.to}>{item.cta}</Button>
-              <div className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[7px] bg-teal-50 px-4 py-2 text-center text-sm font-bold text-teal-700 sm:flex-none">
-                <CheckCircle2 size={18} /> Verified premium workflow
+          <div className="mt-5 flex flex-col gap-2.5">
+            <Button className={`w-full min-h-10 px-4 text-xs font-black text-white shadow-lg sm:w-max ${tone.button} ${tone.iconShadow}`} to={item.to}>
+              {item.cta} <ArrowRight size={15} />
+            </Button>
+            <div className={`inline-flex items-center gap-2 text-[11px] font-black leading-4 ${tone.text}`}>
+              <CheckCircle2 size={14} /> Verified premium workflow
+            </div>
+          </div>
+        </div>
+
+        <div className="relative min-h-[220px] min-w-0 overflow-visible">
+          <div className={`absolute inset-6 rounded-full ${tone.glow} blur-2xl`} />
+          <div className="relative ml-auto flex min-h-[200px] max-w-[280px] items-center justify-center overflow-hidden rounded-[8px] border border-slate-200 bg-white/80 p-2.5 shadow-xl shadow-slate-200/70 backdrop-blur">
+            <img className="max-h-[188px] w-full object-contain transition duration-500 group-hover:scale-[1.03]" src={item.image} alt={item.imageAlt} />
+          </div>
+          <motion.div
+            animate={{ y: [0, -7, 0] }}
+            className={`absolute bottom-0 ${index === 0 ? 'left-4' : 'right-3'} min-w-[138px] rounded-[8px] border border-white bg-white/95 p-3 shadow-xl shadow-slate-200/80 backdrop-blur`}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <div className="flex items-center gap-2.5">
+              <span className={`grid h-10 w-10 place-items-center rounded-full border-[6px] ${tone.statRing}`}>
+                <span className="h-4 w-4 rounded-full bg-white" />
+              </span>
+              <div>
+                <p className="text-xl font-black text-[#070d24]">{item.stat}</p>
+                <p className="mt-0.5 text-[10px] font-semibold leading-3 text-slate-600">{item.statLabel}</p>
               </div>
             </div>
-          </div>
-
-          <div className="relative min-w-0">
-            <div className={`absolute inset-6 rounded-[7px] ${item.glow} blur-2xl`} />
-            <div className="relative flex min-h-[260px] items-center justify-center overflow-hidden rounded-[7px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-lg shadow-blue-100/60 sm:min-h-[320px]">
-              <img className="max-h-[320px] w-full object-contain transition duration-500 group-hover:scale-[1.03]" src={item.image} alt={item.imageAlt} />
-              <motion.div
-                animate={{ y: [0, -7, 0] }}
-                className="absolute bottom-4 left-4 rounded-[7px] border border-white bg-white/90 p-3 shadow-xl shadow-blue-100 backdrop-blur"
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <p className="text-xl font-black text-slate-950">{item.stat}</p>
-                <p className="text-xs font-bold text-slate-500">{item.statLabel}</p>
-              </motion.div>
-            </div>
-          </div>
+            <p className={`mt-2 text-[10px] font-black ${tone.text}`}>↑ {item.trend}</p>
+          </motion.div>
         </div>
       </div>
     </motion.article>
   )
+}
+
+function getShowcaseTone(accent = 'blue') {
+  if (accent === 'green') {
+    return {
+      bg: 'bg-[radial-gradient(circle_at_80%_20%,rgba(34,197,94,0.12),transparent_34%),linear-gradient(135deg,#ffffff_0%,#effcf5_100%)]',
+      border: 'border-emerald-200',
+      button: 'bg-[#16a34a] hover:bg-[#12823d]',
+      dot: 'bg-emerald-300',
+      glow: 'bg-emerald-200/50',
+      iconBg: 'bg-[#16a34a]',
+      iconShadow: 'shadow-emerald-100',
+      line: 'bg-[#16a34a]',
+      shadow: 'hover:shadow-emerald-100',
+      statRing: 'border-emerald-100 text-emerald-500',
+      text: 'text-[#16a34a]',
+    }
+  }
+
+  return {
+    bg: 'bg-[radial-gradient(circle_at_80%_20%,rgba(37,99,235,0.12),transparent_34%),linear-gradient(135deg,#ffffff_0%,#f5f8ff_100%)]',
+    border: 'border-blue-200',
+    button: 'bg-[#2563eb] hover:bg-[#1d4ed8]',
+    dot: 'bg-blue-300',
+    glow: 'bg-blue-200/50',
+    iconBg: 'bg-[#2563eb]',
+    iconShadow: 'shadow-blue-100',
+    line: 'bg-[#2563eb]',
+    shadow: 'hover:shadow-blue-100',
+    statRing: 'border-blue-100 text-blue-500',
+    text: 'text-[#2563eb]',
+  }
 }

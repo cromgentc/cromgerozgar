@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BriefcaseBusiness, Building2, Lock, Mail, Phone, UserRound, X } from 'lucide-react'
-import { getDashboardPath, getRecruiterVerificationPath, getRecruiterVerificationStatus, normalizeRole } from '../routes/authRouting'
+import { getDashboardPath, getRecruiterVerificationPath, getRecruiterVerificationStatus, normalizeRole, storeAuthSession } from '../routes/authRouting'
 import { api } from '../services/api'
 
 const candidateInitial = {
@@ -46,8 +46,7 @@ export function AuthModal({ initialMode = 'login', onClose, onSuccess, open }) {
   }
 
   const finishAuth = (payload, fallbackPath) => {
-    localStorage.setItem('authToken', payload.token)
-    localStorage.setItem('authUser', JSON.stringify({ ...payload.data, role: normalizeRole(payload.data.role) }))
+    storeAuthSession(payload)
     onSuccess?.()
     onClose?.()
     navigate(fallbackPath || getDashboardPath(payload.data.role))
@@ -103,8 +102,7 @@ export function AuthModal({ initialMode = 'login', onClose, onSuccess, open }) {
       if (normalizeRole(payload.data.role) !== 'recruiter') {
         throw new Error('Only recruiter accounts can login from this option.')
       }
-      localStorage.setItem('authToken', payload.token)
-      localStorage.setItem('authUser', JSON.stringify({ ...payload.data, role: 'recruiter' }))
+      storeAuthSession(payload, { role: 'recruiter' })
       const status = getRecruiterVerificationStatus()
       onSuccess?.()
       onClose?.()

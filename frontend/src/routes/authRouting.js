@@ -1,10 +1,53 @@
 export function getStoredUser() {
   try {
+    const expiresAt = localStorage.getItem('authExpiresAt')
+    if (expiresAt && Date.now() > new Date(expiresAt).getTime()) {
+      clearStoredSession()
+      return null
+    }
+
     const user = JSON.parse(localStorage.getItem('authUser') || 'null')
     return user ? { ...user, role: normalizeRole(user.role) } : null
   } catch {
     return null
   }
+}
+
+export function clearStoredSession() {
+  localStorage.removeItem('authToken')
+  localStorage.removeItem('authUser')
+  localStorage.removeItem('authExpiresAt')
+}
+
+export function storeAuthSession(payload, userOverrides = {}) {
+  const token = payload?.token || ''
+  const user = payload?.data ? { ...payload.data, ...userOverrides, role: normalizeRole(userOverrides.role || payload.data.role) } : null
+
+  if (!token || !user) return null
+
+  localStorage.setItem('authToken', token)
+  localStorage.setItem('authUser', JSON.stringify(user))
+
+  const expiresAt = payload.expiresAt || getJwtExpiresAt(token) || getFallbackExpiresAt(user.role)
+  localStorage.setItem('authExpiresAt', expiresAt)
+
+  return user
+}
+
+function getJwtExpiresAt(token) {
+  try {
+    const [, payload] = String(token).split('.')
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
+    return decoded?.exp ? new Date(decoded.exp * 1000).toISOString() : ''
+  } catch {
+    return ''
+  }
+}
+
+function getFallbackExpiresAt(role) {
+  const normalizedRole = normalizeRole(role)
+  const days = ['users', 'Candidate', 'freelancer'].includes(normalizedRole) ? 365 : 1
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
 }
 
 export function normalizeRole(role) {

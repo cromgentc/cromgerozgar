@@ -701,3 +701,30 @@ button.admin-material-nav-item:hover {
     transform: translateX(-50%);
   }
 }
+
+.recruiter-video-testimonial-btn,
+a.recruiter-video-testimonial-btn,
+.recruiter-cta-primary-btn,
+a.recruiter-cta-primary-btn {
+  background: #ff8a00 !important;
+  border-color: #ff8a00 !important;
+  color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+.recruiter-video-testimonial-btn:hover,
+a.recruiter-video-testimonial-btn:hover,
+.recruiter-cta-primary-btn:hover,
+a.recruiter-cta-primary-btn:hover {
+  background: #e87900 !important;
+  border-color: #e87900 !important;
+  color: #ffffff !important;
+}
+
+.recruiter-video-testimonial-btn svg,
+a.recruiter-video-testimonial-btn svg,
+.recruiter-cta-primary-btn svg,
+a.recruiter-cta-primary-btn svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}

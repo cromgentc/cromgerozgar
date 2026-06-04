@@ -96,8 +96,22 @@ function normalizeRole(role) {
   return roleMap[role] || role
 }
 
+function getSessionDuration(role) {
+  const normalizedRole = normalizeRole(role)
+  if (['users', 'Candidate', 'freelancer'].includes(normalizedRole)) return '365d'
+  if (['Admin', 'staff', 'hiring', 'account team', 'recruiter'].includes(normalizedRole)) return '1d'
+  return '1d'
+}
+
 function signToken(user) {
-  return jwt.sign({ id: user._id, role: normalizeRole(user.role) }, process.env.JWT_SECRET, { expiresIn: '7d' })
+  const expiresIn = getSessionDuration(user.role)
+  const token = jwt.sign({ id: user._id, role: normalizeRole(user.role) }, process.env.JWT_SECRET, { expiresIn })
+  const decoded = jwt.decode(token)
+  return {
+    expiresAt: decoded?.exp ? new Date(decoded.exp * 1000).toISOString() : '',
+    expiresIn,
+    token,
+  }
 }
 
 function signResetToken(user) {
@@ -123,6 +137,11 @@ function authPayload(user) {
     recruiterVerificationStatus,
     recruiterVerificationRemark: user.recruiterVerificationRemark,
   }
+}
+
+function authResponse(user) {
+  const session = signToken(user)
+  return { success: true, ...session, data: authPayload(user) }
 }
 
 function normalizeEmail(email = '') {
@@ -178,7 +197,7 @@ const register = asyncHandler(async (req, res) => {
     status: normalizedRole === 'recruiter' ? 'Review' : 'Active',
     recruiterVerificationStatus: normalizedRole === 'recruiter' ? 'documents_required' : 'approved',
   })
-  res.status(201).json({ success: true, token: signToken(user), data: authPayload(user) })
+  res.status(201).json(authResponse(user))
 })
 
 const login = asyncHandler(async (req, res) => {
@@ -190,7 +209,7 @@ const login = asyncHandler(async (req, res) => {
     throw new Error('Invalid email or password')
   }
 
-  res.json({ success: true, token: signToken(user), data: authPayload(user) })
+  res.json(authResponse(user))
 })
 
 const requestWhatsappOtp = asyncHandler(async (req, res) => {
@@ -384,7 +403,7 @@ const verifyWhatsappOtp = asyncHandler(async (req, res) => {
   }
 
   forgotOtpStore.delete(phone)
-  res.json({ success: true, token: signToken(user), data: authPayload(user) })
+  res.json(authResponse(user))
 })
 
 const requestEmailReset = asyncHandler(async (req, res) => {
@@ -607,7 +626,7 @@ const googleAuth = asyncHandler(async (req, res) => {
     })
   }
 
-  res.json({ success: true, token: signToken(user), data: authPayload(user) })
+  res.json(authResponse(user))
 })
 
 const googleConfig = asyncHandler(async (req, res) => {

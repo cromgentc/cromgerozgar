@@ -82,8 +82,8 @@ const configs = {
       ['location', 'Location', 'jobLocation'],
       ['salary', 'Salary range'],
       ['experience', 'Experience'],
-      ['type', 'Job type'],
-      ['workMode', 'Work mode'],
+      ['type', 'Job type', 'careerJobType'],
+      ['workMode', 'Work mode', 'careerWorkMode'],
       ['posted', 'Posted date', 'date'],
       ['deadline', 'Application deadline', 'date'],
       ['accountDepartmentStatus', 'Account department status'],
@@ -138,7 +138,7 @@ const configs = {
       ['address', 'Full address', 'textarea'],
       ['jobs', 'Open jobs', 'number'],
       ['documents', 'Documents status'],
-      ['status', 'Status'],
+      ['status', 'Status', 'careerJobStatus'],
     ],
     required: [],
     transform: (form) => ({
@@ -384,7 +384,7 @@ const configs = {
   contentPages: {
     resource: 'content-pages',
     title: 'Policy Management',
-    subtitle: 'Maintain separate published policy pages for the user frontend and recruiter frontend.',
+    subtitle: 'Maintain separate published policy pages for the users, recruiter, and freelancer frontends.',
     actionLabel: 'Add Policy',
     modalTitle: 'Add / Edit Policy',
     extra: 'Publish',
@@ -469,6 +469,95 @@ const configs = {
       frontendPlacement: form.frontendPlacement || fieldOptions.testimonialPlacement[0],
       rating: Math.min(Math.max(Number(form.rating || 5), 1), 5),
       featured: ['true', 'Yes', 'Featured', true].includes(form.featured),
+    }),
+  },
+  videoTestimonials: {
+    resource: 'video-testimonials',
+    title: 'Video Testimonials Management',
+    subtitle: 'Add recruiter video testimonials with YouTube URL, card copy, duration, thumbnail, and placement details.',
+    actionLabel: 'Add Video Testimonial',
+    modalTitle: 'Add / Edit Video Testimonial',
+    extra: 'Feature',
+    statusOptions: ['Active', 'Inactive'],
+    columns: [
+      { key: '_id', label: 'Video ID' },
+      { key: 'companyName', label: 'Company' },
+      { key: 'duration', label: 'Duration' },
+      { key: 'location', label: 'Location' },
+      { key: 'videoUrl', label: 'YouTube URL' },
+      { key: 'featured', label: 'Featured', badge: true },
+      { key: 'status', label: 'Status', badge: true },
+      { key: 'createdAt', label: 'Created' },
+    ],
+    fields: [
+      ['companyName', 'Company name'],
+      ['duration', 'Video duration e.g. 02:45'],
+      ['location', 'Location'],
+      ['logoText', 'Logo text'],
+      ['videoUrl', 'YouTube video URL'],
+      ['thumbnailUrl', 'Thumbnail image URL'],
+      ['tone', 'Color tone'],
+      ['sortOrder', 'Sort order', 'number'],
+      ['featured', 'Featured', 'featuredToggle'],
+      ['status', 'Status'],
+      ['quote', 'Quote / feedback text', 'textarea'],
+    ],
+    required: ['companyName', 'status'],
+    transform: (form) => ({
+      ...form,
+      sortOrder: Number(form.sortOrder || 0),
+      featured: ['true', 'Yes', 'Featured', true].includes(form.featured),
+      tone: form.tone || 'blue',
+    }),
+  },
+  careerJobs: {
+    resource: 'career-jobs',
+    title: 'Career Job Posts',
+    subtitle: 'Manage Cromgen Rozgar internal vacancies displayed on Career Resources.',
+    actionLabel: 'Add Career Job',
+    modalTitle: 'Add / Edit Career Job',
+    extra: 'Publish',
+    statusOptions: ['Active', 'Inactive', 'Closed'],
+    columns: [
+      { key: '_id', label: 'Job ID' },
+      { key: 'title', label: 'Title' },
+      { key: 'department', label: 'Department' },
+      { key: 'location', label: 'Location' },
+      { key: 'openings', label: 'Vacancy' },
+      { key: 'type', label: 'Type', badge: true },
+      { key: 'workMode', label: 'Work Mode', badge: true },
+      { key: 'featured', label: 'Featured', badge: true },
+      { key: 'status', label: 'Status', badge: true },
+      { key: 'createdAt', label: 'Created' },
+    ],
+    fields: [
+      ['title', 'Job title'],
+      ['department', 'Department'],
+      ['location', 'Location'],
+      ['openings', 'Vacancy count', 'number'],
+      ['type', 'Job type'],
+      ['workMode', 'Work mode'],
+      ['experience', 'Experience'],
+      ['salary', 'Salary'],
+      ['deadline', 'Apply deadline'],
+      ['applyEmail', 'Apply email'],
+      ['skills', 'Skills comma separated'],
+      ['responsibilities', 'Responsibilities comma separated'],
+      ['requirements', 'Requirements comma separated'],
+      ['sortOrder', 'Sort order', 'number'],
+      ['featured', 'Featured', 'featuredToggle'],
+      ['status', 'Status'],
+      ['description', 'Job description', 'textarea'],
+    ],
+    required: ['title', 'description', 'status'],
+    transform: (form) => ({
+      ...form,
+      openings: Math.max(Number(form.openings || 1), 1),
+      sortOrder: Number(form.sortOrder || 0),
+      featured: ['true', 'Yes', 'Featured', true].includes(form.featured),
+      skills: splitAdminList(form.skills),
+      responsibilities: splitAdminList(form.responsibilities),
+      requirements: splitAdminList(form.requirements),
     }),
   },
   faqs: {
@@ -603,7 +692,7 @@ const configs = {
 }
 
 const accessByRole = {
-  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'freelancerProfiles', 'categories', 'locations', 'payments', 'paymentLogs', 'contentPages', 'testimonials', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
+  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'freelancerProfiles', 'categories', 'locations', 'payments', 'paymentLogs', 'contentPages', 'testimonials', 'videoTestimonials', 'careerJobs', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
   staff: [],
   recruiter: [],
   users: [],
@@ -618,12 +707,15 @@ const fieldOptions = {
   documentType: ['GST', 'Offer Letter', 'Aadhar Card'],
   testimonialType: ['Candidate', 'Recruiter', 'Company', 'Admin'],
   testimonialPlacement: ['Users Frontend', 'Recruiter Frontend'],
-  policyPlacement: ['Users Frontend', 'Recruiter Frontend'],
+  policyPlacement: ['Users Frontend', 'Recruiter Frontend', 'Freelancer Frontend'],
   policyCategory: ['Policy', 'Privacy', 'Terms', 'Support', 'General'],
   policyStatus: ['Published', 'Draft'],
   faqCategory: ['General', 'Candidate', 'Recruiter', 'Jobs', 'Applications', 'Payments', 'Account', 'Support'],
   faqStatus: ['Active', 'Inactive'],
   subscriberStatus: ['Subscribed', 'Unsubscribed'],
+  careerJobStatus: ['Active', 'Inactive', 'Closed'],
+  careerJobType: ['Full Time', 'Part Time', 'Contract', 'Internship'],
+  careerWorkMode: ['Remote', 'Hybrid', 'On-site'],
   featuredToggle: ['false', 'true'],
   supportStatus: ['Open', 'In Progress', 'Resolved', 'Closed'],
   accountDepartmentStatus: ['Pending', 'Active', 'Rejected', 'Hold', 'Removed'],
@@ -672,6 +764,14 @@ function mergeAdminQuery(query = '', fallbackQuery = '') {
   })
   const next = params.toString()
   return next ? `?${next}` : ''
+}
+
+function splitAdminList(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean)
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
 }
 
 function getDefaultJobLocation() {
@@ -1788,6 +1888,44 @@ function getInitialForm(type, companyOptions = []) {
     }
   }
 
+  if (type === 'videoTestimonials') {
+    return {
+      companyName: '',
+      quote: '',
+      location: '',
+      duration: '02:45',
+      logoText: '',
+      videoUrl: '',
+      thumbnailUrl: '',
+      tone: 'blue',
+      sortOrder: 0,
+      featured: 'false',
+      status: 'Active',
+    }
+  }
+
+  if (type === 'careerJobs') {
+    return {
+      title: '',
+      department: '',
+      location: 'India',
+      openings: 1,
+      type: 'Full Time',
+      workMode: 'Hybrid',
+      experience: '',
+      salary: '',
+      deadline: '',
+      applyEmail: 'support@cromgenrozgar.com',
+      skills: '',
+      responsibilities: '',
+      requirements: '',
+      sortOrder: 0,
+      featured: 'false',
+      status: 'Active',
+      description: '',
+    }
+  }
+
   if (type === 'freelancerProfiles') {
     return {
       name: '',
@@ -1967,12 +2105,20 @@ function PolicyManagementActions({ onDelete, onEdit, row }) {
 function getPolicyFrontendPath(row = {}) {
   const slug = String(row.slug || 'privacy').trim().toLowerCase()
   const recruiter = row.frontendPlacement === 'Recruiter Frontend'
+  const freelancer = row.frontendPlacement === 'Freelancer Frontend'
 
   if (recruiter) {
     if (slug === 'recruiter-privacy') return '/recruiter/privacy'
     if (slug === 'recruiter-terms') return '/recruiter/terms'
     if (slug === 'recruiter-support') return '/recruiter/support'
     return `/recruiter/policies/${slug}`
+  }
+
+  if (freelancer) {
+    if (slug === 'freelancer-privacy') return '/freelancer/privacy'
+    if (slug === 'freelancer-terms') return '/freelancer/terms'
+    if (slug === 'freelancer-support') return '/freelancer/support'
+    return `/freelancer/policies/${slug}`
   }
 
   if (slug === 'privacy') return '/privacy'
@@ -3619,6 +3765,12 @@ function CrudModal({ companyOptions, companyRows, config, form, isCreate, onChan
             <SelectWithLabel key={key} label={label} onChange={(value) => onChange(key, value)} options={fieldOptions.testimonialType} value={form[key] || fieldOptions.testimonialType[0]} />
           ) : fieldType === 'testimonialPlacement' ? (
             <TestimonialPlacementSelect key={key} label={label} onChange={(value) => onChange(key, value)} value={form[key] || fieldOptions.testimonialPlacement[0]} />
+          ) : fieldType === 'careerJobType' ? (
+            <SelectWithLabel key={key} label={label} onChange={(value) => onChange(key, value)} options={fieldOptions.careerJobType} value={form[key] || fieldOptions.careerJobType[0]} />
+          ) : fieldType === 'careerWorkMode' ? (
+            <SelectWithLabel key={key} label={label} onChange={(value) => onChange(key, value)} options={fieldOptions.careerWorkMode} value={form[key] || fieldOptions.careerWorkMode[1]} />
+          ) : fieldType === 'careerJobStatus' ? (
+            <SelectWithLabel key={key} label={label} onChange={(value) => onChange(key, value)} options={fieldOptions.careerJobStatus} value={form[key] || fieldOptions.careerJobStatus[0]} />
           ) : fieldType === 'policyPlacement' ? (
             <PolicyPlacementSelect key={key} label={label} onChange={(value) => onChange(key, value)} value={form[key] || fieldOptions.policyPlacement[0]} />
           ) : fieldType === 'policyCategory' ? (
@@ -3865,12 +4017,17 @@ function PolicyPlacementSelect({ label, onChange, value }) {
       title: 'Recruiter Frontend',
       text: 'Hiring, account, package, and compliance policy pages for the recruiter/employer website.',
     },
+    {
+      value: 'Freelancer Frontend',
+      title: 'Freelancer Frontend',
+      text: 'Freelancer privacy, terms, support, project, proposal, and marketplace policy pages.',
+    },
   ]
 
   return (
     <div className="grid gap-2 sm:col-span-2">
       <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-3">
         {options.map((option) => (
           <button
             className={`rounded-[7px] border p-4 text-left transition ${

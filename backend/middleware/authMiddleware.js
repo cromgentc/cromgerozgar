@@ -15,6 +15,9 @@ function normalizeRole(role) {
     'Account Team': 'account team',
     'account-team': 'account team',
     account_team: 'account team',
+    Freelancer: 'freelancer',
+    Employer: 'recruiter',
+    company: 'recruiter',
   }
 
   return roleMap[role] || role
@@ -33,8 +36,8 @@ const protect = asyncHandler(async (req, res, next) => {
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET)
   } catch {
-    next()
-    return
+    res.status(401)
+    throw new Error('Session expired. Please login again.')
   }
 
   req.user = await User.findById(decoded.id).select('-password')

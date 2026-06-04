@@ -94,8 +94,13 @@ const sidebarItems = [
     roles: ['Admin'],
     children: [
       { label: 'Testimonials', to: '/admin/testimonials', icon: Star },
+      { label: 'Video Testimonials', to: '/admin/video-testimonials', icon: Star },
+      { label: 'Career Job Posts', to: '/admin/career-jobs', icon: BriefcaseBusiness },
       { label: 'FAQs', to: '/admin/faqs', icon: HelpCircle },
       { label: 'Policy', to: '/admin/policy', icon: FileText },
+      { label: 'User Policies', to: '/admin/policy/users', icon: FileText },
+      { label: 'Recruiter Policies', to: '/admin/policy/recruiter', icon: FileText },
+      { label: 'Freelancer Policies', to: '/admin/policy/freelancer', icon: FileText },
       { label: 'SEO & Branding', to: '/admin/seo-branding', icon: Globe2 },
       { label: 'Social Media', to: '/admin/social-media', icon: Share2 },
       { label: 'Hiring Insights', to: '/admin/hiring-insights', icon: Send },
@@ -308,6 +313,7 @@ export function AdminLayout() {
   const logout = () => {
     localStorage.removeItem('authToken')
     localStorage.removeItem('authUser')
+    localStorage.removeItem('authExpiresAt')
     navigate('/auth', { replace: true })
   }
 
@@ -922,6 +928,7 @@ function SidebarContent({ branding, isEmployer, role }) {
   const logout = () => {
     localStorage.removeItem('authToken')
     localStorage.removeItem('authUser')
+    localStorage.removeItem('authExpiresAt')
     navigate('/auth', { replace: true })
   }
 

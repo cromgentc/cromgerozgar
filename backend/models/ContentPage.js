@@ -14,7 +14,7 @@ const contentPageSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     subtitle: { type: String, default: '' },
     category: { type: String, enum: ['Privacy', 'Terms', 'Support', 'Policy', 'General'], default: 'Policy' },
-    frontendPlacement: { type: String, enum: ['Users Frontend', 'Recruiter Frontend'], default: 'Users Frontend' },
+    frontendPlacement: { type: String, enum: ['Users Frontend', 'Recruiter Frontend', 'Freelancer Frontend'], default: 'Users Frontend' },
     sections: [contentSectionSchema],
     status: { type: String, enum: ['Draft', 'Published'], default: 'Published' },
     effectiveDate: { type: Date, default: Date.now },

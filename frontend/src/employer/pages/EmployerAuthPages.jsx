@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Building2, CheckCircle2, Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { Button } from '../../components/Button'
 import { GoogleAuthButton } from '../../components/GoogleAuthButton'
-import { getDashboardPath, getRecruiterVerificationPath, getRecruiterVerificationStatus, normalizeRole } from '../../routes/authRouting'
+import { getDashboardPath, getRecruiterVerificationPath, getRecruiterVerificationStatus, normalizeRole, storeAuthSession } from '../../routes/authRouting'
 import { api } from '../../services/api'
 import employerImage from '../../assets/employer-hiring-suite.png'
 
@@ -102,9 +102,7 @@ const internationalLocations = {
 
 function saveSession(payload, overrides = {}) {
   const recruiterVerificationStatus = overrides.recruiterVerificationStatus || payload.data.recruiterVerificationStatus
-
-  localStorage.setItem('authToken', payload.token)
-  localStorage.setItem('authUser', JSON.stringify({ ...payload.data, ...overrides, role: normalizeRole(payload.data.role), ...(recruiterVerificationStatus ? { recruiterVerificationStatus } : {}) }))
+  storeAuthSession(payload, { ...overrides, ...(recruiterVerificationStatus ? { recruiterVerificationStatus } : {}) })
 }
 
 export function EmployerLoginPage() {
@@ -123,6 +121,7 @@ export function EmployerLoginPage() {
       if (normalizeRole(payload.data.role) !== 'recruiter') {
         localStorage.removeItem('authToken')
         localStorage.removeItem('authUser')
+        localStorage.removeItem('authExpiresAt')
         setMessage('Only recruiter accounts can login from this page.')
         return
       }
@@ -147,6 +146,7 @@ export function EmployerLoginPage() {
       if (normalizeRole(payload.data.role) !== 'recruiter') {
         localStorage.removeItem('authToken')
         localStorage.removeItem('authUser')
+        localStorage.removeItem('authExpiresAt')
         setMessage('Only recruiter accounts can login from this page.')
         return
       }

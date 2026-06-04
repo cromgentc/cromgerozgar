@@ -62,6 +62,7 @@ export async function apiRequest(path, options = {}) {
       if (authRequired) {
         localStorage.removeItem('authToken')
         localStorage.removeItem('authUser')
+        localStorage.removeItem('authExpiresAt')
 
         if (typeof window !== 'undefined' && window.location.pathname !== '/auth') {
           window.location.assign('/auth')
@@ -94,10 +95,12 @@ const readAuthResources = new Set([
   'support-messages',
   'testimonials',
   'users',
+  'video-testimonials',
 ])
 
 const writeAuthResources = new Set([
   'applications',
+  'career-jobs',
   'candidates',
   'categories',
   'companies',
@@ -118,6 +121,7 @@ const writeAuthResources = new Set([
   'support-messages',
   'testimonials',
   'users',
+  'video-testimonials',
 ])
 
 const publicCreateResources = new Set([
@@ -235,6 +239,7 @@ export const api = {
   subscribeNewsletter: (data) => apiRequest('/newslettersubscribers', { method: 'POST', body: JSON.stringify(data) }),
   companies: (params = '') => apiRequest(`/companies${params}`),
   companyProfiles: () => apiRequest('/company-profiles'),
+  careerJobs: (params = '?status=Active&sort=sortOrder -featured -createdAt') => listAll('career-jobs', params),
   portalSummary: () => apiRequest('/portal-summary'),
   freelancerProfiles: (params = '?status=Active&sort=sortOrder -featured -rating -createdAt') => listAll('freelancer-profiles', params),
   adminDashboard: () => apiRequest('/dashboard/admin', { authRequired: true }),

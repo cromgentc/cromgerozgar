@@ -49,6 +49,7 @@ router.use('/employers', crudRoutes.protected(controllers.employers, {
 router.get('/faqs', listFaqs)
 router.use('/faqs', crudRoutes.protected(controllers.faqs, { publicRead: true }))
 router.use('/freelancer-profiles', crudRoutes.protected(controllers.freelancerProfiles, { publicRead: true }))
+router.use('/career-jobs', crudRoutes.protected(controllers.careerJobs, { publicRead: true }))
 router.use('/candidates', crudRoutes.protected(controllers.candidates, { readRoles: ['Admin', 'hiring', 'recruiter'] }))
 router.use('/applications', crudRoutes.protected(controllers.applications, {
   publicCreate: true,

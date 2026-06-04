@@ -28,6 +28,18 @@ export function applySiteBrandingMeta(branding = {}) {
   document.title = next.seoTitle || next.siteName
   setMeta('description', next.seoDescription)
   setMeta('keywords', next.seoKeywords)
+  setMeta('author', next.siteName)
+  setMetaProperty('og:type', 'website')
+  setMetaProperty('og:site_name', next.siteName)
+  setMetaProperty('og:title', next.seoTitle || next.siteName)
+  setMetaProperty('og:description', next.seoDescription)
+  setMetaProperty('og:image', absoluteUrl(next.logoUrl))
+  setMetaProperty('og:url', getCurrentCanonicalUrl())
+  setMeta('twitter:card', 'summary_large_image')
+  setMeta('twitter:title', next.seoTitle || next.siteName)
+  setMeta('twitter:description', next.seoDescription)
+  setMeta('twitter:image', absoluteUrl(next.logoUrl))
+  setCanonical(getCurrentCanonicalUrl())
 
   if (next.faviconUrl) {
     let link = document.querySelector("link[rel='icon']")
@@ -134,4 +146,38 @@ function setMeta(name, content) {
     document.head.appendChild(meta)
   }
   meta.content = content
+}
+
+function setMetaProperty(property, content) {
+  if (!content) return
+  let meta = document.querySelector(`meta[property='${property}']`)
+  if (!meta) {
+    meta = document.createElement('meta')
+    meta.setAttribute('property', property)
+    document.head.appendChild(meta)
+  }
+  meta.content = content
+}
+
+function setCanonical(href) {
+  if (!href) return
+  let link = document.querySelector("link[rel='canonical']")
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'canonical'
+    document.head.appendChild(link)
+  }
+  link.href = href
+}
+
+function absoluteUrl(value = '') {
+  if (!value) return ''
+  if (/^https?:\/\//i.test(value)) return value
+  if (typeof window === 'undefined') return value
+  return `${window.location.origin}${value.startsWith('/') ? value : `/${value}`}`
+}
+
+function getCurrentCanonicalUrl() {
+  if (typeof window === 'undefined') return 'https://www.cromgenrozgar.in/'
+  return `${window.location.origin}${window.location.pathname}`
 }

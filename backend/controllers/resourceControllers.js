@@ -1,6 +1,7 @@
 const crudController = require('./crudController')
 const Application = require('../models/Application')
 const Candidate = require('../models/Candidate')
+const CareerJob = require('../models/CareerJob')
 const Category = require('../models/Category')
 const Company = require('../models/Company')
 const ContentPage = require('../models/ContentPage')
@@ -598,6 +599,7 @@ module.exports = {
     canAccess: canAccessApplication,
   }),
   candidates: crudController(Candidate, { searchFields: ['name', 'email', 'role', 'location'] }),
+  careerJobs: crudController(CareerJob, { searchFields: ['title', 'department', 'location', 'workMode', 'type', 'skills', 'description', 'status'] }),
   categories: crudController(Category, { searchFields: ['name', 'status'], beforeGetAll: ensureDefaultCategories }),
   companies: crudController(Company, { searchFields: ['name', 'contactPerson', 'contactNumber', 'contactEmail', 'gstNumber', 'industry', 'location', 'status'] }),
   contentPages: crudController(ContentPage, { searchFields: ['slug', 'title', 'subtitle', 'category', 'frontendPlacement', 'status'], beforeGetAll: ensureDefaultPolicyPage }),

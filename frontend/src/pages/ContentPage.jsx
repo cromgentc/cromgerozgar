@@ -74,6 +74,42 @@ const defaultPages = {
       { heading: 'Package Support', body: 'For package activation, wallet coins, billing records, or plan access issues, recruiters should contact the account department with registered business email details.' },
     ],
   },
+  'freelancer-privacy': {
+    slug: 'freelancer-privacy',
+    category: 'Privacy',
+    frontendPlacement: 'Freelancer Frontend',
+    title: 'Freelancer Privacy Policy',
+    subtitle: 'How Cromgen Rozgar handles freelancer profile, portfolio, project, proposal, and payout support data.',
+    sections: [
+      { heading: 'Freelancer Data We Collect', body: 'We collect freelancer account details, profile information, skills, portfolio data, project activity, proposal history, and support messages needed to operate freelancer workflows.' },
+      { heading: 'How Freelancer Data Is Used', body: 'Freelancer data is used to show profiles to companies, support project discovery, manage proposals, verify activity, improve recommendations, and keep the marketplace secure.' },
+      { heading: 'Freelancer Controls', body: 'Freelancers can update profile details, manage portfolio information, review project activity, and contact support for account or privacy-related requests.' },
+    ],
+  },
+  'freelancer-terms': {
+    slug: 'freelancer-terms',
+    category: 'Terms',
+    frontendPlacement: 'Freelancer Frontend',
+    title: 'Freelancer Terms Of Service',
+    subtitle: 'Platform rules for freelancer accounts, project discovery, proposals, communication, and professional conduct.',
+    sections: [
+      { heading: 'Profile Responsibility', body: 'Freelancers must provide accurate profile, skill, portfolio, contact, and availability details. Misleading information may be reviewed or removed.' },
+      { heading: 'Projects And Proposals', body: 'Freelancers are responsible for submitting genuine proposals, maintaining professional communication, and respecting project requirements shared by clients or recruiters.' },
+      { heading: 'Marketplace Usage', body: 'Freelancer access, project visibility, shortlisting, support workflows, and account actions are governed by platform policies and verification status.' },
+    ],
+  },
+  'freelancer-support': {
+    slug: 'freelancer-support',
+    category: 'Support',
+    frontendPlacement: 'Freelancer Frontend',
+    title: 'Freelancer Support Policy',
+    subtitle: 'Support guidance for freelancer profile setup, project listings, proposals, account access, and marketplace workflows.',
+    sections: [
+      { heading: 'Profile Support', body: 'Freelancers can contact support for profile completion, portfolio updates, skill corrections, login issues, and account-related help.' },
+      { heading: 'Project Support', body: 'Support can help route questions about project discovery, proposal visibility, shortlisted opportunities, and marketplace communication workflows.' },
+      { heading: 'Response Workflow', body: 'Support requests are reviewed based on account status, project context, and available details. Keep your freelancer profile updated for faster resolution.' },
+    ],
+  },
 }
 
 export function ContentPage({ placement = 'Users Frontend', slug }) {
@@ -160,8 +196,8 @@ export function ContentPage({ placement = 'Users Frontend', slug }) {
               <h2 className="mt-4 text-lg font-black text-[#071129]">Need Help?</h2>
               <p className="mt-3 text-sm font-semibold leading-6 text-[#071129]/70">For account, privacy, terms, or support questions, contact the Cromgen Rozgar team.</p>
               <div className="mt-5 grid gap-3">
-                <SupportChatButton className={`${theme.buttonBg} text-white shadow-lg ${theme.buttonShadow} hover:opacity-95`} />
-                <Link className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border bg-white px-5 py-2.5 text-sm font-black ${theme.borderClass} ${theme.textClass} transition hover:-translate-y-0.5`} to="/jobs">
+                <SupportChatButton className="!bg-[#ff8a00] text-white shadow-lg shadow-orange-100 hover:!bg-[#e87500]" />
+                <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-[#ff8a00] bg-white px-5 py-2.5 text-sm font-black text-[#ff8a00] transition hover:-translate-y-0.5 hover:bg-orange-50" to="/jobs">
                   <BriefcaseBusiness size={16} /> Browse Jobs
                 </Link>
               </div>

@@ -28,6 +28,7 @@ import { AuthModalPage } from './pages/AuthModalPage'
 import { CandidateAppliedJobsPage, CandidateDashboard, CandidateInterviewInvitesPage, CandidateJobAlertsPage, CandidateSavedJobsPage } from './pages/CandidateDashboard'
 import { CandidateProfilePage } from './pages/CandidateProfilePage'
 import { CandidateReviewsPage } from './pages/CandidateReviewsPage'
+import { CareerResourcesPage } from './pages/CareerResourcesPage'
 import { CategoryJobsPage } from './pages/CategoryJobsPage'
 import { CompaniesPage, CompanyDetailsPage } from './pages/CompaniesPage'
 import { ContactPage } from './pages/ContactPage'
@@ -65,6 +66,7 @@ function App() {
         { path: '/company-jobs-:companySlug', element: <CompanyDetailsPage onApply={setSelectedJob} /> },
         { path: '/companies/:companySlug', element: <CompanyDetailsPage onApply={setSelectedJob} /> },
         { path: '/jobs/:jobId', element: <JobDetailsPage onApply={setSelectedJob} /> },
+        { path: '/career-resources', element: <CareerResourcesPage /> },
         { path: '/:jobSlug', element: <JobDetailsPage onApply={setSelectedJob} /> },
         { path: '/auth', element: <AuthModalPage /> },
         {
@@ -154,7 +156,9 @@ function App() {
         { path: 'resumes', element: <AdminManagementPage type="resumes" /> },
         { path: 'categories', element: <AdminManagementPage type="categories" /> },
         { path: 'locations', element: <AdminManagementPage type="locations" /> },
+        { path: 'career-jobs', element: <AdminManagementPage type="careerJobs" /> },
         { path: 'testimonials', element: <AdminManagementPage type="testimonials" /> },
+        { path: 'video-testimonials', element: <AdminManagementPage type="videoTestimonials" /> },
         { path: 'faqs', element: <AdminManagementPage type="faqs" /> },
         { path: 'hiring-insights', element: <AdminManagementPage type="newsletterSubscribers" /> },
         { path: 'hiring-insights/send', element: <AdminNewsletterSendPage /> },
@@ -163,6 +167,7 @@ function App() {
         { path: 'policy', element: <AdminManagementPage type="contentPages" /> },
         { path: 'policy/users', element: <AdminManagementPage fixedFilters={{ frontendPlacement: 'Users Frontend' }} type="contentPages" /> },
         { path: 'policy/recruiter', element: <AdminManagementPage fixedFilters={{ frontendPlacement: 'Recruiter Frontend' }} type="contentPages" /> },
+        { path: 'policy/freelancer', element: <AdminManagementPage fixedFilters={{ frontendPlacement: 'Freelancer Frontend' }} type="contentPages" /> },
         { path: 'seo-branding', element: <AdminSEOBrandingPage /> },
         { path: 'social-media', element: <AdminSocialMediaPage /> },
         { path: 'payments', element: <Navigate replace to="/admin/payments/transactions" /> },
@@ -375,6 +380,10 @@ function App() {
         { path: '/freelancer/projects/:projectSlug', element: <FreelancerProjectDetailsPage /> },
         { path: '/freelancer-login', element: <AuthPage defaultRole="freelancer" lockRole /> },
         { path: '/freelancer-register', element: <FreelancerRegisterPage /> },
+        { path: '/freelancer/privacy', element: <ContentPage placement="Freelancer Frontend" slug="freelancer-privacy" /> },
+        { path: '/freelancer/terms', element: <ContentPage placement="Freelancer Frontend" slug="freelancer-terms" /> },
+        { path: '/freelancer/support', element: <ContentPage placement="Freelancer Frontend" slug="freelancer-support" /> },
+        { path: '/freelancer/policies/:pageSlug', element: <ContentPage placement="Freelancer Frontend" /> },
       ],
     },
     {

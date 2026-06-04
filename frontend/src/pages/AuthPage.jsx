@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Lock, Mail, MessageCircle, Phone, UserRound } from 'lucide-react'
 import { GoogleAuthButton } from '../components/GoogleAuthButton'
-import { getDashboardPath, normalizeRole } from '../routes/authRouting'
+import { getDashboardPath, normalizeRole, storeAuthSession } from '../routes/authRouting'
 import { api } from '../services/api'
 import { showMessageToast } from '../utils/toast'
 
@@ -60,8 +60,7 @@ const targetRoleSuggestions = [
 ]
 
 function saveSession(payload) {
-  localStorage.setItem('authToken', payload.token)
-  localStorage.setItem('authUser', JSON.stringify({ ...payload.data, role: normalizeRole(payload.data.role) }))
+  storeAuthSession(payload)
 }
 
 export function AuthPage({ defaultMode = 'login', defaultRole = 'Candidate', lockRole = false }) {

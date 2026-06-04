@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, Building2, Clock3, Eye, FileText, IndianRupee, Laptop, Lock, Mail, MapPin, Phone, SearchCheck, ShieldCheck, Sparkles, UserRound, UserRoundCheck, UsersRound, WalletCards, X } from 'lucide-react'
 import { Button } from '../components/Button'
 import { Section } from '../components/Section'
-import { getDashboardPath, normalizeRole } from '../routes/authRouting'
+import { getDashboardPath, storeAuthSession } from '../routes/authRouting'
 import { api } from '../services/api'
 import freelancerHomeHeroImage from '../assets/freelancer-home-hero.png'
 import freelancerProjectsHeroImage from '../assets/freelancer-projects-photo.png'
@@ -400,8 +400,7 @@ function FreelancerRegisterModal({ onClose }) {
         password: form.password,
         role: 'freelancer',
       })
-      localStorage.setItem('authToken', payload.token)
-      localStorage.setItem('authUser', JSON.stringify({ ...payload.data, role: normalizeRole(payload.data.role) }))
+      storeAuthSession(payload)
       onClose()
       navigate(getDashboardPath(payload.data.role))
     } catch (error) {

@@ -67,7 +67,7 @@ export function Layout() {
     ...(showCompaniesNav ? [{ label: 'Companies', to: '/companies' }] : []),
     { label: 'Freelance Projects', to: '/freelancer/projects', badge: 'New' },
     { label: 'Candidates', to: isUserAccount ? '/candidate-dashboard' : '/auth', caption: 'Candidates' },
-    { label: 'Career Resources', to: '/faqs', dropdown: true },
+    { label: 'Career Resources', to: '/career-resources', dropdown: true },
   ]
 
   useEffect(() => {
@@ -195,6 +195,7 @@ export function Layout() {
   const logout = () => {
     localStorage.removeItem('authToken')
     localStorage.removeItem('authUser')
+    localStorage.removeItem('authExpiresAt')
     setUser(null)
     setProfileOpen(false)
     navigate('/auth')

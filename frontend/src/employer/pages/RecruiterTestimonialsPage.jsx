@@ -1,20 +1,29 @@
-import { useEffect, useState } from 'react'
-import { ArrowLeft, ArrowRight, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, ArrowRight, MapPin, Play, Rocket, Star, X } from 'lucide-react'
 import { Button } from '../../components/Button'
 import { api } from '../../services/api'
+import heroImage from '../../assets/enterprise-hiring-banner.png'
+import employerSuiteImage from '../../assets/employer-hiring-suite.png'
+import femaleRecruiterImage from '../../assets/recruiter-female-single.png'
 
 const fallbackVideos = [
   {
     companyName: 'K9HR Solutions',
+    quote: 'Cromgen Rozgar has simplified our hiring process and helped us connect with the right talent faster than ever.',
     location: '150 Feet Ring Road, Rajkot, India',
+    duration: '02:45',
     logoText: 'K9HR',
+    thumbnailUrl: heroImage,
     tone: 'blue',
   },
   {
     companyName: 'Jobsahihai Manpower Solution',
+    quote: 'The platform is easy to use, reliable, and has significantly improved our recruitment efficiency.',
     location: 'Sector 73, Noida, India',
+    duration: '03:12',
     logoText: 'JS',
-    tone: 'stone',
+    thumbnailUrl: employerSuiteImage,
+    tone: 'orange',
   },
 ]
 
@@ -43,76 +52,125 @@ export function RecruiterTestimonialsPage() {
     }
   }, [])
 
-  const visibleVideos = videos.length ? videos : fallbackVideos
+  const visibleVideos = useMemo(() => {
+    const source = videos.length ? videos : fallbackVideos
+    return source.map((item, index) => ({
+      ...fallbackVideos[index % fallbackVideos.length],
+      ...item,
+      quote: item.quote || item.message || item.description || fallbackVideos[index % fallbackVideos.length].quote,
+      duration: item.duration || item.videoDuration || fallbackVideos[index % fallbackVideos.length].duration,
+      tone: item.tone || fallbackVideos[index % fallbackVideos.length].tone,
+    }))
+  }, [videos])
 
   return (
-    <section className="min-h-[calc(100vh-80px)] bg-gradient-to-b from-[#dff4f5] to-[#fff5ee] py-14 sm:py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center justify-center sm:relative">
-          <div className="text-center">
-            <h1 className="text-2xl font-semibold text-[#1f3d68] sm:text-[30px]">Why Companies Choose Us</h1>
-            <p className="mt-3 text-sm font-medium text-slate-600">Video testimonials from recruiter partners using CromGen Rozgar.</p>
+    <main className="overflow-hidden bg-[#f8fbff]">
+      <section className="relative min-h-[calc(100vh-80px)] py-10 sm:py-12">
+        <div className="pointer-events-none absolute left-10 top-28 hidden h-24 w-28 bg-[radial-gradient(circle,#0b5cff_1.5px,transparent_1.5px)] bg-[length:20px_20px] opacity-25 lg:block" />
+        <div className="pointer-events-none absolute right-10 top-[420px] hidden h-28 w-28 bg-[radial-gradient(circle,#ff8a00_1.5px,transparent_1.5px)] bg-[length:20px_20px] opacity-20 lg:block" />
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="relative mx-auto mb-7 max-w-4xl text-center">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-[#e9f1ff] px-5 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#0b5cff] sm:text-sm">
+              <Star size={16} fill="currentColor" />
+              Trusted By Leading Companies
+            </div>
+            <h1 className="mt-3 text-3xl font-black tracking-tight text-[#061333] sm:text-4xl lg:text-5xl">
+              Why Companies Choose Us
+            </h1>
+            <p className="mx-auto mt-3 max-w-2xl text-base font-medium leading-7 text-slate-600 sm:text-lg">
+              Hear from organizations that have transformed their hiring experience with Cromgen Rozgar.
+            </p>
           </div>
-          <div className="absolute right-4 hidden items-center gap-3 sm:flex lg:right-8">
-            <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-300 bg-white/60 text-slate-500 transition hover:border-[#ff8a00] hover:text-[#ff8a00]" type="button" aria-label="Previous video testimonial">
-              <ArrowLeft size={16} />
+
+          <div className="absolute right-8 top-12 hidden items-center gap-4 lg:flex">
+            <button className="grid h-12 w-12 place-items-center rounded-full border border-slate-200 bg-white text-[#061333] shadow-lg shadow-slate-200/80 transition hover:border-[#0b5cff] hover:text-[#0b5cff]" type="button" aria-label="Previous video testimonial">
+              <ArrowLeft size={22} />
             </button>
-            <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-500 bg-white text-slate-700 transition hover:border-[#ff8a00] hover:text-[#ff8a00]" type="button" aria-label="Next video testimonial">
-              <ArrowRight size={16} />
+            <button className="grid h-12 w-12 place-items-center rounded-full bg-[#0b5cff] text-white shadow-lg shadow-blue-200 transition hover:bg-[#0046d6]" type="button" aria-label="Next video testimonial">
+              <ArrowRight size={22} />
             </button>
+          </div>
+
+          {loading ? (
+            <div className="grid gap-6 lg:grid-cols-2">
+              {[1, 2].map((item) => <div className="h-[385px] animate-pulse rounded-[8px] bg-white shadow-xl shadow-slate-200/70" key={item} />)}
+            </div>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-2">
+              {visibleVideos.map((item) => <VideoCard item={item} key={item._id || item.companyName} onPlay={() => setActiveVideo(item)} />)}
+            </div>
+          )}
+
+          <div className="mt-8 text-center">
+            <Button className="recruiter-video-testimonial-btn min-h-11 px-8 shadow-lg ring-0" to="/recruiter" variant="secondary">
+              <ArrowLeft size={18} />
+              Back To Recruiter Page
+            </Button>
+          </div>
+
+          <div className="relative mt-9 min-h-[150px] overflow-hidden rounded-[8px] bg-gradient-to-r from-[#0758e7] via-[#2456c6] to-[#ff7a00] px-6 py-7 text-white shadow-xl shadow-blue-200/60 sm:px-10">
+            <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[40%] bg-[radial-gradient(circle_at_70%_50%,rgba(255,255,255,0.28),transparent_32%)] lg:block" />
+            <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-40 bg-[radial-gradient(circle,rgba(255,255,255,0.18)_1.5px,transparent_1.5px)] bg-[length:18px_18px] opacity-60" />
+            <img
+              className="pointer-events-none absolute bottom-0 right-2 hidden max-h-[185px] w-auto object-contain lg:block"
+              src={femaleRecruiterImage}
+              alt=""
+              aria-hidden="true"
+            />
+            <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:pr-[260px]">
+              <div className="flex min-w-0 items-center gap-5">
+                <span className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-white/12 text-white ring-1 ring-white/15">
+                  <Rocket size={38} fill="currentColor" />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-black tracking-tight sm:text-3xl">Start Hiring Smarter Today</h2>
+                  <p className="mt-2 max-w-xl text-base font-medium leading-7 text-blue-50">
+                    Post jobs, connect with skilled professionals, and grow your team faster.
+                  </p>
+                </div>
+              </div>
+              <Button className="recruiter-cta-primary-btn min-h-14 shrink-0 px-8 shadow-xl ring-0" to="/recruiter-register" variant="secondary">
+                Post Your First Job
+                <ArrowRight size={22} />
+              </Button>
+            </div>
           </div>
         </div>
 
-        {loading ? (
-          <div className="grid gap-5 md:grid-cols-2">
-            {[1, 2].map((item) => <div className="h-[390px] animate-pulse rounded-[6px] bg-white shadow-md" key={item} />)}
-          </div>
-        ) : (
-          <div className={`grid gap-5 ${visibleVideos.length === 2 ? 'md:grid-cols-2 md:px-28' : 'md:grid-cols-3'}`}>
-            {visibleVideos.map((item, index) => (
-              <VideoCard item={item} key={item._id || item.companyName} onPlay={() => setActiveVideo(item)} showSideShade={index > 0} />
-            ))}
-          </div>
-        )}
-
-        <div className="mt-12 text-center">
-          <Button className="min-h-11 border border-[#ff8a00] bg-white px-8 !text-black shadow-none hover:bg-[#fff4e6]" to="/recruiter" variant="secondary">
-            Back To Recruiter Page
-          </Button>
-        </div>
-      </div>
-
-      {activeVideo && <VideoTestimonialModal item={activeVideo} onClose={() => setActiveVideo(null)} />}
-    </section>
+        {activeVideo && <VideoTestimonialModal item={activeVideo} onClose={() => setActiveVideo(null)} />}
+      </section>
+    </main>
   )
 }
 
-function VideoCard({ item, onPlay, showSideShade = false }) {
+function VideoCard({ item, onPlay }) {
+  const tone = getVideoTone(item.tone)
+
   return (
-    <article className="overflow-hidden rounded-[6px] bg-white shadow-md shadow-slate-300/60">
-      <button className={`relative block h-[300px] w-full overflow-hidden bg-gradient-to-br ${getVideoToneClass(item.tone)} md:h-[300px]`} onClick={onPlay} type="button">
+    <article className={`overflow-hidden rounded-[8px] border border-slate-100 bg-white shadow-xl shadow-slate-200/70 ${tone.border}`}>
+      <button className="relative block h-[210px] w-full overflow-hidden bg-slate-900 text-left sm:h-[230px]" onClick={onPlay} type="button">
         {item.thumbnailUrl ? (
           <img className="h-full w-full object-cover" src={item.thumbnailUrl} alt={`${item.companyName} video testimonial`} />
         ) : (
-          <>
-            <div className="absolute inset-x-0 top-0 mx-auto h-full w-[56%] bg-white/10" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.38),transparent_30%)]" />
-          </>
+          <div className={`h-full w-full bg-gradient-to-br ${tone.fallback}`} />
         )}
-        <div className="absolute left-1/2 top-1/2 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white shadow-lg">
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-[#ff0033] text-white">
-            <span className="ml-0.5 h-0 w-0 border-y-[7px] border-l-[11px] border-y-transparent border-l-white" />
-          </span>
+        <div className="absolute inset-0 bg-slate-950/30" />
+        <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-slate-950/55 px-3 py-2 text-sm font-black text-white shadow backdrop-blur">
+          <Play size={14} fill="currentColor" />
+          {item.duration || '02:45'}
         </div>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 rounded-[4px] bg-white/90 px-5 py-3 text-center shadow-sm">
-          <p className="text-3xl font-black tracking-tight text-[#1d7fbf]">{item.logoText || getInitials(item.companyName)}</p>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Solutions</p>
-        </div>
-        {showSideShade && <div className="absolute inset-y-0 left-0 w-28 bg-black/40" />}
+        <span className="absolute left-1/2 top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white shadow-xl shadow-slate-950/20">
+          <Play className={tone.text} size={32} fill="currentColor" />
+        </span>
       </button>
-      <div className="bg-white px-4 py-4 text-center">
-        <h3 className="text-lg font-normal text-[#333]">{item.companyName}</h3>
-        <p className="mt-2 text-sm font-normal text-[#e33113]">{item.location}</p>
+      <div className="px-6 py-5">
+        <h3 className="text-xl font-black text-[#061333]">{item.companyName}</h3>
+        <p className="mt-2 text-base font-medium leading-7 text-slate-600">"{item.quote}"</p>
+        <p className={`mt-4 flex items-center gap-2 text-sm font-black ${tone.text}`}>
+          <MapPin size={17} fill="currentColor" />
+          <span className="text-slate-600">{item.location}</span>
+        </p>
       </div>
     </article>
   )
@@ -137,8 +195,8 @@ function VideoTestimonialModal({ item, onClose }) {
           ) : (
             <div className="grid h-full place-items-center p-8 text-center text-white">
               <div>
-                <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#ff0033]">
-                  <span className="ml-1 h-0 w-0 border-y-[10px] border-l-[16px] border-y-transparent border-l-white" />
+                <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#ff8a00]">
+                  <Play className="ml-1" size={28} fill="currentColor" />
                 </div>
                 <h3 className="mt-5 text-2xl font-black">{item.companyName}</h3>
                 <p className="mt-2 text-sm text-slate-300">Video URL backend mein add karte hi yahan play hoga.</p>
@@ -146,38 +204,55 @@ function VideoTestimonialModal({ item, onClose }) {
             </div>
           )}
         </div>
-        <div className="p-5 text-center">
+        <div className="p-5">
           <h3 className="text-xl font-semibold text-slate-900">{item.companyName}</h3>
-          <p className="mt-1 text-sm text-[#e33113]">{item.location}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">"{item.quote}"</p>
+          <p className="mt-2 text-sm font-semibold text-[#ff6a00]">{item.location}</p>
         </div>
       </div>
     </div>
   )
 }
 
-function getVideoToneClass(tone = 'blue') {
+function getVideoTone(tone = 'blue') {
   const tones = {
-    amber: 'from-zinc-900 via-amber-950 to-zinc-800',
-    blue: 'from-slate-900 via-slate-700 to-slate-950',
-    slate: 'from-slate-950 via-slate-800 to-blue-950',
-    stone: 'from-stone-950 via-stone-700 to-stone-900',
+    amber: {
+      border: 'border-b-4 border-b-[#ff8a00]',
+      fallback: 'from-zinc-900 via-amber-950 to-zinc-800',
+      text: 'text-[#ff6a00]',
+    },
+    blue: {
+      border: 'border-b-4 border-b-[#0b5cff]',
+      fallback: 'from-slate-900 via-blue-950 to-slate-950',
+      text: 'text-[#0b5cff]',
+    },
+    orange: {
+      border: 'border-b-4 border-b-[#ff6a00]',
+      fallback: 'from-stone-950 via-stone-700 to-orange-950',
+      text: 'text-[#ff6a00]',
+    },
+    slate: {
+      border: 'border-b-4 border-b-[#0b5cff]',
+      fallback: 'from-slate-950 via-slate-800 to-blue-950',
+      text: 'text-[#0b5cff]',
+    },
+    stone: {
+      border: 'border-b-4 border-b-[#ff6a00]',
+      fallback: 'from-stone-950 via-stone-700 to-stone-900',
+      text: 'text-[#ff6a00]',
+    },
   }
   return tones[tone] || tones.blue
 }
 
-function getInitials(value = '') {
-  return String(value)
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 4)
-    .toUpperCase()
+function normalizeVideoEmbedUrl(url = '') {
+  if (url.includes('youtube.com/embed/')) return appendVideoParams(url)
+  const youtubeMatch = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/shorts\/)([^&?/]+)/)
+  if (youtubeMatch?.[1]) return `https://www.youtube.com/embed/${youtubeMatch[1]}?autoplay=1&rel=0`
+  return url
 }
 
-function normalizeVideoEmbedUrl(url = '') {
-  if (url.includes('youtube.com/embed/')) return url
-  const youtubeMatch = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&?/]+)/)
-  if (youtubeMatch?.[1]) return `https://www.youtube.com/embed/${youtubeMatch[1]}`
-  return url
+function appendVideoParams(url = '') {
+  const separator = url.includes('?') ? '&' : '?'
+  return `${url}${separator}autoplay=1&rel=0`
 }
