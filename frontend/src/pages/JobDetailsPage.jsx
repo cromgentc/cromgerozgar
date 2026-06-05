@@ -143,12 +143,12 @@ export function JobDetailsPage({ onApply }) {
   }
 
   const overviewItems = [
-    [MapPin, 'Location', displayLocation],
-    [Wallet, 'Salary', job.salary],
-    [Briefcase, 'Experience', job.experience],
     [Monitor, 'Job Type', job.type],
     [CalendarDays, 'Posted', job.posted],
     [CalendarDays, 'Deadline', job.deadline],
+    [Building2, 'Company', job.company],
+    [Briefcase, 'Department', job.department],
+    [MapPin, 'Work Mode', job.workMode],
   ]
   const sections = [
     ['Job Description', [job.description], FileText],
@@ -160,44 +160,53 @@ export function JobDetailsPage({ onApply }) {
 
   return (
     <section className="overflow-x-hidden bg-[#f6f9fc] pb-24 sm:pb-16">
-      <div className="border-b border-blue-100 bg-white">
-        <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-[8px] bg-[linear-gradient(135deg,#061333_0%,#0057B8_58%,#0EA5E9_100%)] shadow-2xl shadow-blue-200/60">
-            <div className="grid gap-6 p-5 text-white sm:p-8 lg:grid-cols-[1fr_320px] lg:items-end">
+      <div className="border-b border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f4f8ff_100%)]">
+        <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-xl shadow-blue-100/50">
+            <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[1fr_330px] lg:items-stretch">
               <div className="min-w-0">
                 <div className="flex items-start gap-4">
-                  <div className="grid h-16 w-16 shrink-0 place-items-center rounded-[8px] bg-white text-xl font-black uppercase text-[#0057B8] shadow-xl shadow-slate-950/10">
+                  <div className="grid h-16 w-16 shrink-0 place-items-center rounded-[8px] bg-[linear-gradient(135deg,#0057B8,#0EA5E9)] text-xl font-black uppercase text-white shadow-lg shadow-blue-100">
                     {job.companyLogo || String(job.company || job.title || 'CR').slice(0, 2).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-black text-blue-100">{job.company || 'Cromgen Rozgar partner'}</p>
-                    <h1 className="mt-2 text-3xl font-black leading-tight sm:text-5xl">{job.title}</h1>
+                    <p className="truncate text-sm font-black text-[#0057B8]">{job.company || 'Cromgen Rozgar partner'}</p>
+                    <h1 className="mt-2 text-3xl font-black leading-tight text-slate-950 sm:text-5xl">{job.title}</h1>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {job.featured && <span className="rounded-[7px] bg-white/15 px-3 py-1 text-xs font-black text-white ring-1 ring-white/20">Featured</span>}
-                      {job.urgent && <span className="rounded-[7px] bg-orange-400 px-3 py-1 text-xs font-black text-slate-950">Urgent hiring</span>}
-                      <span className="rounded-[7px] bg-emerald-300 px-3 py-1 text-xs font-black text-emerald-950">{job.workMode || 'Work mode'}</span>
+                      {job.featured && <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100">Featured</span>}
+                      {job.urgent && <span className="rounded-[7px] bg-orange-50 px-3 py-1 text-xs font-black text-orange-700 ring-1 ring-orange-100">Urgent hiring</span>}
+                      <span className="rounded-[7px] bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">{job.workMode || 'Work mode'}</span>
                     </div>
                   </div>
                 </div>
-                <p className="mt-6 max-w-3xl text-sm font-semibold leading-7 text-blue-50 sm:text-base">
+                <p className="mt-6 max-w-3xl text-sm font-semibold leading-7 text-slate-600 sm:text-base">
                   {job.description || 'Review this opening, check the role details, and apply with your candidate profile.'}
                 </p>
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  <MiniHeroMetric icon={MapPin} label="Location" value={displayLocation} />
+                  <MiniHeroMetric icon={Wallet} label="Salary" value={job.salary} />
+                  <MiniHeroMetric icon={Briefcase} label="Experience" value={job.experience} />
+                </div>
               </div>
 
-              <div className="rounded-[8px] bg-white/10 p-4 ring-1 ring-white/20 backdrop-blur">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-100">Quick action</p>
+              <div className="flex flex-col justify-between rounded-[8px] border border-blue-100 bg-[#f8fbff] p-5">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0057B8]">Quick action</p>
+                  <h2 className="mt-2 text-xl font-black text-slate-950">Apply for this role</h2>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">Submit your candidate profile and track the application from your dashboard.</p>
+                </div>
                 <button
-                  className="mt-3 inline-flex min-h-12 w-full items-center justify-center rounded-[7px] bg-[#ff8a00] px-5 text-sm font-black text-white shadow-xl shadow-slate-950/20 transition hover:bg-[#e87900]"
+                  className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-[7px] bg-[#0057B8] px-5 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:bg-[#004694]"
                   onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}
                   type="button"
                 >
                   {alreadyApplied ? 'Already Applied' : 'Apply Now'}
                 </button>
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] bg-white/10 px-3 text-xs font-black text-white ring-1 ring-white/20 hover:bg-white/15" onClick={saveJob} type="button">
+                  <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] bg-white px-3 text-xs font-black text-slate-700 ring-1 ring-slate-200 hover:bg-blue-50 hover:text-blue-700" onClick={saveJob} type="button">
                     <Bookmark fill={saved ? 'currentColor' : 'none'} size={16} /> {saved ? 'Saved' : 'Save'}
                   </button>
-                  <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] bg-white/10 px-3 text-xs font-black text-white ring-1 ring-white/20 hover:bg-white/15" onClick={() => setShareOpen(true)} type="button">
+                  <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] bg-white px-3 text-xs font-black text-slate-700 ring-1 ring-slate-200 hover:bg-orange-50 hover:text-orange-700" onClick={() => setShareOpen(true)} type="button">
                     <Share2 size={16} /> Share
                   </button>
                 </div>
@@ -299,6 +308,18 @@ function JobInfoTile({ icon: Icon, label, value }) {
           <p className="mt-1 break-words text-sm font-black text-slate-900">{value || 'Not specified'}</p>
         </div>
       </div>
+    </div>
+  )
+}
+
+function MiniHeroMetric({ icon: Icon, label, value }) {
+  return (
+    <div className="min-w-0 rounded-[7px] bg-slate-50 p-3 ring-1 ring-slate-100">
+      <div className="flex items-center gap-2">
+        <Icon className="shrink-0 text-[#0057B8]" size={16} />
+        <p className="truncate text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
+      </div>
+      <p className="mt-2 truncate text-sm font-black text-slate-900">{value || 'Not specified'}</p>
     </div>
   )
 }
