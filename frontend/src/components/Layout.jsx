@@ -1018,77 +1018,77 @@ function FooterColumn({ title, links }) {
 function AppDownloadPopup({ branding = {}, onClose }) {
   const playStoreLink = branding.playStoreLink || 'https://play.google.com/store'
   const appStoreLink = branding.appStoreLink || playStoreLink
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=16&data=${encodeURIComponent(playStoreLink)}`
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=12&data=${encodeURIComponent(playStoreLink)}`
 
   return (
-    <div className="fixed inset-0 z-[110] grid place-items-center bg-slate-950/35 px-3 py-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-6xl overflow-hidden rounded-[22px] bg-white shadow-2xl shadow-slate-950/20">
-        <div className="absolute left-0 top-0 flex min-h-[88px] w-[60%] items-center gap-5 rounded-br-[58px] bg-gradient-to-r from-[#1677ff] to-[#5b31f3] px-7 text-white sm:min-h-[102px] sm:px-11">
-          <Phone className="shrink-0" size={42} />
-          <h2 className="text-xl font-black tracking-tight sm:text-3xl">{branding.appDownloadTitle || 'Download the Cromgen Rozgar App'}</h2>
+    <div className="fixed inset-0 z-[110] grid place-items-center overflow-y-auto bg-slate-950/35 px-3 py-3 backdrop-blur-sm sm:py-4">
+      <div className="relative my-auto max-h-[calc(100vh-24px)] w-full max-w-[420px] overflow-y-auto overflow-x-hidden rounded-[18px] bg-white shadow-2xl shadow-slate-950/20 sm:max-h-[calc(100vh-32px)] sm:max-w-6xl sm:rounded-[22px]">
+        <div className="relative flex min-h-[74px] w-[calc(100%-68px)] items-center gap-3 rounded-br-[34px] bg-gradient-to-r from-[#1677ff] to-[#5b31f3] px-4 pr-5 text-white sm:absolute sm:left-0 sm:top-0 sm:min-h-[102px] sm:w-[60%] sm:gap-5 sm:rounded-br-[58px] sm:px-11">
+          <Phone className="shrink-0" size={32} />
+          <h2 className="text-lg font-black leading-tight tracking-tight sm:text-3xl">{branding.appDownloadTitle || 'Download the Cromgen Rozgar App'}</h2>
         </div>
         <button
           aria-label="Close app download popup"
-          className="absolute right-5 top-5 grid h-14 w-14 place-items-center rounded-full bg-white text-[#07113f] shadow-xl shadow-slate-200 transition hover:bg-slate-50 sm:h-16 sm:w-16"
+          className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-[#005bbb] text-white shadow-xl shadow-blue-200 transition hover:bg-[#004a99] sm:right-5 sm:top-5 sm:h-16 sm:w-16"
           onClick={onClose}
           type="button"
         >
-          <X size={34} />
+          <X size={26} />
         </button>
 
-        <div className="grid gap-8 px-5 pb-8 pt-32 sm:px-10 sm:pt-40 lg:grid-cols-[0.42fr_0.58fr] lg:gap-10">
+        <div className="grid gap-5 px-4 pb-5 pt-5 sm:px-10 sm:pb-8 sm:pt-40 lg:grid-cols-[0.42fr_0.58fr] lg:gap-10">
           <div className="flex flex-col items-center border-slate-200 lg:border-r lg:pr-10">
-            <a className="relative rounded-[10px] bg-white p-5 shadow-xl shadow-slate-200 ring-2 ring-[#1677ff]" href={playStoreLink} rel="noreferrer" target="_blank">
-              <img className="h-56 w-56 object-contain sm:h-64 sm:w-64" src={qrUrl} alt="Scan QR code to download Cromgen Rozgar app" />
+            <a className="relative rounded-[10px] bg-white p-3 shadow-xl shadow-slate-200 ring-2 ring-[#1677ff] sm:p-5" href={playStoreLink} rel="noreferrer" target="_blank">
+              <img className="h-44 w-44 object-contain sm:h-64 sm:w-64" src={qrUrl} alt="Scan QR code to download Cromgen Rozgar app" />
               {branding.logoUrl && (
-                <span className="absolute left-1/2 top-1/2 grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[14px] bg-white shadow-lg">
-                  <img className="h-12 w-12 object-contain" src={branding.logoUrl} alt="" />
+                <span className="absolute left-1/2 top-1/2 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[12px] bg-white shadow-lg sm:h-16 sm:w-16 sm:rounded-[14px]">
+                  <img className="h-9 w-9 object-contain sm:h-12 sm:w-12" src={branding.logoUrl} alt="" />
                 </span>
               )}
             </a>
-            <p className="mt-7 text-center text-2xl font-black text-[#07113f]">Scan the QR code</p>
-            <p className="mt-2 text-center text-xl font-semibold text-slate-500">to download the app</p>
+            <p className="mt-4 text-center text-xl font-black text-[#07113f] sm:mt-7 sm:text-2xl">Scan the QR code</p>
+            <p className="mt-1 text-center text-base font-semibold text-slate-500 sm:mt-2 sm:text-xl">to download the app</p>
           </div>
 
-          <div className="grid content-center gap-8">
+          <div className="grid content-center gap-5 sm:gap-8">
             <div className="grid grid-cols-2 divide-x divide-slate-200 text-center">
               <div className="px-3">
-                <p className="inline-flex items-center justify-center gap-3 text-4xl font-black text-[#07113f] sm:text-5xl">
+                <p className="inline-flex items-center justify-center gap-2 text-3xl font-black text-[#07113f] sm:gap-3 sm:text-5xl">
                   {branding.appRating || '4.4'}
-                  <Star className="fill-[#ffb000] text-[#ffb000]" size={42} />
+                  <Star className="fill-[#ffb000] text-[#ffb000]" size={30} />
                 </p>
-                <p className="mt-4 text-xl font-semibold text-slate-500">{branding.appReviews || '42K Reviews'}</p>
+                <p className="mt-2 text-sm font-semibold text-slate-500 sm:mt-4 sm:text-xl">{branding.appReviews || '42K Reviews'}</p>
               </div>
               <div className="px-3">
-                <p className="inline-flex items-center justify-center gap-4 text-4xl font-black text-[#07113f] sm:text-5xl">
+                <p className="inline-flex items-center justify-center gap-2 text-3xl font-black text-[#07113f] sm:gap-4 sm:text-5xl">
                   {branding.appDownloads || '50L+'}
-                  <Download className="text-[#365cff]" size={44} />
+                  <Download className="text-[#365cff]" size={32} />
                 </p>
-                <p className="mt-4 text-xl font-semibold text-slate-500">Downloads</p>
+                <p className="mt-2 text-sm font-semibold text-slate-500 sm:mt-4 sm:text-xl">Downloads</p>
               </div>
             </div>
 
             <div>
-              <div className="mb-5 flex items-center justify-center gap-4">
-                <span className="h-px w-28 bg-slate-200" />
-                <p className="text-2xl font-black text-[#07113f]">Available on</p>
-                <span className="h-px w-28 bg-slate-200" />
+              <div className="mb-4 flex items-center justify-center gap-3 sm:mb-5 sm:gap-4">
+                <span className="h-px w-14 bg-slate-200 sm:w-28" />
+                <p className="text-lg font-black text-[#07113f] sm:text-2xl">Available on</p>
+                <span className="h-px w-14 bg-slate-200 sm:w-28" />
               </div>
-              <div className="flex flex-wrap items-center justify-center gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-4">
                 <StoreDownloadButton href={playStoreLink} label="GET IT ON" name="Google Play" play />
                 <StoreDownloadButton href={appStoreLink} label="Download on the" name="App Store" />
               </div>
             </div>
 
-            <div className="grid gap-3 rounded-[12px] bg-[#f0edff] p-5 sm:grid-cols-3">
+            <div className="grid grid-cols-3 gap-2 rounded-[12px] bg-[#f0edff] p-3 sm:gap-3 sm:p-5">
               {[
                 [ShieldCheck, 'Secure & Trusted'],
                 [Sparkles, 'Fast & Easy'],
                 [Bell, 'Always Updated'],
               ].map(([Icon, label]) => (
-                <div className="flex items-center justify-center gap-3 border-slate-200 text-[#07113f] sm:border-r sm:last:border-r-0" key={label}>
-                  <Icon className="text-[#663ff0]" size={34} />
-                  <span className="text-lg font-semibold leading-tight">{label}</span>
+                <div className="flex flex-col items-center justify-center gap-1 border-slate-200 text-center text-[#07113f] sm:flex-row sm:gap-3 sm:border-r sm:last:border-r-0 sm:text-left" key={label}>
+                  <Icon className="text-[#663ff0]" size={24} />
+                  <span className="text-xs font-semibold leading-tight sm:text-lg">{label}</span>
                 </div>
               ))}
             </div>
@@ -1101,15 +1101,15 @@ function AppDownloadPopup({ branding = {}, onClose }) {
 
 function StoreDownloadButton({ href, label, name, play = false }) {
   return (
-    <a className="inline-flex min-h-20 min-w-[230px] items-center justify-center gap-4 rounded-[10px] bg-slate-950 px-6 text-white shadow-lg shadow-slate-200 transition hover:-translate-y-0.5 hover:bg-black" href={href} rel="noreferrer" target="_blank">
+    <a className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-[10px] bg-[#005bbb] px-3 text-white shadow-lg shadow-blue-100 transition hover:-translate-y-0.5 hover:bg-[#004a99] sm:min-h-20 sm:min-w-[230px] sm:gap-4 sm:px-6" href={href} rel="noreferrer" target="_blank">
       {play ? (
-        <span className="h-0 w-0 border-y-[18px] border-l-[30px] border-y-transparent border-l-[#32d06b]" />
+        <span className="h-0 w-0 border-y-[12px] border-l-[20px] border-y-transparent border-l-[#32d06b] sm:border-y-[18px] sm:border-l-[30px]" />
       ) : (
-        <span className="text-4xl font-black">A</span>
+        <span className="text-2xl font-black sm:text-4xl">A</span>
       )}
       <span>
-        <span className="block text-sm font-semibold leading-none">{label}</span>
-        <span className="mt-1 block text-3xl font-black leading-none">{name}</span>
+        <span className="block text-[10px] font-semibold leading-none sm:text-sm">{label}</span>
+        <span className="mt-1 block text-lg font-black leading-none sm:text-3xl">{name}</span>
       </span>
     </a>
   )

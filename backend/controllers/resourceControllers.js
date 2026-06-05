@@ -13,6 +13,7 @@ const Location = require('../models/Location')
 const NewsletterSubscriber = require('../models/NewsletterSubscriber')
 const Payment = require('../models/Payment')
 const PricingPackage = require('../models/PricingPackage')
+const PressNews = require('../models/PressNews')
 const RecruiterDocument = require('../models/RecruiterDocument')
 const Resume = require('../models/Resume')
 const Setting = require('../models/Setting')
@@ -634,6 +635,7 @@ module.exports = {
   }),
   payments: crudController(Payment, { searchFields: ['employer', 'plan', 'invoiceNo', 'status'] }),
   pricingPackages: crudController(PricingPackage, { searchFields: ['name', 'description', 'price', 'badge'] }),
+  pressNews: crudController(PressNews, { searchFields: ['title', 'description', 'excerpt', 'category', 'author', 'location', 'status'] }),
   recruiterDocuments: crudController(RecruiterDocument, {
     searchFields: ['recruiterName', 'recruiterEmail', 'documentType', 'panNumber', 'gstNumber', 'status'],
     beforeCreate: createOrReplaceRecruiterDocument,

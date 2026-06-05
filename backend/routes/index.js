@@ -66,6 +66,7 @@ router.get('/newsletter-updates', protect, authorize('Admin', 'staff', 'hiring',
 router.post('/newsletter-updates/send', protect, authorize('Admin', 'staff', 'hiring', 'account team'), sendNewsletterUpdate)
 router.use('/payments', crudRoutes.protected(controllers.payments))
 router.use('/pricing-packages', crudRoutes.protected(controllers.pricingPackages, { publicRead: true }))
+router.use('/press-news', crudRoutes.protected(controllers.pressNews, { publicRead: true }))
 router.use('/recruiter-package-subscriptions', recruiterPackageRoutes)
 router.use('/recruiter-job-posts', recruiterJobRoutes)
 router.use('/recruiter-documents', crudRoutes.protected(controllers.recruiterDocuments, {

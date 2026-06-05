@@ -95,6 +95,7 @@ const sidebarItems = [
     children: [
       { label: 'Testimonials', to: '/admin/testimonials', icon: Star },
       { label: 'Video Testimonials', to: '/admin/video-testimonials', icon: Star },
+      { label: 'Press / News', to: '/admin/press-news', icon: FileText },
       { label: 'Career Job Posts', to: '/admin/career-jobs', icon: BriefcaseBusiness },
       { label: 'FAQs', to: '/admin/faqs', icon: HelpCircle },
       { label: 'Policy', to: '/admin/policy', icon: FileText },

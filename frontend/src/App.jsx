@@ -161,6 +161,7 @@ function App() {
         { path: 'categories', element: <AdminManagementPage type="categories" /> },
         { path: 'locations', element: <AdminManagementPage type="locations" /> },
         { path: 'career-jobs', element: <AdminManagementPage type="careerJobs" /> },
+        { path: 'press-news', element: <AdminManagementPage type="pressNews" /> },
         { path: 'testimonials', element: <AdminManagementPage type="testimonials" /> },
         { path: 'video-testimonials', element: <AdminManagementPage type="videoTestimonials" /> },
         { path: 'faqs', element: <AdminManagementPage type="faqs" /> },

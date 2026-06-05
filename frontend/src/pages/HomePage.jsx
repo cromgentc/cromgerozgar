@@ -277,6 +277,8 @@ function TrustedByCandidates() {
       Icon: Code2,
     },
   ]
+  const [activeTestimonial, setActiveTestimonial] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
 
   const stats = [
     [UsersRound, '10,000+', 'Happy Candidates', 'blue'],
@@ -284,6 +286,17 @@ function TrustedByCandidates() {
     [BriefcaseBusiness, '500+', 'Top Companies', 'orange'],
     [ThumbsUp, '4.8/5', 'Average Rating', 'purple'],
   ]
+  const visibleTestimonials = testimonials.map((_, index) => testimonials[(activeTestimonial + index) % testimonials.length])
+
+  useEffect(() => {
+    if (isPaused || testimonials.length < 2) return undefined
+
+    const sliderTimer = window.setInterval(() => {
+      setActiveTestimonial((current) => (current + 1) % testimonials.length)
+    }, 3200)
+
+    return () => window.clearInterval(sliderTimer)
+  }, [isPaused, testimonials.length])
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_52%,#fff4e6_100%)] py-10 sm:py-12">
@@ -301,37 +314,56 @@ function TrustedByCandidates() {
           Real feedback, success stories, and platform experiences shared by professionals using <span className="font-black text-blue-600">Cromgen Rozgar.</span>
         </p>
 
-        <div className="mt-6 grid gap-4 text-left lg:grid-cols-3">
-          {testimonials.map(({ Icon, accent, avatar, name, quote, role }) => (
-            <article className="rounded-[12px] border border-blue-100 bg-white/90 p-4 shadow-lg shadow-blue-100/50 backdrop-blur" key={name}>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className={`grid h-14 w-14 place-items-center rounded-full text-base font-black ${getCandidateAccentClasses(accent).avatar}`}>
-                  {avatar}
-                </div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">
-                  <ShieldCheck size={15} /> Verified Candidate
-                </span>
-              </div>
-              <div className="mt-4 flex items-center gap-1 text-[#ffb000]">
-                {Array.from({ length: 5 }).map((_, index) => <Star className="fill-current" key={index} size={15} />)}
-                <span className="ml-2 text-sm font-black text-slate-800">5.0</span>
-                <Quote className="ml-auto text-blue-100" size={24} />
-              </div>
-              <p className="mt-4 min-h-[72px] text-sm font-semibold leading-6 text-slate-700">{quote}</p>
-              <div className="mt-4 border-t border-slate-200 pt-4">
-                <div className="flex items-center gap-3">
-                  <span className={`grid h-11 w-11 place-items-center rounded-[12px] ${getCandidateAccentClasses(accent).icon}`}>
-                    <Icon size={20} />
+        <div className="mt-6 overflow-hidden" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
+          <motion.div
+            animate={{ opacity: 1, x: 0 }}
+            className="grid gap-4 text-left lg:grid-cols-3"
+            initial={{ opacity: 0, x: 26 }}
+            key={activeTestimonial}
+            transition={{ duration: 0.45, ease: 'easeOut' }}
+          >
+            {visibleTestimonials.map(({ Icon, accent, avatar, name, quote, role }) => (
+              <article className="rounded-[12px] border border-blue-100 bg-white/90 p-4 shadow-lg shadow-blue-100/50 backdrop-blur" key={name}>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className={`grid h-14 w-14 place-items-center rounded-full text-base font-black ${getCandidateAccentClasses(accent).avatar}`}>
+                    {avatar}
+                  </div>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">
+                    <ShieldCheck size={15} /> Verified Candidate
                   </span>
-                  <div>
-                    <h3 className="text-base font-black text-slate-950">{name}</h3>
-                    <p className="text-xs font-bold text-slate-500">{role}</p>
-                    <p className="mt-0.5 text-xs font-black text-blue-600">Cromgen Rozgar Candidate</p>
+                </div>
+                <div className="mt-4 flex items-center gap-1 text-[#ffb000]">
+                  {Array.from({ length: 5 }).map((_, index) => <Star className="fill-current" key={index} size={15} />)}
+                  <span className="ml-2 text-sm font-black text-slate-800">5.0</span>
+                  <Quote className="ml-auto text-blue-100" size={24} />
+                </div>
+                <p className="mt-4 min-h-[72px] text-sm font-semibold leading-6 text-slate-700">{quote}</p>
+                <div className="mt-4 border-t border-slate-200 pt-4">
+                  <div className="flex items-center gap-3">
+                    <span className={`grid h-11 w-11 place-items-center rounded-[12px] ${getCandidateAccentClasses(accent).icon}`}>
+                      <Icon size={20} />
+                    </span>
+                    <div>
+                      <h3 className="text-base font-black text-slate-950">{name}</h3>
+                      <p className="text-xs font-bold text-slate-500">{role}</p>
+                      <p className="mt-0.5 text-xs font-black text-blue-600">Cromgen Rozgar Candidate</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))}
+          </motion.div>
+          <div className="mt-4 flex justify-center gap-2">
+            {testimonials.map(({ name }, index) => (
+              <button
+                aria-label={`Show ${name} testimonial`}
+                className={`h-2.5 rounded-full transition-all ${activeTestimonial === index ? 'w-8 bg-[#ff8a00]' : 'w-2.5 bg-blue-200 hover:bg-blue-400'}`}
+                key={name}
+                onClick={() => setActiveTestimonial(index)}
+                type="button"
+              />
+            ))}
+          </div>
         </div>
 
         <div className="mt-6 rounded-[12px] border border-blue-100 bg-white/90 p-3 shadow-lg shadow-blue-100/50 backdrop-blur">

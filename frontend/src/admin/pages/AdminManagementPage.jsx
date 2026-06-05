@@ -560,6 +560,49 @@ const configs = {
       requirements: splitAdminList(form.requirements),
     }),
   },
+  pressNews: {
+    resource: 'press-news',
+    title: 'Press / News Posts',
+    subtitle: 'Manage press releases, company announcements, media notes, and news cards displayed on Press / News.',
+    actionLabel: 'Add Press Post',
+    modalTitle: 'Add / Edit Press News',
+    extra: 'Publish',
+    statusOptions: ['Active', 'Inactive', 'Draft'],
+    columns: [
+      { key: '_id', label: 'Post ID' },
+      { key: 'title', label: 'Title' },
+      { key: 'category', label: 'Category', badge: true },
+      { key: 'author', label: 'Author' },
+      { key: 'publishedAt', label: 'Published' },
+      { key: 'featured', label: 'Featured', badge: true },
+      { key: 'status', label: 'Status', badge: true },
+      { key: 'createdAt', label: 'Created' },
+    ],
+    fields: [
+      ['title', 'Post title'],
+      ['category', 'Category'],
+      ['imageUrl', 'Image URL'],
+      ['publishedAt', 'Published date'],
+      ['author', 'Author / team'],
+      ['location', 'Location'],
+      ['sourceName', 'Source name'],
+      ['sourceUrl', 'Source URL'],
+      ['sortOrder', 'Sort order', 'number'],
+      ['featured', 'Featured', 'featuredToggle'],
+      ['status', 'Status'],
+      ['excerpt', 'Short excerpt', 'textarea'],
+      ['description', 'Post description', 'textarea'],
+    ],
+    required: ['title', 'description', 'status'],
+    transform: (form) => ({
+      ...form,
+      sortOrder: Number(form.sortOrder || 0),
+      featured: ['true', 'Yes', 'Featured', true].includes(form.featured),
+      category: form.category || 'Company News',
+      author: form.author || 'Cromgen Rozgar Team',
+      status: form.status || 'Active',
+    }),
+  },
   faqs: {
     resource: 'faqs',
     title: 'FAQ Management',
@@ -692,7 +735,7 @@ const configs = {
 }
 
 const accessByRole = {
-  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'freelancerProfiles', 'categories', 'locations', 'payments', 'paymentLogs', 'contentPages', 'testimonials', 'videoTestimonials', 'careerJobs', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
+  Admin: ['users', 'jobs', 'companies', 'employers', 'recruiterDocuments', 'candidates', 'applications', 'resumes', 'freelancerProfiles', 'categories', 'locations', 'payments', 'paymentLogs', 'contentPages', 'testimonials', 'videoTestimonials', 'careerJobs', 'pressNews', 'faqs', 'newsletterSubscribers', 'supportMessages', 'reports', 'settings'],
   staff: [],
   recruiter: [],
   users: [],
@@ -702,7 +745,7 @@ const accessByRole = {
 
 const fieldOptions = {
   role: ['users', 'Admin', 'staff', 'recruiter', 'freelancer', 'hiring', 'account team'],
-  status: ['Active', 'Review', 'Inactive', 'Pending', 'Approved', 'Rejected', 'Suspended', 'Blocked', 'Open', 'Closed', 'New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected'],
+  status: ['Active', 'Review', 'Inactive', 'Draft', 'Pending', 'Approved', 'Rejected', 'Suspended', 'Blocked', 'Open', 'Closed', 'New', 'Reviewed', 'Shortlisted', 'Interview', 'Selected'],
   userStatus: ['Review', 'Active', 'Inactive', 'Suspend'],
   documentType: ['GST', 'Offer Letter', 'Aadhar Card'],
   testimonialType: ['Candidate', 'Recruiter', 'Company', 'Admin'],
