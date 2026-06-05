@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { Bookmark, Briefcase, CalendarDays, Copy, Mail, MapPin, MessageCircle, Monitor, Send, Share2, Wallet, X } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Bookmark, Briefcase, Building2, CalendarDays, CheckCircle2, Copy, FileText, Mail, MapPin, MessageCircle, Monitor, Send, Share2, ShieldCheck, Wallet, X } from 'lucide-react'
 import { Button } from '../components/Button'
-import { JobCard } from '../components/JobCard'
 import { useApiResource } from '../hooks/useApiResource'
 import { api } from '../services/api'
 import { canSaveJobs, isJobSaved, toggleSavedJob } from '../utils/savedJobs'
 import { getStoredUser } from '../routes/authRouting'
 import { isSameAppliedJob } from '../utils/candidateActivity'
-import { extractJobIdFromSlug, findJobByRouteValue } from '../utils/jobRoutes'
+import { createJobDetailPath, extractJobIdFromSlug, findJobByRouteValue } from '../utils/jobRoutes'
 import { formatStateCountryLocation } from '../utils/locationDisplay'
 
 export function JobDetailsPage({ onApply }) {
@@ -143,84 +142,122 @@ export function JobDetailsPage({ onApply }) {
     setSaved(result.saved)
   }
 
-  return (
-    <section className="overflow-x-hidden pb-24 pt-3 sm:py-14">
-      <div className="mx-auto w-full max-w-7xl px-0 sm:px-6 lg:px-8">
-        <div className="grid gap-5 lg:grid-cols-[1fr_360px] lg:gap-6">
-          <article className="overflow-hidden rounded-none border-y border-slate-200 bg-white p-4 shadow-sm sm:rounded-[7px] sm:border sm:p-8">
-            <div className="flex items-start gap-3 sm:gap-5">
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[7px] bg-gradient-to-br from-blue-600 to-teal-400 text-lg font-black text-white shadow-lg shadow-blue-100 sm:h-16 sm:w-16 sm:text-xl">{job.companyLogo}</div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-bold text-blue-600 sm:text-sm">{job.company}</p>
-                <h1 className="mt-1 text-2xl font-black leading-tight text-slate-950 sm:mt-2 sm:text-5xl">{job.title}</h1>
-                <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
-                  {job.featured && <span className="badge-blue">Featured</span>}
-                  {job.urgent && <span className="badge-rose">Urgent hiring</span>}
-                  <span className="badge-teal">{job.workMode}</span>
-                </div>
-              </div>
-            </div>
+  const overviewItems = [
+    [MapPin, 'Location', displayLocation],
+    [Wallet, 'Salary', job.salary],
+    [Briefcase, 'Experience', job.experience],
+    [Monitor, 'Job Type', job.type],
+    [CalendarDays, 'Posted', job.posted],
+    [CalendarDays, 'Deadline', job.deadline],
+  ]
+  const sections = [
+    ['Job Description', [job.description], FileText],
+    ['Responsibilities', job.responsibilities, CheckCircle2],
+    ['Requirements', job.requirements, ShieldCheck],
+    ['Benefits', job.benefits, Wallet],
+    ['About Company', [job.aboutCompany], Building2],
+  ]
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:gap-3 lg:grid-cols-4">
-              {[
-                [MapPin, displayLocation],
-                [Wallet, job.salary],
-                [Briefcase, job.experience],
-                [Monitor, job.type],
-                [CalendarDays, `Posted ${job.posted}`],
-                [CalendarDays, `Deadline ${job.deadline}`],
-              ].map(([Icon, text], index) => (
-                <div className="min-w-0 rounded-[7px] bg-slate-50 p-3 text-xs font-semibold text-slate-600 sm:p-4 sm:text-sm" key={`job-meta-${index}-${text || 'empty'}`}>
-                  <Icon className="mb-2 text-blue-600" size={18} />
-                  <span className="block truncate">{text || 'Not specified'}</span>
+  return (
+    <section className="overflow-x-hidden bg-[#f6f9fc] pb-24 sm:pb-16">
+      <div className="border-b border-blue-100 bg-white">
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+          <div className="overflow-hidden rounded-[8px] bg-[linear-gradient(135deg,#061333_0%,#0057B8_58%,#0EA5E9_100%)] shadow-2xl shadow-blue-200/60">
+            <div className="grid gap-6 p-5 text-white sm:p-8 lg:grid-cols-[1fr_320px] lg:items-end">
+              <div className="min-w-0">
+                <div className="flex items-start gap-4">
+                  <div className="grid h-16 w-16 shrink-0 place-items-center rounded-[8px] bg-white text-xl font-black uppercase text-[#0057B8] shadow-xl shadow-slate-950/10">
+                    {job.companyLogo || String(job.company || job.title || 'CR').slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-blue-100">{job.company || 'Cromgen Rozgar partner'}</p>
+                    <h1 className="mt-2 text-3xl font-black leading-tight sm:text-5xl">{job.title}</h1>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {job.featured && <span className="rounded-[7px] bg-white/15 px-3 py-1 text-xs font-black text-white ring-1 ring-white/20">Featured</span>}
+                      {job.urgent && <span className="rounded-[7px] bg-orange-400 px-3 py-1 text-xs font-black text-slate-950">Urgent hiring</span>}
+                      <span className="rounded-[7px] bg-emerald-300 px-3 py-1 text-xs font-black text-emerald-950">{job.workMode || 'Work mode'}</span>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2 sm:mt-7">
-              {(job.skills || []).filter(Boolean).map((item, index) => <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700" key={`skill-${index}-${item}`}>{item}</span>)}
-            </div>
-            {[
-              ['Job Description', [job.description]],
-              ['Responsibilities', job.responsibilities],
-              ['Requirements', job.requirements],
-              ['Benefits', job.benefits],
-              ['About Company', [job.aboutCompany]],
-            ].map(([title, items]) => (
-              <section className="mt-7 sm:mt-9" key={title}>
-                <h2 className="text-xl font-black text-slate-950 sm:text-2xl">{title}</h2>
-                <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:mt-4 sm:gap-3 sm:text-base">
-                  {(items || []).filter(Boolean).map((item, index) => <p className="rounded-[7px] bg-slate-50 p-3 leading-6 sm:p-4 sm:leading-7" key={`${title}-${index}`}>{item}</p>)}
-                  {!(items || []).filter(Boolean).length && <p className="rounded-[7px] bg-slate-50 p-3 leading-6 sm:p-4 sm:leading-7">Not added</p>}
+                <p className="mt-6 max-w-3xl text-sm font-semibold leading-7 text-blue-50 sm:text-base">
+                  {job.description || 'Review this opening, check the role details, and apply with your candidate profile.'}
+                </p>
+              </div>
+
+              <div className="rounded-[8px] bg-white/10 p-4 ring-1 ring-white/20 backdrop-blur">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-100">Quick action</p>
+                <button
+                  className="mt-3 inline-flex min-h-12 w-full items-center justify-center rounded-[7px] bg-[#ff8a00] px-5 text-sm font-black text-white shadow-xl shadow-slate-950/20 transition hover:bg-[#e87900]"
+                  onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}
+                  type="button"
+                >
+                  {alreadyApplied ? 'Already Applied' : 'Apply Now'}
+                </button>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] bg-white/10 px-3 text-xs font-black text-white ring-1 ring-white/20 hover:bg-white/15" onClick={saveJob} type="button">
+                    <Bookmark fill={saved ? 'currentColor' : 'none'} size={16} /> {saved ? 'Saved' : 'Save'}
+                  </button>
+                  <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[7px] bg-white/10 px-3 text-xs font-black text-white ring-1 ring-white/20 hover:bg-white/15" onClick={() => setShareOpen(true)} type="button">
+                    <Share2 size={16} /> Share
+                  </button>
                 </div>
-              </section>
-            ))}
-          </article>
-          <aside className="hidden h-max lg:sticky lg:top-24 lg:block">
-            <div className="rounded-[7px] border border-slate-200 bg-white p-5 shadow-xl shadow-blue-100/50">
-              <h2 className="text-xl font-black text-slate-950">Apply for this role</h2>
-              <p className="mt-2 text-sm text-slate-500">Submit your profile before {job.deadline}.</p>
-              <Button className="mt-5 w-full" onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}>
-                {alreadyApplied ? 'Already Applied' : 'Apply Now'}
-              </Button>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <Button onClick={saveJob} variant={saved ? 'primary' : 'secondary'}><Bookmark fill={saved ? 'currentColor' : 'none'} size={17} /> {saved ? 'Saved' : 'Save'}</Button>
-                <Button onClick={() => setShareOpen(true)} variant="secondary"><Share2 size={17} /> Share</Button>
               </div>
             </div>
-            <div className="mt-5 rounded-[7px] border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-xl font-black text-slate-950">Similar Jobs</h2>
-              {similarLoading ? (
-                <p className="mt-5 rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500">Finding related jobs...</p>
-              ) : similarJobs.length ? (
-                <div className="mt-5 grid gap-4">
-                  {similarJobs.map((item) => <JobCard denseMobile job={item} key={item._id || item.id} onApply={onApply} />)}
-                </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
+        <main className="min-w-0">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {overviewItems.map(([Icon, label, value]) => <JobInfoTile icon={Icon} key={label} label={label} value={value} />)}
+          </div>
+
+          <div className="mt-5 rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-black text-slate-950">Required skills</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {(job.skills || []).filter(Boolean).length ? (
+                (job.skills || []).filter(Boolean).map((item, index) => (
+                  <span className="rounded-[7px] bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700 ring-1 ring-blue-100" key={`skill-${index}-${item}`}>{item}</span>
+                ))
               ) : (
-                <p className="mt-5 rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500">No similar jobs available right now.</p>
+                <span className="rounded-[7px] bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500">Skills not added</span>
               )}
             </div>
-          </aside>
-        </div>
+          </div>
+
+          <div className="mt-5 grid gap-5">
+            {sections.map(([title, items, Icon]) => <JobDetailSection icon={Icon} items={items} key={title} title={title} />)}
+          </div>
+        </main>
+
+        <aside className="hidden h-max lg:sticky lg:top-24 lg:block">
+          <div className="rounded-[8px] border border-slate-200 bg-white p-5 shadow-xl shadow-blue-100/50">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">Apply for this role</p>
+            <h2 className="mt-2 text-2xl font-black text-slate-950">{job.title}</h2>
+            <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">Submit your profile before {job.deadline || 'the deadline'}.</p>
+            <Button className="mt-5 w-full" onClick={() => (alreadyApplied ? navigate('/candidate-applied-jobs') : onApply?.(job))}>
+              {alreadyApplied ? 'Already Applied' : 'Apply Now'}
+            </Button>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button onClick={saveJob} variant={saved ? 'primary' : 'secondary'}><Bookmark fill={saved ? 'currentColor' : 'none'} size={17} /> {saved ? 'Saved' : 'Save'}</Button>
+              <Button onClick={() => setShareOpen(true)} variant="secondary"><Share2 size={17} /> Share</Button>
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-xl font-black text-slate-950">Similar Jobs</h2>
+            {similarLoading ? (
+              <p className="mt-5 rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500">Finding related jobs...</p>
+            ) : similarJobs.length ? (
+              <div className="mt-5 grid gap-3">
+                {similarJobs.map((item, index) => <SimilarJobLink index={index + 1} job={item} key={item._id || item.id || item.title} />)}
+              </div>
+            ) : (
+              <p className="mt-5 rounded-[7px] bg-slate-50 p-4 text-sm font-semibold text-slate-500">No similar jobs available right now.</p>
+            )}
+          </div>
+        </aside>
       </div>
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 shadow-2xl shadow-slate-300/50 backdrop-blur lg:hidden">
         <div className="mx-auto grid max-w-md grid-cols-[1fr_auto_auto] gap-2">
@@ -247,6 +284,57 @@ export function JobDetailsPage({ onApply }) {
       </div>
       {shareOpen && <ShareModal job={job} onClose={() => setShareOpen(false)} />}
     </section>
+  )
+}
+
+function JobInfoTile({ icon: Icon, label, value }) {
+  return (
+    <div className="min-w-0 rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[7px] bg-blue-50 text-[#0057B8]">
+          <Icon size={18} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
+          <p className="mt-1 break-words text-sm font-black text-slate-900">{value || 'Not specified'}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function JobDetailSection({ icon: Icon, items, title }) {
+  const visibleItems = (items || []).filter(Boolean)
+
+  return (
+    <section className="rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="flex items-center gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[7px] bg-orange-50 text-[#ff8a00]">
+          <Icon size={19} />
+        </span>
+        <h2 className="text-xl font-black text-slate-950 sm:text-2xl">{title}</h2>
+      </div>
+      <div className="mt-5 grid gap-3 text-sm font-semibold leading-7 text-slate-600 sm:text-base">
+        {visibleItems.length ? visibleItems.map((item, index) => (
+          <p className="rounded-[7px] bg-slate-50 p-4" key={`${title}-${index}`}>{item}</p>
+        )) : (
+          <p className="rounded-[7px] bg-slate-50 p-4 text-slate-500">Not added</p>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function SimilarJobLink({ index, job }) {
+  return (
+    <Link className="block rounded-[8px] border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50" to={createJobDetailPath(job, index)}>
+      <p className="line-clamp-2 text-sm font-black text-slate-950">{job.title || 'Job opening'}</p>
+      <p className="mt-1 truncate text-xs font-bold text-slate-500">{job.company || 'Cromgen Rozgar partner'}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <span className="rounded-[7px] bg-white px-2 py-1 text-[11px] font-black text-blue-700 ring-1 ring-blue-100">{job.workMode || 'Work mode'}</span>
+        <span className="rounded-[7px] bg-white px-2 py-1 text-[11px] font-black text-slate-600 ring-1 ring-slate-200">{job.salary || 'Salary'}</span>
+      </div>
+    </Link>
   )
 }
 
