@@ -3,40 +3,6 @@ import { ArrowRight, CalendarDays, ExternalLink, Loader2, MapPin, Newspaper, Sen
 import { Link } from 'react-router-dom'
 import { api } from '../services/api'
 
-const fallbackNewsItems = [
-  {
-    _id: 'platform-update',
-    category: 'Platform Update',
-    title: 'Career Resources now supports Cromgen Rozgar internal vacancies.',
-    excerpt: 'A cleaner career page helps users discover Cromgen Rozgar hiring posts and apply directly.',
-    description: 'Career Resources now supports Cromgen Rozgar internal vacancies with direct applications, improved role details, and a better candidate journey.',
-    author: 'Cromgen Rozgar Team',
-    location: 'India',
-    publishedAt: '2026',
-    featured: true,
-  },
-  {
-    _id: 'recruiter-tools',
-    category: 'Recruiter Tools',
-    title: 'Recruiter workspace brings hiring operations into one dashboard.',
-    excerpt: 'Recruiters can manage job posting, applications, resume search, and hiring analytics from structured tools.',
-    description: 'Recruiter workspace includes job posting, application tracking, resume search, hiring analytics, and verified hiring workflows.',
-    author: 'Product Team',
-    location: 'New Delhi, India',
-    publishedAt: '2026',
-  },
-  {
-    _id: 'freelancer-network',
-    category: 'Freelancer Network',
-    title: 'Freelancer project discovery is now easier for independent professionals.',
-    excerpt: 'Dedicated freelancer journeys support project discovery and independent work opportunities.',
-    description: 'Freelancers can explore projects, apply with skills, and manage opportunities through dedicated workflows.',
-    author: 'Cromgen Rozgar Team',
-    location: 'India',
-    publishedAt: '2026',
-  },
-]
-
 export function PressNewsPage() {
   const [newsItems, setNewsItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -60,7 +26,7 @@ export function PressNewsPage() {
     }
   }, [])
 
-  const posts = newsItems.length ? newsItems : fallbackNewsItems
+  const posts = newsItems
   const featuredPost = useMemo(() => posts.find((item) => item.featured) || posts[0], [posts])
   const otherPosts = posts.filter((item) => item._id !== featuredPost?._id)
 
@@ -94,12 +60,6 @@ export function PressNewsPage() {
         <div className="mt-8 grid gap-5 lg:grid-cols-3">
           {otherPosts.map((post) => <PressCard key={post._id || post.title} post={post} />)}
         </div>
-
-        {!newsItems.length && !loading && (
-          <div className="mt-6 rounded-[8px] border border-dashed border-blue-200 bg-blue-50 px-4 py-3 text-center text-sm font-bold text-blue-700">
-            Backend mein Press / News post add karte hi default content replace ho jayega.
-          </div>
-        )}
 
         <section className="mt-10 overflow-hidden rounded-[8px] bg-gradient-to-r from-[#0057B8] to-[#ff8a00] p-6 text-white shadow-xl shadow-blue-100 sm:p-8">
           <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">

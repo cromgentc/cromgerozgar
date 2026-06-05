@@ -8,12 +8,13 @@ import { api } from '../services/api'
 import { canSaveJobs, isJobSaved, toggleSavedJob } from '../utils/savedJobs'
 import { getStoredUser } from '../routes/authRouting'
 import { isSameAppliedJob } from '../utils/candidateActivity'
-import { extractJobIdFromSlug } from '../utils/jobRoutes'
+import { extractJobIdFromSlug, findJobByRouteValue } from '../utils/jobRoutes'
 import { formatStateCountryLocation } from '../utils/locationDisplay'
 
 export function JobDetailsPage({ onApply }) {
   const { jobId, jobSlug } = useParams()
-  const resolvedJobId = extractJobIdFromSlug(jobSlug || jobId)
+  const routeValue = jobSlug || jobId
+  const resolvedJobId = extractJobIdFromSlug(routeValue)
   const navigate = useNavigate()
   const user = getStoredUser()
   const fallbackJob = {
@@ -37,7 +38,13 @@ export function JobDetailsPage({ onApply }) {
     aboutCompany: '',
   }
   const shouldFetchById = /^[a-f\d]{24}$/i.test(resolvedJobId)
-  const { data: apiJob } = useApiResource(() => (shouldFetchById ? api.job(resolvedJobId) : Promise.resolve({ data: fallbackJob })), fallbackJob, [resolvedJobId])
+  const { data: apiJob } = useApiResource(async () => {
+    if (shouldFetchById) return api.job(resolvedJobId)
+
+    const payload = await api.jobs('?sort=-createdAt&limit=100')
+    const jobs = Array.isArray(payload.data) ? payload.data : []
+    return { data: findJobByRouteValue(jobs, routeValue) || fallbackJob }
+  }, fallbackJob, [resolvedJobId, routeValue, shouldFetchById])
   const job = apiJob || fallbackJob
   const displayLocation = formatStateCountryLocation(job.location)
   const [saved, setSaved] = useState(() => isJobSaved(job))

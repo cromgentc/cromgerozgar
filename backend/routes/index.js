@@ -52,7 +52,7 @@ router.use('/freelancer-profiles', crudRoutes.protected(controllers.freelancerPr
 router.use('/career-jobs', crudRoutes.protected(controllers.careerJobs, { publicRead: true }))
 router.use('/candidates', crudRoutes.protected(controllers.candidates, { readRoles: ['Admin', 'hiring', 'recruiter'] }))
 router.use('/applications', crudRoutes.protected(controllers.applications, {
-  publicCreate: true,
+  createRoles: accountRoles,
   readRoles: accountRoles,
   updateRoles: ['Admin', 'staff', 'hiring', 'account team', 'recruiter'],
 }))

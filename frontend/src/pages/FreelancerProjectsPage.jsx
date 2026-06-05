@@ -1009,6 +1009,7 @@ function getProjectSlug(project) {
 function getProjectDetailPath(project) {
   const slug = [
     'freelance-project-listings',
+    getProjectSlug(project),
     project.title,
     project.company,
     project.category,

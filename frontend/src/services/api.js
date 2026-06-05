@@ -249,7 +249,7 @@ export const api = {
   employerDashboard: (email = '') => apiRequest(`/dashboard/employer${email ? `?recruiterEmail=${encodeURIComponent(email)}` : ''}`, { authRequired: true }),
   videoTestimonials: () => apiRequest('/video-testimonials'),
   createJob: (data) => apiRequest('/jobs', { method: 'POST', body: JSON.stringify(data) }),
-  createApplication: (data) => apiRequest('/applications', { method: 'POST', body: JSON.stringify(data) }),
+  createApplication: (data) => apiRequest('/applications', { method: 'POST', body: JSON.stringify(data), authRequired: true }),
   login: (data) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   register: (data) => apiRequest('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   currentAuthUser: () => apiRequest('/auth/me', { authRequired: true }),

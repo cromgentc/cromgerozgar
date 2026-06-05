@@ -350,8 +350,22 @@ async function createOrReplaceRecruiterDocument(body, req) {
 }
 
 async function attachRecruiterToApplication(body, req) {
+  const requesterRole = normalizeRole(req.user?.role)
+  const requesterEmail = normalizeEmail(req.user?.email)
+
+  if (!req.user || !requesterEmail) {
+    req.res.status(401)
+    throw new Error('Please login before applying.')
+  }
+
   body.candidateEmail = normalizeEmail(body.candidateEmail)
   body.candidatePhone = normalizePhone(body.candidatePhone || body.phone)
+
+  if (['users', 'freelancer'].includes(requesterRole)) {
+    body.candidateEmail = requesterEmail
+    body.candidateName = body.candidateName || req.user.name || requesterEmail
+    body.candidatePhone = body.candidatePhone || normalizePhone(req.user.phone)
+  }
 
   if (body.recruiterEmail) {
     body.recruiterEmail = normalizeEmail(body.recruiterEmail)
