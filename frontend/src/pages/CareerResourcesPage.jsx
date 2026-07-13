@@ -105,12 +105,12 @@ export function CareerResourcesPage() {
               Guides to help you move faster in your career
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base font-semibold leading-7 text-slate-600">
-              Practical resources for candidates, freelancers, and recruiters using Cromgen Rozgar.
+              Practical resources for candidates, freelancers, and recruiters using INSEET.
             </p>
             <div className="mx-auto mt-5 grid max-w-xl gap-3 sm:grid-cols-2">
               <div className="rounded-[8px] border border-blue-100 bg-white p-4 shadow-sm">
                 <p className="text-3xl font-black text-[#0057B8]">{totalVacancies}</p>
-                <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-slate-500">Cromgen Rozgar Vacancy</p>
+                <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-slate-500">INSEET Vacancy</p>
               </div>
               <div className="rounded-[8px] border border-orange-100 bg-white p-4 shadow-sm">
                 <p className="text-3xl font-black text-[#ff8a00]">{careerJobs.length}</p>
@@ -135,7 +135,7 @@ export function CareerResourcesPage() {
           <section className="mt-8 rounded-[8px] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/70">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff8a00]">Cromgen Rozgar Hiring</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff8a00]">INSEET Hiring</p>
                 <h2 className="mt-1 text-2xl font-black text-[#061333]">Current vacancies</h2>
                 <p className="mt-2 text-sm font-semibold text-slate-500">{totalVacancies} vacancy available across {careerJobs.length} active posts.</p>
               </div>
@@ -150,7 +150,7 @@ export function CareerResourcesPage() {
               )) : (
                 <div className="rounded-[8px] border border-dashed border-slate-300 bg-slate-50 p-6 text-center lg:col-span-2">
                   <BriefcaseBusiness className="mx-auto text-[#0057B8]" size={34} />
-                  <h3 className="mt-3 text-lg font-black text-slate-950">No Cromgen Rozgar vacancies right now</h3>
+                  <h3 className="mt-3 text-lg font-black text-slate-950">No INSEET vacancies right now</h3>
                   <p className="mt-2 text-sm font-semibold text-slate-500">Admin Website Content mein Career Job Post add karte hi yahan show hoga.</p>
                 </div>
               )}
@@ -222,7 +222,7 @@ function CareerJobCard({ job, onApply }) {
     <article className="rounded-[8px] border border-slate-200 bg-[#f8fbff] p-5 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0057B8]">{job.department || 'Cromgen Rozgar'}</p>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0057B8]">{job.department || 'INSEET'}</p>
           <h3 className="mt-2 text-xl font-black text-[#061333]">{job.title}</h3>
         </div>
         <span className="inline-flex w-fit rounded-full bg-orange-100 px-3 py-1 text-xs font-black text-[#ff8a00]">
@@ -268,7 +268,7 @@ function CareerApplyModal({ job, onClose }) {
         subject: `Career Application: ${job.title}`,
         message: [
           `Career application for ${job.title}`,
-          `Department: ${job.department || 'Cromgen Rozgar'}`,
+          `Department: ${job.department || 'INSEET'}`,
           `Location: ${job.location || 'India'}`,
           `Applicant message: ${form.message || 'Not added'}`,
         ].join('\n'),
@@ -293,7 +293,7 @@ function CareerApplyModal({ job, onClose }) {
         <div className="bg-gradient-to-r from-[#0057B8] to-[#ff8a00] p-6 text-white">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-50">Apply for</p>
           <h2 className="mt-2 pr-10 text-2xl font-black">{job.title}</h2>
-          <p className="mt-2 text-sm font-semibold text-blue-50">{job.department || 'Cromgen Rozgar'} / {job.location || 'India'}</p>
+          <p className="mt-2 text-sm font-semibold text-blue-50">{job.department || 'INSEET'} / {job.location || 'India'}</p>
         </div>
         <form className="grid gap-3 p-6" onSubmit={submit}>
           <input className="input" onChange={(event) => update('name', event.target.value)} placeholder="Full name" required value={form.name} />

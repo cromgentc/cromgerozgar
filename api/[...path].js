@@ -18,7 +18,7 @@ function getFallbackPayload(req) {
     ? `/${queryPath.replace(/^\/+/, '')}`
     : url.pathname.replace(/^\/api(?=\/|$)/, '')
 
-  if (pathname === '/health') return { success: true, message: 'Cromgen Rozgar API fallback is running' }
+  if (pathname === '/health') return { success: true, message: 'INSEET API fallback is running' }
 
   return null
 }

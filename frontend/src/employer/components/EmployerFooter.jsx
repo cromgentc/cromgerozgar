@@ -173,11 +173,11 @@ export function EmployerFooter() {
           <div className="min-w-0">
             <Link className="flex min-w-0 items-center font-black text-slate-950" to="/recruiter">
               {branding.logoUrl ? (
-                <img className="h-16 w-auto max-w-[240px] object-contain" src={branding.logoUrl} alt={branding.recruiterName || 'Rozgar Recruiter'} />
+                <img className="h-16 w-auto max-w-[240px] object-contain" src={branding.logoUrl} alt={branding.recruiterName || 'INSEET Recruiter'} />
               ) : (
                 <>
                   <span className="grid h-12 w-12 place-items-center"><BriefcaseBusiness size={23} /></span>
-                  <span className="text-xl">{branding.recruiterName || 'Rozgar Recruiter'}</span>
+                  <span className="text-xl">{branding.recruiterName || 'INSEET Recruiter'}</span>
                 </>
               )}
             </Link>
@@ -203,7 +203,7 @@ export function EmployerFooter() {
             </div>
 
             <div className="mt-6 grid gap-3 text-sm font-semibold text-slate-500">
-              <p className="flex items-center gap-3"><Mail className="text-blue-600" size={18} /> {branding.recruiterEmail || 'recruiter@cromgenrozgar.com'}</p>
+              <p className="flex items-center gap-3"><Mail className="text-blue-600" size={18} /> {branding.recruiterEmail || 'support@inseet.in'}</p>
               <p className="flex items-center gap-3"><Phone className="text-blue-600" size={18} /> {branding.tollFreeNumber || '+91 98765 43210'}</p>
               <p className="flex items-center gap-3"><MessageCircle className="text-blue-600" size={18} /> Hiring support and account desk</p>
               {branding.showRecruiterFooterLocation !== false && (
@@ -275,7 +275,7 @@ export function EmployerFooter() {
         </div>
 
         <div className="mt-6 flex flex-col justify-between gap-3 text-sm font-semibold text-slate-500 sm:flex-row sm:items-center">
-          <p>(c) 2026 Cromgen Rozgar Recruiter Portal. All rights reserved.</p>
+          <p>(c) 2026 INSEET Recruiter Portal. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
             {policyLinks.slice(0, 3).map(([label, to]) => <Link className="hover:text-blue-600" key={label} to={to}>{label}</Link>)}
           </div>

@@ -39,7 +39,7 @@ export function PressNewsPage() {
             Press / News
           </span>
           <h1 className="mt-5 text-3xl font-black tracking-tight text-[#061333] sm:text-5xl">
-            Cromgen Rozgar updates, announcements, and media notes.
+            INSEET updates, announcements, and media notes.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base font-semibold leading-8 text-slate-600">
             Admin backend se press post update hote hi yahan latest image, title, and description automatically show hoga.
@@ -67,7 +67,7 @@ export function PressNewsPage() {
               <Sparkles size={30} />
               <h2 className="mt-4 text-2xl font-black sm:text-3xl">Media and partnership enquiries</h2>
               <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-blue-50">
-                For announcements, interviews, partnership notes, or company information, contact the Cromgen Rozgar team.
+                For announcements, interviews, partnership notes, or company information, contact the INSEET team.
               </p>
             </div>
             <Link className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[7px] bg-white px-6 text-sm font-black text-[#0057B8] shadow-lg shadow-slate-900/10" to="/contact">
@@ -152,7 +152,7 @@ function PressImage({ imageUrl, title, featured = false }) {
 function PressMeta({ post, compact = false }) {
   return (
     <div className={`mt-4 flex flex-wrap gap-3 text-xs font-bold text-slate-500 ${compact ? '' : 'sm:text-sm'}`}>
-      <MetaPill icon={UserRound} label={post.author || 'Cromgen Rozgar Team'} />
+      <MetaPill icon={UserRound} label={post.author || 'INSEET Team'} />
       <MetaPill icon={MapPin} label={post.location || 'India'} />
     </div>
   )

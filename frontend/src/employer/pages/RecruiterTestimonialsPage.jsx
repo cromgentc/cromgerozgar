@@ -9,7 +9,7 @@ import femaleRecruiterImage from '../../assets/recruiter-female-single.png'
 const fallbackVideos = [
   {
     companyName: 'K9HR Solutions',
-    quote: 'Cromgen Rozgar has simplified our hiring process and helped us connect with the right talent faster than ever.',
+    quote: 'INSEET has simplified our hiring process and helped us connect with the right talent faster than ever.',
     location: '150 Feet Ring Road, Rajkot, India',
     duration: '02:45',
     logoText: 'K9HR',
@@ -79,7 +79,7 @@ export function RecruiterTestimonialsPage() {
               Why Companies Choose Us
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base font-medium leading-7 text-slate-600 sm:text-lg">
-              Hear from organizations that have transformed their hiring experience with Cromgen Rozgar.
+              Hear from organizations that have transformed their hiring experience with INSEET.
             </p>
           </div>
 

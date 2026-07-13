@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Building2, CloudUpload, FileCheck2, Rocket, SearchCheck, ShieldCheck, Sparkles } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Building2, CloudUpload, Eye, FileCheck2, FileText, RefreshCw, Rocket, SearchCheck, ShieldCheck, Sparkles, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { JobCard } from '../components/JobCard'
@@ -20,8 +20,9 @@ const user = getStoredUser()
   const [interviewInvites, setInterviewInvites] = useState(() => getInterviewInvites())
   const [jobAlerts, setJobAlerts] = useState(() => getJobAlerts())
   const [profileStrength, setProfileStrength] = useState(() => getCandidateProfileStrength())
-
-  const candidateProfile = useMemo(() => getStoredCandidateProfile(user), [user?.email, user?.name])
+  const [candidateProfile, setCandidateProfile] = useState(() => getStoredCandidateProfile(user))
+  const [resumeDeleting, setResumeDeleting] = useState(false)
+  const [resumeMessage, setResumeMessage] = useState('')
 
   useEffect(() => {
     const loadApplications = async () => {
@@ -40,6 +41,7 @@ const user = getStoredUser()
       setInterviewInvites(getInterviewInvites())
       setJobAlerts(getJobAlerts())
       setProfileStrength(getCandidateProfileStrength())
+      setCandidateProfile(getStoredCandidateProfile(user))
       loadApplications()
     }
 
@@ -100,6 +102,59 @@ const user = getStoredUser()
     { label: 'Interview invites', value: String(trackedApplications.filter((item) => ['Interview', 'Selected'].includes(item.status)).length || interviewInvites.length), icon: Building2, to: '/candidate-interview-invites' },
     { label: 'Job alerts', value: String(jobAlerts.length), icon: Rocket, to: '/candidate-job-alerts' },
   ]
+  const hasResume = Boolean(candidateProfile.resumeName || candidateProfile.resumeMongoId || candidateProfile.resumeUrl)
+
+  const updateStoredCandidateProfile = (nextProfile) => {
+    localStorage.setItem('candidateProfile', JSON.stringify(nextProfile))
+    setCandidateProfile(nextProfile)
+    window.dispatchEvent(new CustomEvent('candidateActivityChanged'))
+  }
+
+  const viewResume = async () => {
+    setResumeMessage('')
+    try {
+      if (candidateProfile.resumeMongoId) {
+        await api.openResume(candidateProfile.resumeMongoId)
+        return
+      }
+
+      if (candidateProfile.resumeUrl && !String(candidateProfile.resumeUrl).startsWith('r2://')) {
+        window.open(candidateProfile.resumeUrl, '_blank', 'noopener,noreferrer')
+        return
+      }
+
+      setResumeMessage('Resume preview is not available. Please re-upload your resume.')
+    } catch (error) {
+      setResumeMessage(error.message || 'Resume could not be opened.')
+    }
+  }
+
+  const deleteResume = async () => {
+    if (!hasResume || resumeDeleting) return
+
+    setResumeDeleting(true)
+    setResumeMessage('')
+    try {
+      if (candidateProfile.resumeMongoId) {
+        await api.remove('resumes', candidateProfile.resumeMongoId)
+      }
+
+      const nextProfile = {
+        ...candidateProfile,
+        resumeJson: null,
+        resumeMongoId: '',
+        resumeName: '',
+        resumeUpdatedAt: '',
+        resumeUrl: '',
+      }
+      updateStoredCandidateProfile(nextProfile)
+      setResumeMessage('Resume deleted.')
+    } catch (error) {
+      setResumeMessage(error.message || 'Resume could not be deleted.')
+    } finally {
+      setResumeDeleting(false)
+    }
+  }
 
   return (
     <DashboardShell title="Candidate Dashboard" subtitle="Manage your profile, applications, saved jobs, and recommendations.">
@@ -150,12 +205,35 @@ const user = getStoredUser()
 
         <div className="grid h-max gap-4 sm:gap-6">
           <Panel title="Resume Upload">
-            <div className="rounded-[7px] border border-dashed border-blue-200 bg-blue-50 p-4 text-center sm:p-6">
-              <CloudUpload className="mx-auto text-blue-600" size={28} />
-              <p className="mt-3 text-sm font-bold text-slate-950 sm:text-base">Upload latest resume</p>
-              <p className="mt-1 text-xs text-slate-500 sm:mt-2 sm:text-sm">PDF or DOCX up to 5MB</p>
-              <Button className="mt-4 w-full sm:mt-5 sm:w-auto" to="/candidate-profile?missing=Resume">Choose File</Button>
-            </div>
+            {hasResume ? (
+              <div className="rounded-[7px] border border-blue-100 bg-blue-50 p-4 sm:p-5">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[7px] bg-white text-blue-600 ring-1 ring-blue-100">
+                    <FileText size={22} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-black text-slate-950 sm:text-base">{candidateProfile.resumeName || 'Uploaded resume'}</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                      {candidateProfile.resumeUpdatedAt ? `Updated ${new Date(candidateProfile.resumeUpdatedAt).toLocaleDateString()}` : 'Resume uploaded'}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                  <Button className="w-full px-3" onClick={viewResume} variant="secondary"><Eye size={16} /> View</Button>
+                  <Button className="w-full px-3" to="/candidate-profile?missing=Resume" variant="secondary"><RefreshCw size={16} /> Re-upload</Button>
+                  <Button className="w-full px-3 bg-rose-600 shadow-rose-100 hover:bg-rose-700" disabled={resumeDeleting} onClick={deleteResume} variant="secondary"><Trash2 size={16} /> {resumeDeleting ? 'Deleting...' : 'Delete'}</Button>
+                </div>
+                {resumeMessage && <p className="mt-3 rounded-[7px] bg-white p-3 text-xs font-bold text-slate-600">{resumeMessage}</p>}
+              </div>
+            ) : (
+              <div className="rounded-[7px] border border-dashed border-blue-200 bg-blue-50 p-4 text-center sm:p-6">
+                <CloudUpload className="mx-auto text-blue-600" size={28} />
+                <p className="mt-3 text-sm font-bold text-slate-950 sm:text-base">Upload latest resume</p>
+                <p className="mt-1 text-xs text-slate-500 sm:mt-2 sm:text-sm">PDF up to 25MB</p>
+                <Button className="mt-4 w-full sm:mt-5 sm:w-auto" to="/candidate-profile?missing=Resume">Choose File</Button>
+                {resumeMessage && <p className="mt-3 text-xs font-bold text-slate-600">{resumeMessage}</p>}
+              </div>
+            )}
           </Panel>
 
           <Panel title="Saved Jobs">

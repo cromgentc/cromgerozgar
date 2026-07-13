@@ -1,4 +1,4 @@
-# Cromgen Rozgar Backend
+# INSEET Backend
 
 Express + MongoDB API for the Job Portal.
 
@@ -18,6 +18,19 @@ MONGO_URI=mongodb://127.0.0.1:27017/cromgen-rozgar
 JWT_SECRET=change-this-secret
 CLIENT_URL=https://www.cromgenrozgar.in
 ```
+
+Resume uploads are stored in Cloudflare R2. Create an R2 API token with object read/write access for the `inseet-resumes` bucket, then add:
+
+```env
+CLOUDFLARE_R2_ACCOUNT_ID=69d4cb35ab86c2664455ce656338ea7a
+CLOUDFLARE_R2_BUCKET=inseet-resumes
+CLOUDFLARE_R2_RESUME_FOLDER=
+CLOUDFLARE_R2_ACCESS_KEY_ID=your_r2_access_key_id
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
+CLOUDFLARE_R2_PUBLIC_URL=
+```
+
+`CLOUDFLARE_R2_PUBLIC_URL` is optional. Leave it blank for private storage; resumes will still open through the protected API viewer.
 
 ## Run
 

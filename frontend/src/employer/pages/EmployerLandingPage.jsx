@@ -33,8 +33,8 @@ import femaleRecruiterImage from '../../assets/recruiter-female-single.png'
 
 const slides = [
   {
-    badge: 'CromGen Rozgar Recruiter Portal',
-    title: 'Hire Verified Talent Faster With CromGen Rozgar',
+    badge: 'INSEET Recruiter Portal',
+    title: 'Hire Verified Talent Faster With INSEET',
     subtitle: 'Post jobs, manage applications, shortlist candidates, and connect with skilled talent across India from one professional recruiter dashboard.',
     primary: 'Post a Job',
     secondary: 'View Candidates',
@@ -424,7 +424,7 @@ function HiringFeaturesSection() {
             <div>
               <h3 className="text-xl font-black text-[#070d24]">Built for modern hiring teams</h3>
               <p className="mt-1 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
-                Cromgen Rozgar provides everything you need to attract, engage, and hire top talent efficiently.
+                INSEET provides everything you need to attract, engage, and hire top talent efficiently.
               </p>
             </div>
             <Button className="min-h-14 bg-[#0d5be8] px-8 text-sm font-black shadow-lg shadow-blue-100 hover:bg-[#084bc4]" to="/recruiter-resources">
@@ -617,7 +617,7 @@ function EmployerTestimonials({ testimonials = [] }) {
   const fallbackVideos = [
     {
       companyName: 'K9HR Solutions',
-      quote: 'Cromgen Rozgar has simplified our hiring process and helped us connect with the right talent faster than ever.',
+      quote: 'INSEET has simplified our hiring process and helped us connect with the right talent faster than ever.',
       location: '150 Feet Ring Road, Rajkot, India',
       duration: '02:45',
       logoText: 'K9HR',
@@ -661,7 +661,7 @@ function EmployerTestimonials({ testimonials = [] }) {
             Why Companies Choose Us
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-base font-medium leading-7 text-slate-600 sm:text-lg">
-            Hear from organizations that have transformed their hiring experience with Cromgen Rozgar.
+            Hear from organizations that have transformed their hiring experience with INSEET.
           </p>
         </div>
 

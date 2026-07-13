@@ -192,7 +192,7 @@ function RecruiterSidebar({ onClose }) {
         <Link className="flex items-center gap-3" to="/">
           <span className="grid h-11 w-11 place-items-center rounded-[7px] bg-[#0057B8] text-sm font-black text-white">CR</span>
           <span>
-            <span className="block text-base font-black text-slate-950">CromGen Rozgar</span>
+            <span className="block text-base font-black text-slate-950">INSEET</span>
             <span className="block text-xs font-bold text-slate-500">Recruiter Workspace</span>
           </span>
         </Link>

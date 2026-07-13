@@ -10,7 +10,7 @@ export function SupportChat({ onClose, open }) {
   const user = getStoredUser()
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([
-    { from: 'support', text: 'Hi, welcome to Cromgen Rozgar customer care. How can we help you today?' },
+    { from: 'support', text: 'Hi, welcome to INSEET customer care. How can we help you today?' },
   ])
   const [activeTicket, setActiveTicket] = useState(null)
   const [sending, setSending] = useState(false)
@@ -34,7 +34,7 @@ export function SupportChat({ onClose, open }) {
 
         setActiveTicket(ticket)
         setMessages([
-          { from: 'support', text: 'Hi, welcome to Cromgen Rozgar customer care. How can we help you today?' },
+          { from: 'support', text: 'Hi, welcome to INSEET customer care. How can we help you today?' },
           ...getChatMessages(ticket).map((item) => ({
             from: item.sender === 'admin' ? 'support' : item.sender,
             text: item.text,

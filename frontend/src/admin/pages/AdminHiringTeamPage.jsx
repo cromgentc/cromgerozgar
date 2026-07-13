@@ -189,10 +189,10 @@ export function AdminHiringTeamPage() {
       data.append('maritalStatus', form.maritalStatus)
 
       try {
-        uploadedResume = await api.uploadResumeToSupaCloud(data)
+        uploadedResume = await api.uploadResumeToCloudflareR2(data)
       } catch (error) {
         setUploading(false)
-        setUploadMessage(error.message || 'Resume upload failed. Check Supa Cloud settings.')
+        setUploadMessage(error.message || 'Resume upload failed. Check Cloudflare R2 settings.')
         return
       }
     }

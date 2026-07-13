@@ -937,12 +937,12 @@ function SidebarContent({ branding, isEmployer, role }) {
     <div className="flex h-full flex-col">
       <Link className="flex min-w-0 items-center px-6 py-5" to={isEmployer ? '/recruiter-dashboard' : role === 'freelancer' ? '/admin/projects' : role === 'hiring' ? '/admin/hiring-team' : role === 'account team' ? '/admin/employers' : '/admin'}>
         {branding?.logoUrl ? (
-          <img className="h-16 w-auto max-w-[220px] object-contain" src={branding.logoUrl} alt={isEmployer ? (branding?.recruiterName || 'Rozgar Recruiter') : (branding?.adminName || 'Rozgar Admin')} />
+          <img className="h-16 w-auto max-w-[220px] object-contain" src={branding.logoUrl} alt={isEmployer ? (branding?.recruiterName || 'INSEET Recruiter') : (branding?.adminName || 'INSEET Admin')} />
         ) : (
           <>
             <span className="grid h-12 w-12 place-items-center"><BriefcaseBusiness size={23} /></span>
             <span>
-              <span className="block text-lg font-black text-slate-950">{isEmployer ? (branding?.recruiterName || 'Rozgar Recruiter') : (branding?.adminName || 'Rozgar Admin')}</span>
+              <span className="block text-lg font-black text-slate-950">{isEmployer ? (branding?.recruiterName || 'INSEET Recruiter') : (branding?.adminName || 'INSEET Admin')}</span>
               <span className="block text-xs font-black text-slate-500">{isEmployer ? 'Hiring panel' : 'Enterprise panel'}</span>
             </span>
           </>

@@ -17,7 +17,7 @@ async function getEmailConfig() {
     provider: config.provider || 'Resend',
     apiKey: config.apiKey || '',
     fromEmail: config.fromEmail || '',
-    fromName: config.fromName || 'Cromgen Rozgar',
+    fromName: config.fromName || 'INSEET',
     smtpHost: config.smtpHost || '',
     smtpPort: config.smtpPort || '587',
     smtpUser: config.smtpUser || '',

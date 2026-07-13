@@ -69,7 +69,7 @@ export function HomePage({ onApply }) {
       <MobileHomeJobs jobs={latestJobs} onApply={onApply} />
 
       {liveCompanies.length >= 50 && (
-        <Section className="bg-white md:hidden" title="Trusted companies hiring on CromGen Rozgar" subtitle="Verified recruiters with active openings.">
+        <Section className="bg-white md:hidden" title="Trusted companies hiring on INSEET" subtitle="Verified recruiters with active openings.">
           <CompanyGrid companies={liveCompanies} compactMobile />
         </Section>
       )}
@@ -78,7 +78,7 @@ export function HomePage({ onApply }) {
         <CareerFocusBand />
 
         {liveCompanies.length >= 50 && (
-          <Section className="bg-white" title="Trusted companies hiring on CromGen Rozgar" subtitle="Verified recruiter profiles with active openings and transparent role information.">
+          <Section className="bg-white" title="Trusted companies hiring on INSEET" subtitle="Verified recruiter profiles with active openings and transparent role information.">
             <CompanyGrid companies={liveCompanies} />
           </Section>
         )}
@@ -311,7 +311,7 @@ function TrustedByCandidates() {
         <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-4xl">Trusted by Candidates</h2>
         <span className="mx-auto mt-3 block h-1 w-16 rounded-full bg-[#ff8a00]" />
         <p className="mx-auto mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500 sm:text-base">
-          Real feedback, success stories, and platform experiences shared by professionals using <span className="font-black text-blue-600">Cromgen Rozgar.</span>
+          Real feedback, success stories, and platform experiences shared by professionals using <span className="font-black text-blue-600">INSEET.</span>
         </p>
 
         <div className="mt-6 overflow-hidden" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
@@ -346,7 +346,7 @@ function TrustedByCandidates() {
                     <div>
                       <h3 className="text-base font-black text-slate-950">{name}</h3>
                       <p className="text-xs font-bold text-slate-500">{role}</p>
-                      <p className="mt-0.5 text-xs font-black text-blue-600">Cromgen Rozgar Candidate</p>
+                      <p className="mt-0.5 text-xs font-black text-blue-600">INSEET Candidate</p>
                     </div>
                   </div>
                 </div>

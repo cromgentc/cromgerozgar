@@ -250,11 +250,11 @@ export function Layout() {
           <nav className="flex min-h-[86px] items-center justify-between gap-3 px-3 sm:px-5 lg:gap-5">
             <Link className="flex min-w-0 shrink-0 items-center font-bold text-[#ff8a00]" onClick={handleHeaderLinkClick} to="/">
               {branding.logoUrl ? (
-                <img className="h-14 w-auto max-w-[250px] object-contain" src={branding.logoUrl} alt={branding.siteName || 'Cromgen Rozgar'} />
+                <img className="h-14 w-auto max-w-[250px] object-contain" src={branding.logoUrl} alt={branding.siteName || 'INSEET'} />
               ) : (
                 <>
                   <span className="grid h-12 w-12 place-items-center rounded-[7px] bg-[#0057B8] text-white"><BriefcaseBusiness size={22} /></span>
-                  <span className="ml-3 text-xl text-[#ff8a00]">{branding.siteName || 'Cromgen Rozgar'}</span>
+                  <span className="ml-3 text-xl text-[#ff8a00]">{branding.siteName || 'INSEET'}</span>
                 </>
               )}
             </Link>
@@ -859,11 +859,11 @@ function MainFooter({ branding, newsletterEmail, newsletterLoading, newsletterSt
           <div className="min-w-0 lg:col-span-1">
             <Link className="inline-flex min-w-0 items-center font-black text-slate-950" onClick={handleFooterLinkClick} to="/">
               {branding.logoUrl ? (
-                <img className="h-10 w-auto max-w-full object-contain sm:h-12 sm:max-w-[190px]" src={branding.logoUrl} alt={branding.siteName || 'Cromgen Rozgar'} />
+                <img className="h-10 w-auto max-w-full object-contain sm:h-12 sm:max-w-[190px]" src={branding.logoUrl} alt={branding.siteName || 'INSEET'} />
               ) : (
                 <>
                   <span className="grid h-10 w-10 place-items-center"><BriefcaseBusiness size={22} /></span>
-                  <span className="text-lg text-[#ff8a00]">{branding.siteName || 'Cromgen Rozgar'}</span>
+                  <span className="text-lg text-[#ff8a00]">{branding.siteName || 'INSEET'}</span>
                 </>
               )}
             </Link>
@@ -936,7 +936,7 @@ function MainFooter({ branding, newsletterEmail, newsletterLoading, newsletterSt
         </section>
 
         <section className="grid grid-cols-2 gap-3 bg-[#082347] px-4 py-4 text-xs font-semibold text-white sm:px-6 sm:text-sm md:flex md:flex-row md:items-center md:justify-between">
-          <p className="min-w-0 leading-5">© 2026 Cromgen Rozgar. All rights reserved.</p>
+          <p className="min-w-0 leading-5">© 2026 INSEET. All rights reserved.</p>
           <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-4">
             <Link className="hover:text-blue-200" onClick={handleFooterLinkClick} to="/privacy">Privacy Policy</Link>
             <span className="text-white/40">|</span>
@@ -1025,7 +1025,7 @@ function AppDownloadPopup({ branding = {}, onClose }) {
       <div className="relative my-auto max-h-[calc(100vh-24px)] w-full max-w-[420px] overflow-y-auto overflow-x-hidden rounded-[18px] bg-white shadow-2xl shadow-slate-950/20 sm:max-h-[calc(100vh-32px)] sm:max-w-6xl sm:rounded-[22px]">
         <div className="relative flex min-h-[74px] w-[calc(100%-68px)] items-center gap-3 rounded-br-[34px] bg-gradient-to-r from-[#1677ff] to-[#5b31f3] px-4 pr-5 text-white sm:absolute sm:left-0 sm:top-0 sm:min-h-[102px] sm:w-[60%] sm:gap-5 sm:rounded-br-[58px] sm:px-11">
           <Phone className="shrink-0" size={32} />
-          <h2 className="text-lg font-black leading-tight tracking-tight sm:text-3xl">{branding.appDownloadTitle || 'Download the Cromgen Rozgar App'}</h2>
+          <h2 className="text-lg font-black leading-tight tracking-tight sm:text-3xl">{branding.appDownloadTitle || 'Download the INSEET App'}</h2>
         </div>
         <button
           aria-label="Close app download popup"
@@ -1039,7 +1039,7 @@ function AppDownloadPopup({ branding = {}, onClose }) {
         <div className="grid gap-5 px-4 pb-5 pt-5 sm:px-10 sm:pb-8 sm:pt-40 lg:grid-cols-[0.42fr_0.58fr] lg:gap-10">
           <div className="flex flex-col items-center border-slate-200 lg:border-r lg:pr-10">
             <a className="relative rounded-[10px] bg-white p-3 shadow-xl shadow-slate-200 ring-2 ring-[#1677ff] sm:p-5" href={playStoreLink} rel="noreferrer" target="_blank">
-              <img className="h-44 w-44 object-contain sm:h-64 sm:w-64" src={qrUrl} alt="Scan QR code to download Cromgen Rozgar app" />
+              <img className="h-44 w-44 object-contain sm:h-64 sm:w-64" src={qrUrl} alt="Scan QR code to download INSEET app" />
               {branding.logoUrl && (
                 <span className="absolute left-1/2 top-1/2 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[12px] bg-white shadow-lg sm:h-16 sm:w-16 sm:rounded-[14px]">
                   <img className="h-9 w-9 object-contain sm:h-12 sm:w-12" src={branding.logoUrl} alt="" />

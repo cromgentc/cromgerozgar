@@ -7,7 +7,7 @@ const pressNewsSchema = new mongoose.Schema(
     excerpt: { type: String, default: '', trim: true },
     imageUrl: { type: String, default: '', trim: true },
     category: { type: String, default: 'Company News', trim: true },
-    author: { type: String, default: 'Cromgen Rozgar Team', trim: true },
+    author: { type: String, default: 'INSEET Team', trim: true },
     location: { type: String, default: 'India', trim: true },
     publishedAt: { type: String, default: '', trim: true },
     sourceName: { type: String, default: '', trim: true },

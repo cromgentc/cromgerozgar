@@ -5,11 +5,15 @@ function notFound(req, res, next) {
 }
 
 function errorHandler(err, req, res, next) {
-  const statusCode = err.statusCode || (res.statusCode === 200 ? 500 : res.statusCode)
+  const isMulterError = err.name === 'MulterError'
+  const statusCode = err.statusCode || (isMulterError ? 400 : (res.statusCode === 200 ? 500 : res.statusCode))
+  const message = isMulterError && err.code === 'LIMIT_FILE_SIZE'
+    ? 'Resume file is too large. Please upload a PDF up to 25 MB.'
+    : err.message
 
   res.status(statusCode).json({
     success: false,
-    message: err.message,
+    message,
     stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
   })
 }

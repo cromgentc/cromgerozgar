@@ -12,7 +12,7 @@ const defaultWhatsAppApiConfig = {
   languageCode: 'en_US',
   defaultCountryCode: '+91',
   appLink: 'https://www.cromgenrozgar.in',
-  appLinkMessage: 'Cromgen Rozgar application link: {link}',
+  appLinkMessage: 'INSEET application link: {link}',
   notes: '',
 }
 

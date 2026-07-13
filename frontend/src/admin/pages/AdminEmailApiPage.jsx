@@ -7,7 +7,7 @@ const defaultEmailApiConfig = {
   provider: 'Resend',
   apiKey: '',
   fromEmail: '',
-  fromName: 'Cromgen Rozgar',
+  fromName: 'INSEET',
   smtpHost: '',
   smtpPort: '587',
   smtpUser: '',
@@ -154,7 +154,7 @@ export function AdminEmailApiPage() {
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
                 <LabeledInput label="From Email" onChange={(value) => update('fromEmail', value)} placeholder="support@yourdomain.com" value={form.fromEmail} />
-                <LabeledInput label="From Name" onChange={(value) => update('fromName', value)} placeholder="Cromgen Rozgar" value={form.fromName} />
+                <LabeledInput label="From Name" onChange={(value) => update('fromName', value)} placeholder="INSEET" value={form.fromName} />
                 <LabeledInput className="sm:col-span-2" label="Reset URL" onChange={(value) => update('resetUrl', value)} placeholder="https://yourdomain.com/reset-password" value={form.resetUrl} />
               </div>
               {form.provider === 'Resend' ? (

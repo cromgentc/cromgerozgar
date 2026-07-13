@@ -922,7 +922,7 @@ function ProjectApplyButton({ project }) {
         candidateEmail: user.email,
         candidatePhone: user.phone || '',
         jobTitle: project.title || 'Freelance Project',
-        company: project.company || 'Cromgen Rozgar',
+        company: project.company || 'INSEET',
         coverNote: `Applied for freelance project: ${project.title || 'Freelance Project'}`,
       }
       const payload = await api.createApplication(applicationPayload)

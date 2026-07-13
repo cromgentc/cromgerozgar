@@ -114,7 +114,7 @@ function buildNewsletterHtml({ ctaLabel, ctaUrl, imageUrl, message, previewText,
               </tr>
               <tr>
                 <td style="border-top:1px solid #e2e8f0;background:#f8fafc;padding:18px 32px;text-align:center">
-                  <p style="margin:0;color:#64748b;font-size:12px;line-height:1.6">Cromgen Rozgar hiring insights and recruiter updates.</p>
+                  <p style="margin:0;color:#64748b;font-size:12px;line-height:1.6">INSEET hiring insights and recruiter updates.</p>
                 </td>
               </tr>
             </table>

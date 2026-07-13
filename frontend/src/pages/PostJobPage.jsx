@@ -13,7 +13,7 @@ const jobTitleSuggestions = [
   'Performance Marketing Manager', 'HR Recruiter', 'Customer Success Specialist', 'Sales Executive', 'Data Analyst', 'Data Collection Lead',
 ]
 
-const companySuggestions = ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'Cromgen Rozgar']
+const companySuggestions = ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'INSEET']
 
 const departmentSuggestions = [
   'Engineering', 'Product', 'Design', 'Marketing', 'Sales', 'Customer Success', 'Human Resources', 'Recruitment',

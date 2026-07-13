@@ -1,7 +1,7 @@
 const faqTopics = [
-  ['General', 'How do I create a CromGen Rozgar account?', 'Open the login or register page, choose your account type, enter the required details, and submit the form. Your dashboard opens after successful verification.'],
-  ['General', 'Can I use CromGen Rozgar on mobile?', 'Yes. The website is responsive and supports job search, applications, recruiter login, document upload, and account management on mobile browsers.'],
-  ['General', 'Is CromGen Rozgar free for candidates?', 'Candidates can browse jobs, create a profile, upload a resume, and apply to eligible jobs without paying a platform fee.'],
+  ['General', 'How do I create a INSEET account?', 'Open the login or register page, choose your account type, enter the required details, and submit the form. Your dashboard opens after successful verification.'],
+  ['General', 'Can I use INSEET on mobile?', 'Yes. The website is responsive and supports job search, applications, recruiter login, document upload, and account management on mobile browsers.'],
+  ['General', 'Is INSEET free for candidates?', 'Candidates can browse jobs, create a profile, upload a resume, and apply to eligible jobs without paying a platform fee.'],
   ['General', 'How do I update my profile information?', 'Login to your account, open the profile page, update your details, and save changes. Updated profile data is stored in MongoDB.'],
   ['General', 'Why am I not receiving updates?', 'Check your email address, notification settings, spam folder, and make sure your profile has the correct contact details.'],
   ['Jobs', 'How do I search for jobs?', 'Use the jobs page search, filters, category pages, and company pages to find live approved jobs from MongoDB.'],

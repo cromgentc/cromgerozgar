@@ -9,7 +9,7 @@ const defaultPages = {
     slug: 'privacy',
     category: 'Privacy',
     title: 'Privacy Policy',
-    subtitle: 'How Cromgen Rozgar handles candidate, recruiter, application, and hiring data.',
+    subtitle: 'How INSEET handles candidate, recruiter, application, and hiring data.',
     sections: [
       { heading: 'Data We Collect', body: 'We collect account details, profile information, resumes, job applications, recruiter documents, payment and wallet activity, and platform usage data needed to operate hiring workflows.' },
       { heading: 'How We Use Data', body: 'Data is used to verify accounts, match candidates with jobs, process applications, help recruiters manage hiring, improve platform security, and send relevant hiring insights when users subscribe.' },
@@ -43,7 +43,7 @@ const defaultPages = {
     category: 'Privacy',
     frontendPlacement: 'Recruiter Frontend',
     title: 'Recruiter Privacy Policy',
-    subtitle: 'How Cromgen Rozgar handles recruiter, company, document, package, and hiring workflow data.',
+    subtitle: 'How INSEET handles recruiter, company, document, package, and hiring workflow data.',
     sections: [
       { heading: 'Recruiter Data We Collect', body: 'We collect company profile details, recruiter contact information, verification documents, job posts, package activity, wallet records, and hiring workflow data.' },
       { heading: 'How Recruiter Data Is Used', body: 'Recruiter data is used for account verification, job approval, candidate pipeline management, package activation, billing support, and platform security.' },
@@ -79,7 +79,7 @@ const defaultPages = {
     category: 'Privacy',
     frontendPlacement: 'Freelancer Frontend',
     title: 'Freelancer Privacy Policy',
-    subtitle: 'How Cromgen Rozgar handles freelancer profile, portfolio, project, proposal, and payout support data.',
+    subtitle: 'How INSEET handles freelancer profile, portfolio, project, proposal, and payout support data.',
     sections: [
       { heading: 'Freelancer Data We Collect', body: 'We collect freelancer account details, profile information, skills, portfolio data, project activity, proposal history, and support messages needed to operate freelancer workflows.' },
       { heading: 'How Freelancer Data Is Used', body: 'Freelancer data is used to show profiles to companies, support project discovery, manage proposals, verify activity, improve recommendations, and keep the marketplace secure.' },
@@ -194,7 +194,7 @@ export function ContentPage({ placement = 'Users Frontend', slug }) {
                 <Headphones size={22} />
               </span>
               <h2 className="mt-4 text-lg font-black text-[#071129]">Need Help?</h2>
-              <p className="mt-3 text-sm font-semibold leading-6 text-[#071129]/70">For account, privacy, terms, or support questions, contact the Cromgen Rozgar team.</p>
+              <p className="mt-3 text-sm font-semibold leading-6 text-[#071129]/70">For account, privacy, terms, or support questions, contact the INSEET team.</p>
               <div className="mt-5 grid gap-3">
                 <SupportChatButton className="!bg-[#ff8a00] text-white shadow-lg shadow-orange-100 hover:!bg-[#e87500]" />
                 <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[7px] border border-[#ff8a00] bg-white px-5 py-2.5 text-sm font-black text-[#ff8a00] transition hover:-translate-y-0.5 hover:bg-orange-50" to="/jobs">

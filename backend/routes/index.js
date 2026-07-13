@@ -25,7 +25,7 @@ const { authorize, protect } = require('../middleware/authMiddleware')
 const router = express.Router()
 const accountRoles = ['Admin', 'staff', 'hiring', 'account team', 'recruiter', 'users', 'freelancer']
 
-router.get('/health', (req, res) => res.json({ success: true, message: 'Cromgen Rozgar API is running' }))
+router.get('/health', (req, res) => res.json({ success: true, message: 'INSEET API is running' }))
 router.use('/auth', authRoutes)
 router.use('/dashboard', dashboardRoutes)
 router.use('/gst', gstRoutes)

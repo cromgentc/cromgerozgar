@@ -148,7 +148,7 @@ async function getRazorpayConfig() {
     enabled: value.enabled !== false,
     keyId: value.keyId || process.env.RAZORPAY_KEY_ID || '',
     keySecret: value.keySecret || process.env.RAZORPAY_KEY_SECRET || '',
-    companyName: value.companyName || process.env.RAZORPAY_COMPANY_NAME || 'Cromgen Rozgar',
+    companyName: value.companyName || process.env.RAZORPAY_COMPANY_NAME || 'INSEET',
     themeColor: value.themeColor || '#2563eb',
   }
 }

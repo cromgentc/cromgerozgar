@@ -24,7 +24,7 @@ const initialRegister = {
   termsAccepted: false,
 }
 
-const companySuggestions = ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'Cromgen Rozgar']
+const companySuggestions = ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'INSEET']
 
 const industrySuggestions = [
   'IT & Software', 'Recruitment', 'HR Technology', 'Cloud Software', 'Fintech', 'Digital Marketing', 'Customer Support',

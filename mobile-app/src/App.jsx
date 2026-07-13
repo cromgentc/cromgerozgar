@@ -83,9 +83,10 @@ const fallbackCustomerCareNumber = '+91 98765 43210'
 function normalizeBrandingPayload(payload = {}) {
   const setting = payload?.data || payload || {}
   const site = setting.value || setting
+  const name = site.siteName || site.name || 'INSEET'
 
   return {
-    name: site.siteName || site.name || 'Cromgen Jobs',
+    name: typeof name === 'string' ? name.replace(/CromGen Rozgar|Cromgen Rozgar|Cromgen Jobs/g, 'INSEET') : 'INSEET',
     logoUrl: site.logoUrl || site.logo || '/cromgen-rozgar-logo.png',
     tollFreeNumber: site.tollFreeNumber || fallbackCustomerCareNumber,
   }
@@ -589,7 +590,7 @@ function App() {
   const [toast, setToast] = useState('')
   const [language, setLanguage] = useState(() => localStorage.getItem('mobileLanguage') || 'English')
   const [notificationsCleared, setNotificationsCleared] = useState(() => localStorage.getItem('mobileNotificationsCleared') === 'true')
-  const [branding, setBranding] = useState({ name: 'Cromgen Jobs', logoUrl: '/cromgen-rozgar-logo.png', tollFreeNumber: fallbackCustomerCareNumber })
+  const [branding, setBranding] = useState({ name: 'INSEET', logoUrl: '/cromgen-rozgar-logo.png', tollFreeNumber: fallbackCustomerCareNumber })
   const isDark = theme === 'dark'
   const t = useMemo(() => (key) => translate(language, key), [language])
 
@@ -841,7 +842,7 @@ function App() {
         </div>
       </section>
 
-      <section className="phone-frame" aria-label="Cromgen Jobs mobile app preview">
+      <section className="phone-frame" aria-label="INSEET mobile app preview">
         <div className="phone">
           <div className="phone-screen">
             {toast && <div className={`mobile-toast ${toast.type || 'info'}`}>{toast.message || toast}</div>}

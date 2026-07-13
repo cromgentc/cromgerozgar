@@ -6,20 +6,20 @@ const BRANDING_EVENT = 'siteBrandingChanged'
 export const defaultHeroBrands = ['OYO', 'paytm', 'Nestle', 'HCL', 'bookmyshow', 'NYKAA']
 
 export const defaultSiteBranding = {
-  siteName: 'Cromgen Rozgar',
-  adminName: 'Rozgar Admin',
-  recruiterName: 'Rozgar Recruiter',
+  siteName: 'INSEET',
+  adminName: 'INSEET Admin',
+  recruiterName: 'INSEET Recruiter',
   logoUrl: '/cromgen-rozgar-logo.png',
   faviconUrl: '/cromgen-rozgar-favicon.png',
   tollFreeNumber: '+91 98765 43210',
-  recruiterEmail: 'recruiter@cromgenrozgar.com',
+  recruiterEmail: 'support@inseet.in',
   recruiterFooterLocation: 'New Delhi, India',
   showRecruiterFooterLocation: true,
   heroBrandNames: defaultHeroBrands,
-  seoTitle: 'Cromgen Rozgar',
+  seoTitle: 'INSEET',
   seoDescription: 'A modern enterprise job portal for candidates, recruiters, HR teams, and growing companies.',
-  seoKeywords: 'jobs, recruiter, hiring, candidates, cromgen rozgar',
-  appDownloadTitle: 'Download the Cromgen Rozgar App',
+  seoKeywords: 'jobs, recruiter, hiring, candidates, INSEET',
+  appDownloadTitle: 'Download the INSEET App',
   playStoreLink: 'https://play.google.com/store',
   appStoreLink: '',
   appRating: '4.4',
@@ -59,12 +59,13 @@ export function applySiteBrandingMeta(branding = {}) {
 }
 
 export function normalizeSiteBranding(branding = {}) {
+  const migrated = migrateLegacyBranding(branding)
   return {
     ...defaultSiteBranding,
-    ...branding,
-    logoUrl: branding.logoUrl || defaultSiteBranding.logoUrl,
-    faviconUrl: branding.faviconUrl || defaultSiteBranding.faviconUrl,
-    heroBrandNames: normalizeHeroBrands(branding.heroBrandNames),
+    ...migrated,
+    logoUrl: migrated.logoUrl || defaultSiteBranding.logoUrl,
+    faviconUrl: migrated.faviconUrl || defaultSiteBranding.faviconUrl,
+    heroBrandNames: normalizeHeroBrands(migrated.heroBrandNames),
   }
 }
 
@@ -141,6 +142,25 @@ function normalizeHeroBrands(value) {
 
   const cleaned = [...new Set(list.map((item) => String(item || '').trim()).filter(Boolean))]
   return cleaned.length ? cleaned : defaultHeroBrands
+}
+
+function migrateLegacyBranding(branding = {}) {
+  const next = { ...branding }
+  const rename = (value) => (typeof value === 'string' ? value
+    .replace(/CromGen Rozgar/g, 'INSEET')
+    .replace(/Cromgen Rozgar/g, 'INSEET')
+    .replace(/Rozgar Admin/g, 'INSEET Admin')
+    .replace(/Rozgar Recruiter/g, 'INSEET Recruiter') : value)
+
+  next.siteName = rename(next.siteName)
+  next.adminName = rename(next.adminName)
+  next.recruiterName = rename(next.recruiterName)
+  next.seoTitle = rename(next.seoTitle)
+  next.seoDescription = rename(next.seoDescription)
+  next.seoKeywords = rename(next.seoKeywords)
+  next.appDownloadTitle = rename(next.appDownloadTitle)
+
+  return next
 }
 
 function setMeta(name, content) {

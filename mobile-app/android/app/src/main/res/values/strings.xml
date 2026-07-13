@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Cromgen Jobs</string>
-    <string name="title_activity_main">Cromgen Jobs</string>
+    <string name="app_name">INSEET</string>
+    <string name="title_activity_main">INSEET</string>
     <string name="package_name">com.cromgen.jobs</string>
     <string name="custom_url_scheme">com.cromgen.jobs</string>
 </resources>

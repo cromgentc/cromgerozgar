@@ -153,7 +153,7 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
               <Link className="line-clamp-2 text-xl font-black leading-7 text-slate-950 hover:text-[#0057B8]" to={jobDetailPath}>
                 {job.title}
               </Link>
-              <p className="mt-1 truncate text-sm font-semibold text-slate-500">{job.company || 'Cromgen Rozgar partner'}</p>
+              <p className="mt-1 truncate text-sm font-semibold text-slate-500">{job.company || 'INSEET partner'}</p>
             </div>
           </div>
           <button
@@ -208,7 +208,7 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
             <Link className={`${denseMobile ? 'line-clamp-2 text-base' : 'text-lg'} font-black text-slate-800 hover:text-[#008bdc]`} to={jobDetailPath}>
               {job.title}
             </Link>
-            <p className="mt-1 truncate text-sm font-bold text-slate-500">{job.company || 'Cromgen Rozgar partner'}</p>
+            <p className="mt-1 truncate text-sm font-bold text-slate-500">{job.company || 'INSEET partner'}</p>
           </div>
         </div>
         <button

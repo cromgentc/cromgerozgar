@@ -1,6 +1,6 @@
-# Cromgen Rozgar Frontend
+# INSEET Frontend
 
-React + Vite frontend for Cromgen Rozgar.
+React + Vite frontend for INSEET.
 
 ## API modes
 

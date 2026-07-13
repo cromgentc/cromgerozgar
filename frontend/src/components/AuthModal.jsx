@@ -159,7 +159,7 @@ export function AuthModal({ initialMode = 'login', onClose, onSuccess, open }) {
                 {isRecruiter ? (isRegister ? 'Recruiter Register' : 'Recruiter Login') : isRegister ? 'Register' : 'Login'}
               </h2>
               <p className="mt-1 text-sm font-semibold text-slate-500">
-                {isRecruiter ? 'Access recruiter hiring tools.' : 'Access your CromGen Rozgar account.'}
+                {isRecruiter ? 'Access recruiter hiring tools.' : 'Access your INSEET account.'}
               </p>
             </div>
 

@@ -249,7 +249,7 @@ function ChatModal({ onClose }) {
           <button className="grid h-10 w-10 place-items-center rounded-[7px] bg-slate-100 text-slate-500 hover:bg-slate-200" onClick={onClose} type="button" aria-label="Close chat"><X size={18} /></button>
         </div>
         <div className="grid gap-3 bg-slate-50 p-5">
-          <div className="max-w-[82%] rounded-[7px] rounded-t-[7px]l-md bg-white p-4 text-sm font-semibold leading-6 text-slate-600 shadow-sm">Hi, welcome to Cromgen Rozgar support. How can we help you today?</div>
+          <div className="max-w-[82%] rounded-[7px] rounded-t-[7px]l-md bg-white p-4 text-sm font-semibold leading-6 text-slate-600 shadow-sm">Hi, welcome to INSEET support. How can we help you today?</div>
           <div className="ml-auto max-w-[82%] rounded-[7px] rounded-t-[7px]r-md bg-blue-600 p-4 text-sm font-semibold leading-6 text-white shadow-sm">I need help with my account or applications.</div>
         </div>
         <div className="flex gap-2 border-t border-slate-100 p-4">

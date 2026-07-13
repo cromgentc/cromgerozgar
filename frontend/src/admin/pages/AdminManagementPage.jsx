@@ -513,7 +513,7 @@ const configs = {
   careerJobs: {
     resource: 'career-jobs',
     title: 'Career Job Posts',
-    subtitle: 'Manage Cromgen Rozgar internal vacancies displayed on Career Resources.',
+    subtitle: 'Manage INSEET internal vacancies displayed on Career Resources.',
     actionLabel: 'Add Career Job',
     modalTitle: 'Add / Edit Career Job',
     extra: 'Publish',
@@ -599,7 +599,7 @@ const configs = {
       sortOrder: Number(form.sortOrder || 0),
       featured: ['true', 'Yes', 'Featured', true].includes(form.featured),
       category: form.category || 'Company News',
-      author: form.author || 'Cromgen Rozgar Team',
+      author: form.author || 'INSEET Team',
       status: form.status || 'Active',
     }),
   },
@@ -1991,7 +1991,7 @@ function getInitialForm(type, companyOptions = []) {
   if (type === 'faqs') {
     return {
       category: fieldOptions.faqCategory[0],
-      question: 'How do I apply for jobs on CromGen Rozgar?',
+      question: 'How do I apply for jobs on INSEET?',
       answer: 'Create or login to your candidate account, complete your profile, open a job, and click Apply. You can track submitted applications from your dashboard.',
       featured: 'false',
       sortOrder: 0,
@@ -4318,9 +4318,9 @@ function NewsletterSendShortcut() {
 
 export function AdminNewsletterSendPage() {
   const [form, setForm] = useState({
-    subject: 'Fresh hiring insights from CromGen Rozgar',
+    subject: 'Fresh hiring insights from INSEET',
     previewText: 'Latest jobs, recruiter trends, and platform updates curated for you.',
-    message: 'Hello,\n\nHere are the latest hiring insights from CromGen Rozgar. Explore fresh verified openings, recruiter updates, and career trends from active companies.\n\nStay connected for more job alerts and hiring updates.',
+    message: 'Hello,\n\nHere are the latest hiring insights from INSEET. Explore fresh verified openings, recruiter updates, and career trends from active companies.\n\nStay connected for more job alerts and hiring updates.',
     imageUrl: '',
     ctaLabel: 'Explore Latest Jobs',
     ctaUrl: 'https://www.cromgenrozgar.in/jobs',
@@ -5433,13 +5433,13 @@ export function AdminSEOBrandingPage() {
             ) : (
               <>
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <LabeledInput label="Frontend Site Name" onChange={(value) => update('siteName', value)} placeholder="Cromgen Rozgar" value={form.siteName} />
-                  <LabeledInput label="Admin Name" onChange={(value) => update('adminName', value)} placeholder="Rozgar Admin" value={form.adminName} />
-                  <LabeledInput label="Recruiter Name" onChange={(value) => update('recruiterName', value)} placeholder="Rozgar Recruiter" value={form.recruiterName} />
+                  <LabeledInput label="Frontend Site Name" onChange={(value) => update('siteName', value)} placeholder="INSEET" value={form.siteName} />
+                  <LabeledInput label="Admin Name" onChange={(value) => update('adminName', value)} placeholder="INSEET Admin" value={form.adminName} />
+                  <LabeledInput label="Recruiter Name" onChange={(value) => update('recruiterName', value)} placeholder="INSEET Recruiter" value={form.recruiterName} />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <LabeledInput label="Toll-Free Number" onChange={(value) => update('tollFreeNumber', value)} placeholder="1800 000 0000" type="tel" value={form.tollFreeNumber} />
-                  <LabeledInput label="Recruiter Email" onChange={(value) => update('recruiterEmail', value)} placeholder="recruiter@cromgenrozgar.com" type="email" value={form.recruiterEmail} />
+                  <LabeledInput label="Recruiter Email" onChange={(value) => update('recruiterEmail', value)} placeholder="support@inseet.in" type="email" value={form.recruiterEmail} />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
                   <LabeledInput label="Recruiter Footer Location" onChange={(value) => update('recruiterFooterLocation', value)} placeholder="New Delhi, India" value={form.recruiterFooterLocation} />
@@ -5471,11 +5471,11 @@ export function AdminSEOBrandingPage() {
                     value={form.faviconUrl}
                   />
                 </div>
-                <LabeledInput label="SEO Title" onChange={(value) => update('seoTitle', value)} placeholder="Cromgen Rozgar - Jobs and Hiring" value={form.seoTitle} />
+                <LabeledInput label="SEO Title" onChange={(value) => update('seoTitle', value)} placeholder="INSEET - Jobs and Hiring" value={form.seoTitle} />
                 <div className="rounded-[7px] border border-blue-100 bg-blue-50/50 p-4">
                   <p className="text-xs font-black uppercase tracking-wide text-blue-700">App Download Popup</p>
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                    <LabeledInput label="Popup Title" onChange={(value) => update('appDownloadTitle', value)} placeholder="Download the Cromgen Rozgar App" value={form.appDownloadTitle || ''} />
+                    <LabeledInput label="Popup Title" onChange={(value) => update('appDownloadTitle', value)} placeholder="Download the INSEET App" value={form.appDownloadTitle || ''} />
                     <LabeledInput label="Play Store Link" onChange={(value) => update('playStoreLink', value)} placeholder="https://play.google.com/store/apps/details?id=..." value={form.playStoreLink || ''} />
                     <LabeledInput label="App Store Link" onChange={(value) => update('appStoreLink', value)} placeholder="https://apps.apple.com/app/..." value={form.appStoreLink || ''} />
                     <LabeledInput label="Rating" onChange={(value) => update('appRating', value)} placeholder="4.4" value={form.appRating || ''} />

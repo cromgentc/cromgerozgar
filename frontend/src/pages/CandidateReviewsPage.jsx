@@ -59,7 +59,7 @@ export function CandidateReviewsPage() {
           </div>
           <h1 className="mt-4 text-3xl font-black text-slate-950 sm:text-5xl">Candidate Reviews</h1>
           <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-slate-500 sm:text-base">
-            All published candidate feedback, success stories, and platform experiences from CromGen Rozgar.
+            All published candidate feedback, success stories, and platform experiences from INSEET.
           </p>
         </div>
 

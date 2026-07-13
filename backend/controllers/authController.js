@@ -344,7 +344,7 @@ const sendWhatsappAppLink = asyncHandler(async (req, res) => {
 })
 
 function buildAppLinkMessage(template, appLink) {
-  const defaultMessage = 'Cromgen Rozgar application link: {link}'
+  const defaultMessage = 'INSEET application link: {link}'
   const message = String(template || defaultMessage).trim() || defaultMessage
 
   return message.includes('{link}') ? message.replaceAll('{link}', appLink) : `${message}\n${appLink}`
@@ -483,7 +483,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 async function sendPasswordResetEmail({ config, provider, resetLink, user }) {
   const isResend = String(provider).toLowerCase() === 'resend'
-  const subject = 'Reset your Cromgen Rozgar password'
+  const subject = 'Reset your INSEET password'
   const text = `Hi ${user.name || 'User'},\n\nReset your password using this link:\n${resetLink}\n\nThis link expires in 15 minutes.`
   const html = `
     <div style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
@@ -495,7 +495,7 @@ async function sendPasswordResetEmail({ config, provider, resetLink, user }) {
                 <td style="background:linear-gradient(135deg,#2563eb,#06b6d4);padding:28px 32px;color:#ffffff">
                   <div style="display:inline-block;border-radius:10px;background:rgba(255,255,255,0.16);padding:8px 10px;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase">Secure Account Access</div>
                   <h1 style="margin:18px 0 0;font-size:28px;line-height:1.2;font-weight:900">Reset your password</h1>
-                  <p style="margin:10px 0 0;color:#dbeafe;font-size:15px;line-height:1.6">We received a request to reset your Cromgen Rozgar account password.</p>
+                  <p style="margin:10px 0 0;color:#dbeafe;font-size:15px;line-height:1.6">We received a request to reset your INSEET account password.</p>
                 </td>
               </tr>
               <tr>
@@ -514,7 +514,7 @@ async function sendPasswordResetEmail({ config, provider, resetLink, user }) {
               </tr>
               <tr>
                 <td style="border-top:1px solid #e2e8f0;background:#f8fafc;padding:18px 32px;text-align:center">
-                  <p style="margin:0;color:#64748b;font-size:12px;line-height:1.6">Cromgen Rozgar · Secure hiring and career platform</p>
+                  <p style="margin:0;color:#64748b;font-size:12px;line-height:1.6">INSEET · Secure hiring and career platform</p>
                 </td>
               </tr>
             </table>
@@ -532,7 +532,7 @@ async function sendPasswordResetEmail({ config, provider, resetLink, user }) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: `${config.fromName || 'Cromgen Rozgar'} <${config.fromEmail}>`,
+        from: `${config.fromName || 'INSEET'} <${config.fromEmail}>`,
         to: [user.email],
         subject,
         html,
@@ -558,7 +558,7 @@ async function sendPasswordResetEmail({ config, provider, resetLink, user }) {
   })
 
   await transporter.sendMail({
-    from: `"${config.fromName || 'Cromgen Rozgar'}" <${config.fromEmail || config.smtpUser}>`,
+    from: `"${config.fromName || 'INSEET'}" <${config.fromEmail || config.smtpUser}>`,
     to: user.email,
     subject,
     text,

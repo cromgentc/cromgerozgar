@@ -12,7 +12,7 @@ const heroSlides = [
   {
     badge: 'Verified freelance network',
     heading: 'Find Freelance Projects That Match Your Skills',
-    subtitle: 'Create your freelancer profile, explore verified projects, submit proposals, and grow your independent career with CromGen Rozgar.',
+    subtitle: 'Create your freelancer profile, explore verified projects, submit proposals, and grow your independent career with INSEET.',
     primary: 'Explore Projects',
     primaryTo: '/freelancer/projects',
     secondary: 'Create Freelancer Profile',
@@ -103,7 +103,7 @@ export function FreelancerPage() {
     <>
       <FreelancerHeroSlider />
 
-      <Section className="relative overflow-hidden bg-[#F7FBFF] !py-10 sm:!py-20" eyebrow="How it works" title="Start freelancing through Cromgen Rozgar" subtitle="A simple and transparent process to help you find the right projects and grow your freelance career.">
+      <Section className="relative overflow-hidden bg-[#F7FBFF] !py-10 sm:!py-20" eyebrow="How it works" title="Start freelancing through INSEET" subtitle="A simple and transparent process to help you find the right projects and grow your freelance career.">
         <div className="pointer-events-none absolute left-6 top-10 hidden grid-cols-4 gap-3 opacity-50 lg:grid">
           {Array.from({ length: 24 }).map((_, index) => <span className="h-1.5 w-1.5 rounded-full bg-blue-300" key={index} />)}
         </div>
@@ -170,7 +170,7 @@ export function FreelancerPage() {
         </div>
       </Section>
 
-      <Section className="relative overflow-hidden bg-[#F7FBFF] !py-10 sm:!py-20" eyebrow="Benefits" title="Why Freelancers Choose Cromgen Rozgar" subtitle="Discover verified projects, connect with trusted clients, manage proposals, and grow your freelance career from one powerful platform.">
+      <Section className="relative overflow-hidden bg-[#F7FBFF] !py-10 sm:!py-20" eyebrow="Benefits" title="Why Freelancers Choose INSEET" subtitle="Discover verified projects, connect with trusted clients, manage proposals, and grow your freelance career from one powerful platform.">
         <div className="pointer-events-none absolute -left-20 top-0 hidden h-44 w-44 rounded-full bg-blue-100/70 lg:block" />
         <div className="pointer-events-none absolute right-10 top-16 hidden text-blue-500 lg:block">
           <ArrowRight size={44} className="-rotate-45" />
@@ -246,7 +246,7 @@ export function FreelancerPage() {
             <span className="grid h-12 w-12 place-items-center rounded-full bg-blue-50 text-[#0057B8]">
               <Sparkles size={22} />
             </span>
-            <p className="text-sm font-semibold text-slate-600 sm:text-base">Join thousands of freelancers already building their career with Cromgen Rozgar.</p>
+            <p className="text-sm font-semibold text-slate-600 sm:text-base">Join thousands of freelancers already building their career with INSEET.</p>
           </div>
           <Link className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-[7px] bg-[#0057B8] px-8 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:-translate-y-0.5 hover:bg-[#004694]" to="/freelancer-register">
             Join Now <ArrowRight size={18} />
@@ -294,7 +294,7 @@ function FreelancerHeroSlider() {
               {active === 0 ? 'Start Freelancing From Home' : slide.heading}
             </h1>
             <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-slate-600 sm:text-base sm:leading-7 lg:mt-4">
-              {active === 0 ? 'Work with trusted projects, earn online, and grow your skills with Cromgen Rozgar.' : slide.subtitle}
+              {active === 0 ? 'Work with trusted projects, earn online, and grow your skills with INSEET.' : slide.subtitle}
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-3 sm:mt-7">
               <button

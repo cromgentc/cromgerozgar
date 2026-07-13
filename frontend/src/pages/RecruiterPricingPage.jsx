@@ -220,7 +220,7 @@ export function RecruiterPricingPage() {
           key: order.keyId,
           amount: order.amount * 100,
           currency: order.currency || 'INR',
-          name: order.companyName || 'Cromgen Rozgar',
+          name: order.companyName || 'INSEET',
           description,
           order_id: order.orderId,
           prefill: {

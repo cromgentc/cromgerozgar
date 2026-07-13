@@ -27,6 +27,10 @@ const {
   removeSupaCloudObject,
   removeSupaCloudObjects,
 } = require('../utils/supaCloudStorage')
+const {
+  parseR2ObjectUrl,
+  removeR2Object,
+} = require('../utils/r2Storage')
 
 function normalizeEmail(value = '') {
   return String(value).trim().toLowerCase()
@@ -199,7 +203,7 @@ async function ensureMongoDefaultFaqs(filter) {
 const defaultPolicyPage = {
   slug: 'privacy',
   title: 'Privacy Policy',
-  subtitle: 'How CromGen Rozgar handles candidate, recruiter, application, and hiring data.',
+  subtitle: 'How INSEET handles candidate, recruiter, application, and hiring data.',
   category: 'Privacy',
   frontendPlacement: 'Users Frontend',
   status: 'Published',
@@ -558,6 +562,17 @@ function normalizeJobReview(body) {
 }
 
 async function removeResumeFromSupaCloud(resume) {
+  if (resume.storageProvider === 'cloudflare-r2' && resume.storageBucket && resume.storagePath) {
+    await removeR2Object({ bucket: resume.storageBucket, storagePath: resume.storagePath }, 'Cloudflare R2 resume file')
+    return
+  }
+
+  const r2Object = parseR2ObjectUrl(resume.resumeUrl)
+  if (r2Object) {
+    await removeR2Object(r2Object, 'Cloudflare R2 resume file')
+    return
+  }
+
   if (resume.storageProvider === 'supa-cloud' && resume.storageBucket && resume.storagePath) {
     await removeSupaCloudObject({ bucket: resume.storageBucket, storagePath: resume.storagePath }, 'Supa Cloud resume file')
     return

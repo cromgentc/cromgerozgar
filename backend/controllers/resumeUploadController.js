@@ -5,6 +5,13 @@ const {
   parseSupaCloudObjectUrl,
   removeSupaCloudObject,
 } = require('../utils/supaCloudStorage')
+const {
+  fetchR2Object,
+  parseR2ObjectUrl,
+  readR2Error,
+  removeR2Object,
+  uploadResumeToR2,
+} = require('../utils/r2Storage')
 
 function cleanSegment(value = '') {
   return String(value || 'file')
@@ -27,6 +34,12 @@ function storageError(message, statusCode = 502) {
   const error = new Error(message)
   error.statusCode = statusCode
   return error
+}
+
+function isPdfUpload(file) {
+  const mimeType = String(file?.mimetype || '')
+  const originalName = String(file?.originalname || '').toLowerCase()
+  return originalName.endsWith('.pdf') && ['application/pdf', 'application/octet-stream', 'application/x-pdf', 'binary/octet-stream'].includes(mimeType)
 }
 
 async function readSupaCloudError(response, fallback) {
@@ -157,17 +170,16 @@ async function uploadResume(req, res) {
     throw new Error('Resume PDF is required.')
   }
 
-  if (req.file.mimetype !== 'application/pdf') {
+  if (!isPdfUpload(req.file)) {
     res.status(400)
     throw new Error('Only PDF resume upload is allowed.')
   }
 
-  const config = await getSupaCloudConfig()
   const originalFileName = req.file.originalname || 'resume.pdf'
-  const upload = await uploadToSupaCloud({
+  const resumeMimeType = req.file.mimetype === 'application/pdf' ? req.file.mimetype : 'application/pdf'
+  const upload = await uploadResumeToR2({
     buffer: req.file.buffer,
-    config,
-    contentType: req.file.mimetype,
+    contentType: resumeMimeType,
     fileName: originalFileName,
   })
 
@@ -184,10 +196,10 @@ async function uploadResume(req, res) {
     file: {
       originalName: originalFileName,
       extension: path.extname(originalFileName),
-      mimeType: req.file.mimetype,
+      mimeType: resumeMimeType,
       size: req.file.size,
-      storageProvider: 'supa-cloud',
-      bucket: config.bucket,
+      storageProvider: 'cloudflare-r2',
+      bucket: upload.bucket,
       path: upload.storagePath,
       url: upload.publicUrl,
     },
@@ -203,11 +215,11 @@ async function uploadResume(req, res) {
     experience: '',
     resumeUrl: upload.publicUrl,
     resumeJson: metadata,
-    storageProvider: 'supa-cloud',
-    storageBucket: config.bucket,
+    storageProvider: 'cloudflare-r2',
+    storageBucket: upload.bucket,
     storagePath: upload.storagePath,
     originalFileName,
-    mimeType: req.file.mimetype,
+    mimeType: resumeMimeType,
     fileSize: req.file.size,
     source: 'Admin Upload',
     status: 'Active',
@@ -219,11 +231,18 @@ async function uploadResume(req, res) {
     const previousEmail = String(previousResume?.email || '').trim().toLowerCase()
 
     if (previousResume && (!currentEmail || !previousEmail || currentEmail === previousEmail)) {
-      if (previousResume.storageBucket && previousResume.storagePath) {
+      if (previousResume.storageProvider === 'cloudflare-r2' && previousResume.storageBucket && previousResume.storagePath) {
+        await removeR2Object({ bucket: previousResume.storageBucket, storagePath: previousResume.storagePath }, 'Cloudflare R2 old resume file')
+      } else if (previousResume.storageBucket && previousResume.storagePath) {
         await removeSupaCloudObject({ bucket: previousResume.storageBucket, storagePath: previousResume.storagePath }, 'Supa Cloud old resume file')
       } else {
-        const parsed = parseSupaCloudObjectUrl(previousResume.resumeUrl)
-        if (parsed) await removeSupaCloudObject(parsed, 'Supa Cloud old resume file')
+        const parsedR2 = parseR2ObjectUrl(previousResume.resumeUrl)
+        if (parsedR2) {
+          await removeR2Object(parsedR2, 'Cloudflare R2 old resume file')
+        } else {
+          const parsed = parseSupaCloudObjectUrl(previousResume.resumeUrl)
+          if (parsed) await removeSupaCloudObject(parsed, 'Supa Cloud old resume file')
+        }
       }
       await Resume.findByIdAndDelete(previousResume._id)
     }
@@ -382,29 +401,24 @@ async function viewResume(req, res) {
     throw new Error('Resume not found.')
   }
 
+  assertResumeAccess(req, res, resume)
+
   if (!resume.storageBucket || !resume.storagePath) {
     res.status(404)
     throw new Error('Resume storage path not found. Please upload the resume again.')
   }
 
-  const config = await getSupaCloudConfig()
-  if (!config.supabaseUrl || !config.serviceRoleKey) {
-    res.status(400)
-    throw new Error('Supa Cloud storage is not configured. Save Supa Cloud settings first.')
-  }
-
-  const objectUrl = `${config.supabaseUrl}/storage/v1/object/${encodeURIComponent(resume.storageBucket)}/${resume.storagePath}`
-  const response = await fetch(objectUrl, {
-    headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-    },
-  })
+  const isR2Resume = resume.storageProvider === 'cloudflare-r2'
+  const response = isR2Resume
+    ? await fetchR2Object({ bucket: resume.storageBucket, storagePath: resume.storagePath })
+    : await fetchSupaCloudResumeObject(resume)
 
   if (!response.ok) {
-    const message = await readSupaCloudError(response, 'Resume file could not be opened.')
+    const message = isR2Resume
+      ? await readR2Error(response, 'Resume file could not be opened.')
+      : await readSupaCloudError(response, 'Resume file could not be opened.')
     res.status(response.status === 404 ? 404 : 502)
-    throw new Error(`Supa Cloud resume view failed: ${message}. Please upload the resume again or check bucket "${resume.storageBucket}".`)
+    throw new Error(`${isR2Resume ? 'Cloudflare R2' : 'Supa Cloud'} resume view failed: ${message}. Please upload the resume again or check bucket "${resume.storageBucket}".`)
   }
 
   const arrayBuffer = await response.arrayBuffer()
@@ -415,4 +429,68 @@ async function viewResume(req, res) {
   res.send(Buffer.from(arrayBuffer))
 }
 
-module.exports = { uploadBrandAsset, uploadRecruiterDocumentFile, uploadRecruiterProfileImage, uploadResume, viewResume }
+async function deleteResume(req, res) {
+  const resume = await Resume.findById(req.params.id)
+  if (!resume) {
+    res.status(404)
+    throw new Error('Resume not found.')
+  }
+
+  assertResumeAccess(req, res, resume)
+  await removeStoredResumeFile(resume)
+  await Resume.findByIdAndDelete(resume._id)
+
+  res.json({ success: true, message: 'Resume deleted.' })
+}
+
+function assertResumeAccess(req, res, resume) {
+  const role = req.user?.role
+  if (['Admin', 'hiring', 'recruiter', 'account team'].includes(role)) return
+
+  const requesterEmail = String(req.user?.email || '').trim().toLowerCase()
+  const resumeEmail = String(resume.email || resume.resumeJson?.candidate?.email || '').trim().toLowerCase()
+  if (role === 'users' && requesterEmail && resumeEmail && requesterEmail === resumeEmail) return
+
+  res.status(403)
+  throw new Error('Forbidden: you can access only your own resume.')
+}
+
+async function removeStoredResumeFile(resume) {
+  if (resume.storageProvider === 'cloudflare-r2' && resume.storageBucket && resume.storagePath) {
+    await removeR2Object({ bucket: resume.storageBucket, storagePath: resume.storagePath }, 'Cloudflare R2 resume file')
+    return
+  }
+
+  const parsedR2 = parseR2ObjectUrl(resume.resumeUrl)
+  if (parsedR2) {
+    await removeR2Object(parsedR2, 'Cloudflare R2 resume file')
+    return
+  }
+
+  if (resume.storageBucket && resume.storagePath) {
+    await removeSupaCloudObject({ bucket: resume.storageBucket, storagePath: resume.storagePath }, 'Supa Cloud resume file')
+    return
+  }
+
+  const parsed = parseSupaCloudObjectUrl(resume.resumeUrl)
+  if (parsed) await removeSupaCloudObject(parsed, 'Supa Cloud resume file')
+}
+
+async function fetchSupaCloudResumeObject(resume) {
+  const config = await getSupaCloudConfig()
+  if (!config.supabaseUrl || !config.serviceRoleKey) {
+    const error = new Error('Supa Cloud storage is not configured. Save Supa Cloud settings first.')
+    error.statusCode = 400
+    throw error
+  }
+
+  const objectUrl = `${config.supabaseUrl}/storage/v1/object/${encodeURIComponent(resume.storageBucket)}/${resume.storagePath}`
+  return fetch(objectUrl, {
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+    },
+  })
+}
+
+module.exports = { deleteResume, uploadBrandAsset, uploadRecruiterDocumentFile, uploadRecruiterProfileImage, uploadResume, viewResume }

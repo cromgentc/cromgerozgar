@@ -19,7 +19,7 @@ export function JobDetailsPage({ onApply }) {
   const fallbackJob = {
     id: resolvedJobId,
     title: 'Job not found',
-    company: 'Cromgen Rozgar',
+    company: 'INSEET',
     companyLogo: 'CR',
     department: '',
     location: '',
@@ -170,7 +170,7 @@ export function JobDetailsPage({ onApply }) {
                     {job.companyLogo || String(job.company || job.title || 'CR').slice(0, 2).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-black text-[#0057B8]">{job.company || 'Cromgen Rozgar partner'}</p>
+                    <p className="truncate text-sm font-black text-[#0057B8]">{job.company || 'INSEET partner'}</p>
                     <h1 className="mt-2 text-3xl font-black leading-tight text-slate-950 sm:text-5xl">{job.title}</h1>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {job.featured && <span className="rounded-[7px] bg-blue-50 px-3 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100">Featured</span>}
@@ -350,7 +350,7 @@ function SimilarJobLink({ index, job }) {
   return (
     <Link className="block rounded-[8px] border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50" to={createJobDetailPath(job, index)}>
       <p className="line-clamp-2 text-sm font-black text-slate-950">{job.title || 'Job opening'}</p>
-      <p className="mt-1 truncate text-xs font-bold text-slate-500">{job.company || 'Cromgen Rozgar partner'}</p>
+      <p className="mt-1 truncate text-xs font-bold text-slate-500">{job.company || 'INSEET partner'}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         <span className="rounded-[7px] bg-white px-2 py-1 text-[11px] font-black text-blue-700 ring-1 ring-blue-100">{job.workMode || 'Work mode'}</span>
         <span className="rounded-[7px] bg-white px-2 py-1 text-[11px] font-black text-slate-600 ring-1 ring-slate-200">{job.salary || 'Salary'}</span>

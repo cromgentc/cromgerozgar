@@ -4,11 +4,13 @@ const { uploadBrandAsset, uploadRecruiterDocumentFile, uploadRecruiterProfileIma
 const { authorize, protect } = require('../middleware/authMiddleware')
 
 const router = express.Router()
+const resumeFileTypes = new Set(['application/pdf', 'application/octet-stream', 'application/x-pdf', 'binary/octet-stream'])
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 8 * 1024 * 1024 },
+  limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter(req, file, callback) {
-    if (file.mimetype !== 'application/pdf') {
+    const isPdfFile = String(file.originalname || '').toLowerCase().endsWith('.pdf')
+    if (!isPdfFile || !resumeFileTypes.has(file.mimetype)) {
       callback(new Error('Only PDF upload is allowed.'))
       return
     }
@@ -42,7 +44,7 @@ const imageUpload = multer({
   },
 })
 
-router.post('/supa-cloud', protect, authorize('Admin', 'hiring', 'recruiter', 'users'), upload.single('resume'), uploadResume)
+router.post('/cloudflare-r2', protect, authorize('Admin', 'hiring', 'recruiter', 'users'), upload.single('resume'), uploadResume)
 router.post('/recruiter-document', protect, authorize('Admin', 'account team', 'recruiter'), documentUpload.single('document'), uploadRecruiterDocumentFile)
 router.post('/recruiter-profile-image', protect, authorize('Admin', 'account team', 'recruiter'), imageUpload.single('image'), uploadRecruiterProfileImage)
 router.post('/brand-asset', protect, authorize('Admin'), imageUpload.single('asset'), uploadBrandAsset)

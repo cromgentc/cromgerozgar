@@ -18,10 +18,10 @@ export function AboutPage() {
               About Us
             </span>
             <h1 className="mt-5 text-4xl font-black tracking-tight text-[#061333] sm:text-5xl">
-              Cromgen Rozgar connects talent, recruiters, and work opportunities.
+              INSEET connects talent, recruiters, and work opportunities.
             </h1>
             <p className="mt-5 max-w-3xl text-base font-semibold leading-8 text-slate-600">
-              Cromgen Rozgar is built for candidates, freelancers, recruiters, and hiring teams who need a trusted place to discover jobs, post openings, manage applications, and grow careers with clear workflows.
+              INSEET is built for candidates, freelancers, recruiters, and hiring teams who need a trusted place to discover jobs, post openings, manage applications, and grow careers with clear workflows.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[7px] bg-[#0057B8] px-6 text-sm font-black text-white shadow-lg shadow-blue-100" to="/jobs">

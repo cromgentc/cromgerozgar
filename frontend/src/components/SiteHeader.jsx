@@ -97,11 +97,11 @@ export function SiteHeader({ variant = 'default' }) {
           <nav className="flex min-h-[86px] items-center justify-between gap-3 px-3 sm:px-5 lg:gap-5">
             <Link className="flex min-w-0 shrink-0 items-center font-bold text-[#ff8a00]" onClick={handleLinkClick} to={config.homeTo}>
               {branding.logoUrl ? (
-                <img className="h-14 w-auto max-w-[250px] object-contain" src={branding.logoUrl} alt={branding.siteName || 'Cromgen Rozgar'} />
+                <img className="h-14 w-auto max-w-[250px] object-contain" src={branding.logoUrl} alt={branding.siteName || 'INSEET'} />
               ) : (
                 <>
                   <span className="grid h-12 w-12 place-items-center rounded-[7px] bg-[#0057B8] text-white"><BriefcaseBusiness size={22} /></span>
-                  <span className="ml-3 text-xl text-[#ff8a00]">{branding.siteName || 'Cromgen Rozgar'}</span>
+                  <span className="ml-3 text-xl text-[#ff8a00]">{branding.siteName || 'INSEET'}</span>
                 </>
               )}
             </Link>

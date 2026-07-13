@@ -29,7 +29,7 @@ export function CookieConsent() {
           <div>
             <p className="font-black text-slate-950">Cookies Notice</p>
             <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
-              We use cookies to keep sessions secure, remember preferences, and improve the CromGen Rozgar experience.
+              We use cookies to keep sessions secure, remember preferences, and improve the INSEET experience.
             </p>
           </div>
         </div>

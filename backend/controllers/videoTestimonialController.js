@@ -4,7 +4,7 @@ const VideoTestimonial = require('../models/VideoTestimonial')
 const defaultVideoTestimonials = [
   {
     companyName: 'K9HR Solutions',
-    quote: 'Cromgen Rozgar has simplified our hiring process and helped us connect with the right talent faster than ever.',
+    quote: 'INSEET has simplified our hiring process and helped us connect with the right talent faster than ever.',
     location: '150 Feet Ring Road, Rajkot, India',
     duration: '02:45',
     logoText: 'K9HR',

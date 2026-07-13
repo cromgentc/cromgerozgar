@@ -197,7 +197,7 @@ export function CandidateProfilePage() {
     }
 
     setResumeUploading(true)
-    setMessage('Uploading resume to Supa Cloud...')
+    setMessage('Uploading resume to Cloudflare R2...')
 
     const data = new FormData()
     data.append('resume', file)
@@ -214,7 +214,7 @@ export function CandidateProfilePage() {
     if (profile.resumeMongoId) data.append('previousResumeId', profile.resumeMongoId)
 
     try {
-      const payload = await api.uploadResumeToSupaCloud(data)
+      const payload = await api.uploadResumeToCloudflareR2(data)
       const resume = payload.data || {}
       const nextProfile = {
         ...profile,
@@ -227,9 +227,9 @@ export function CandidateProfilePage() {
       setProfile(nextProfile)
       localStorage.setItem('candidateProfile', JSON.stringify(nextProfile))
       window.dispatchEvent(new CustomEvent('candidateActivityChanged'))
-      setMessage('Resume uploaded to Supa Cloud and saved in MongoDB.')
+      setMessage('Resume uploaded to Cloudflare R2 and saved in MongoDB.')
     } catch (error) {
-      setMessage(error.message || 'Resume upload failed. Please check Supa Cloud settings.')
+      setMessage(error.message || 'Resume upload failed. Please check Cloudflare R2 settings.')
     } finally {
       setResumeUploading(false)
     }

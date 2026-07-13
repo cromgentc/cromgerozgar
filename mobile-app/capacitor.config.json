@@ -1,6 +1,6 @@
 {
   "appId": "com.cromgen.jobs",
-  "appName": "Cromgen Jobs",
+  "appName": "INSEET",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"
