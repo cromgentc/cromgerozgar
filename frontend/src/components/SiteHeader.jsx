@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowRight, BriefcaseBusiness, ChevronDown, Menu, Search, X } from 'lucide-react'
+import { ArrowRight, BriefcaseBusiness, Menu, Search, X } from 'lucide-react'
 import { AuthModal } from './AuthModal'
 import { getStoredUser } from '../routes/authRouting'
 import { useSiteBranding } from '../utils/siteBranding'
@@ -13,9 +13,9 @@ const headerConfigs = {
     links: [
       { label: 'Home', to: '/' },
       { label: 'Find Jobs', to: '/jobs' },
+      { label: 'Internship Course', to: '/internship-course', badge: 'Video' },
       { label: 'Freelance Projects', to: '/freelancer/projects', badge: 'New' },
       { label: 'Candidates', to: '/auth', caption: 'Candidates' },
-      { label: 'Career Resources', to: '/career-resources', dropdown: true },
     ],
     cta: { label: 'For Employers', caption: 'Post Jobs Free', to: '/recruiter' },
   },
@@ -125,7 +125,6 @@ export function SiteHeader({ variant = 'default' }) {
                         {item.caption && <span className="block text-xs font-semibold text-slate-500">{item.caption}</span>}
                       </span>
                       {item.badge && <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-700">{item.badge}</span>}
-                      {item.dropdown && <ChevronDown size={14} />}
                       <span className={`absolute bottom-0 left-0 h-1 rounded-full bg-[#0057B8] transition-all ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`} />
                     </>
                   )}

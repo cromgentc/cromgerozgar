@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowRight, Bell, BriefcaseBusiness, Building2, CalendarDays, ChevronDown, ChevronRight, ClipboardList, CreditCard, Download, Lock, LogOut, Mail, MapPin, Menu, MessageCircle, Phone, Search, Send, Share2, ShieldCheck, Sparkles, Star, UserRound, Users, Wallet, X } from 'lucide-react'
+import { ArrowRight, Bell, BriefcaseBusiness, Building2, CalendarDays, ChevronRight, ClipboardList, CreditCard, Download, Lock, LogOut, Mail, MapPin, Menu, MessageCircle, Phone, Search, Send, Share2, ShieldCheck, Sparkles, Star, UserRound, Users, Wallet, X } from 'lucide-react'
 import { AuthModal } from './AuthModal'
 import { Button } from './Button'
 import { getStoredUser } from '../routes/authRouting'
@@ -14,6 +14,7 @@ import { useSocialMediaLinks } from '../utils/socialMediaLinks'
 const navItems = [
   { label: 'Home', to: '/' },
   { label: 'Jobs', to: '/jobs' },
+  { label: 'Internship Course', to: '/internship-course' },
   { label: 'Companies', to: '/companies' },
   { label: 'Freelancer', to: '/freelancer' },
   { label: 'Candidates', to: '/candidate-dashboard' },
@@ -64,10 +65,10 @@ export function Layout() {
   const publicHeaderLinks = [
     { label: 'Home', to: '/' },
     { label: 'Find Jobs', to: '/jobs' },
+    { label: 'Internship Course', to: '/internship-course', badge: 'Video' },
     ...(showCompaniesNav ? [{ label: 'Companies', to: '/companies' }] : []),
     { label: 'Freelance Projects', to: '/freelancer/projects', badge: 'New' },
     { label: 'Candidates', to: isUserAccount ? '/candidate-dashboard' : '/auth', caption: 'Candidates' },
-    { label: 'Career Resources', to: '/career-resources', dropdown: true },
   ]
 
   useEffect(() => {
@@ -777,6 +778,8 @@ function MainFooter({ branding, newsletterEmail, newsletterLoading, newsletterSt
     ['About Us', '/about'],
     ['Press / News', '/press-news'],
     ['Jobs', '/jobs'],
+    ['Internship Course', '/internship-course'],
+    ['Career Resources', '/career-resources'],
     ['Companies', '/companies'],
     ['Industries', '/industries'],
     ['Contact', '/contact'],
