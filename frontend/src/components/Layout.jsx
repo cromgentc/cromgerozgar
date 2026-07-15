@@ -250,7 +250,7 @@ export function Layout() {
           <nav className="flex min-h-[86px] items-center justify-between gap-3 px-3 sm:px-5 lg:gap-5">
             <Link className="flex min-w-0 shrink-0 items-center font-bold text-[#ff8a00]" onClick={handleHeaderLinkClick} to="/">
               {branding.logoUrl ? (
-                <img className="h-14 w-auto max-w-[250px] object-contain" src={branding.logoUrl} alt={branding.siteName || 'INSEET'} />
+                <img className="h-14 w-auto max-w-[250px] object-contain mix-blend-multiply" src={branding.logoUrl} alt={branding.siteName || 'INSEET'} />
               ) : (
                 <>
                   <span className="grid h-12 w-12 place-items-center rounded-[7px] bg-[#0057B8] text-white"><BriefcaseBusiness size={22} /></span>
@@ -859,7 +859,7 @@ function MainFooter({ branding, newsletterEmail, newsletterLoading, newsletterSt
           <div className="min-w-0 lg:col-span-1">
             <Link className="inline-flex min-w-0 items-center font-black text-slate-950" onClick={handleFooterLinkClick} to="/">
               {branding.logoUrl ? (
-                <img className="h-10 w-auto max-w-full object-contain sm:h-12 sm:max-w-[190px]" src={branding.logoUrl} alt={branding.siteName || 'INSEET'} />
+                <img className="h-11 w-auto max-w-full object-contain sm:h-14 sm:max-w-[220px]" src={branding.logoUrl} alt={branding.siteName || 'INSEET'} />
               ) : (
                 <>
                   <span className="grid h-10 w-10 place-items-center"><BriefcaseBusiness size={22} /></span>
@@ -886,7 +886,7 @@ function MainFooter({ branding, newsletterEmail, newsletterLoading, newsletterSt
               <h3 className="text-sm font-black uppercase text-slate-950">Contact & Updates</h3>
             </div>
             <div className="grid gap-2 text-sm font-semibold text-slate-500">
-              <p className="flex min-w-0 items-center gap-2 break-words"><Mail className="shrink-0 text-blue-600" size={17} /> {branding.recruiterEmail || 'care@cromgenrozgar.in'}</p>
+              <p className="flex min-w-0 items-center gap-2 break-words"><Mail className="shrink-0 text-blue-600" size={17} /> {branding.recruiterEmail || 'care@inseet.in'}</p>
               <p className="flex min-w-0 items-center gap-2 break-words"><Phone className="shrink-0 text-blue-600" size={17} /> {branding.tollFreeNumber || '+91 1800-123-4567'}</p>
               <p className="flex min-w-0 items-center gap-2 break-words"><MessageCircle className="shrink-0 text-blue-600" size={17} /> Chat with our support team</p>
               {branding.showRecruiterFooterLocation !== false && (

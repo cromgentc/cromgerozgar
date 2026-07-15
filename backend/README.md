@@ -14,9 +14,9 @@ Update `.env`:
 
 ```env
 PORT=5050
-MONGO_URI=mongodb://127.0.0.1:27017/cromgen-rozgar
+MONGO_URI=mongodb://127.0.0.1:27017/inseet
 JWT_SECRET=change-this-secret
-CLIENT_URL=https://www.cromgenrozgar.in
+CLIENT_URL=https://www.inseet.in
 ```
 
 Resume uploads are stored in Cloudflare R2. Create an R2 API token with object read/write access for the `inseet-resumes` bucket, then add:
@@ -42,14 +42,14 @@ API health:
 
 ```bash
 GET http://localhost:5050/api/health
-GET https://www.cromgenrozgar.in/api?path=health
+GET https://www.inseet.in/api?path=health
 ```
 
 Postman login:
 
 ```bash
 POST http://localhost:5050/api/auth/login
-POST https://www.cromgenrozgar.in/api?path=auth%2Flogin
+POST https://www.inseet.in/api?path=auth%2Flogin
 ```
 
 ## Seed Demo Data
@@ -69,8 +69,8 @@ npm run seed:clear
 Demo users:
 
 ```text
-admin@cromgen.test / password123
-employer@cromgen.test / password123
+admin@inseet.test / password123
+employer@inseet.test / password123
 ```
 
 ## Main API Routes

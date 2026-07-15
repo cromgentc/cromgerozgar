@@ -23,8 +23,8 @@ const app = express()
 const port = process.env.PORT || 5000
 const allowedOrigins = [
   process.env.CLIENT_URL,
-  'https://www.cromgenrozgar.in',
-  'https://cromgenrozgar.in',
+  'https://www.inseet.in',
+  'https://inseet.in',
 ].filter(Boolean)
 
 function isAllowedOrigin(origin) {

@@ -165,7 +165,7 @@ export function EmployerLoginPage() {
   return (
     <EmployerAuthShell title="Recruiter Login" subtitle="Access your recruiter hiring workspace, review applications, and manage hiring workflows.">
       <form className="grid gap-4" onSubmit={submit}>
-        <Field icon={Mail} label="Business Email" onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} placeholder="recruiter@cromgen.test" required type="email" value={form.email} />
+        <Field icon={Mail} label="Business Email" onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} placeholder="recruiter@inseet.test" required type="email" value={form.email} />
         <Field icon={Lock} label="Password" onChange={(e) => setForm((current) => ({ ...current, password: e.target.value }))} placeholder="password123" required type="password" value={form.password} />
         <div className="flex items-center justify-between text-sm">
           <label className="flex items-center gap-2 text-slate-500"><input type="checkbox" /> Remember me</label>

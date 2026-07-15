@@ -11,7 +11,7 @@ const defaultWhatsAppApiConfig = {
   otpTemplateName: '',
   languageCode: 'en_US',
   defaultCountryCode: '+91',
-  appLink: 'https://www.cromgenrozgar.in',
+  appLink: 'https://www.inseet.in',
   appLinkMessage: 'INSEET application link: {link}',
   notes: '',
 }
@@ -139,7 +139,7 @@ export function AdminWhatsAppApiPage() {
                 <LabeledInput label="Business Account ID" onChange={(value) => update('businessAccountId', value)} placeholder="WhatsApp business account ID" value={form.businessAccountId} />
                 <LabeledInput label="OTP Template Name" onChange={(value) => update('otpTemplateName', value)} placeholder="login_otp" value={form.otpTemplateName} />
                 <LabeledInput label="Language Code" onChange={(value) => update('languageCode', value)} placeholder="en_US, en, en_IN" value={form.languageCode} />
-                <LabeledInput className="sm:col-span-2" label="Application Link" onChange={(value) => update('appLink', value)} placeholder="https://www.cromgenrozgar.in/app" value={form.appLink} />
+                <LabeledInput className="sm:col-span-2" label="Application Link" onChange={(value) => update('appLink', value)} placeholder="https://www.inseet.in/app" value={form.appLink} />
               </div>
               <label className="grid gap-1">
                 <span className="text-xs font-black uppercase tracking-wide text-slate-400">Application Link Message</span>

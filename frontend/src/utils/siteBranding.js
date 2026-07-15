@@ -9,8 +9,8 @@ export const defaultSiteBranding = {
   siteName: 'INSEET',
   adminName: 'INSEET Admin',
   recruiterName: 'INSEET Recruiter',
-  logoUrl: '/cromgen-rozgar-logo.png',
-  faviconUrl: '/cromgen-rozgar-favicon.png',
+  logoUrl: '/inseet-logo.png',
+  faviconUrl: '/inseet-favicon.png',
   tollFreeNumber: '+91 98765 43210',
   recruiterEmail: 'support@inseet.in',
   recruiterFooterLocation: 'New Delhi, India',
@@ -147,8 +147,6 @@ function normalizeHeroBrands(value) {
 function migrateLegacyBranding(branding = {}) {
   const next = { ...branding }
   const rename = (value) => (typeof value === 'string' ? value
-    .replace(/CromGen Rozgar/g, 'INSEET')
-    .replace(/Cromgen Rozgar/g, 'INSEET')
     .replace(/Rozgar Admin/g, 'INSEET Admin')
     .replace(/Rozgar Recruiter/g, 'INSEET Recruiter') : value)
 
@@ -204,6 +202,6 @@ function absoluteUrl(value = '') {
 }
 
 function getCurrentCanonicalUrl() {
-  if (typeof window === 'undefined') return 'https://www.cromgenrozgar.in/'
+  if (typeof window === 'undefined') return 'https://www.inseet.in/'
   return `${window.location.origin}${window.location.pathname}`
 }

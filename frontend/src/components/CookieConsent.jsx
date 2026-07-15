@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Cookie, X } from 'lucide-react'
 
-const consentKey = 'cromgenCookieConsent'
+const consentKey = 'inseetCookieConsent'
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false)

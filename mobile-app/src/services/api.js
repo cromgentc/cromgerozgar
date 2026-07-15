@@ -1,4 +1,4 @@
-const LIVE_API_BASE_URL = 'https://www.cromgenrozgar.in/api'
+const LIVE_API_BASE_URL = 'https://www.inseet.in/api'
 
 function getApiBaseUrl() {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL

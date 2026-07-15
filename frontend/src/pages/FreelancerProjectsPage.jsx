@@ -999,7 +999,7 @@ export function FreelancerProjectDetailsPage() {
 }
 
 function getProjectSlug(project) {
-  const source = `${project.title || 'project'}-${project.company || 'cromgen'}`
+  const source = `${project.title || 'project'}-${project.company || 'inseet'}`
   return source
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -1199,5 +1199,5 @@ function getProjectId(project, index) {
 
 function getOwnerEmail(owner = '') {
   const normalized = owner.toLowerCase() || 'admin'
-  return `${normalized.replace(/\s+/g, '.')}@cromgen.in`
+  return `${normalized.replace(/\s+/g, '.')}@inseet.in`
 }

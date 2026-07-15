@@ -449,7 +449,7 @@ function CompanyProfile({ totalJobs, user }) {
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {[
-          ['Company name', user?.name || 'CromGen Hiring Partner'],
+          ['Company name', user?.name || 'INSEET Hiring Partner'],
           ['Website', 'https://company.example'],
           ['Location', 'India'],
           ['Team size', '51-200'],

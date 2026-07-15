@@ -15,7 +15,7 @@ const careerJobSchema = new mongoose.Schema(
     description: { type: String, required: true, trim: true },
     responsibilities: [{ type: String }],
     requirements: [{ type: String }],
-    applyEmail: { type: String, default: 'support@cromgenrozgar.com', lowercase: true, trim: true },
+    applyEmail: { type: String, default: 'support@inseet.in', lowercase: true, trim: true },
     featured: { type: Boolean, default: false },
     sortOrder: { type: Number, default: 0 },
     status: { type: String, enum: ['Active', 'Inactive', 'Closed'], default: 'Active' },

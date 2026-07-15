@@ -19,7 +19,7 @@ function getApiBaseUrl() {
 function isFrontendDomain(url) {
   try {
     const hostname = new URL(url).hostname.replace(/^www\./, '')
-    return hostname === 'cromgenrozgar.in'
+    return hostname === 'inseet.in'
   } catch {
     return false
   }

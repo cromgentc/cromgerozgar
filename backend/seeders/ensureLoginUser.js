@@ -5,7 +5,7 @@ const User = require('../models/User')
 
 const email = String(process.env.LOGIN_EMAIL || '').trim().toLowerCase()
 const password = String(process.env.LOGIN_PASSWORD || '')
-const name = String(process.env.LOGIN_NAME || 'Cromgen Admin').trim()
+const name = String(process.env.LOGIN_NAME || 'INSEET Admin').trim()
 const role = String(process.env.LOGIN_ROLE || 'Admin').trim()
 
 async function ensureLoginUser() {

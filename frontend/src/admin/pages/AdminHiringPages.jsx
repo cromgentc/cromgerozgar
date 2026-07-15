@@ -5,13 +5,13 @@ import { AdminCard, StatusBadge } from '../components/AdminPrimitives'
 import { api } from '../../services/api'
 
 const bulkRows = [
-  { role: 'Sales Executive', company: 'Cromgen Technologies', openings: 25, location: 'Noida', status: 'Active' },
+  { role: 'Sales Executive', company: 'INSEET Technologies', openings: 25, location: 'Noida', status: 'Active' },
   { role: 'Customer Support Associate', company: 'Rozgar Enterprise', openings: 40, location: 'Delhi NCR', status: 'Pending' },
   { role: 'Field Recruiter', company: 'TalentBridge Services', openings: 12, location: 'Gurugram', status: 'Review' },
 ]
 
 const singleRows = [
-  { candidate: 'Amit Sharma', role: 'Frontend Developer', company: 'Cromgen Technologies', status: 'Interview' },
+  { candidate: 'Amit Sharma', role: 'Frontend Developer', company: 'INSEET Technologies', status: 'Interview' },
   { candidate: 'Priya Singh', role: 'HR Executive', company: 'NextHire Solutions', status: 'Shortlisted' },
   { candidate: 'Rohit Verma', role: 'Account Manager', company: 'Rozgar Enterprise', status: 'Pending' },
 ]

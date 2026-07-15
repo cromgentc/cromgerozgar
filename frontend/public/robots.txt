@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.cromgenrozgar.in/sitemap.xml
+Sitemap: https://www.inseet.in/sitemap.xml

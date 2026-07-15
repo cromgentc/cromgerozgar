@@ -324,7 +324,7 @@ const sendWhatsappAppLink = asyncHandler(async (req, res) => {
   }
 
   const config = await getWhatsAppApiConfig({ requireOtpTemplate: false })
-  const appLink = String(config.appLink || process.env.APP_DOWNLOAD_LINK || process.env.CLIENT_URL || 'https://www.cromgenrozgar.in').trim()
+  const appLink = String(config.appLink || process.env.APP_DOWNLOAD_LINK || process.env.CLIENT_URL || 'https://www.inseet.in').trim()
 
   if (!appLink) {
     res.status(400)
@@ -430,7 +430,7 @@ const requestEmailReset = asyncHandler(async (req, res) => {
   }
 
   const resetToken = signResetToken(user)
-  const resetBaseUrl = value.resetUrl || `${process.env.CLIENT_URL || 'https://www.cromgenrozgar.in'}/auth`
+  const resetBaseUrl = value.resetUrl || `${process.env.CLIENT_URL || 'https://www.inseet.in'}/auth`
   const resetLink = `${resetBaseUrl}${resetBaseUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(resetToken)}&email=${encodeURIComponent(email)}`
 
   await sendPasswordResetEmail({ config: value, provider, resetLink, user })

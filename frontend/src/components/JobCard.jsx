@@ -90,7 +90,7 @@ export function JobCard({ denseMobile = false, index = 1, job, onApply, featured
               <Link className="line-clamp-1 text-lg font-black leading-6 text-slate-950 hover:text-[#178955]" to={jobDetailPath}>
                 {job.title}
               </Link>
-              <p className="mt-1 truncate text-sm font-bold text-[#178955]">{job.company || 'Cromgen Technology'}</p>
+              <p className="mt-1 truncate text-sm font-bold text-[#178955]">{job.company || 'INSEET Technology'}</p>
             </div>
           </div>
           <button

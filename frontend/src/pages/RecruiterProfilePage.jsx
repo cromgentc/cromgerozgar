@@ -15,7 +15,7 @@ export function RecruiterProfilePage() {
   const [profile, setProfile] = useState(() => ({
     name: user?.name || 'Recruiter',
     contactPerson: user?.name || '',
-    email: user?.email || 'recruiter@cromgen.test',
+    email: user?.email || 'recruiter@inseet.test',
     phone: '',
     location: 'India',
     industry: 'Recruitment',

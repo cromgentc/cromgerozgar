@@ -1,4 +1,4 @@
-const themeStorageKey = 'cromgenThemeMode'
+const themeStorageKey = 'inseetThemeMode'
 
 export function getInitialThemeMode() {
   if (typeof window === 'undefined') return 'light'

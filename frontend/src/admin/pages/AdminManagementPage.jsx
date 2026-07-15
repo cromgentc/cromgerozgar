@@ -772,7 +772,7 @@ const skillOptions = ['React', 'JavaScript', 'TypeScript', 'Node.js', 'Python', 
 
 const jobTitleOptions = ['Frontend Developer', 'React Developer', 'Next.js Developer', 'Backend Developer', 'Node.js Developer', 'Full Stack Developer', 'MERN Stack Developer', 'Python Developer', 'Java Developer', 'PHP Developer', 'Laravel Developer', 'Mobile App Developer', 'Flutter Developer', 'Android Developer', 'iOS Developer', 'UI/UX Designer', 'Product Designer', 'QA Engineer', 'Automation Tester', 'DevOps Engineer', 'Cloud Engineer', 'Data Analyst', 'Data Scientist', 'Machine Learning Engineer', 'AI Engineer', 'Digital Marketing Executive', 'SEO Specialist', 'Performance Marketing Manager', 'Content Writer', 'Sales Executive', 'Business Development Executive', 'Customer Support Specialist', 'HR Recruiter', 'Talent Acquisition Specialist', 'Finance Analyst', 'Operations Executive', 'Data Entry Operator', 'BPO Executive']
 
-const companyNameOptions = ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'Cromgen Solutions', 'TechNova Systems', 'BrightEdge Digital', 'Cloudify Labs', 'HireWave', 'FinEdge Analytics', 'SupportSphere', 'DataMint', 'GrowthWorks']
+const companyNameOptions = ['Nimbus Tech', 'Talentora', 'Auralis Support', 'BluePeak Finance', 'PeopleMint', 'Marketly Labs', 'INSEET Solutions', 'TechNova Systems', 'BrightEdge Digital', 'Cloudify Labs', 'HireWave', 'FinEdge Analytics', 'SupportSphere', 'DataMint', 'GrowthWorks']
 
 const industryOptions = ['IT & Software', 'SaaS', 'Fintech', 'Recruitment', 'HR Technology', 'Digital Marketing', 'Customer Support', 'E-commerce', 'Finance', 'Healthcare', 'Education', 'Manufacturing', 'Logistics', 'AI & Data', 'BPO', 'Consulting']
 
@@ -1958,7 +1958,7 @@ function getInitialForm(type, companyOptions = []) {
       experience: '',
       salary: '',
       deadline: '',
-      applyEmail: 'support@cromgenrozgar.com',
+      applyEmail: 'support@inseet.in',
       skills: '',
       responsibilities: '',
       requirements: '',
@@ -4323,7 +4323,7 @@ export function AdminNewsletterSendPage() {
     message: 'Hello,\n\nHere are the latest hiring insights from INSEET. Explore fresh verified openings, recruiter updates, and career trends from active companies.\n\nStay connected for more job alerts and hiring updates.',
     imageUrl: '',
     ctaLabel: 'Explore Latest Jobs',
-    ctaUrl: 'https://www.cromgenrozgar.in/jobs',
+    ctaUrl: 'https://www.inseet.in/jobs',
   })
   const [updates, setUpdates] = useState([])
   const [message, setMessage] = useToastMessageState()
@@ -5064,13 +5064,13 @@ export function AdminGoogleAuthPage() {
           ) : (
             <div className="mt-5 grid gap-4">
               <LabeledInput label="Google OAuth Client ID" onChange={(value) => update('clientId', value)} placeholder="xxxx.apps.googleusercontent.com" value={form.clientId} />
-              <LabeledInput label="Google Cloud Project ID" onChange={(value) => update('projectId', value)} placeholder="cromgen-rozgar-auth" value={form.projectId} />
+              <LabeledInput label="Google Cloud Project ID" onChange={(value) => update('projectId', value)} placeholder="inseet-auth" value={form.projectId} />
               <label className="grid gap-1">
                 <span className="text-xs font-black uppercase tracking-wide text-slate-400">Authorized domains</span>
                 <textarea
                   className="input min-h-24"
                   onChange={(event) => update('authorizedDomains', event.target.value)}
-                  placeholder="www.cromgenrozgar.in, cromgenrozgar.in"
+                  placeholder="www.inseet.in, inseet.in"
                   value={form.authorizedDomains}
                 />
               </label>

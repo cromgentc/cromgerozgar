@@ -29,7 +29,7 @@ export function ContactPage() {
   const companyInfo = useMemo(() => ({
     address: branding.recruiterFooterLocation || '21 Career Avenue, New Delhi',
     phone: branding.tollFreeNumber || '+91 1800-123-4567',
-    email: branding.recruiterEmail || 'support@cromgenrozgar.com',
+    email: branding.recruiterEmail || 'support@inseet.in',
   }), [branding.recruiterEmail, branding.recruiterFooterLocation, branding.tollFreeNumber])
 
   const visibleSocialLinks = useMemo(() => {

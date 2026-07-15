@@ -128,7 +128,7 @@ function AppDownloadPromo() {
       <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[20px] border border-blue-100 bg-[#F5F4FF] shadow-sm sm:rounded-[24px] lg:grid-cols-[0.9fr_0.55fr_1.35fr] lg:items-center">
         <div className="p-5 sm:p-8">
           <h2 className="max-w-xs text-2xl font-black leading-tight tracking-tight text-slate-950 sm:text-3xl">
-            10M+ users are on the CromGen app
+            10M+ users are on the INSEET app
           </h2>
           <p className="mt-3 text-sm font-semibold text-slate-600">Get real-time job updates & more!</p>
 

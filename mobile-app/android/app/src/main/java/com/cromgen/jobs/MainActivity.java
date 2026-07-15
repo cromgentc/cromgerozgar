@@ -1,4 +1,4 @@
-package com.cromgen.jobs;
+package com.inseet.jobs;
 
 import com.getcapacitor.BridgeActivity;
 

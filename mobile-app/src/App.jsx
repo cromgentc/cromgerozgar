@@ -43,7 +43,7 @@ const fallbackJobs = [
   {
     _id: 'demo-1',
     title: 'Senior React Native Developer',
-    company: 'Cromgen Technologies',
+    company: 'INSEET Technologies',
     location: 'Noida, India',
     salary: 'INR 18L - 28L',
     experience: '5+ years',
@@ -86,8 +86,8 @@ function normalizeBrandingPayload(payload = {}) {
   const name = site.siteName || site.name || 'INSEET'
 
   return {
-    name: typeof name === 'string' ? name.replace(/CromGen Rozgar|Cromgen Rozgar|Cromgen Jobs/g, 'INSEET') : 'INSEET',
-    logoUrl: site.logoUrl || site.logo || '/cromgen-rozgar-logo.png',
+    name: typeof name === 'string' ? name : 'INSEET',
+    logoUrl: site.logoUrl || site.logo || '/inseet-logo.png',
     tollFreeNumber: site.tollFreeNumber || fallbackCustomerCareNumber,
   }
 }
@@ -590,7 +590,7 @@ function App() {
   const [toast, setToast] = useState('')
   const [language, setLanguage] = useState(() => localStorage.getItem('mobileLanguage') || 'English')
   const [notificationsCleared, setNotificationsCleared] = useState(() => localStorage.getItem('mobileNotificationsCleared') === 'true')
-  const [branding, setBranding] = useState({ name: 'INSEET', logoUrl: '/cromgen-rozgar-logo.png', tollFreeNumber: fallbackCustomerCareNumber })
+  const [branding, setBranding] = useState({ name: 'INSEET', logoUrl: '/inseet-logo.png', tollFreeNumber: fallbackCustomerCareNumber })
   const isDark = theme === 'dark'
   const t = useMemo(() => (key) => translate(language, key), [language])
 
