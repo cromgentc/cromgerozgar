@@ -13,6 +13,8 @@ const {
   uploadResumeToR2,
 } = require('../utils/r2Storage')
 
+const SITE_BRANDING_KEY = 'siteSeoBranding'
+
 function cleanSegment(value = '') {
   return String(value || 'file')
     .trim()
@@ -304,6 +306,41 @@ function getDocumentExtension(mimeType = '') {
   return '.pdf'
 }
 
+function withVersionedUrl(url = '') {
+  const next = String(url || '').trim()
+  if (!next) return ''
+
+  const separator = next.includes('?') ? '&' : '?'
+  return `${next}${separator}v=${Date.now()}`
+}
+
+function normalizeBrandAssetField(value = '') {
+  const field = cleanSegment(value || 'brand-asset')
+  if (['favicon', 'favicon-url', 'faviconurl'].includes(field)) return 'faviconUrl'
+  return 'logoUrl'
+}
+
+async function publishBrandAssetUrl({ field, url }) {
+  const brandingField = normalizeBrandAssetField(field)
+  const setting = await Setting.findOne({ key: SITE_BRANDING_KEY }).lean()
+  const currentValue = setting?.value || {}
+  const value = {
+    ...currentValue,
+    [brandingField]: withVersionedUrl(url),
+  }
+
+  const updated = await Setting.findOneAndUpdate(
+    { key: SITE_BRANDING_KEY },
+    { $set: { key: SITE_BRANDING_KEY, group: 'website', value } },
+    { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+  ).lean()
+
+  return {
+    field: brandingField,
+    value: updated?.value || value,
+  }
+}
+
 async function uploadBrandAsset(req, res) {
   if (!req.file) {
     res.status(400)
@@ -331,13 +368,19 @@ async function uploadBrandAsset(req, res) {
 
   const previousObject = parseSupaCloudObjectUrl(req.body.previousFileUrl || req.body.previousUrl)
   if (previousObject && previousObject.bucket === config.brandingBucket) {
-    await removeSupaCloudObject(previousObject, 'Supa Cloud old brand asset')
+    try {
+      await removeSupaCloudObject(previousObject, 'Supa Cloud old brand asset')
+    } catch (error) {
+      console.warn(`Supa Cloud old brand asset cleanup skipped: ${error.message}`)
+    }
   }
+
+  const branding = await publishBrandAssetUrl({ field, url: upload.publicUrl })
 
   res.status(201).json({
     success: true,
     data: {
-      url: upload.publicUrl,
+      url: branding.value[branding.field] || withVersionedUrl(upload.publicUrl),
       storageProvider: 'supa-cloud',
       storageBucket: config.brandingBucket,
       storagePath: upload.storagePath,
@@ -345,6 +388,8 @@ async function uploadBrandAsset(req, res) {
       mimeType: req.file.mimetype || '',
       fileSize: req.file.size,
       field,
+      brandingField: branding.field,
+      branding: branding.value,
     },
   })
 }

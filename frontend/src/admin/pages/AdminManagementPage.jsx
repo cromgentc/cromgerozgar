@@ -19,7 +19,7 @@ import { reportRows } from '../data/adminData'
 import { api } from '../../services/api'
 import { updateRecruiterVerificationRemark } from '../../routes/authRouting'
 import { fetchPricingPackages, getPricingPackages, seedDefaultPricingPackages } from '../../utils/pricingPackages'
-import { applySiteBrandingMeta, defaultSiteBranding, publishSiteBranding } from '../../utils/siteBranding'
+import { applySiteBrandingMeta, defaultSiteBranding, normalizeSiteBranding, publishSiteBranding } from '../../utils/siteBranding'
 import { buildStateCountryLocation } from '../../utils/locationDisplay'
 import { getJobsForCategory } from '../../utils/categoryMatching'
 import { showMessageToast } from '../../utils/toast'
@@ -5322,7 +5322,7 @@ export function AdminSEOBrandingPage() {
       .siteBranding()
       .then((payload) => {
         const value = payload.data?.value || {}
-        const next = { ...defaultSiteBranding, ...value }
+        const next = normalizeSiteBranding({ ...defaultSiteBranding, ...value })
         setForm(next)
         applySiteBrandingMeta(next)
       })
@@ -5360,8 +5360,13 @@ export function AdminSEOBrandingPage() {
         setMessage('Brand asset uploaded, but public URL was not returned. Please check public bucket setting.')
         return
       }
-      update(key, url)
-      setMessage(`${key === 'logoUrl' ? 'Logo' : 'Favicon'} uploaded to Supa Cloud. Save SEO & Branding to publish.`)
+      const nextBranding = publishSiteBranding({
+        ...form,
+        ...(payload.data?.branding || {}),
+        [key]: url,
+      })
+      setForm(nextBranding)
+      setMessage(`${key === 'logoUrl' ? 'Logo' : 'Favicon'} uploaded and published successfully.`)
     } catch (error) {
       setMessage(error.message || 'Brand asset could not be uploaded to Supa Cloud.')
     } finally {

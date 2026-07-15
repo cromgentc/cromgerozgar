@@ -149,10 +149,19 @@ function migrateLegacyBranding(branding = {}) {
   const rename = (value) => (typeof value === 'string' ? value
     .replace(/Rozgar Admin/g, 'INSEET Admin')
     .replace(/Rozgar Recruiter/g, 'INSEET Recruiter') : value)
+  const renameAsset = (value, fallback) => {
+    const nextValue = typeof value === 'string' ? value.trim() : ''
+    if (!nextValue) return fallback
+    return nextValue
+      .replace(/cromgen-rozgar-logo\.png/gi, 'inseet-logo.png')
+      .replace(/cromgen-rozgar-favicon\.png/gi, 'inseet-favicon.png')
+  }
 
   next.siteName = rename(next.siteName)
   next.adminName = rename(next.adminName)
   next.recruiterName = rename(next.recruiterName)
+  next.logoUrl = renameAsset(next.logoUrl, defaultSiteBranding.logoUrl)
+  next.faviconUrl = renameAsset(next.faviconUrl, defaultSiteBranding.faviconUrl)
   next.seoTitle = rename(next.seoTitle)
   next.seoDescription = rename(next.seoDescription)
   next.seoKeywords = rename(next.seoKeywords)

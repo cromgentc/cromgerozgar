@@ -4,6 +4,14 @@ const Setting = require('../models/Setting')
 const PUBLIC_BRANDING_KEY = 'siteSeoBranding'
 const PUBLIC_SOCIAL_LINKS_KEY = 'socialMediaLinks'
 
+function migrateLegacyBrandingUrl(value, fallback) {
+  const next = String(value || '').trim()
+  if (!next) return fallback
+  return next
+    .replace(/cromgen-rozgar-logo\.png/gi, 'inseet-logo.png')
+    .replace(/cromgen-rozgar-favicon\.png/gi, 'inseet-favicon.png')
+}
+
 function normalizeSiteBrandingValue(body = {}) {
   const heroBrandNames = Array.isArray(body.heroBrandNames)
     ? body.heroBrandNames
@@ -14,8 +22,8 @@ function normalizeSiteBrandingValue(body = {}) {
     siteName: String(body.siteName || 'INSEET').trim() || 'INSEET',
     adminName: String(body.adminName || 'INSEET Admin').trim() || 'INSEET Admin',
     recruiterName: String(body.recruiterName || 'INSEET Recruiter').trim() || 'INSEET Recruiter',
-    logoUrl: String(body.logoUrl || '').trim(),
-    faviconUrl: String(body.faviconUrl || '').trim(),
+    logoUrl: migrateLegacyBrandingUrl(body.logoUrl, '/inseet-logo.png'),
+    faviconUrl: migrateLegacyBrandingUrl(body.faviconUrl, '/inseet-favicon.png'),
     tollFreeNumber: String(body.tollFreeNumber || '').trim(),
     recruiterEmail: String(body.recruiterEmail || 'support@inseet.in').trim() || 'support@inseet.in',
     recruiterFooterLocation: String(body.recruiterFooterLocation || 'New Delhi, India').trim() || 'New Delhi, India',
@@ -39,7 +47,7 @@ function formatSetting(setting) {
       _id: setting._id,
       key: setting.key,
       group: setting.group,
-      value: setting.value || {},
+      value: normalizeSiteBrandingValue(setting.value || {}),
       updatedAt: setting.updatedAt,
     }
     : null
@@ -48,6 +56,7 @@ function formatSetting(setting) {
 const getPublicSiteBranding = asyncHandler(async (req, res) => {
   const setting = await Setting.findOne({ key: PUBLIC_BRANDING_KEY }).lean()
 
+  res.set('Cache-Control', 'no-store, max-age=0')
   res.json({
     success: true,
     data: formatSetting(setting),
