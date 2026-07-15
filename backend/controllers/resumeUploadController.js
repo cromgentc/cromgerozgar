@@ -1,3 +1,4 @@
+const fs = require('fs/promises')
 const path = require('path')
 const Resume = require('../models/Resume')
 const Setting = require('../models/Setting')
@@ -14,6 +15,7 @@ const {
 } = require('../utils/r2Storage')
 
 const SITE_BRANDING_KEY = 'siteSeoBranding'
+const LOCAL_UPLOAD_ROOT = path.join(__dirname, '..', 'uploads')
 
 function cleanSegment(value = '') {
   return String(value || 'file')
@@ -36,6 +38,10 @@ function storageError(message, statusCode = 502) {
   const error = new Error(message)
   error.statusCode = statusCode
   return error
+}
+
+function getRequestOrigin(req) {
+  return `${req.protocol}://${req.get('host')}`
 }
 
 function isPdfUpload(file) {
@@ -79,17 +85,19 @@ async function getSupaCloudConfig() {
 }
 
 async function ensureSupaCloudBucket(config) {
+  validateSupaCloudConfig(config)
+
   const bucketUrl = `${config.supabaseUrl}/storage/v1/bucket/${encodeURIComponent(config.bucket)}`
   const headers = {
     apikey: config.serviceRoleKey,
     Authorization: `Bearer ${config.serviceRoleKey}`,
   }
-  const bucketResponse = await fetch(bucketUrl, { headers })
+  const bucketResponse = await fetchSupaCloud(bucketUrl, { headers })
 
   if (bucketResponse.ok) {
     const bucket = await bucketResponse.json().catch(() => ({}))
     if (config.publicBucket && bucket.public !== true) {
-      const updateResponse = await fetch(bucketUrl, {
+      const updateResponse = await fetchSupaCloud(bucketUrl, {
         method: 'PUT',
         headers: {
           ...headers,
@@ -114,7 +122,7 @@ async function ensureSupaCloudBucket(config) {
     throw storageError(`Supa Cloud bucket check failed: ${message}`)
   }
 
-  const createResponse = await fetch(`${config.supabaseUrl}/storage/v1/bucket`, {
+  const createResponse = await fetchSupaCloud(`${config.supabaseUrl}/storage/v1/bucket`, {
     method: 'POST',
     headers: {
       ...headers,
@@ -143,7 +151,7 @@ async function uploadToSupaCloud({ buffer, config, contentType, fileName }) {
   const folder = cleanPath(config.folder)
   const storagePath = `${folder ? `${folder}/` : ''}${Date.now()}-${cleanSegment(fileName)}`
   const uploadUrl = `${config.supabaseUrl}/storage/v1/object/${encodeURIComponent(config.bucket)}/${storagePath}`
-  const response = await fetch(uploadUrl, {
+  const response = await fetchSupaCloud(uploadUrl, {
     method: 'POST',
     headers: {
       apikey: config.serviceRoleKey,
@@ -164,6 +172,23 @@ async function uploadToSupaCloud({ buffer, config, contentType, fileName }) {
     : ''
 
   return { publicUrl, storagePath }
+}
+
+function validateSupaCloudConfig(config = {}) {
+  try {
+    const url = new URL(config.supabaseUrl)
+    if (!/^https?:$/.test(url.protocol)) throw new Error('invalid protocol')
+  } catch {
+    throw storageError('Supa Cloud URL is invalid. Save a valid https://... Supa Cloud URL in Admin > Settings > Supa Cloud Storage.', 400)
+  }
+}
+
+async function fetchSupaCloud(url, options) {
+  try {
+    return await fetch(url, options)
+  } catch (error) {
+    throw storageError(`Supa Cloud connection failed: ${error.message}. Check Supa Cloud URL, service role key, and internet access.`, 502)
+  }
 }
 
 async function uploadResume(req, res) {
@@ -341,6 +366,22 @@ async function publishBrandAssetUrl({ field, url }) {
   }
 }
 
+async function uploadBrandAssetLocally({ file, field, req }) {
+  const folder = path.join(LOCAL_UPLOAD_ROOT, 'branding', cleanSegment(field || 'brand-asset'))
+  await fs.mkdir(folder, { recursive: true })
+
+  const fileName = `${Date.now()}-${cleanSegment(file.originalname || `${field || 'brand-asset'}.png`)}`
+  const storagePath = path.join(folder, fileName)
+  await fs.writeFile(storagePath, file.buffer)
+
+  const publicPath = `/uploads/branding/${cleanSegment(field || 'brand-asset')}/${fileName}`
+  return {
+    publicUrl: `${getRequestOrigin(req)}${publicPath}`,
+    storagePath: publicPath,
+    storageProvider: 'local',
+  }
+}
+
 async function uploadBrandAsset(req, res) {
   if (!req.file) {
     res.status(400)
@@ -355,19 +396,29 @@ async function uploadBrandAsset(req, res) {
 
   const config = await getSupaCloudConfig()
   const field = cleanSegment(req.body.field || 'brand-asset')
-  const upload = await uploadToSupaCloud({
-    buffer: req.file.buffer,
-    config: {
-      ...config,
-      bucket: config.brandingBucket,
-      folder: `${config.brandingFolder}/${field}`,
-    },
-    contentType: req.file.mimetype || 'application/octet-stream',
-    fileName: req.file.originalname || `${field}.png`,
-  })
+  let upload
+  let uploadWarning = ''
+  try {
+    upload = await uploadToSupaCloud({
+      buffer: req.file.buffer,
+      config: {
+        ...config,
+        bucket: config.brandingBucket,
+        folder: `${config.brandingFolder}/${field}`,
+      },
+      contentType: req.file.mimetype || 'application/octet-stream',
+      fileName: req.file.originalname || `${field}.png`,
+    })
+  } catch (error) {
+    if (process.env.NODE_ENV === 'production') throw error
+
+    uploadWarning = error.message
+    console.warn(`Supa Cloud brand asset upload skipped, using local dev storage: ${error.message}`)
+    upload = await uploadBrandAssetLocally({ file: req.file, field, req })
+  }
 
   const previousObject = parseSupaCloudObjectUrl(req.body.previousFileUrl || req.body.previousUrl)
-  if (previousObject && previousObject.bucket === config.brandingBucket) {
+  if (upload.storageProvider !== 'local' && previousObject && previousObject.bucket === config.brandingBucket) {
     try {
       await removeSupaCloudObject(previousObject, 'Supa Cloud old brand asset')
     } catch (error) {
@@ -381,8 +432,8 @@ async function uploadBrandAsset(req, res) {
     success: true,
     data: {
       url: branding.value[branding.field] || withVersionedUrl(upload.publicUrl),
-      storageProvider: 'supa-cloud',
-      storageBucket: config.brandingBucket,
+      storageProvider: upload.storageProvider || 'supa-cloud',
+      storageBucket: upload.storageProvider === 'local' ? 'local' : config.brandingBucket,
       storagePath: upload.storagePath,
       originalFileName: req.file.originalname || '',
       mimeType: req.file.mimetype || '',
@@ -390,6 +441,7 @@ async function uploadBrandAsset(req, res) {
       field,
       brandingField: branding.field,
       branding: branding.value,
+      warning: uploadWarning,
     },
   })
 }

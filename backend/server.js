@@ -14,6 +14,7 @@ const express = require('express')
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
 const morgan = require('morgan')
+const path = require('path')
 const connectDB = require('./config/db')
 const apiRoutes = require('./routes')
 const { errorHandler, notFound } = require('./middleware/errorMiddleware')
@@ -58,6 +59,9 @@ app.use(
 )
 app.use(express.json({ limit: '1mb' }))
 app.use(express.urlencoded({ extended: true, limit: '1mb' }))
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
+}))
 app.use(mongoSanitize)
 if (process.env.NODE_ENV !== 'production') app.use(morgan('dev'))
 app.use(
