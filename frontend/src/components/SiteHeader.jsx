@@ -15,7 +15,7 @@ const headerConfigs = {
       { label: 'Find Jobs', to: '/jobs' },
       { label: 'Internship Course', to: '/internship-course', badge: 'Video' },
       { label: 'Freelance Projects', to: '/freelancer/projects', badge: 'New' },
-      { label: 'Candidates', to: '/auth', caption: 'Candidates' },
+      { label: 'Candidates', to: '/auth' },
     ],
     cta: { label: 'For Employers', caption: 'Post Jobs Free', to: '/recruiter' },
   },
